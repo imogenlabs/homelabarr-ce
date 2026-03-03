@@ -46,5 +46,11 @@
 
 ---
 
-## Previous Versions
-*Historical changelog entries would be added here as the system evolves*
+## [v1.0.0] - September 2025
+
+- Initial public release
+- Docker container management via CLI bridge
+- 100+ curated app templates
+- React frontend with dark mode
+- Traefik + Authelia integration
+- MkDocs wiki
