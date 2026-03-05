@@ -16,6 +16,7 @@ Only the latest release is fully supported. The previous minor version receives 
 
 Instead, please report security issues privately:
 
+- **Preferred:** [GitHub Security Advisory](https://github.com/smashingtags/homelabarr-ce/security/advisories/new) (private by default)
 - **Email:** michael@mjashley.com
 - **Subject line:** `[SECURITY] HomelabARR CE — <brief description>`
 
