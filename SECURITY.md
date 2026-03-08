@@ -51,6 +51,7 @@ Instead, please report security issues privately:
 HomelabARR CE requires access to the Docker socket to manage containers. In production:
 
 - Mount the socket **read-only** where possible (`:ro`)
+- Consider using a [Docker socket proxy](https://github.com/Tecnativa/docker-socket-proxy) to limit API access
 - Run behind authentication (Authelia 2FA recommended)
 - Do not expose port 8084 or 8092 to the public internet without a reverse proxy
 
