@@ -46,7 +46,9 @@ Want to add a new app to the catalog?
 3. Include proper Docker image tags, Traefik labels, and environment defaults
 4. Open a PR targeting `dev`
 
-Current categories: `ai`, `backup`, `downloads`, `media-management`, `media-servers`, `monitoring`, `self-hosted`, `system`, `transcoding`, `virtual-desktops`, `myapps`
+Current categories: `ai`, `backup`, `downloads`, `media-management`, `media-servers`, `monitoring`, `self-hosted`, `system`, `transcoding`, `virtual-desktops`
+
+The `myapps` directory is for user-created custom templates and should not be modified by contributors.
 
 See `apps/legacy/README.md` for examples of what NOT to add (deprecated/abandoned projects).
 
