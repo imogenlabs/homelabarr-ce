@@ -1,6 +1,6 @@
 services:
   changedetection:
-    image: ghcr.io/dgtlmoon/changedetection.io:latest
+    image: lscr.io/linuxserver/changedetection.io:latest
     container_name: changedetection
     restart: unless-stopped
     environment:

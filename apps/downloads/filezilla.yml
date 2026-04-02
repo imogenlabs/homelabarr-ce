@@ -10,7 +10,7 @@ services:
       - "UMASK=${UMASK}"
       - "DISPLAY_WIDTH=1920"
       - "DISPLAY_HEIGHT=1080"
-    image: "docker.io/jlesage/filezilla:latest"
+    image: "lscr.io/linuxserver/filezilla:latest"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

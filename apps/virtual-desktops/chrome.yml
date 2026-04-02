@@ -3,7 +3,7 @@ services:
   chrome:
     container_name: "chrome"
     hostname: "chrome"
-    image: "kasmweb/chrome:1.9.0-rolling"
+    image: "kasmweb/chrome:1.16.0"
     restart: "${RESTARTAPP}"
     environment:
       - "PGID=${ID}"

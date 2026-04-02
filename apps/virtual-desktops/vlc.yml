@@ -3,7 +3,7 @@ services:
   vlc:
     container_name: "vlc"
     hostname: "vlc"
-    image: "kasmweb/vlc:1.9.0-rolling"
+    image: "kasmweb/vlc:1.16.0"
     restart: "${RESTARTAPP}"
     environment:
       - "PGID=${ID}"

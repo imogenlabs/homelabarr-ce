@@ -1,7 +1,7 @@
 ---
 services:
   fail2ban:
-    image: "ghcr.io/crazy-max/fail2ban:1.1.0"
+    image: "lscr.io/linuxserver/fail2ban:latest"
     hostname: "fail2ban"
     container_name: "fail2ban"
     cap_add:
