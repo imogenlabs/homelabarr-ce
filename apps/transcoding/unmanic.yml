@@ -19,6 +19,7 @@ services:
       - "${APPFOLDER}/unmanic/tmp:/tmp/unmanic:rw"
       - "unionfs:/mnt"
     labels:
+      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "dockupdater.enable=true"

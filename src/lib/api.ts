@@ -266,6 +266,14 @@ export async function findAvailablePort(startPort: number = 8000, endPort: numbe
   return handleResponse(response);
 }
 
+// GPU detection
+export async function detectGpu(): Promise<{ success: boolean; gpus: { nvidia: boolean; intel: boolean } }> {
+  const response = await fetch(`${API_BASE_URL}/gpu/detect`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
 // Starred Apps API functions
 export async function getStars(): Promise<{ stars: string[] }> {
   const response = await fetch(`${API_BASE_URL}/auth/me/stars`, {
