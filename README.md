@@ -59,7 +59,7 @@
 
 You know how setting up self-hosted apps usually means Googling Docker Compose files, copying YAML, editing ports, and hoping it works? HomelabARR skips all of that.
 
-It's a dashboard. You open it, you see a catalog of 110+ apps, you click **Deploy**, and the app is running. That's it.
+It's a dashboard. You open it, you see a catalog of 100+ apps, you click **Deploy**, and the app is running. That's it.
 
 Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're all in there, ready to go.
 
@@ -84,9 +84,8 @@ Login: `admin` / `admin`. Browse apps, click around. Nothing you do in the demo 
 You need a Linux machine with Docker installed. You don't need to write Compose files, but you do need basic shell access to your server.
 
 ```bash
-# 1. Grab the code and community templates
+# 1. Grab the code (cloning to /opt/homelabarr is recommended — it matches the default template path)
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
-git clone https://github.com/smashingtags/homelabarr-templates.git /opt/homelabarr/templates
 cd /opt/homelabarr
 
 # 2. Set three things (copy-paste these exactly)
@@ -104,7 +103,7 @@ That's the whole install.
 
 > 💾 **For a permanent setup**, move those exports into a `.env` file in the same directory as `homelabarr.yml` instead of re-running them on every reboot. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
 
-> 📁 **Cloned somewhere other than `/opt/homelabarr`?** Set `CLI_BRIDGE_HOST_PATH` in your `.env` to match your clone path, and `TEMPLATES_PATH` to your templates directory, or the app catalog won't load.
+> 📁 **Cloned somewhere other than `/opt/homelabarr`?** Set `CLI_BRIDGE_HOST_PATH` in your `.env` to match your clone path, or the app catalog won't load.
 
 > 💡 **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first. Takes about a minute.
 
@@ -116,12 +115,11 @@ Want to build from source instead? Check the [full install guide](https://wiki.h
 
 ## What You Get
 
-- **110+ apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
+- **100+ apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
 - **Three ways to deploy.** Just IP:port, or with Traefik reverse proxy for SSL, or Traefik + Authelia for 2FA on top.
 - **Manage running containers.** Start, stop, restart, remove, view logs — all from the dashboard.
 - **Port Manager.** See every port in use across all your containers. Catch conflicts before they happen.
-- **Community app store.** 110+ templates maintained in a [separate repo](https://github.com/smashingtags/homelabarr-templates) — update independently, contribute your own, or swap in custom template packs.
-- **Add your own apps.** Drop a YAML file in `templates/myapps/` and it shows up in the catalog automatically.
+- **Add your own apps.** Drop a YAML file in `apps/myapps/` and it shows up in the catalog automatically.
 - **Secure by default.** Login required, API keys for automation, rate limiting, security headers.
 - **Dark mode.** Obviously.
 - **Mobile app.** iOS and Android — manage your homelab from the couch.
@@ -145,7 +143,7 @@ Want to build from source instead? Check the [full install guide](https://wiki.h
 | 💾 Backup | 3 | Duplicati, Restic |
 | 📁 My Apps | — | Whatever you add |
 
-Every template is a standard Docker Compose YAML file. The community templates live in a [separate repo](https://github.com/smashingtags/homelabarr-templates) — update them independently with `git pull`, contribute your own via PR, or swap in a custom template pack.
+Every template is just a Docker Compose YAML file in `apps/<category>/`. You can read them, edit them, or write your own.
 
 ---
 
@@ -188,8 +186,7 @@ All the config options: [wiki.homelabarr.com/guides/configuration](https://wiki.
 homelabarr-ce/
 ├── src/              # React frontend (Vite + shadcn/ui)
 ├── server/           # Node.js + Express backend
-├── apps/             # Bundled app templates (fallback if no external templates)
-├── templates/        # ← Community templates (cloned from homelabarr-templates repo)
+├── apps/             # App templates (one YAML per app, organized by category)
 │   ├── ai/           # AI & machine learning tools
 │   ├── downloads/    # Download clients
 │   ├── media-servers/

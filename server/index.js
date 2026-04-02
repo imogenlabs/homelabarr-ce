@@ -455,16 +455,6 @@ app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) =
   }
 });
 
-// GPU detection endpoint
-app.get('/gpu/detect', requireAuth(), (req, res) => {
-  try {
-    const gpus = CLIBridge.detectGpu();
-    res.json({ success: true, gpus });
-  } catch (err) {
-    res.status(500).json({ error: 'GPU detection failed' });
-  }
-});
-
 // Enhanced health check endpoint with comprehensive platform and configuration information
 app.get('/health', async (req, res) => {
   const connectionState = dockerManager.getConnectionState();
@@ -4820,11 +4810,8 @@ try {
       }
     });
     
-    if (process.env.REQUIRE_DOCKER === 'false') {
-      logger.warn('⚠️  Network validation failed — running in catalog-only mode (REQUIRE_DOCKER=false)');
-    } else {
-      process.exit(1);
-    }
+    // Continue without Docker — catalog still works, container management gracefully degraded
+    logger.warn('⚠️  Network validation failed — running in catalog-only mode (no Docker)');
   }
 
   // Log successful validation

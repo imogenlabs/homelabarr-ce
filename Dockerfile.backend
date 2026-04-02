@@ -6,8 +6,12 @@ FROM node:24-alpine3.23
 # Update Alpine packages to pick up latest security patches
 RUN apk upgrade --no-cache
 
-# Update npm to latest
-RUN npm install -g npm@latest
+# Force-update npm and patch vulnerable transitive deps (minimatch, tar)
+RUN npm install -g npm@latest && \
+    npm install -g minimatch@latest tar@latest 2>/dev/null; \
+    cd /usr/local/lib/node_modules/npm && \
+    npm install minimatch@latest tar@latest --save 2>/dev/null; \
+    true
 
 # Set working directory
 WORKDIR /app
@@ -38,11 +42,11 @@ RUN npm ci --only=production --no-audit --loglevel=error --no-fund
 # Copy server files and configurations
 COPY server/ ./server/
 
-# Bundled app templates (fallback — external templates repo is the primary source)
-# Users mount homelabarr-templates at /app/templates via TEMPLATES_PATH
+# Copy app templates (CLI Bridge scans these for the application catalog)
 COPY apps/ ./apps/
 
-# Copy traefik templates (used by CLI Bridge for deployment)
+# Copy scripts and traefik templates (used by CLI Bridge for deployment)
+COPY scripts/ ./scripts/
 COPY traefik/ ./traefik/
 COPY install.sh ./install.sh
 

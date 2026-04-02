@@ -107,7 +107,6 @@ export interface CLIApplication {
   restart: string;
   requiresTraefik: boolean;
   requiresAuthelia: boolean;
-  gpuSupport: boolean;
 }
 
 export interface ApplicationCatalog {

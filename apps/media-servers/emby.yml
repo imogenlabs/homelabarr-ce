@@ -29,7 +29,6 @@ services:
       - "${APPFOLDER}/emby:/config"
       - "unionfs:/mnt:ro"
     labels:
-      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "dockupdater.enable=true"

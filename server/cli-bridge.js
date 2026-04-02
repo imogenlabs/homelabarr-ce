@@ -67,9 +67,7 @@ export class CLIBridge {
     // CLI_BRIDGE_HOST_PATH env var allows override for Docker deployments
     // where the CLI repo is mounted at a different path than the app working directory
     this.cliPath = process.env.CLI_BRIDGE_HOST_PATH || process.cwd();
-    // TEMPLATES_PATH overrides the apps directory independently of the CLI path
-    // This enables external template repos (e.g. homelabarr-templates)
-    this.appsPath = process.env.TEMPLATES_PATH || path.join(this.cliPath, 'apps');
+    this.appsPath = path.join(this.cliPath, 'apps');
     this.scriptsPath = path.join(this.cliPath, 'scripts');
     this.traefik = path.join(this.cliPath, 'traefik');
 
@@ -212,8 +210,7 @@ export class CLIBridge {
         healthcheck: service.healthcheck || null,
         restart: this.resolveTemplateVar(service.restart || '${RESTARTAPP}'),
         requiresTraefik: this.requiresTraefik(service),
-        requiresAuthelia: this.requiresAuthelia(service),
-        gpuSupport: this.hasGpuSupport(service)
+        requiresAuthelia: this.requiresAuthelia(service)
       };
     } catch (error) {
       DeploymentLogger.logDockerOperationFailed('parseApplicationConfig', error, {
@@ -289,23 +286,14 @@ export class CLIBridge {
    * Deploy application with Traefik integration
    */
   async deployWithTraefik(appPath, config) {
+    // Ensure Traefik is installed and running
     await this.ensureTraefikRunning();
-
-    // If GPU enabled, rewrite compose with GPU config
-    if (config.enableGpu && config.gpuType) {
-      const content = fs.readFileSync(appPath, 'utf8');
-      const doc = yaml.parse(content);
-      this.injectGpuConfig(doc, config.gpuType);
-      const tmpPath = appPath.replace('.yml', '-gpu.yml');
-      fs.writeFileSync(tmpPath, yaml.stringify(doc));
-      try {
-        return await this.executeDockerCompose(tmpPath, 'up -d', { ...config, DOCKERNETWORK: 'proxy' });
-      } finally {
-        try { fs.unlinkSync(tmpPath); } catch {}
-      }
-    }
-
-    return await this.executeDockerCompose(appPath, 'up -d', { ...config, DOCKERNETWORK: 'proxy' });
+    
+    // Deploy using docker-compose with Traefik network
+    return await this.executeDockerCompose(appPath, 'up -d', {
+      ...config,
+      DOCKERNETWORK: 'proxy'
+    });
   }
 
   /**
@@ -342,11 +330,6 @@ export class CLIBridge {
       }
     }
 
-    // Inject GPU config if requested
-    if (config.enableGpu && config.gpuType) {
-      this.injectGpuConfig(doc, config.gpuType);
-    }
-
     const tmpPath = appPath.replace('.yml', '-local.yml');
     fs.writeFileSync(tmpPath, yaml.stringify(doc));
 
@@ -371,23 +354,14 @@ export class CLIBridge {
    * Deploy application with Authelia authentication
    */
   async deployWithAuthelia(appPath, config) {
+    // Ensure both Traefik and Authelia are running
     await this.ensureTraefikRunning();
     await this.ensureAutheliaRunning();
-
-    if (config.enableGpu && config.gpuType) {
-      const content = fs.readFileSync(appPath, 'utf8');
-      const doc = yaml.parse(content);
-      this.injectGpuConfig(doc, config.gpuType);
-      const tmpPath = appPath.replace('.yml', '-gpu.yml');
-      fs.writeFileSync(tmpPath, yaml.stringify(doc));
-      try {
-        return await this.executeDockerCompose(tmpPath, 'up -d', { ...config, DOCKERNETWORK: 'proxy' });
-      } finally {
-        try { fs.unlinkSync(tmpPath); } catch {}
-      }
-    }
-
-    return await this.executeDockerCompose(appPath, 'up -d', { ...config, DOCKERNETWORK: 'proxy' });
+    
+    return await this.executeDockerCompose(appPath, 'up -d', {
+      ...config,
+      DOCKERNETWORK: 'proxy'
+    });
   }
 
   /**
@@ -599,68 +573,6 @@ export class CLIBridge {
   requiresAuthelia(service) {
     if (!service.labels) return false;
     return service.labels.some(label => label.includes('authelia') || label.includes('chain-authelia'));
-  }
-
-  hasGpuSupport(service) {
-    if (!service.labels) return false;
-    return service.labels.some(label => label.includes('x-gpu=true'));
-  }
-
-  /**
-   * Inject GPU passthrough config into a parsed compose document.
-   * Called when config.enableGpu is set and the app has gpuSupport.
-   */
-  injectGpuConfig(doc, gpuType) {
-    if (!doc.services) return doc;
-    for (const svcName of Object.keys(doc.services)) {
-      const svc = doc.services[svcName];
-      if (gpuType === 'nvidia') {
-        svc.deploy = {
-          ...(svc.deploy || {}),
-          resources: {
-            reservations: {
-              devices: [{
-                driver: 'nvidia',
-                count: 'all',
-                capabilities: ['gpu']
-              }]
-            }
-          }
-        };
-        if (!svc.environment) svc.environment = [];
-        if (Array.isArray(svc.environment)) {
-          if (!svc.environment.some(e => e.includes('NVIDIA_VISIBLE_DEVICES'))) {
-            svc.environment.push('NVIDIA_VISIBLE_DEVICES=all');
-          }
-          if (!svc.environment.some(e => e.includes('NVIDIA_DRIVER_CAPABILITIES'))) {
-            svc.environment.push('NVIDIA_DRIVER_CAPABILITIES=compute,utility');
-          }
-        }
-      } else if (gpuType === 'intel') {
-        if (!svc.devices) svc.devices = [];
-        if (!svc.devices.some(d => d.includes('/dev/dri'))) {
-          svc.devices.push('/dev/dri:/dev/dri');
-        }
-      }
-    }
-    return doc;
-  }
-
-  /**
-   * Detect available GPUs on the host.
-   */
-  static detectGpu() {
-    const result = { nvidia: false, intel: false };
-    try {
-      execSync('nvidia-smi', { stdio: 'pipe' });
-      result.nvidia = true;
-    } catch {}
-    try {
-      if (fs.existsSync('/dev/dri')) {
-        result.intel = true;
-      }
-    } catch {}
-    return result;
   }
 
   /**

@@ -1,44 +1,126 @@
 #!/bin/bash
-
-# HomelabARR CE — CLI wrapper
-# Installed to /usr/local/bin/homelabarr-cli by install-remote.sh
-
-HOMELABARR_DIR="/opt/homelabarr"
-
-if [ "$EUID" -ne 0 ]; then
-  sudo "$0" "$@"
-  exit $?
+####################################
+# HomelabARR CLI                     #
+# Part of HomelabARR ecosystem      #
+# Visit homelabarr.com               #
+####################################
+# shellcheck disable=SC2086
+# shellcheck disable=SC2006
+if [[ $EUID != 0 ]]; then
+    sudo "$0" "$@"
+    exit $?
 fi
-
-if [ ! -d "$HOMELABARR_DIR" ]; then
-  echo "⛔ HomelabARR not found at $HOMELABARR_DIR"
-  echo "   Install: git clone https://github.com/smashingtags/homelabarr-ce.git $HOMELABARR_DIR"
-  exit 1
+homelabarr=/opt/homelabarr
+run() {
+if [[ -d ${homelabarr} ]];then
+   envmigra && fastapt && cleanup && clear
+   $(command -v cd) ${homelabarr} && $(command -v bash) install.sh
+else
+   usage
 fi
-
-usage() {
-  echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "    🚀 HomelabARR CE CLI"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo ""
-  echo "    homelabarr-cli -i, --install    Open the setup menu"
-  echo "    homelabarr-cli -h, --help       Show this help"
-  echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo ""
+}
+####
+update() {
+homelabarr=/opt/homelabarr
+clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "    🚀    HomelabARR CLI [ UPDATE CONTAINER ] STARTED"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+     basefolder="/opt/appdata"
+     compose="compose/docker-compose.yml"
+     $(command -v rsync) ${homelabarr}/homelabarr-ce/docker.yml $basefolder/$compose -aqhv
+     if [[ -f $basefolder/$compose ]];then
+        $(command -v cd) $basefolder/compose/ && \
+          docker-compose config 1>/dev/null 2>&1 && \
+            docker-compose down 1>/dev/null 2>&1 && \
+            docker-compose up -d --force-recreate 1>/dev/null 2>&1
+     fi
+     $(command -v chown) -cR 1000:1000 ${homelabarr} 1>/dev/null 2>&1
+     envmigra && fastapt && cleanup && clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "    🚀    HomelabARR CLI [ UPDATE CONTAINER ] DONE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+}
+####
+fastapp() {
+APP=${APP}
+  cd /opt/homelabarr/
+  compose="compose/docker-compose.yaml"
+  appfolder="/opt/homelabarr"
+  basefolder="/opt/appdata"
+  find /opt/homelabarr-cli/apps/ -type f -name '*${APP}*' -exec cp "{}" $basefolder/$compose \;
+  cd $basefolder/compose
+     docker-compose config > /dev/null
+     docker-compose pull > /dev/null
+     docker-compose up -d --force-recreate > /dev/null
+     rm -rf $basefolder/compose/docker-compo**
+  exit
 }
 
-case "${1:-}" in
-  ""|-i|--install)
-    cd "$HOMELABARR_DIR" && bash install.sh
-    ;;
-  -h|--help)
-    usage
-    ;;
-  *)
-    echo "Unknown option: $1"
-    usage
-    exit 1
-    ;;
+####
+usage() {
+clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "    🚀    HomelabARR CLI [ USAGE COMMANDS ]"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "   Commands :"
+echo ""
+echo "   homelabber -i / --install     =   open the HomelabARR CLI setup"
+echo "   homelabber -h / --help        =   help/usage"
+echo "   homelabber -u / --update      =   deployed the update container"
+echo ""
+echo "   homelabber -a / --app <{NAMEOFAPP}>  =   fast app installation"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "    🚀    HomelabARR CLI [ USAGE COMMANDS ]"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+}
+
+envmigra() {
+basefolder="/opt/appdata"
+homelabarr="/opt/homelabarr-cli"
+envmigrate="$homelabarr/apps/.subactions/envmigrate.sh"
+if [[ -f "$basefolder/compose/.env" ]];then
+   $(command -v bash) $envmigrate
+fi 
+}
+
+fastapt() {
+if ! type aria2c >/dev/null 2>&1; then
+   apt-get update -y && apt-get install --force-yes -y -qq aria2
+fi
+if ! [[ -f /etc/apt-fast.conf ]]; then
+      bash -c "$(curl -sL https://raw.githubusercontent.com/ilikenwf/apt-fast/main/quick-install.sh)"
+      echo debconf apt-fast/maxdownloads string 16 | debconf-set-selections
+      echo debconf apt-fast/dlflag boolean true | debconf-set-selections
+      echo debconf apt-fast/aptmanager string apt | debconf-set-selections
+fi
+}
+
+cleanup() {
+   find /var/log -type f -regex ".*\.gz$" -delete
+   find /var/log -type f -regex ".*\.[0-9]$" -delete
+}
+
+###
+
+DOCK=$1
+APP=$2
+
+case "$DOCK" in
+ "" ) run ;;
+ "-i" ) run ;;
+ "--install" ) run ;;
+ "-u" ) update ;;
+ "--update" ) update ;;
+ "-a" ) fastapp ;;
+ "--app" ) fastapp ;;
+ "-h" ) usage ;;
+ "--help" ) usage ;;
+
 esac
+
+#E-o-F#

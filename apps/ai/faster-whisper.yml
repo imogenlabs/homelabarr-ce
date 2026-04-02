@@ -30,7 +30,6 @@ services:
               count: all
               capabilities: [gpu]
     labels:
-      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.routers.faster-whisper-rtr.entrypoints=https"

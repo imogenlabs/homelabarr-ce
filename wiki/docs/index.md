@@ -4,9 +4,9 @@
 
 # HomelabARR CE
 
-**Simplify self-hosting with an easy-to-use dashboard for 110+ apps.**
+**Simplify self-hosting with an easy-to-use dashboard for 100+ apps.**
 
-You shouldn't need to wrestle with Docker Compose files and YAML syntax just to run Plex, Nextcloud, or Pi-hole. HomelabARR CE is a free, open-source dashboard that deploys 110+ self-hosted apps with one click — media servers, download clients, AI tools, home automation, and more.
+You shouldn't need to wrestle with Docker Compose files and YAML syntax just to run Plex, Nextcloud, or Pi-hole. HomelabARR CE is a free, open-source dashboard that deploys 100+ self-hosted apps with one click — media servers, download clients, AI tools, home automation, and more.
 
 Whether you just bought your first server or you've been running a homelab for years, HomelabARR meets you where you are. Start with the GUI, grow into the CLI and API when you're ready.
 
@@ -40,7 +40,7 @@ Open **http://YOUR-SERVER-IP:8084** and log in with `admin` / `admin` — then *
 
 ## What You Get
 
-- **110+ app templates** across 10 categories — ready to deploy in one click
+- **100+ app templates** across 10 categories — ready to deploy in one click
 - **Three deployment modes** — Local (direct ports), Traefik (reverse proxy + SSL), Traefik + Authelia (SSO/MFA)
 - **Real-time deployment** — watch container pulls and startup via Server-Sent Events
 - **Container management** — start, stop, restart, remove, and view logs from the dashboard
@@ -57,7 +57,7 @@ Open **http://YOUR-SERVER-IP:8084** and log in with `admin` / `admin` — then *
 | **Media & Entertainment** | Plex, Jellyfin, Emby, Mstream |
 | **Downloads & Automation** | qBittorrent, SABnzbd, NZBGet, Prowlarr, Jackett |
 | **Media Management** | Radarr, Sonarr, Lidarr, Bazarr, Readarr, Tautulli |
-| **Monitoring & Analytics** | Netdata, Grafana/Prometheus, Speedtest Tracker, Notifiarr |
+| **Monitoring & Analytics** | Netdata, Grafana/Prometheus, Speedtest, Notifiarr |
 | **Virtual Desktops** | Chrome, Firefox, Discord, Steam, Signal (via Kasm) |
 | **Backup & Storage** | Duplicati, Restic, Rsnapshot |
 | **System & Utilities** | Portainer, Dozzle, Uptime Kuma, Watchtower, Gluetun |

@@ -26,7 +26,6 @@ services:
       - "${APPFOLDER}/tdarr/encoders:/app/encoders"
       - "unionfs:/mnt"
     labels:
-      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "dockupdater.enable=true"

@@ -21,7 +21,6 @@ services:
       - "/mnt/handbrake/storage:/storage:ro"
       - "unionfs:/mnt"
     labels:
-      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "dockupdater.enable=true"

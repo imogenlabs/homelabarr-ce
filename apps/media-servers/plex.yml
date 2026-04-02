@@ -47,7 +47,6 @@ services:
       - "unionfs:/mnt:ro"
       - "/dev/shm:/ram_transcode:rw"
     labels:
-      - "x-gpu=true"
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "dockupdater.enable=true"

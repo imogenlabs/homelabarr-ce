@@ -56,9 +56,12 @@ jobs:
             docker:
               - '**/Dockerfile*'
               - '.dockerignore'
+              - 'preinstall/**'
               - '.github/workflows/security-audit.yml'
             scripts:
               - '**/*.sh'
+              - 'scripts/**'
+              - 'preinstall/**'
               - '.installer/**'
             compose:
               - 'apps/**/*.yml'
@@ -67,6 +70,7 @@ jobs:
               - 'docker-compose*.yaml'
               - 'traefik/**'
             security:
+              - 'scripts/security/**'
               - '.github/workflows/security-audit.yml'
 
   # Shell script security analysis

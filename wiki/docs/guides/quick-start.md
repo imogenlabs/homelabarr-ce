@@ -37,17 +37,13 @@ If both commands print a version number, you're good. If not, check the [Docker 
 
 This is the fastest way to get up and running. Copy and paste these commands one at a time.
 
-### Step 1: Clone the repos
+### Step 1: Clone the repo
 
 ```bash
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
-git clone https://github.com/smashingtags/homelabarr-templates.git /opt/homelabarr/templates
 ```
 
-The first clone gets the dashboard. The second gets the 110+ community app templates. Both are required — without the templates repo, the dashboard has nothing to show.
-
-!!! tip "Update templates anytime"
-    The templates are a separate repo. Run `cd /opt/homelabarr/templates && git pull` to get the latest community apps without touching the dashboard.
+This downloads the entire repo — including all 100+ app templates — to `/opt/homelabarr`. The `apps/` folder inside is what makes the catalog work. **Don't skip this step.**
 
 ### Step 2: Go into the folder
 
@@ -95,7 +91,7 @@ Open your web browser and go to:
 http://YOUR-SERVER-IP:8084
 ```
 
-You should see the HomelabARR dashboard with 110+ apps ready to deploy.
+You should see the HomelabARR dashboard with 100+ apps ready to deploy.
 
 ### Step 6: Log in and change your password
 
@@ -163,7 +159,7 @@ You've got HomelabARR running. Here's what to explore next:
 
 ### I see the dashboard but no apps load
 
-Make sure you cloned **both repos** in Step 1. The templates repo (`/opt/homelabarr/templates`) is what populates the catalog. If you only cloned homelabarr-ce, run: `git clone https://github.com/smashingtags/homelabarr-templates.git /opt/homelabarr/templates`
+Make sure you cloned the repo in Step 1. The app templates live in the `apps/` folder — without them, the dashboard has nothing to show.
 
 ### I get a CORS error or the API won't connect
 

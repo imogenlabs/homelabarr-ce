@@ -2,14 +2,13 @@
 # This file provides a production-ready deployment using pre-built images from GitHub Container Registry
 #
 # IMPORTANT: Before deploying, ensure you have:
-# 1. Cloned homelabarr-templates to /opt/homelabarr/templates
-# 2. Set CLI_BRIDGE_HOST_PATH to your actual homelabarr installation path
-# 3. Configured your DOCKER_GID to match your system's docker group
-# 4. Set secure authentication credentials
-# 5. Updated CORS_ORIGIN to your specific domain
+# 1. Set CLI_BRIDGE_HOST_PATH to your actual homelabarr installation path
+# 2. Configured your DOCKER_GID to match your system's docker group
+# 3. Set secure authentication credentials
+# 4. Updated CORS_ORIGIN to your specific domain
 #
 # Usage:
-#   docker compose -f homelabarr.yml up -d
+#   docker-compose -f homelabarr.yml up -d
 
 services:
   frontend:
@@ -59,9 +58,6 @@ services:
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin}
 
-      # Community templates path (points to the mounted templates repo)
-      - TEMPLATES_PATH=${TEMPLATES_PATH:-/app/templates}
-
       # Network configuration
       - BIND_ADDRESS=0.0.0.0
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8084}
@@ -77,9 +73,6 @@ services:
       #   - /home/user/homelabarr:/homelabarr:rw              # User installation
       #   - /Users/username/homelabarr:/homelabarr:rw         # macOS installation
       - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:rw
-
-      # Community app templates (cloned from homelabarr-templates repo)
-      - ${TEMPLATES_HOST_PATH:-/opt/homelabarr/templates}:/app/templates:ro
 
       # Data persistence
       - homelabarr-data:/app/data

@@ -9,7 +9,7 @@
 
 ---
 
-HomelabARR PE is a **NAS management platform** — not just an app launcher. It includes everything in CE (Docker container management, 110+ app templates) plus enterprise-grade storage management built for homelabs running mixed-size drives.
+HomelabARR PE is a **NAS management platform** — not just an app launcher. It includes everything in CE (Docker container management, 100+ app templates) plus enterprise-grade storage management built for homelabs running mixed-size drives.
 
 If CE is "deploy apps on my server," PE is "manage my homelab NAS *and* deploy apps on it."
 
@@ -20,7 +20,7 @@ If CE is "deploy apps on my server," PE is "manage my homelab NAS *and* deploy a
 | Feature | CE (Free, MIT) | PE (Paid, Proprietary) |
 |---------|:---:|:---:|
 | Docker container management | ✅ | ✅ |
-| 110+ app templates | ✅ | ✅ |
+| 100+ app templates | ✅ | ✅ |
 | Traefik/Authelia scaffolding | ✅ | ✅ |
 | Web dashboard | ✅ | ✅ enhanced |
 | **Storage management (SnapRAID + MergerFS)** | ❌ | ✅ |
@@ -68,7 +68,7 @@ graph TD
         end
 
         subgraph Services["Services"]
-            Docker["🐳 Docker SDK<br/>container management<br/>110+ app templates"]
+            Docker["🐳 Docker SDK<br/>container management<br/>100+ app templates"]
             FS["📁 File Sharing<br/>SMB + NFS<br/>(Go-native)"]
         end
 
@@ -117,7 +117,7 @@ Here's what each layer does:
     - **SnapRAID** protects your data with a parity drive — if a drive dies, you recover it
     - **MergerFS** pools all your drives into one big folder, even if they're different sizes
     - **Cache Mover** writes fast to your SSD first, then moves files to spinning drives overnight
-5. **Docker SDK** manages your containers — same 110+ app templates as CE
+5. **Docker SDK** manages your containers — same 100+ app templates as CE
 6. **File Sharing** serves SMB (Windows) and NFS (Linux/Mac) shares natively — no Samba container required
 7. At the bottom: your actual hardware — cache SSD, data drives (mixed sizes are fine), and one parity drive
 

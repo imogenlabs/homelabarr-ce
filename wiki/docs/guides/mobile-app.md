@@ -1,16 +1,16 @@
 # Mobile App
 
-HomelabARR Mobile is an optional companion app for iOS and Android. It connects to your existing CE server — same dashboard, same 110+ apps, same login — but native on your phone.
+HomelabARR Mobile is an optional companion app for iOS and Android. It connects to your existing CE server — same dashboard, same 100+ apps, same login — but native on your phone.
 
 !!! info "The mobile app is optional"
     It doesn't run any extra backend services. Your CE server keeps running exactly as it does now. The app is just a convenient way to check on things without opening a laptop.
 
 ![HomelabARR Mobile — setup screen showing octopus logo, server URL and API key fields](../img/screenshots/mobile-app-mockup.png){ width="300", align="left" }
-![HomelabARR Mobile — connected to CE server showing 110+ apps, category tabs, and Deploy buttons](../img/screenshots/mobile-connected.png){ width="300" }
+![HomelabARR Mobile — connected to CE server showing 100+ apps, category tabs, and Deploy buttons](../img/screenshots/mobile-connected.png){ width="300" }
 
 ## What It Does
 
-- **Browse and deploy** all 110+ container templates from your phone
+- **Browse and deploy** all 100+ container templates from your phone
 - **Monitor** running containers with real-time status
 - **Works everywhere** — local IP, Tailscale, Cloudflare Tunnel, any URL that reaches your CE server
 - **Secure** — your server URL and API key are stored locally on your device. Deleting the app removes them.
@@ -86,4 +86,4 @@ Don't have a CE server yet? Connect to the live demo:
 - **URL:** `https://ce-demo.homelabarr.com`
 - **Login:** `admin` / `admin`
 
-Browse all 110+ apps (deploys are disabled on the demo server).
+Browse all 100+ apps (deploys are disabled on the demo server).
