@@ -1,6 +1,0 @@
----
-
-services:
-  <APP>:
-    devices:
-      - "/dev/dri:/dev/dri"
