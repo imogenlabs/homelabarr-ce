@@ -119,7 +119,7 @@ def gen_system():
     box(ax, 0.04, 0.29, 0.26, 0.22, '', color=PURPLE)
     ax.text(0.17, 0.49, 'APP TEMPLATES', fontsize=12, fontweight='bold',
             color=TEXT, ha='center', fontfamily='monospace')
-    ax.text(0.17, 0.46, '100+ YAML files', fontsize=10,
+    ax.text(0.17, 0.46, '110+ YAML files', fontsize=10,
             color=TEXT_DIM, ha='center', fontfamily='monospace')
     cats = ['ai/', 'media-servers/', 'downloads/', 'self-hosted/',
             'monitoring/', 'virtual-desktops/', 'backup/', 'system/']
@@ -135,7 +135,7 @@ def gen_system():
     ax.text(0.84, 0.725, 'Your running apps', fontsize=10,
             color=TEXT_DIM, ha='center', fontfamily='monospace')
     apps = ['Plex', 'Radarr', 'Sonarr', 'Ollama', 'Nextcloud',
-            'Grafana', 'qBittorrent', '...100+ more']
+            'Grafana', 'qBittorrent', '...110+ more']
     for i, a in enumerate(apps):
         ax.text(0.84, 0.685 - i * 0.035, '[*] ' + a, fontsize=9,
                 color=TEXT_DIM, ha='center', fontfamily='monospace')
@@ -442,7 +442,7 @@ def gen_request():
         ('nginx', 'Strip /api -> proxy to :8092', PRIMARY, 0.64),
         ('Express', 'Route -> auth (optional)', ACCENT, 0.51),
         ('CLI Bridge', 'Return cached catalog', PURPLE, 0.38),
-        ('Response', '200 OK + JSON (100+ apps)', GREEN, 0.25),
+        ('Response', '200 OK + JSON (110+ apps)', GREEN, 0.25),
     ]
     for i, (l, d, c, y) in enumerate(rsteps):
         box(ax, 0.04, y, 0.42, 0.10, '', color=c, alpha=0.12, lw=2)

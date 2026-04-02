@@ -43,7 +43,7 @@ This is the fastest way to get up and running. Copy and paste these commands one
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
 ```
 
-This downloads the entire repo — including all 100+ app templates — to `/opt/homelabarr`. The `apps/` folder inside is what makes the catalog work. **Don't skip this step.**
+This downloads the entire repo — including all 110+ app templates — to `/opt/homelabarr`. The `apps/` folder inside is what makes the catalog work. **Don't skip this step.**
 
 ### Step 2: Go into the folder
 
@@ -91,7 +91,7 @@ Open your web browser and go to:
 http://YOUR-SERVER-IP:8084
 ```
 
-You should see the HomelabARR dashboard with 100+ apps ready to deploy.
+You should see the HomelabARR dashboard with 110+ apps ready to deploy.
 
 ### Step 6: Log in and change your password
 

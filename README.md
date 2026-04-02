@@ -59,7 +59,7 @@
 
 You know how setting up self-hosted apps usually means Googling Docker Compose files, copying YAML, editing ports, and hoping it works? HomelabARR skips all of that.
 
-It's a dashboard. You open it, you see a catalog of 100+ apps, you click **Deploy**, and the app is running. That's it.
+It's a dashboard. You open it, you see a catalog of 110+ apps, you click **Deploy**, and the app is running. That's it.
 
 Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're all in there, ready to go.
 
@@ -115,7 +115,7 @@ Want to build from source instead? Check the [full install guide](https://wiki.h
 
 ## What You Get
 
-- **100+ apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
+- **110+ apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
 - **Three ways to deploy.** Just IP:port, or with Traefik reverse proxy for SSL, or Traefik + Authelia for 2FA on top.
 - **Manage running containers.** Start, stop, restart, remove, view logs — all from the dashboard.
 - **Port Manager.** See every port in use across all your containers. Catch conflicts before they happen.

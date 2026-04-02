@@ -6,7 +6,7 @@
 
 ### What is HomelabARR CE?
 
-HomelabARR CE (Community Edition) is a free, open-source dashboard for deploying and managing Docker containers on your own server. It comes with 100+ pre-configured apps — media servers, download clients, AI tools, and more. Just click Deploy.
+HomelabARR CE (Community Edition) is a free, open-source dashboard for deploying and managing Docker containers on your own server. It comes with 110+ pre-configured apps — media servers, download clients, AI tools, and more. Just click Deploy.
 
 ### What do I need to run it?
 
@@ -26,7 +26,7 @@ Yes — that's the point. HomelabARR was built so you don't have to write Docker
 
 ### How is this different from Portainer?
 
-Portainer is a general Docker management tool — powerful, but you need to know what you want to run. HomelabARR gives you a curated catalog of 100+ homelab apps with one-click deployment. Think of it as an app store for your server. They work great together — Portainer is even in the catalog.
+Portainer is a general Docker management tool — powerful, but you need to know what you want to run. HomelabARR gives you a curated catalog of 110+ homelab apps with one-click deployment. Think of it as an app store for your server. They work great together — Portainer is even in the catalog.
 
 ### Can I use it without Docker?
 
@@ -48,7 +48,7 @@ The app templates are missing. Make sure you ran the `git clone` step:
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
 ```
 
-The 100+ app templates live in the `apps/` folder inside the repo. Without it, the catalog is empty. This is the most common setup mistake.
+The 110+ app templates live in the `apps/` folder inside the repo. Without it, the catalog is empty. This is the most common setup mistake.
 
 ### I get a CORS error or API calls fail after login
 
