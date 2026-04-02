@@ -67,7 +67,9 @@ export class CLIBridge {
     // CLI_BRIDGE_HOST_PATH env var allows override for Docker deployments
     // where the CLI repo is mounted at a different path than the app working directory
     this.cliPath = process.env.CLI_BRIDGE_HOST_PATH || process.cwd();
-    this.appsPath = path.join(this.cliPath, 'apps');
+    // TEMPLATES_PATH overrides the apps directory independently of the CLI path
+    // This enables external template repos (e.g. homelabarr-templates)
+    this.appsPath = process.env.TEMPLATES_PATH || path.join(this.cliPath, 'apps');
     this.scriptsPath = path.join(this.cliPath, 'scripts');
     this.traefik = path.join(this.cliPath, 'traefik');
 
