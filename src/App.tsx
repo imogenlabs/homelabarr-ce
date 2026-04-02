@@ -26,8 +26,9 @@ import {
   RefreshCw,
   Package,
   Search as SearchIcon,
+  Star,
 } from 'lucide-react';
-import { deployApp, getContainers, getApplicationCatalog, getDeploymentModes } from './lib/api';
+import { deployApp, getContainers, getApplicationCatalog, getDeploymentModes, getStars, starApp, unstarApp } from './lib/api';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 type TabId = string; // display category ids, 'deployed', 'all-apps'
 
 // Build category tabs from DISPLAY_CATEGORIES + special views
-const categoryTabs = [
+const baseCategoryTabs = [
   { id: 'deployed', name: 'Deployed Apps', icon: Box },
   ...DISPLAY_CATEGORIES.map(dc => ({
     id: dc.id,
@@ -99,6 +100,8 @@ export default function App() {
     appId: string;
   } | null>(null);
 
+  const [starredApps, setStarredApps] = useState<Set<string>>(new Set());
+
   const { success, error: showError, info } = useNotifications();
   const { loading: deploymentInProgress } = useLoading();
   const { isAuthenticated } = useAuth();
@@ -135,6 +138,33 @@ export default function App() {
     loadCatalog();
   }, [loadCatalog]);
 
+  // Fetch starred apps when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) { setStarredApps(new Set()); return; }
+    getStars().then(data => setStarredApps(new Set(data.stars))).catch(() => {});
+  }, [isAuthenticated]);
+
+  const handleToggleStar = useCallback(async (appId: string) => {
+    const wasStarred = starredApps.has(appId);
+    // Optimistic update
+    setStarredApps(prev => {
+      const next = new Set(prev);
+      wasStarred ? next.delete(appId) : next.add(appId);
+      return next;
+    });
+    try {
+      const data = wasStarred ? await unstarApp(appId) : await starApp(appId);
+      setStarredApps(new Set(data.stars));
+    } catch {
+      // Rollback
+      setStarredApps(prev => {
+        const next = new Set(prev);
+        wasStarred ? next.add(appId) : next.delete(appId);
+        return next;
+      });
+    }
+  }, [starredApps]);
+
   // Convert all CLI apps to AppTemplates
   const allAppTemplates = React.useMemo(() => {
     return cliApps.map(cliAppToTemplate);
@@ -145,7 +175,12 @@ export default function App() {
     let apps = allAppTemplates;
 
     // Category filter
-    if (activeCategory !== 'all-apps' && activeCategory !== 'deployed') {
+    if (activeCategory === 'starred') {
+      apps = apps.filter(app => {
+        const cliApp = (app as any)._cliApp as CLIApplication;
+        return starredApps.has(cliApp?.id || app.name);
+      });
+    } else if (activeCategory !== 'all-apps' && activeCategory !== 'deployed') {
       const displayCat = getDisplayCategory(activeCategory);
       if (displayCat) {
         apps = apps.filter(app => {
@@ -170,7 +205,17 @@ export default function App() {
     }
 
     return apps;
-  }, [allAppTemplates, activeCategory, searchQuery]);
+  }, [allAppTemplates, activeCategory, searchQuery, starredApps]);
+
+  // Build tabs dynamically — include Starred only when user has stars
+  const categoryTabs = React.useMemo(() => {
+    if (starredApps.size === 0) return baseCategoryTabs;
+    return [
+      baseCategoryTabs[0], // Deployed
+      { id: 'starred', name: 'Starred', icon: Star },
+      ...baseCategoryTabs.slice(1),
+    ];
+  }, [starredApps.size]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -611,6 +656,8 @@ export default function App() {
                 key={app.id}
                 app={app}
                 onDeploy={() => handleAppCardDeploy(app)}
+                starred={starredApps.has((app as any)._cliApp?.id || app.name)}
+                onToggleStar={handleToggleStar}
               />
             ))}
           </div>
