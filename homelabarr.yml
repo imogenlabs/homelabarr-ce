@@ -58,6 +58,9 @@ services:
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin}
 
+      # Optional: External templates path (use with templates volume mount)
+      # - TEMPLATES_PATH=/app/templates
+
       # Network configuration
       - BIND_ADDRESS=0.0.0.0
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8084}
@@ -73,6 +76,10 @@ services:
       #   - /home/user/homelabarr:/homelabarr:rw              # User installation
       #   - /Users/username/homelabarr:/homelabarr:rw         # macOS installation
       - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:rw
+
+      # Optional: External templates directory (overrides bundled apps/)
+      # Clone https://github.com/smashingtags/homelabarr-templates and mount here
+      # - ./homelabarr-templates:/app/templates:ro
 
       # Data persistence
       - homelabarr-data:/app/data
