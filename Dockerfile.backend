@@ -45,8 +45,7 @@ COPY server/ ./server/
 # Copy app templates (CLI Bridge scans these for the application catalog)
 COPY apps/ ./apps/
 
-# Copy scripts and traefik templates (used by CLI Bridge for deployment)
-COPY scripts/ ./scripts/
+# Copy traefik templates (used by CLI Bridge for deployment)
 COPY traefik/ ./traefik/
 COPY install.sh ./install.sh
 
