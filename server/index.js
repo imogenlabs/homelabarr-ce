@@ -4820,8 +4820,11 @@ try {
       }
     });
     
-    // Continue without Docker — catalog still works, container management gracefully degraded
-    logger.warn('⚠️  Network validation failed — running in catalog-only mode (no Docker)');
+    if (process.env.REQUIRE_DOCKER === 'false') {
+      logger.warn('⚠️  Network validation failed — running in catalog-only mode (REQUIRE_DOCKER=false)');
+    } else {
+      process.exit(1);
+    }
   }
 
   // Log successful validation
