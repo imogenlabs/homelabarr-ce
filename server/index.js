@@ -38,6 +38,7 @@ import { CLIBridge } from './cli-bridge.js';
 import { progressStream, StreamingCLIBridge } from './progress-stream.js';
 import { randomUUID } from 'crypto';
 import { initializeActivityLog, logActivity, getActivities } from './activity-logger.js';
+import { getUserStars, addStar, removeStar } from './stars.js';
 
 function getRequestMeta(req) {
   return {
@@ -871,6 +872,21 @@ app.delete('/auth/api-keys/:keyId', requireAuth(), (req, res) => {
   const success = revokeApiKey(req.params.keyId, req.user.id);
   if (success) res.json({ message: 'API key revoked' });
   else res.status(404).json({ error: 'API key not found' });
+});
+
+// ─── Starred Apps Routes ────────────────────────────────────────────────
+app.get('/auth/me/stars', requireAuth(), (req, res) => {
+  res.json({ stars: getUserStars(req.user.id) });
+});
+
+app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+  const stars = addStar(req.user.id, req.params.appId);
+  res.json({ stars });
+});
+
+app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+  const stars = removeStar(req.user.id, req.params.appId);
+  res.json({ stars });
 });
 
 // Activity log endpoint

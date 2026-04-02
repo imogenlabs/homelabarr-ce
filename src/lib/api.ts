@@ -266,6 +266,30 @@ export async function findAvailablePort(startPort: number = 8000, endPort: numbe
   return handleResponse(response);
 }
 
+// Starred Apps API functions
+export async function getStars(): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
+export async function starApp(appId: string): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
+export async function unstarApp(appId: string): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
 // Enhanced Mount Container API functions
 export async function getEnhancedMountStatus(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/status`, {
