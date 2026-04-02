@@ -7,7 +7,9 @@
 set -e
 
 REPO="https://github.com/smashingtags/homelabarr-ce.git"
+TEMPLATES_REPO="https://github.com/smashingtags/homelabarr-templates.git"
 INSTALL_DIR="/opt/homelabarr"
+TEMPLATES_DIR="/opt/homelabarr/templates"
 BIN_NAME="homelabarr-cli"
 
 echo ""
@@ -42,6 +44,19 @@ else
 fi
 
 cd "$INSTALL_DIR"
+
+# Clone or update community templates
+if [[ -d "$TEMPLATES_DIR" ]]; then
+  echo "📂 Updating community templates..."
+  cd "$TEMPLATES_DIR"
+  if ! git pull --ff-only 2>&1; then
+    echo "⚠️  Could not update templates. Run 'cd $TEMPLATES_DIR && git pull' manually."
+  fi
+  cd "$INSTALL_DIR"
+else
+  echo "📥 Cloning community app templates..."
+  git clone "$TEMPLATES_REPO" "$TEMPLATES_DIR"
+fi
 
 # Make all scripts executable
 echo "🔧 Setting permissions..."
