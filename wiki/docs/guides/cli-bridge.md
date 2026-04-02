@@ -1,6 +1,6 @@
 # CLI Bridge
 
-The CLI Bridge is how the dashboard knows about all 110+ apps. It reads Docker Compose files from the `apps/` folder and turns them into the browsable, deployable catalog you see in the UI.
+The CLI Bridge is how the dashboard knows about all 110+ apps. It reads Docker Compose files from the [community templates repo](https://github.com/smashingtags/homelabarr-templates) (or a bundled `apps/` fallback) and turns them into the browsable, deployable catalog you see in the UI.
 
 !!! info "Who this page is for"
     Developers who want to understand how app templates work, or anyone adding custom apps beyond simple ones in `apps/myapps/`. You don't need to read this to use HomelabARR.
@@ -15,17 +15,19 @@ The CLI Bridge is how the dashboard knows about all 110+ apps. It reads Docker C
 
 When the backend starts, it:
 
-1. Scans every subfolder in `apps/` for `.yml` files
+1. Scans every subfolder in the templates directory (set by `TEMPLATES_PATH`, defaults to `apps/`) for `.yml` files
 2. Reads each file to discover the app's name, image, ports, and labels
 3. Makes them available in the dashboard catalog via the API
 4. When you click Deploy, takes the YAML, transforms it for your chosen mode, fills in variables, and runs `docker compose up -d`
 
 ---
 
-## App Folder Structure
+## Template Folder Structure
+
+The templates live in a [separate repo](https://github.com/smashingtags/homelabarr-templates) that you clone alongside CE. Update templates independently with `cd /opt/homelabarr/templates && git pull`.
 
 ```
-apps/
+templates/
 ├── ai/                  # Ollama, ComfyUI, Stable Diffusion, LocalAI…
 ├── backup/              # Duplicati, Restic, Rsnapshot
 ├── downloads/           # qBittorrent, SABnzbd, NZBGet, Prowlarr, Jackett…

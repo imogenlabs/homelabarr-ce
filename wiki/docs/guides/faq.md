@@ -42,13 +42,14 @@ CE (Community Edition) is 100% free and open source under the MIT license. There
 
 ### The dashboard loads but no apps show up ("Failed to load applications")
 
-The app templates are missing. Make sure you ran the `git clone` step:
+The community templates are missing. Make sure you cloned **both repos**:
 
 ```bash
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/smashingtags/homelabarr-templates.git /opt/homelabarr/templates
 ```
 
-The 110+ app templates live in the `apps/` folder inside the repo. Without it, the catalog is empty. This is the most common setup mistake.
+The 110+ app templates live in the [homelabarr-templates](https://github.com/smashingtags/homelabarr-templates) repo. Without it, the catalog is empty. This is the most common setup mistake.
 
 ### I get a CORS error or API calls fail after login
 
