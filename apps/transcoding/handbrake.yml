@@ -4,13 +4,11 @@ services:
     hostname: "handbrake"
     container_name: "handbrake"
     environment:
-      - "PGID=${ID}"
-      - "USER_ID:${ID}"
-      - "GROUP_ID:${ID}"
       - "PUID=${ID}"
+      - "PGID=${ID}"
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
-    image: "docker.io/jlesage/handbrake:24.03.1"
+    image: "lscr.io/linuxserver/handbrake:latest"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}
@@ -32,7 +30,7 @@ services:
       - "traefik.http.routers.handbrake-rtr.tls.certresolver=dns-cloudflare"
       - "traefik.http.routers.handbrake-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.handbrake-rtr.service=handbrake-svc"
-      - "traefik.http.services.handbrake-svc.loadbalancer.server.port=5800"
+      - "traefik.http.services.handbrake-svc.loadbalancer.server.port=3000"
 networks:
   proxy:
     driver: bridge

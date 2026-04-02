@@ -1,30 +1,14 @@
 import {
   HelpCircle, Rocket, Layout, Shield, PlayCircle, Terminal,
   RefreshCw, Trash2, BarChart3, BookOpen,
-  ExternalLink, Zap, Server, Film, Download, HardDrive,
-  Activity, Code, Globe, FolderOpen, Monitor
+  ExternalLink
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const categories = [
-  { name: "Self-hosted", icon: Globe, count: 37, desc: "Dashboards, wikis, bookmarks, and utilities", color: "text-emerald-500 dark:text-emerald-400" },
-  { name: "Media Management", icon: Film, count: 16, desc: "Sonarr, Radarr, Bazarr, Lidarr, Overseerr", color: "text-blue-500 dark:text-blue-400" },
-  { name: "Downloads", icon: Download, count: 14, desc: "Torrent and Usenet clients", color: "text-red-500 dark:text-red-400" },
-  { name: "AI & Machine Learning", icon: Zap, count: 14, desc: "Ollama, ComfyUI, Stable Diffusion, and more", color: "text-rose-500 dark:text-rose-400" },
-  { name: "System", icon: Monitor, count: 13, desc: "Traefik, Portainer, Watchtower, and more", color: "text-gray-500 dark:text-gray-400" },
-  { name: "Virtual Desktops", icon: Layout, count: 10, desc: "Browser-based desktop environments via Kasm", color: "text-indigo-500 dark:text-indigo-400" },
-  { name: "Monitoring", icon: Activity, count: 6, desc: "Uptime Kuma, Netdata, Grafana, and alerting", color: "text-green-500 dark:text-green-400" },
-  { name: "Transcoding", icon: Code, count: 5, desc: "Tdarr, Handbrake, MakeMKV, Unmanic", color: "text-yellow-500 dark:text-yellow-400" },
-  { name: "Media Servers", icon: Server, count: 5, desc: "Plex, Jellyfin, Emby", color: "text-orange-500 dark:text-orange-400" },
-  { name: "Backup", icon: HardDrive, count: 3, desc: "Duplicati, Restic, Rsnapshot", color: "text-amber-500 dark:text-amber-400" },
-];
 
 const actions = [
   { icon: PlayCircle, label: "Start / Stop", desc: "Toggle containers on or off", color: "text-green-500" },
@@ -86,33 +70,6 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     <div>
                       <span className="text-sm font-medium">{a.label}</span>
                       <p className="text-xs text-muted-foreground">{a.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* App Categories */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-amber-500" />
-                  <h3 className="font-semibold text-base">App Categories</h3>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  123 apps
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {categories.map((cat) => (
-                  <div key={cat.name} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04]">
-                    <cat.icon className={`w-4 h-4 flex-shrink-0 ${cat.color}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{cat.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2">{cat.count}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{cat.desc}</p>
                     </div>
                   </div>
                 ))}

@@ -1,170 +1,206 @@
 # Quick Start
 
-Get HomelabARR CE running in under 5 minutes.
+Get HomelabARR CE running on your server. Pick one of the two install methods below and follow every step in order.
 
-## Prerequisites
+---
 
-- A Linux server (Ubuntu 22.04+, Debian 12+, or similar)
-- Docker 24.0+ with Docker Compose v2
-- 4 GB RAM, 2 CPU cores, 20 GB disk
+## Before You Start
+
+You need a Linux server with Docker installed. That's it.
+
+**Don't have Docker yet?** Run this on your server:
 
 ```bash
-# Verify Docker is installed
+curl -fsSL https://get.docker.com | sh
+```
+
+This is the official Docker installer script — you can [review the source](https://github.com/docker/docker-install) before running it if you prefer. It downloads and installs Docker Engine and Compose v2 on most Linux distributions.
+
+Wait for it to finish. Then add your user to the Docker group so you don't need `sudo` for everything:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+**Log out and back in** for that to take effect. Then verify it worked:
+
+```bash
 docker --version
 docker compose version
 ```
 
+If both commands print a version number, you're good. If not, check the [Docker docs](https://docs.docker.com/engine/install/).
+
+---
+
 ## Method 1: Docker Compose (Recommended)
 
-This pulls pre-built images from GitHub Container Registry. No build step needed.
+This is the fastest way to get up and running. Copy and paste these commands one at a time.
+
+### Step 1: Clone the repo
 
 ```bash
-# Download the production compose file
-curl -O https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/homelabarr.yml
+git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+```
 
-# Set required environment variables
+This downloads the entire repo — including all 100+ app templates — to `/opt/homelabarr`. The `apps/` folder inside is what makes the catalog work. **Don't skip this step.**
+
+### Step 2: Go into the folder
+
+```bash
+cd /opt/homelabarr
+```
+
+### Step 3: Set up your environment
+
+You need to set three variables before starting. Copy and paste this entire block:
+
+```bash
 export JWT_SECRET=$(openssl rand -hex 32)
 export DOCKER_GID=$(getent group docker | cut -d: -f3)
+export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+```
 
-# Optional: Set your CORS origin if accessing from a domain
-export CORS_ORIGIN=http://your-server-ip:8084
+!!! warning "Replace YOUR-SERVER-IP — both times"
+    Change `YOUR-SERVER-IP` to your actual server's IP address in the `CORS_ORIGIN` line, and again when you open the dashboard in Step 5. For example: `http://192.168.1.100:8084`
 
-# Start HomelabARR
+    Don't know your server's IP? Run `hostname -I` and use the first address shown.
+
+What these do:
+
+- **JWT_SECRET** — a random secret key that signs your login sessions. Keep it private and don't commit it to version control.
+- **DOCKER_GID** — the group ID that can talk to Docker on your server. This number varies by system.
+- **CORS_ORIGIN** — tells the backend to accept requests from your browser. Must match exactly how you access the dashboard.
+
+!!! tip "Persist with a .env file"
+    These `export` commands only last until you close your terminal. To make them permanent, create a `.env` file — see the [Configuration guide](configuration.md) for details.
+
+### Step 4: Start HomelabARR
+
+```bash
 docker compose -f homelabarr.yml up -d
 ```
 
-!!! warning "CORS_ORIGIN is important"
-    If you see API errors after login, set `CORS_ORIGIN` to the URL you use to access the dashboard. For local access: `http://your-server-ip:8084`. For domain access: `https://homelabarr.yourdomain.com`.
+Docker will download the images (this takes a minute or two the first time) and start everything up.
 
-### What gets deployed
+### Step 5: Open the dashboard
 
-| Container | Port | Purpose |
-|-----------|------|---------|
-| `homelabarr-frontend` | 8084 | Web dashboard (nginx) |
-| `homelabarr-backend` | 8092 | REST API server (Node.js) |
+Open your web browser and go to:
 
-### First login
+```
+http://YOUR-SERVER-IP:8084
+```
 
-1. Open `http://your-server-ip:8084`
-2. Click **Sign In**
-3. Username: `admin` / Password: `admin`
-4. **Change the default password** under user settings
+You should see the HomelabARR dashboard with 100+ apps ready to deploy.
+
+### Step 6: Log in and change your password
+
+Click **Sign In** in the top right corner.
+
+- **Username:** `admin`
+- **Password:** `admin`
 
 ![Login Modal](../img/screenshots/dark-login-modal.png)
 
-### Deploy your first app
+!!! danger "Change this now"
+    The default admin/admin credentials are well-known. Anyone on your network can log in until you change them. After signing in, click your username in the top right and update your password before doing anything else.
 
-1. Browse the app catalog or use the search bar
-2. Click **Deploy** on any app
+### Step 7: Deploy your first app
+
+1. Pick any app from the catalog — try **Plex**, **Jellyfin**, or **Portainer** to start
+2. Click the blue **Deploy** button on the app card
 3. Choose a deployment mode:
-    - **Standard** — direct port access (http://server:port)
-    - **Traefik** — reverse proxy with SSL (requires [Traefik setup](traefik-setup.md))
-    - **Traefik + Authelia** — reverse proxy with SSO/MFA
-4. Configure environment variables (timezone, paths, etc.)
-5. Click **Deploy** and watch the real-time progress
+    - **Standard** — the simple option. The app gets a port, you access it at `http://YOUR-SERVER-IP:PORT`. No extra setup needed. **Pick this if you're not sure.**
+    - **Traefik** — gives the app a real URL like `https://plex.yourdomain.com` with SSL. Requires a domain and Traefik. ([Setup guide](traefik-setup.md))
+    - **Traefik + Authelia** — same as Traefik but adds a login page in front of the app
+4. Click **Deploy** and watch it install in real time
 
 ![Deploy Modal](../img/screenshots/dark-deploy-modal-auth.png)
 
+Your app is running. You can find it at `http://YOUR-SERVER-IP:PORT` — the port number is shown in the app card.
+
 ---
 
-## Method 2: CLI Installation
+## Method 2: One-Line Install
 
-For users who prefer a terminal-based setup with an interactive menu:
+Prefer an interactive guided setup? The install script handles everything:
 
 ```bash
-# Download and run the installer
-sudo wget -qO /usr/local/bin/homelabarr-cli \
-  https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh
-sudo chmod +x /usr/local/bin/homelabarr-cli
-
-# Run the interactive installer
-homelabarr-cli -i
+curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
 ```
 
-The CLI installer will:
+!!! info "What this script does"
+    You can [review the script](https://github.com/smashingtags/homelabarr-ce/blob/main/install-remote.sh) before running it. It will ask you interactively for your timezone, user ID, and data paths — nothing happens without your input.
 
-1. Clone the HomelabARR CE repository
-2. Set up environment variables
-3. Configure Docker networks
-4. Present an interactive menu to deploy applications
+The script will:
 
-!!! tip "CLI vs Web Dashboard"
-    The CLI and web dashboard are complementary. The CLI installs the underlying Docker Compose templates; the web dashboard provides a GUI for the same catalog. You can use both.
+1. Check for Docker (and install it if missing)
+2. Clone the repo to `/opt/homelabarr`
+3. Walk you through setting your timezone, user ID, and data paths
+4. Configure Docker networks
+5. Start HomelabARR
+
+→ [More about the CLI](cli-installation.md)
 
 ---
 
-## Method 3: Build from Source
+## What Now?
 
-For developers who want to modify the code:
+You've got HomelabARR running. Here's what to explore next:
+
+- **Browse the dashboard** — check out all 10 categories of apps
+- **[Web Dashboard Guide](web-dashboard.md)** — learn what every button does
+- **[Configuration](configuration.md)** — customise ports, paths, and settings
+- **Want apps on a custom domain with SSL?** → [Traefik & Domain Setup](traefik-setup.md)
+
+---
+
+## Something Not Working?
+
+### I see the dashboard but no apps load
+
+Make sure you cloned the repo in Step 1. The app templates live in the `apps/` folder — without them, the dashboard has nothing to show.
+
+### I get a CORS error or the API won't connect
+
+The `CORS_ORIGIN` variable needs to match **exactly** how you access the dashboard in your browser.
 
 ```bash
-# Clone the repository
-git clone https://github.com/smashingtags/homelabarr-ce.git
-cd homelabarr-ce
-
-# Install dependencies
-cd client && npm install && cd ..
-cd server && npm install && cd ..
-
-# Start in development mode
-# Terminal 1: Backend
-cd server && npm run dev
-
-# Terminal 2: Frontend
-cd client && npm run dev
-```
-
-The frontend runs on port 5173 (Vite dev server) and proxies API requests to the backend on port 8092.
-
----
-
-## Next Steps
-
-- [Web Dashboard Guide](web-dashboard.md) — learn the full UI
-- [Configuration](configuration.md) — environment variables and settings
-- [Traefik & Domain Setup](traefik-setup.md) — access apps via custom domains with SSL
-- [API Reference](api-reference.md) — automate deployments via REST API
-
----
-
-## Troubleshooting
-
-### "CORS error" or API calls failing after login
-
-Set the `CORS_ORIGIN` environment variable to match exactly how you access the dashboard:
-
-```bash
-# Example for IP access
+# If you access it at http://192.168.1.100:8084, set:
 export CORS_ORIGIN=http://192.168.1.100:8084
-docker compose -f homelabarr.yml up -d
 
-# Example for domain access  
-export CORS_ORIGIN=https://homelabarr.yourdomain.com
+# Then restart:
 docker compose -f homelabarr.yml up -d
 ```
 
 ### Containers won't deploy — "Docker socket" error
 
-The backend needs access to the Docker socket. Ensure:
+Make sure `DOCKER_GID` is set correctly:
 
-1. `/var/run/docker.sock` is mounted in the backend container (it is by default in `homelabarr.yml`)
-2. `DOCKER_GID` matches your host's Docker group ID: `getent group docker | cut -d: -f3`
+```bash
+# Check your Docker group ID:
+getent group docker | cut -d: -f3
+
+# Then set it and restart:
+export DOCKER_GID=YOUR_NUMBER_HERE
+docker compose -f homelabarr.yml up -d
+```
 
 ### Permission denied on `/opt/appdata`
 
+Some apps store data in `/opt/appdata`. Create it with the right permissions:
+
 ```bash
 sudo mkdir -p /opt/appdata
-sudo chown -R 1000:1000 /opt/appdata
+sudo chown -R $USER:$USER /opt/appdata
 ```
 
-### Running in Proxmox LXC
+### Running in a Proxmox LXC container?
 
-If deploying inside a Proxmox LXC container, you may need to disable AppArmor:
+Docker inside LXC needs AppArmor disabled. On your **Proxmox host** (not inside the container), run:
 
 ```bash
-# On the Proxmox host, edit the LXC config:
-# /etc/pve/lxc/<VMID>.conf
-lxc.apparmor.profile: unconfined
+echo 'lxc.apparmor.profile: unconfined' >> /etc/pve/lxc/YOUR-VMID.conf
 ```
 
-Then restart the LXC container.
+Replace `YOUR-VMID` with your container's ID number (like `100` or `999`). Then restart the container from the Proxmox UI.

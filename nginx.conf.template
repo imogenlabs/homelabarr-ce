@@ -33,6 +33,9 @@ server {
         add_header Content-Type text/plain;
     }
     
+    # API proxy to backend container
+    # Strips /api/ prefix — backend routes are /applications, /auth/login, etc.
+    # BACKEND_URL_PLACEHOLDER is replaced at container start by docker-entrypoint.sh
     location /api/ {
         resolver 127.0.0.11 valid=10s ipv6=off;
         set $backend BACKEND_URL_PLACEHOLDER;

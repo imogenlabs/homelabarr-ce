@@ -225,7 +225,8 @@ export class NetworkManager {
       if (config.platform !== 'windows') {
         // Unix-like systems: check if socket file exists and is accessible
         if (!fs.existsSync(config.dockerSocket)) {
-          errors.push(`Docker socket not found at ${config.dockerSocket}. Ensure Docker is installed and running.`);
+          // Warn only — server can still serve the app catalog without Docker (catalog-only mode)
+          warnings.push(`Docker socket not found at ${config.dockerSocket}. Container management will be unavailable, but the app catalog will still work.`);
         } else {
           try {
             const stats = fs.statSync(config.dockerSocket);

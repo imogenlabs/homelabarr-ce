@@ -26,8 +26,9 @@ import {
   RefreshCw,
   Package,
   Search as SearchIcon,
+  Star,
 } from 'lucide-react';
-import { deployApp, getContainers, getApplicationCatalog, getDeploymentModes } from './lib/api';
+import { deployApp, getContainers, getApplicationCatalog, getDeploymentModes, getStars, starApp, unstarApp } from './lib/api';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 type TabId = string; // display category ids, 'deployed', 'all-apps'
 
 // Build category tabs from DISPLAY_CATEGORIES + special views
-const categoryTabs = [
+const baseCategoryTabs = [
   { id: 'deployed', name: 'Deployed Apps', icon: Box },
   ...DISPLAY_CATEGORIES.map(dc => ({
     id: dc.id,
@@ -99,6 +100,8 @@ export default function App() {
     appId: string;
   } | null>(null);
 
+  const [starredApps, setStarredApps] = useState<Set<string>>(new Set());
+
   const { success, error: showError, info } = useNotifications();
   const { loading: deploymentInProgress } = useLoading();
   const { isAuthenticated } = useAuth();
@@ -135,6 +138,35 @@ export default function App() {
     loadCatalog();
   }, [loadCatalog]);
 
+  // Fetch starred apps when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) { setStarredApps(new Set()); return; }
+    getStars().then(data => setStarredApps(new Set(data.stars))).catch(() => {});
+  }, [isAuthenticated]);
+
+  const handleToggleStar = useCallback(async (appId: string) => {
+    setStarredApps(prev => {
+      const wasStarred = prev.has(appId);
+      const next = new Set(prev);
+      wasStarred ? next.delete(appId) : next.add(appId);
+
+      // Fire API call (don't await — optimistic)
+      const apiCall = wasStarred ? unstarApp(appId) : starApp(appId);
+      apiCall
+        .then(data => setStarredApps(new Set(data.stars)))
+        .catch(() => {
+          // Rollback on failure
+          setStarredApps(rollback => {
+            const rb = new Set(rollback);
+            wasStarred ? rb.add(appId) : rb.delete(appId);
+            return rb;
+          });
+        });
+
+      return next;
+    });
+  }, []);
+
   // Convert all CLI apps to AppTemplates
   const allAppTemplates = React.useMemo(() => {
     return cliApps.map(cliAppToTemplate);
@@ -145,7 +177,12 @@ export default function App() {
     let apps = allAppTemplates;
 
     // Category filter
-    if (activeCategory !== 'all-apps' && activeCategory !== 'deployed') {
+    if (activeCategory === 'starred') {
+      apps = apps.filter(app => {
+        const cliApp = (app as any)._cliApp as CLIApplication;
+        return starredApps.has(cliApp?.id || app.name);
+      });
+    } else if (activeCategory !== 'all-apps' && activeCategory !== 'deployed') {
       const displayCat = getDisplayCategory(activeCategory);
       if (displayCat) {
         apps = apps.filter(app => {
@@ -170,7 +207,17 @@ export default function App() {
     }
 
     return apps;
-  }, [allAppTemplates, activeCategory, searchQuery]);
+  }, [allAppTemplates, activeCategory, searchQuery, starredApps]);
+
+  // Build tabs dynamically — include Starred only when user has stars
+  const categoryTabs = React.useMemo(() => {
+    if (starredApps.size === 0) return baseCategoryTabs;
+    return [
+      baseCategoryTabs[0], // Deployed
+      { id: 'starred', name: 'Starred', icon: Star },
+      ...baseCategoryTabs.slice(1),
+    ];
+  }, [starredApps.size]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -611,6 +658,8 @@ export default function App() {
                 key={app.id}
                 app={app}
                 onDeploy={() => handleAppCardDeploy(app)}
+                starred={starredApps.has((app as any)._cliApp?.id || app.name)}
+                onToggleStar={handleToggleStar}
               />
             ))}
           </div>
@@ -638,6 +687,7 @@ export default function App() {
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[hsl(222,30%,8%)]/80 backdrop-blur-xl shadow-sm dark:shadow-black/20 border-b border-gray-200/50 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
           <div className="flex items-center gap-2 md:gap-3 order-1 md:order-none">
+            <img src="/octopus.png" alt="" className="h-20 w-20 md:h-24 md:w-24 object-contain flex-shrink-0" />
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Homelab<span className="bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">ARR</span></h1>
             {/* Connection status indicator */}
             {!catalogLoading && (

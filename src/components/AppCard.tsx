@@ -1,5 +1,5 @@
 import { AppTemplate, CLIApplication } from "../types";
-import { Shield, Network, Monitor } from "lucide-react";
+import { Shield, Network, Monitor, Star } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,11 @@ import { useTheme } from '../contexts/ThemeContext';
 interface AppCardProps {
   app: AppTemplate;
   onDeploy: (app: AppTemplate) => void;
+  starred?: boolean;
+  onToggleStar?: (appId: string) => void;
 }
 
-export function AppCard({ app, onDeploy }: AppCardProps) {
+export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCardProps) {
   const { theme } = useTheme();
   const cliApp = (app as any)._cliApp as CLIApplication | undefined;
 
@@ -19,6 +21,23 @@ export function AppCard({ app, onDeploy }: AppCardProps) {
     <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/20 hover:translate-y-[-3px] flex flex-col h-full border-0 ring-1 ring-gray-200 dark:ring-white/[0.08] hover:ring-indigo-400/50 dark:hover:ring-indigo-500/40 bg-white dark:bg-[hsl(222,28%,10%)]">
       {/* Category accent stripe */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+
+      {/* Star button */}
+      {onToggleStar && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleStar(cliApp?.id || app.name); }}
+          className="absolute top-3 right-3 z-10 p-1.5 rounded-lg transition-all duration-200 hover:scale-110"
+          aria-label={starred ? 'Unstar app' : 'Star app'}
+        >
+          <Star
+            className={`w-4 h-4 transition-colors ${
+              starred
+                ? 'fill-amber-400 text-amber-400'
+                : 'text-zinc-400 hover:text-amber-400'
+            }`}
+          />
+        </button>
+      )}
 
       <CardHeader className="flex flex-row items-center gap-4 pt-5 pb-3">
         <div className="p-3 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 rounded-xl ring-1 ring-indigo-100 dark:ring-indigo-800/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-indigo-500/20">

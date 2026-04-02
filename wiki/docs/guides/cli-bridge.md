@@ -1,55 +1,59 @@
 # CLI Bridge
 
-The CLI Bridge connects the web dashboard to the Docker Compose template library. It reads YAML templates from the `apps/` directory and serves them as a browsable, deployable catalog.
+The CLI Bridge is how the dashboard knows about all 100+ apps. It reads Docker Compose files from the `apps/` folder and turns them into the browsable, deployable catalog you see in the UI.
+
+!!! info "Who this page is for"
+    Developers who want to understand how app templates work, or anyone adding custom apps beyond simple ones in `apps/myapps/`. You don't need to read this to use HomelabARR.
+
+    For day-to-day usage: the [Web Dashboard](web-dashboard.md) guide covers adding custom apps in one paragraph.
+    For the broader system: see [Architecture](architecture.md).
+    To contribute a new app template: see [Contributing](contributing.md).
 
 ---
 
 ## How It Works
 
-On startup, the backend:
+When the backend starts, it:
 
-1. Scans the `apps/` directory for YAML templates
-2. Parses each template (image, ports, environment variables, volumes, labels)
-3. Serves the catalog via the `/applications` API
-4. At deploy time: loads the template, applies user config, runs `docker compose up -d`
+1. Scans every subfolder in `apps/` for `.yml` files
+2. Reads each file to discover the app's name, image, ports, and labels
+3. Makes them available in the dashboard catalog via the API
+4. When you click Deploy, takes the YAML, transforms it for your chosen mode, fills in variables, and runs `docker compose up -d`
 
 ---
 
-## Directory Structure
+## App Folder Structure
 
 ```
 apps/
-├── ai/                    # AI & Machine Learning (Ollama, ComfyUI, etc.)
-├── backup/                # Backup & Storage (Duplicati, Restic, Rsnapshot)
-├── downloads/             # Downloads & Automation (qBittorrent, SABnzbd, etc.)
-├── legacy/                # Deprecated apps (not shown in dashboard)
-├── media-management/      # Media Management (Radarr, Sonarr, etc.)
-├── media-servers/         # Media Servers (Plex, Jellyfin, Emby)
-├── monitoring/            # Monitoring & Analytics (Netdata, Grafana, etc.)
-├── myapps/                # Your custom templates
-├── self-hosted/           # Self-hosted apps (Nextcloud, Bitwarden, etc.)
-├── system/                # System & Utilities (Portainer, Dozzle, etc.)
-├── transcoding/           # Transcoding (Tdarr, Handbrake, etc.)
-└── virtual-desktops/      # Virtual Desktops (Kasm-powered browsers, apps)
+├── ai/                  # Ollama, ComfyUI, Stable Diffusion, LocalAI…
+├── backup/              # Duplicati, Restic, Rsnapshot
+├── downloads/           # qBittorrent, SABnzbd, NZBGet, Prowlarr, Jackett…
+├── media-management/    # Radarr, Sonarr, Lidarr, Bazarr, Tautulli…
+├── media-servers/       # Plex, Jellyfin, Emby
+├── monitoring/          # Netdata, Grafana, Speedtest, Notifiarr…
+├── myapps/              # ← Your custom templates go here
+├── self-hosted/         # Nextcloud, Bitwarden, Pi-hole, Home Assistant, n8n…
+├── system/              # Portainer, Dozzle, Uptime Kuma, Watchtower…
+├── transcoding/         # Tdarr, Handbrake, MakeMKV, Unmanic
+└── virtual-desktops/    # Chrome, Firefox, Steam (Kasm-powered)
 ```
 
-Only these directories are scanned. The `legacy/` directory is excluded from the catalog. Other directories are ignored.
+The folder name maps to the category displayed in the dashboard. Add a file to any folder and it appears automatically after a backend restart.
 
 ---
 
 ## Template Format
 
-Each YAML file is a standard Docker Compose file. The CLI Bridge parses the first service to extract metadata:
+Each app is a standard Docker Compose file with `${VARIABLE}` placeholders. Here's a typical example:
 
 ```yaml
 version: "3"
 services:
   radarr:
-    image: ${RADARRIMAGE}
+    image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
-    restart: ${RESTARTAPP}
-    networks:
-      - ${DOCKERNETWORK}
+    restart: unless-stopped
     ports:
       - 7878:7878
     environment:
@@ -64,63 +68,50 @@ services:
       - traefik.http.services.radarr.loadbalancer.server.port=7878
 ```
 
-The bridge extracts:
+### Available Variables
 
-- **id**: `media-management-radarr` (category + filename)
-- **image**: value of the `image` field
-- **ports**: from the `ports` array
-- **requiresTraefik**: `true` if labels contain `traefik.enable=true`
-- **requiresAuthelia**: `true` if labels reference `authelia` or `chain-authelia`
-
----
-
-## Deployment Modes
-
-### Standard / Local Mode
-
-The bridge rewrites the template before deploying:
-
-1. Removes external networks
-2. Strips Traefik labels
-3. Removes security_opt referencing unavailable configs
-4. Sets `DOCKERNETWORK=bridge`
-
-The rewritten file is saved temporarily, deployed, then deleted.
-
-### Traefik Mode
-
-Deploys the template as-is with `DOCKERNETWORK=proxy`. Traefik labels handle routing and SSL.
-
-### Authelia Mode
-
-Same as Traefik, plus ensures Authelia middleware is active. Templates with `chain-authelia` labels get automatic SSO protection.
+| Variable | Default | What it does |
+|----------|---------|-------------|
+| `${TZ}` | `UTC` | Timezone (e.g., `America/New_York`) |
+| `${ID}` | `1000` | User/group ID for file permissions |
+| `${APPFOLDER}` | `/opt/appdata` | Where app data gets stored |
+| `${DOMAIN}` | `localhost` | Your domain for Traefik routing |
+| `${DOCKERNETWORK}` | set by mode | Docker network (injected automatically based on deploy mode) |
 
 ---
 
-## Adding Custom Templates
+## What Happens During Deployment
 
-Drop a YAML file in `apps/myapps/` and it appears in the **My Apps** category:
+The bridge transforms the template differently depending on which mode you pick:
+
+**Standard mode:**
+- Strips out all `traefik.*` labels
+- Removes any external networks
+- Sets network to bridge (direct port access)
+- Result: `http://server:PORT`
+
+**Traefik mode:**
+- Deploys the template as-is
+- Adds the `proxy` network
+- Traefik picks it up via Docker labels and starts routing
+- Result: `https://appname.yourdomain.com` with automatic SSL
+
+**Traefik + Authelia mode:**
+- Same as Traefik
+- Adds `chain-authelia` middleware to the Traefik router
+- Authelia intercepts requests and requires login before passing through
+- Result: `https://appname.yourdomain.com` with authentication gate
+
+---
+
+## Adding Your Own Apps
 
 1. Create `apps/myapps/my-app.yml`
-2. Follow standard Docker Compose format
-3. Use placeholder variables (`${APPFOLDER}`, `${TZ}`, `${ID}`, etc.)
-4. Add Traefik labels if you want reverse proxy support
-5. Restart the server or refresh the dashboard
+2. Use the template format above — standard Docker Compose with `${VARIABLE}` placeholders
+3. Refresh the dashboard — your app shows up in **My Apps**
 
 !!! tip "Test in Standard mode first"
-    Deploy your template in Standard mode before adding Traefik labels. Confirm the container runs correctly before introducing proxy complexity.
+    Get your custom app working in Standard mode before adding Traefik labels. Easier to debug one thing at a time.
 
----
-
-## CLI Bridge Host Path
-
-In Docker deployments, the bridge needs to know where the HomelabARR repo lives on the host:
-
-```yaml
-environment:
-  - CLI_BRIDGE_HOST_PATH=/opt/homelabarr
-volumes:
-  - /opt/homelabarr:/homelabarr:rw
-```
-
-This path points to the root of the cloned repository containing the `apps/` directory.
+!!! tip "Contributing an app to the catalog"
+    If your template works well and others would benefit, open a PR. See [Contributing](contributing.md) for the submission process.

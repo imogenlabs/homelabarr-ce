@@ -26,12 +26,102 @@ async function handleResponse(response: Response) {
   return response.json();
 }
 
+// Seed data shown when backend has no Docker socket (dev/staging/demo)
+const DEMO_CONTAINERS = [
+  {
+    Id: 'demo-plex-001',
+    Names: ['/plex'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 3,
+    Ports: '0.0.0.0:32400->32400/tcp',
+    stats: { cpu: '2.4%', memory: '1.2 GiB / 16 GiB', network: '↑ 45 MB ↓ 1.8 GB' }
+  },
+  {
+    Id: 'demo-sonarr-002',
+    Names: ['/sonarr'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 5,
+    Ports: '0.0.0.0:8989->8989/tcp',
+    stats: { cpu: '0.8%', memory: '380 MiB / 16 GiB', network: '↑ 12 MB ↓ 890 MB' }
+  },
+  {
+    Id: 'demo-radarr-003',
+    Names: ['/radarr'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 5,
+    Ports: '0.0.0.0:7878->7878/tcp',
+    stats: { cpu: '0.5%', memory: '290 MiB / 16 GiB', network: '↑ 8 MB ↓ 620 MB' }
+  },
+  {
+    Id: 'demo-prowlarr-004',
+    Names: ['/prowlarr'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 7,
+    Ports: '0.0.0.0:9696->9696/tcp',
+    stats: { cpu: '0.2%', memory: '180 MiB / 16 GiB', network: '↑ 5 MB ↓ 340 MB' }
+  },
+  {
+    Id: 'demo-overseerr-005',
+    Names: ['/overseerr'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 2,
+    Ports: '0.0.0.0:5055->5055/tcp',
+    stats: { cpu: '0.3%', memory: '210 MiB / 16 GiB', network: '↑ 3 MB ↓ 150 MB' }
+  },
+  {
+    Id: 'demo-tautulli-006',
+    Names: ['/tautulli'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 10,
+    Ports: '0.0.0.0:8181->8181/tcp',
+    stats: { cpu: '0.1%', memory: '120 MiB / 16 GiB', network: '↑ 2 MB ↓ 95 MB' }
+  },
+  {
+    Id: 'demo-sabnzbd-007',
+    Names: ['/sabnzbd'],
+    State: 'stopped',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 12,
+    Ports: '',
+    stats: null
+  },
+  {
+    Id: 'demo-portainer-008',
+    Names: ['/portainer'],
+    State: 'running',
+    Created: Math.floor(Date.now() / 1000) - 86400 * 14,
+    Ports: '0.0.0.0:9443->9443/tcp',
+    stats: { cpu: '0.4%', memory: '95 MiB / 16 GiB', network: '↑ 1 MB ↓ 45 MB' }
+  },
+];
+
 export async function getContainers(includeStats = false) {
   const url = includeStats ? `${API_BASE_URL}/containers?stats=true` : `${API_BASE_URL}/containers`;
-  const response = await fetch(url, {
-    headers: getAuthHeaders()
-  });
-  return handleResponse(response);
+  try {
+    const response = await fetch(url, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    // Backend returns 200 with empty containers when no Docker socket
+    // Use demo data in dev/staging so deployed apps section is previewable
+    if ((!data.containers || data.containers.length === 0) && isDemoEnvironment()) {
+      return { ...data, containers: DEMO_CONTAINERS };
+    }
+    return data;
+  } catch {
+    // Backend unreachable — return demo data in dev/staging
+    if (isDemoEnvironment()) {
+      return { containers: DEMO_CONTAINERS };
+    }
+    return { containers: [] };
+  }
+}
+
+function isDemoEnvironment(): boolean {
+  const host = window.location.hostname;
+  return host.includes('dev.') || host.includes('ce-dev.') || 
+         host.includes('staging.') || host.includes('ce-staging.') ||
+         host === 'localhost' || host === '127.0.0.1';
 }
 
 export async function getContainerStats(containerId: string) {
@@ -171,6 +261,30 @@ export async function checkUsedPorts() {
 
 export async function findAvailablePort(startPort: number = 8000, endPort: number = 9000) {
   const response = await fetch(`${API_BASE_URL}/ports/available?start=${startPort}&end=${endPort}`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
+// Starred Apps API functions
+export async function getStars(): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
+export async function starApp(appId: string): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+}
+
+export async function unstarApp(appId: string): Promise<{ stars: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
+    method: 'DELETE',
     headers: getAuthHeaders()
   });
   return handleResponse(response);

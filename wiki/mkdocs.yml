@@ -51,24 +51,48 @@ theme:
     text: Roboto
     code: Roboto Mono
   favicon: img/favicon.png
-  logo: img/homelabarr-banner.jpg
+  logo: img/homelabarr-octopus-v2b-transparent.png
+
+extra_css:
+  - stylesheets/extra.css
 
 # Plugins
 plugins:
   - search:
       lang: en
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
   - minify:
       minify_html: true
 
 # Customization
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
+
 extra:
   social:
+    - icon: fontawesome/solid/globe
+      link: https://homelabarr.com
+      name: HomelabARR
     - icon: fontawesome/brands/github
       link: https://github.com/smashingtags/homelabarr-ce
       name: GitHub
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Pc7mXX786x
       name: Discord
+    - icon: fontawesome/solid/building
+      link: https://imogenlabs.ai
+      name: Imogen Labs
+    - icon: fontawesome/solid/user
+      link: https://mjashley.com
+      name: Michael Ashley
 
 markdown_extensions:
   - admonition
@@ -81,7 +105,11 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:
@@ -93,6 +121,7 @@ nav:
   - Getting Started:
       - Quick Start: guides/quick-start.md
       - Web Dashboard: guides/web-dashboard.md
+      - Mobile App: guides/mobile-app.md
       - Configuration: guides/configuration.md
   - Guides:
       - Traefik & Domain Setup: guides/traefik-setup.md
@@ -102,9 +131,11 @@ nav:
       - Architecture: guides/architecture.md
       - CLI Bridge: guides/cli-bridge.md
       - Contributing: guides/contributing.md
-  - Professional Edition:
-      - Overview: pe/overview.md
   - Community:
+      - Migration Guide: guides/migration.md
+      - Project History: guides/history.md
       - FAQ & Troubleshooting: guides/faq.md
       - Discord: https://discord.gg/Pc7mXX786x
       - GitHub Discussions: https://github.com/smashingtags/homelabarr-ce/discussions
+  - Professional Edition:
+      - Overview: pe/overview.md

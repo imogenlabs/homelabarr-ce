@@ -1,3 +1,9 @@
+/* Octopus logo in nav bar */
+.md-header__button.md-logo img {
+  height: 2.5rem;
+  width: 2.5rem;
+}
+
 .md-typeset__table {
   min-width: 100%;
 }

@@ -60,7 +60,7 @@ test.describe('Modals & Dialogs', () => {
 
     // Should contain key sections
     await expect(dialog.locator('text=/Quick Start|Getting Started/i')).toBeVisible();
-    await expect(dialog.locator('text=/App Categories/i')).toBeVisible();
+
   });
 
   test('help modal contains Imogen Labs credit', async ({ page }) => {

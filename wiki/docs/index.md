@@ -1,28 +1,42 @@
+<p align="center">
+  <img src="img/homelabarr-octopus-v2b-transparent.png" alt="HomelabARR" width="600">
+</p>
+
 # HomelabARR CE
 
-**Free, open-source Docker container management for homelabs.**
+**Simplify self-hosting with an easy-to-use dashboard for 100+ apps.**
 
-HomelabARR CE gives you a web dashboard to browse, deploy, and manage 100+ self-hosted applications — media servers, download clients, AI tools, monitoring, and more. One Docker Compose command to install. No subscription, no lock-in.
+You shouldn't need to wrestle with Docker Compose files and YAML syntax just to run Plex, Nextcloud, or Pi-hole. HomelabARR CE is a free, open-source dashboard that deploys 100+ self-hosted apps with one click — media servers, download clients, AI tools, home automation, and more.
+
+Whether you just bought your first server or you've been running a homelab for years, HomelabARR meets you where you are. Start with the GUI, grow into the CLI and API when you're ready.
+
+!!! info "What you need to get started"
+    A Linux server with Docker installed. That's it. If you don't have Docker yet, the [Quick Start guide](guides/quick-start.md) covers it in the first step.
+
+!!! danger "Default credentials"
+    The default login is **admin / admin**. Change your password immediately after setup — the dashboard is open to anyone on your network until you do.
 
 ![Dashboard](img/screenshots/dark-dashboard.png)
 
 ## Quick Start
 
 ```bash
-# 1. Download the compose file
-curl -O https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/homelabarr.yml
+# 1. Clone the repo (includes all app templates)
+git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+cd /opt/homelabarr
 
 # 2. Set required variables
 export JWT_SECRET=$(openssl rand -hex 32)
 export DOCKER_GID=$(getent group docker | cut -d: -f3)
+export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
 
 # 3. Start HomelabARR
 docker compose -f homelabarr.yml up -d
 ```
 
-Open **http://your-server:8084** and log in with `admin` / `admin`.
+Open **http://YOUR-SERVER-IP:8084** and log in with `admin` / `admin` — then **change your password right away**.
 
-→ [Full Quick Start Guide](guides/quick-start.md)
+→ [Full Quick Start Guide](guides/quick-start.md){ .md-button .md-button--primary }
 
 ## What You Get
 
@@ -33,7 +47,8 @@ Open **http://your-server:8084** and log in with `admin` / `admin`.
 - **Port Manager** — see what ports are in use, find available ones
 - **Dark mode** — automatic or manual toggle
 - **API key authentication** — generate `hlr_` prefixed keys for programmatic access
-- **Mobile-responsive** — works on phones and tablets
+- **Mobile app** — optional iOS/Android companion for quick monitoring on the go
+- **Mobile-responsive** — works on phones and tablets without the app
 
 ## App Categories
 
@@ -60,12 +75,19 @@ Open **http://your-server:8084** and log in with `admin` / `admin`.
 | Disk | 20 GB |
 | Docker | 24.0+ with Compose v2 |
 
-!!! warning "No ARM support"
-    HomelabARR CE Docker images are built for x86_64 (amd64) only.
+!!! success "Multi-architecture support"
+    HomelabARR CE images are built for both **x86_64 (amd64)** and **ARM64 (aarch64)** — runs on Raspberry Pi 4/5, Apple Silicon, AWS Graviton, and standard x86 servers.
+
+## Built With LinuxServer.io
+
+The majority of our app catalog uses [LinuxServer.io](https://linuxserver.io) container images — the gold standard for self-hosted Docker containers. We're proud to be a sponsor. If you love what they do, [consider supporting them too](https://www.linuxserver.io/donate).
 
 ## Links
 
+- [HomelabARR](https://homelabarr.com) — Product home
 - [GitHub](https://github.com/smashingtags/homelabarr-ce)
-- [Discord](https://discord.gg/Pc7mXX786x)
-- [Demo](https://ce-demo.homelabarr.com) (login: admin/admin)
-- [Professional Edition](pe/overview.md)
+- [Discord](https://discord.gg/Pc7mXX786x) — Get help, share your setup
+- [Demo](https://ce-demo.homelabarr.com) — Try it live (login: admin/admin)
+- [Professional Edition](pe/overview.md) — For power users
+- [Imogen Labs](https://imogenlabs.ai) — Built by Imogen Labs
+- [Michael Ashley](https://mjashley.com) — Creator

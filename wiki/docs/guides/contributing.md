@@ -446,3 +446,5 @@ Your support helps us:
 **Thank you for contributing to HomelabARR CE!**
 
 *Together we're building the best self-hosted media server solution.*
+
+---

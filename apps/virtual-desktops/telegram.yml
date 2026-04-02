@@ -3,7 +3,7 @@ services:
   telegram:
     container_name: "telegram"
     hostname: "telegram"
-    image: "kasmweb/telegram:1.9.0-rolling"
+    image: "kasmweb/telegram:1.16.0"
     restart: "${RESTARTAPP}"
     environment:
       - "PGID=${ID}"

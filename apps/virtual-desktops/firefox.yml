@@ -3,7 +3,7 @@ services:
   firefox:
     container_name: "firefox"
     hostname: "firefox"
-    image: "kasmweb/firefox:1.9.0-rolling"
+    image: "kasmweb/firefox:1.16.0"
     restart: "${RESTARTAPP}"
     environment:
       - "PGID=${ID}"

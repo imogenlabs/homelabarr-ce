@@ -1,4 +1,4 @@
-# HomelabARR CLI Changelog
+# HomelabARR CE Changelog
 
 ## [v2.0.0] - September 2025
 
