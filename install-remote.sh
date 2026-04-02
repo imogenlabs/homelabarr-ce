@@ -1,7 +1,7 @@
 #!/bin/bash
 #####################################
 # HomelabARR CE — One-Line Installer
-# Usage: sudo wget -qO- https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
 #####################################
 
 set -e
@@ -18,9 +18,8 @@ echo "    🚀 HomelabARR CE — One-Line Installer"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Check root
 if [[ $EUID -ne 0 ]]; then
-  echo "⛔ This script must be run as root (use sudo)"
+  echo "⛔ Must be run as root (use sudo)"
   exit 1
 fi
 
@@ -30,61 +29,42 @@ if ! command -v git &>/dev/null; then
   apt-get update -qq && apt-get install -y -qq git >/dev/null 2>&1
 fi
 
-# Clone or update repo
-if [[ -d "$INSTALL_DIR" ]]; then
-  echo "📂 Updating existing installation at $INSTALL_DIR..."
-  cd "$INSTALL_DIR"
-  if ! git pull --ff-only 2>&1; then
-    echo "⚠️  Could not fast-forward update. You may have local changes."
-    echo "    Run 'cd $INSTALL_DIR && git stash && git pull' to resolve."
-  fi
+# Clone or update CE
+if [[ -d "$INSTALL_DIR/.git" ]]; then
+  echo "📂 Updating HomelabARR CE..."
+  git -C "$INSTALL_DIR" pull --ff-only 2>&1 || echo "⚠️  Could not update. Run: cd $INSTALL_DIR && git stash && git pull"
 else
-  echo "📥 Cloning HomelabARR CE to $INSTALL_DIR..."
+  echo "📥 Cloning HomelabARR CE..."
   git clone "$REPO" "$INSTALL_DIR"
 fi
 
-cd "$INSTALL_DIR"
-
-# Clone or update community templates
-if [[ -d "$TEMPLATES_DIR" ]]; then
+# Clone or update templates
+if [[ -d "$TEMPLATES_DIR/.git" ]]; then
   echo "📂 Updating community templates..."
-  cd "$TEMPLATES_DIR"
-  if ! git pull --ff-only 2>&1; then
-    echo "⚠️  Could not update templates. Run 'cd $TEMPLATES_DIR && git pull' manually."
-  fi
-  cd "$INSTALL_DIR"
+  git -C "$TEMPLATES_DIR" pull --ff-only 2>&1 || echo "⚠️  Could not update templates. Run: cd $TEMPLATES_DIR && git pull"
 else
   echo "📥 Cloning community app templates..."
   git clone "$TEMPLATES_REPO" "$TEMPLATES_DIR"
 fi
 
-# Make all scripts executable
-echo "🔧 Setting permissions..."
-find . -name "*.sh" -exec chmod +x {} \;
-chmod +x .installer/homelabber 2>/dev/null || true
+# Set permissions on installer scripts only
+chmod +x "$INSTALL_DIR/install.sh" \
+         "$INSTALL_DIR/traefik/install.sh" \
+         "$INSTALL_DIR/apps/install.sh" \
+         "$INSTALL_DIR/.installer/homelabber" 2>/dev/null || true
 
-# Install the CLI command system-wide
-echo "🔗 Installing $BIN_NAME command..."
-if ! cp .installer/homelabber /usr/local/bin/$BIN_NAME 2>/dev/null; then
-  if ! cp .installer/homelabber /bin/$BIN_NAME 2>/dev/null; then
-    echo "⚠️  Could not install $BIN_NAME to PATH. Run manually: cd $INSTALL_DIR && sudo ./install.sh"
-  else
-    chmod +x /bin/$BIN_NAME
-  fi
-else
-  chmod +x /usr/local/bin/$BIN_NAME
-  # Also install to /bin for compatibility
-  cp .installer/homelabber /bin/$BIN_NAME 2>/dev/null && chmod +x /bin/$BIN_NAME 2>/dev/null
-fi
+# Install CLI command
+echo "🔗 Installing $BIN_NAME..."
+install -m 755 "$INSTALL_DIR/.installer/homelabber" "/usr/local/bin/$BIN_NAME"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "    ✅ HomelabARR CE installed successfully!"
+echo "    ✅ HomelabARR CE installed!"
 echo ""
-echo "    Run the installer:  sudo homelabarr-cli -i"
-echo "    Or start directly:  cd $INSTALL_DIR && sudo ./install.sh"
+echo "    Run:      sudo homelabarr-cli -i"
+echo "    Or:       cd $INSTALL_DIR && sudo ./install.sh"
 echo ""
-echo "    Wiki: https://wiki.homelabarr.com"
-echo "    Discord: https://discord.gg/Pc7mXX786x"
+echo "    Wiki:     https://wiki.homelabarr.com"
+echo "    Discord:  https://discord.gg/Pc7mXX786x"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
