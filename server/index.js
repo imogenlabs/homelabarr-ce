@@ -3144,15 +3144,10 @@ function parseBytes(bytesString) {
 }
 
 // Middleware to conditionally require auth
-const conditionalAuth = (req, res, next) => {
-  if (!authEnabled) {
-    return next();
-  }
-  return requireAuth(req, res, next);
-};
+// conditionalAuth removed — all container routes now require authentication
 
 // Routes (protected by authentication if enabled)
-app.get('/containers', conditionalAuth, async (req, res) => {
+app.get('/containers', requireAuth(), async (req, res) => {
   try {
     // Skip dockerode service status check — we use CLI-based Docker access
     // which works even when dockerode can't connect
@@ -3364,7 +3359,7 @@ app.get('/containers/:id/stats', async (req, res) => {
 });
 
 // Container control endpoints
-app.post('/containers/:id/start', conditionalAuth, async (req, res) => {
+app.post('/containers/:id/start', requireAuth(), async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3404,7 +3399,7 @@ app.post('/containers/:id/start', conditionalAuth, async (req, res) => {
   }
 });
 
-app.post('/containers/:id/stop', conditionalAuth, async (req, res) => {
+app.post('/containers/:id/stop', requireAuth(), async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3444,7 +3439,7 @@ app.post('/containers/:id/stop', conditionalAuth, async (req, res) => {
   }
 });
 
-app.post('/containers/:id/restart', conditionalAuth, async (req, res) => {
+app.post('/containers/:id/restart', requireAuth(), async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3484,7 +3479,7 @@ app.post('/containers/:id/restart', conditionalAuth, async (req, res) => {
   }
 });
 
-app.delete('/containers/:id', conditionalAuth, async (req, res) => {
+app.delete('/containers/:id', requireAuth(), async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -4255,7 +4250,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
 });
 
 // Enhanced Mount Container API endpoints - Proxy to container's web interface
-app.get('/enhanced-mount/:containerId/status', conditionalAuth, async (req, res) => {
+app.get('/enhanced-mount/:containerId/status', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4294,7 +4289,7 @@ app.get('/enhanced-mount/:containerId/status', conditionalAuth, async (req, res)
   }
 });
 
-app.get('/enhanced-mount/:containerId/providers', conditionalAuth, async (req, res) => {
+app.get('/enhanced-mount/:containerId/providers', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4332,7 +4327,7 @@ app.get('/enhanced-mount/:containerId/providers', conditionalAuth, async (req, r
   }
 });
 
-app.get('/enhanced-mount/:containerId/costs', conditionalAuth, async (req, res) => {
+app.get('/enhanced-mount/:containerId/costs', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4370,7 +4365,7 @@ app.get('/enhanced-mount/:containerId/costs', conditionalAuth, async (req, res) 
   }
 });
 
-app.get('/enhanced-mount/:containerId/performance', conditionalAuth, async (req, res) => {
+app.get('/enhanced-mount/:containerId/performance', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4411,7 +4406,7 @@ app.get('/enhanced-mount/:containerId/performance', conditionalAuth, async (req,
 // Provider configuration endpoints
 const ALLOWED_PROVIDERS = ['local', 'google', 'dropbox', 'onedrive', 'sftp', 'webdav', 's3', 'b2', 'mega', 'box', 'ftp', 'smb', 'nfs'];
 
-app.post('/enhanced-mount/:containerId/providers/:provider/enable', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth(), async (req, res) => {
   try {
     const { containerId, provider } = req.params;
     const config = req.body;
@@ -4465,7 +4460,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/enable', conditionalA
   }
 });
 
-app.post('/enhanced-mount/:containerId/providers/:provider/disable', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth(), async (req, res) => {
   try {
     const { containerId, provider } = req.params;
 
@@ -4515,7 +4510,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/disable', conditional
 });
 
 // Rclone Authentication endpoints
-app.post('/enhanced-mount/:containerId/auth/start', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/start', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
@@ -4561,7 +4556,7 @@ app.post('/enhanced-mount/:containerId/auth/start', conditionalAuth, async (req,
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/complete', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/complete', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, auth_code } = req.body;
@@ -4607,7 +4602,7 @@ app.post('/enhanced-mount/:containerId/auth/complete', conditionalAuth, async (r
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/api-key', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, credentials } = req.body;
@@ -4654,7 +4649,7 @@ app.post('/enhanced-mount/:containerId/auth/api-key', conditionalAuth, async (re
 });
 
 // Test rclone connection
-app.post('/enhanced-mount/:containerId/auth/test', conditionalAuth, async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/test', requireAuth(), async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
