@@ -1,5 +1,5 @@
 import { AppTemplate, CLIApplication } from "../types";
-import { Shield, Network, Monitor, Star } from "lucide-react";
+import { Shield, Network, Monitor, Star, Cpu } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,12 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
             <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800/50" variant="outline">
               <Shield className="w-3 h-3 mr-1" />
               Auth
+            </Badge>
+          )}
+          {cliApp?.gpuSupport && (
+            <Badge className="bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300 border-lime-200 dark:border-lime-800/50" variant="outline">
+              <Cpu className="w-3 h-3 mr-1" />
+              GPU
             </Badge>
           )}
           {!cliApp && app.deploymentModes && app.deploymentModes.map(mode => {

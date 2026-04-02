@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { AppTemplate, ConfigField, DeploymentMode } from "../types";
-import { Settings2, ChevronDown, ChevronUp, Loader2, Home } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { AppTemplate, CLIApplication, ConfigField, DeploymentMode } from "../types";
+import { Settings2, ChevronDown, ChevronUp, Loader2, Home, Cpu } from "lucide-react";
+import { detectGpu } from "../lib/api";
 import { validateConfig, validatePortConflicts } from "../lib/validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,24 @@ export function DeployModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [validating, setValidating] = useState(false);
   const [autheliaEnabled, setAutheliaEnabled] = useState(false);
+  const [gpuEnabled, setCpuEnabled] = useState(false);
+  const [gpuType, setCpuType] = useState<'nvidia' | 'intel' | null>(null);
+  const [availableCpus, setAvailableCpus] = useState<{ nvidia: boolean; intel: boolean }>({ nvidia: false, intel: false });
+
+  const cliApp = (app as any)._cliApp as CLIApplication | undefined;
+  const hasCpu = cliApp?.gpuSupport ?? false;
+
+  useEffect(() => {
+    if (hasCpu && isOpen) {
+      detectGpu()
+        .then(data => {
+          setAvailableCpus(data.gpus);
+          if (data.gpus.nvidia) setCpuType('nvidia');
+          else if (data.gpus.intel) setCpuType('intel');
+        })
+        .catch(() => {});
+    }
+  }, [hasCpu, isOpen]);
   const [deploymentMode, setDeploymentMode] = useState<DeploymentMode>(
     deploymentModes.length > 0
       ? deploymentModes[0]
@@ -51,7 +70,12 @@ export function DeployModal({
         return;
       }
       setErrors([]);
-      onDeploy(app.id, config, deploymentMode);
+      const deployConfig = { ...config };
+      if (gpuEnabled && gpuType) {
+        deployConfig.enableCpu = 'true';
+        deployConfig.gpuType = gpuType;
+      }
+      onDeploy(app.id, deployConfig, deploymentMode);
     } finally {
       setValidating(false);
     }
@@ -150,6 +174,40 @@ export function DeployModal({
               )}
             </div>
           </div>
+
+          {/* GPU Passthrough */}
+          {hasCpu && (availableCpus.nvidia || availableCpus.intel) && (
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Cpu className="w-4 h-4" />
+                GPU Acceleration
+              </h3>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={gpuEnabled}
+                  onChange={(e) => setCpuEnabled(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 rounded"
+                />
+                <span className="text-sm">Enable GPU passthrough</span>
+              </label>
+              {gpuEnabled && availableCpus.nvidia && availableCpus.intel && (
+                <div className="mt-3 ml-7 space-y-2">
+                  <label className="flex items-center space-x-3">
+                    <input type="radio" checked={gpuType === 'nvidia'} onChange={() => setCpuType('nvidia')} className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">NVIDIA</span>
+                  </label>
+                  <label className="flex items-center space-x-3">
+                    <input type="radio" checked={gpuType === 'intel'} onChange={() => setCpuType('intel')} className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">Intel Quick Sync</span>
+                  </label>
+                </div>
+              )}
+              {gpuEnabled && !availableCpus.nvidia && !availableCpus.intel && (
+                <p className="text-xs text-amber-500 mt-2">No GPUs detected on this host.</p>
+              )}
+            </div>
+          )}
 
           {/* Basic Configuration Fields */}
           <div className="space-y-4">
