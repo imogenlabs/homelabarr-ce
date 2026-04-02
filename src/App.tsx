@@ -145,25 +145,27 @@ export default function App() {
   }, [isAuthenticated]);
 
   const handleToggleStar = useCallback(async (appId: string) => {
-    const wasStarred = starredApps.has(appId);
-    // Optimistic update
     setStarredApps(prev => {
+      const wasStarred = prev.has(appId);
       const next = new Set(prev);
       wasStarred ? next.delete(appId) : next.add(appId);
+
+      // Fire API call (don't await — optimistic)
+      const apiCall = wasStarred ? unstarApp(appId) : starApp(appId);
+      apiCall
+        .then(data => setStarredApps(new Set(data.stars)))
+        .catch(() => {
+          // Rollback on failure
+          setStarredApps(rollback => {
+            const rb = new Set(rollback);
+            wasStarred ? rb.add(appId) : rb.delete(appId);
+            return rb;
+          });
+        });
+
       return next;
     });
-    try {
-      const data = wasStarred ? await unstarApp(appId) : await starApp(appId);
-      setStarredApps(new Set(data.stars));
-    } catch {
-      // Rollback
-      setStarredApps(prev => {
-        const next = new Set(prev);
-        wasStarred ? next.add(appId) : next.delete(appId);
-        return next;
-      });
-    }
-  }, [starredApps]);
+  }, []);
 
   // Convert all CLI apps to AppTemplates
   const allAppTemplates = React.useMemo(() => {
