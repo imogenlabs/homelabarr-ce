@@ -18,7 +18,7 @@ services:
       - "F2B_DB_PURGE_AGE=1d"
     restart: unless-stopped
     volumes:
-      - "${APPFOLDER}/fail2ban:/data"
+      - "${APPFOLDER}/fail2ban:/config"
       - "/var/log:/var/log:ro"
 networks:
   proxy:

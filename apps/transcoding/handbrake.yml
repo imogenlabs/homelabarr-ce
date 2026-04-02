@@ -30,7 +30,7 @@ services:
       - "traefik.http.routers.handbrake-rtr.tls.certresolver=dns-cloudflare"
       - "traefik.http.routers.handbrake-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.handbrake-rtr.service=handbrake-svc"
-      - "traefik.http.services.handbrake-svc.loadbalancer.server.port=5800"
+      - "traefik.http.services.handbrake-svc.loadbalancer.server.port=3000"
 networks:
   proxy:
     driver: bridge
