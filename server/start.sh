@@ -51,6 +51,18 @@ fi
 # Test Docker connection (non-blocking)
 test_docker_connection || echo "⚠️  Docker connection test failed - will retry during runtime"
 
+# Ensure config directory is writable and seed files exist
+echo "📁 Checking config directory..."
+CONFIG_DIR="server/config"
+mkdir -p "$CONFIG_DIR"
+for f in users.json api-keys.json stars.json; do
+  [ ! -f "$CONFIG_DIR/$f" ] && echo '{}' > "$CONFIG_DIR/$f" && echo "  Created $CONFIG_DIR/$f"
+done
+# Fix ownership if running as homelabarr but files are root-owned (bind mount)
+if [ "$(id -u)" = "1001" ]; then
+  sudo chown -R 1001:1001 "$CONFIG_DIR" 2>/dev/null || true
+fi
+
 # Start the Node.js application
 echo "🎯 Starting Node.js application..."
 exec node server/index.js
