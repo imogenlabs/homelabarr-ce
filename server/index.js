@@ -542,12 +542,10 @@ app.get('/health', async (req, res) => {
     } else if (dockerStatus === 'connected') {
       overallStatus = 'OK';
       httpStatus = 200;
-    } else if (dockerStatus === 'degraded' || (dockerStatus === 'disconnected' && connectionState.isRetrying)) {
-      overallStatus = 'DEGRADED';
-      httpStatus = 503;
     } else {
-      overallStatus = 'ERROR';
-      httpStatus = 503;
+      // Docker unavailable but app still works (catalog, auth, community store)
+      overallStatus = 'DEGRADED';
+      httpStatus = 200;
     }
 
     const healthResponse = {
@@ -843,7 +841,7 @@ app.get('/health', async (req, res) => {
       };
     }
 
-    res.status(503).json(errorResponse);
+    res.status(200).json(errorResponse);
   }
 });
 

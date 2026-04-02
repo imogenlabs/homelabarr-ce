@@ -185,9 +185,11 @@ export class EnvironmentManager {
    * @private
    */
   static #getServiceUrls() {
+    const bindAddress = process.env.BIND_ADDRESS || '0.0.0.0';
+    const port = process.env.PORT || '8092';
     return {
-      frontend: process.env.FRONTEND_URL || 'http://localhost:5173',
-      backend: process.env.BACKEND_URL || 'http://localhost:3001',
+      frontend: process.env.FRONTEND_URL || 'http://frontend:5173',
+      backend: process.env.BACKEND_URL || `http://${bindAddress}:${port}`,
       docker: process.env.DOCKER_HOST || 'unix:///var/run/docker.sock'
     };
   }
