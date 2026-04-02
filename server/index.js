@@ -876,17 +876,29 @@ app.delete('/auth/api-keys/:keyId', requireAuth(), (req, res) => {
 
 // ─── Starred Apps Routes ────────────────────────────────────────────────
 app.get('/auth/me/stars', requireAuth(), (req, res) => {
-  res.json({ stars: getUserStars(req.user.id) });
+  try {
+    res.json({ stars: getUserStars(req.user.id) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load stars' });
+  }
 });
 
 app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
-  const stars = addStar(req.user.id, req.params.appId);
-  res.json({ stars });
+  try {
+    const stars = addStar(req.user.id, req.params.appId);
+    res.json({ stars });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to star app' });
+  }
 });
 
 app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
-  const stars = removeStar(req.user.id, req.params.appId);
-  res.json({ stars });
+  try {
+    const stars = removeStar(req.user.id, req.params.appId);
+    res.json({ stars });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to unstar app' });
+  }
 });
 
 // Activity log endpoint
