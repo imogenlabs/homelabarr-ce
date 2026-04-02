@@ -199,7 +199,7 @@ export function DeployModal({
                   </label>
                   <label className="flex items-center space-x-3">
                     <input type="radio" checked={gpuType === 'intel'} onChange={() => setCpuType('intel')} className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm">Intel Quick Sync</span>
+                    <span className="text-sm">Integrated GPU (Intel / AMD)</span>
                   </label>
                 </div>
               )}
