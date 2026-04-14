@@ -53,28 +53,13 @@ HomelabARR CE is the GUI that actually shipped:
 - **Comprehensive documentation** — full wiki with migration guides for every major platform (Saltbox, Cloudbox, PGBlitz, Dockserver).
 - **One-line install** — `sudo wget -qO- https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash`
 
-CE is free, open source, and MIT licensed. It's the community edition — designed to be the easiest way to get a media server running.
-
-## HomelabARR PE (Professional Edition)
-
-Tired of building on other people's foundations, Michael rewrote everything from scratch in **Go**. HomelabARR PE is a completely independent codebase — not a fork, not based on anyone else's work.
-
-PE is a single binary that embeds:
-
-- A native Go backend with 50+ REST API endpoints
-- A React 19 dashboard with shadcn/ui components
-- SnapRAID + MergerFS storage management for mixed drive sizes
-- Native Go file sharing (SMB/NFS without Docker overhead)
-- 137+ Docker Compose app templates
-- Real-time WebSocket monitoring
-
-PE is the commercial product. CE is the free funnel. Both are built and maintained by one person from a server rack in Georgia.
+CE is free, open source, and MIT licensed. It's the community edition — designed to be the easiest way to get a media server running. Built and maintained by one person from a server rack in Georgia.
 
 ## The Thread That Connects Everything
 
 Every project in this lineage stores app data in `/opt/appdata/`. Every one uses Docker containers. Every one manages the same apps — Plex, Sonarr, Radarr, Jellyfin, qBittorrent.
 
-The difference is how you interact with them. PlexGuide and PGBlitz used Ansible. Dockserver used Docker Compose with no GUI. Saltbox still uses Ansible. HomelabARR CE gives you a web browser or an interactive terminal menu. HomelabARR PE gives you a single binary.
+The difference is how you interact with them. PlexGuide and PGBlitz used Ansible. Dockserver used Docker Compose with no GUI. Saltbox still uses Ansible. HomelabARR CE gives you a web browser or an interactive terminal menu.
 
 The community split because of people. The technology evolved because of need. HomelabARR exists because someone who was there from the beginning decided to build the tool that should have existed all along.
 
@@ -86,5 +71,5 @@ The community split because of people. The technology evolved because of need. H
 - [CE Demo](https://ce-demo.homelabarr.com)
 - [HomelabARR Website](https://homelabarr.com)
 - [Discord](https://discord.gg/Pc7mXX786x)
-- [Michael Ashley](https://mjashley.com)
+- [Developer](https://mjashley.com)
 - [Imogen Labs](https://imogenlabs.ai)

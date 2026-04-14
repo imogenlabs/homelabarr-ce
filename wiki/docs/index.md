@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/homelabarr-octopus-v2b-transparent.png" alt="HomelabARR" width="600">
+  <img src="img/octopus-v3b-600.webp" srcset="img/octopus-v3b-600.webp 1x, img/octopus-v3b-1200.webp 2x" alt="HomelabARR" width="600">
 </p>
 
 # HomelabARR CE
@@ -88,6 +88,5 @@ The majority of our app catalog uses [LinuxServer.io](https://linuxserver.io) co
 - [GitHub](https://github.com/smashingtags/homelabarr-ce)
 - [Discord](https://discord.gg/Pc7mXX786x) — Get help, share your setup
 - [Demo](https://ce-demo.homelabarr.com) — Try it live (login: admin/admin)
-- [Professional Edition](pe/overview.md) — For power users
 - [Imogen Labs](https://imogenlabs.ai) — Built by Imogen Labs
-- [Michael Ashley](https://mjashley.com) — Creator
+- [Developer](https://mjashley.com)
