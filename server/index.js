@@ -2976,22 +2976,24 @@ logger.info('🐳 Initializing Docker connection manager');
 logger.info('🔧 Enabling Docker functionality for container deployment');
   
   // Create CLI-based Docker manager for Windows compatibility
+  const cliDocker = new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
   dockerManager = {
+    docker: cliDocker,
     config: {
       platform: networkConfig.platform,
-      cliPath: 'docker', // Use docker CLI directly
+      cliPath: 'docker',
     },
-    getConnectionState: () => ({ 
-      isConnected: true, 
+    getConnectionState: () => ({
+      isConnected: true,
       lastSuccessfulConnection: new Date(),
       platform: 'windows-cli'
     }),
-    getServiceStatus: () => ({ 
-      status: 'available', 
+    getServiceStatus: () => ({
+      status: 'available',
       message: 'Docker CLI integration active'
     }),
     executeWithRetry: async (operation, description) => {
-      return operation();
+      return operation(cliDocker);
     },
     createErrorResponse: (operation, error, includeDetails = true) => ({
       success: false,
