@@ -33,7 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Tab type encompasses display categories + special views
 type TabId = string; // display category ids, 'deployed', 'all-apps'
@@ -850,6 +850,9 @@ export default function App() {
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Enhanced Mount Dashboard</DialogTitle>
+              <DialogDescription className="sr-only">
+                Manage mount points, volumes, and bind mounts for the selected container.
+              </DialogDescription>
             </DialogHeader>
             {selectedEnhancedMount && (
               <EnhancedMountManager
