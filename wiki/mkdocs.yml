@@ -50,7 +50,6 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: img/favicon.png
   logo: img/mascot-80.webp
 
 extra_css:
