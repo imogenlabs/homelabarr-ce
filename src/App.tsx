@@ -687,7 +687,7 @@ export default function App() {
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[hsl(222,30%,8%)]/80 backdrop-blur-xl shadow-sm dark:shadow-black/20 border-b border-gray-200/50 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
           <div className="flex items-center gap-2 md:gap-3 order-1 md:order-none">
-            <img src="/octopus.png" alt="" className="h-20 w-20 md:h-24 md:w-24 object-contain flex-shrink-0" />
+            <img src="/mascot.webp" srcSet="/mascot.webp 1x, /mascot-2x.webp 2x" alt="" className="h-20 w-20 md:h-24 md:w-24 object-contain flex-shrink-0" />
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Homelab<span className="bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">ARR</span></h1>
             {/* Connection status indicator */}
             {!catalogLoading && (
