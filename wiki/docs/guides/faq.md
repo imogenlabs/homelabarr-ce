@@ -34,7 +34,7 @@ No. HomelabARR runs as Docker containers and deploys Docker containers. Docker i
 
 ### Is it free?
 
-CE (Community Edition) is 100% free and open source under the MIT license. There's also a [Professional Edition](../pe/overview.md) with NAS management features — that one's paid.
+CE (Community Edition) is 100% free and open source under the MIT license. There's also a paid [HomelabARR Mobile](https://homelabarr.com/#editions) app for managing your CE instance from your phone.
 
 ---
 

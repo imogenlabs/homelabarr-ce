@@ -51,7 +51,7 @@ theme:
     text: Roboto
     code: Roboto Mono
   favicon: img/favicon.png
-  logo: img/homelabarr-octopus-v2b-transparent.png
+  logo: img/octopus-v3b-80.webp
 
 extra_css:
   - stylesheets/extra.css
@@ -92,7 +92,7 @@ extra:
       name: Imogen Labs
     - icon: fontawesome/solid/user
       link: https://mjashley.com
-      name: Michael Ashley
+      name: Developer
 
 markdown_extensions:
   - admonition
@@ -137,5 +137,3 @@ nav:
       - FAQ & Troubleshooting: guides/faq.md
       - Discord: https://discord.gg/Pc7mXX786x
       - GitHub Discussions: https://github.com/smashingtags/homelabarr-ce/discussions
-  - Professional Edition:
-      - Overview: pe/overview.md
