@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-04-14 09:37 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-04-14 12:40 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 360
+**Total brand references found:** 359
 
 ---
 
@@ -184,7 +184,7 @@
 
 ## Root documentation
 
-**59 references**
+**58 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -206,7 +206,6 @@
 | `CONTRIBUTING.md` | 63 | `- **Ko-fi**: [ko-fi.com/homelabarr](https://ko-fi.com/homelabarr)` |
 | `CONTRIBUTING.md` | 64 | `- **Discussions**: [GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)` |
 | `README.md` | 4 | `    <a href="https://github.com/smashingtags/homelabarr-ce">` |
-| `README.md` | 5 | `      <img src="wiki/docs/img/homelabarr-octopus-v2b.jpg" alt="HomelabARR CE" width="300">` |
 | `README.md` | 12 | `    <a href="https://github.com/smashingtags/homelabarr-ce/releases/latest">` |
 | `README.md` | 13 | `        <img src="https://img.shields.io/github/v/release/smashingtags/homelabarr-ce?label=Release&logo=github" alt="Rel` |
 | `README.md` | 15 | `    <a href="https://github.com/smashingtags/homelabarr-ce/blob/main/LICENSE">` |
