@@ -32,7 +32,7 @@ export function getAppIconPath(appName: string, _theme: 'light' | 'dark'): strin
   }
 
   // Always use light icons — they pop better on both backgrounds
-  return `/icons/apps/light/${normalized}.png?v=2`;
+  return `/icons/apps/light/${normalized}.webp?v=2`;
 }
 
 /**
