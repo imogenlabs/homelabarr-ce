@@ -33,7 +33,16 @@ export function loadUsers() {
       return [];
     }
     const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Guard against malformed state (e.g. users.json saved as {} instead of []).
+    // Without this, every downstream call (users.find, users.length) breaks and
+    // the default-admin seeder never runs because `users.length === 0` is false
+    // for non-arrays.
+    if (!Array.isArray(parsed)) {
+      console.warn(`users.json is not an array (got ${typeof parsed}) — ignoring and returning []. File will be rewritten on next save.`);
+      return [];
+    }
+    return parsed;
   } catch (error) {
     console.error('Error loading users:', error);
     return [];

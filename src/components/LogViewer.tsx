@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getContainerLogs } from "../lib/api";
 import { Terminal } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface LogViewerProps {
@@ -46,6 +46,9 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
             <Terminal className="w-5 h-5" />
             Container Logs
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Real-time log output for the selected container.
+          </DialogDescription>
           <label className="flex items-center text-gray-300 text-sm">
             <input
               type="checkbox"

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </div>
           </div>
           <DialogTitle className="text-center text-2xl">Sign In to HomelabARR</DialogTitle>
+          <DialogDescription className="sr-only">
+            Enter your username and password to sign in to the HomelabARR dashboard.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
