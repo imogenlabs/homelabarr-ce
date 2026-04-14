@@ -252,16 +252,6 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 ---
 
-## Want More? Check Out the Pro Edition
-
-CE handles Docker containers. **PE** (Professional Edition) adds storage management — SnapRAID + MergerFS + cache mover + file sharing + system monitoring.
-
-If you've got a bunch of mismatched hard drives and want to turn them into a storage pool without RAID, that's what PE is for.
-
-[See pricing →](https://homelabarr.com#pricing)
-
----
-
 ## Links
 
 | | |
@@ -272,7 +262,7 @@ If you've got a bunch of mismatched hard drives and want to turn them into a sto
 | 💬 **Discord** | [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) |
 | 📣 **Reddit** | [r/homelabarr](https://www.reddit.com/r/homelabarr/) |
 | 🏢 **Company** | [imogenlabs.ai](https://imogenlabs.ai) |
-| 👤 **Author** | [mjashley.com](https://mjashley.com) |
+| 👤 **Developer** | [mjashley.com](https://mjashley.com) |
 
 ---
 
