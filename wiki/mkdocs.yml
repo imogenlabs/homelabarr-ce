@@ -51,7 +51,7 @@ theme:
     text: Roboto
     code: Roboto Mono
   favicon: img/favicon.png
-  logo: img/octopus-v3b-80.webp
+  logo: img/mascot-80.webp
 
 extra_css:
   - stylesheets/extra.css
