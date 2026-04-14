@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-04-14 07:08 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-04-14 08:15 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 363
+**Total brand references found:** 360
 
 ---
 
@@ -184,7 +184,7 @@
 
 ## Root documentation
 
-**60 references**
+**59 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -195,10 +195,10 @@
 | `CHANGELOG.md` | 12 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
 | `CHANGELOG.md` | 13 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
 | `CHANGELOG.md` | 16 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
-| `CONTRIBUTING.md` | 7 | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitHub` |
-| `CONTRIBUTING.md` | 17 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run \|` |
-| `CONTRIBUTING.md` | 18 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr.c` |
-| `CONTRIBUTING.md` | 19 | `\| 'dev' \| Active development — proposed changes \| [ce-dev.homelabarr.com](https://ce-dev.homelabarr.com) \| May break` |
+| `CONTRIBUTING.md` | 7 | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitH` |
+| `CONTRIBUTING.md` | 17 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run ` |
+| `CONTRIBUTING.md` | 18 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
+| `CONTRIBUTING.md` | 19 | `\| 'dev' \| Active development — proposed changes \| [ce-dev.homelabarr.com](https://ce-dev.homelabarr.com) \| May bre` |
 | `CONTRIBUTING.md` | 55 | `- Open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues)` |
 | `CONTRIBUTING.md` | 56 | `- Or drop it in [#help](https://discord.gg/Pc7mXX786x) on Discord` |
 | `CONTRIBUTING.md` | 61 | `- **Discord**: [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x)` |
@@ -226,32 +226,31 @@
 | `README.md` | 88 | `git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr` |
 | `README.md` | 89 | `cd /opt/homelabarr` |
 | `README.md` | 97 | `docker compose -f homelabarr.yml up -d` |
-| `README.md` | 104 | `> 💾 **For a permanent setup**, move those exports into a '.env' file in the same directory as 'homelabarr.yml' instead o` |
-| `README.md` | 106 | `> 📁 **Cloned somewhere other than '/opt/homelabarr'?** Set 'CLI_BRIDGE_HOST_PATH' in your '.env' to match your clone pat` |
-| `README.md` | 110 | `> ⚠️ **Running in a Proxmox LXC?** You might need to add 'lxc.apparmor.profile: unconfined' to the container config. See` |
+| `README.md` | 104 | `> 💾 **For a permanent setup**, move those exports into a '.env' file in the same directory as 'homelabarr.yml' instea` |
+| `README.md` | 106 | `> 📁 **Cloned somewhere other than '/opt/homelabarr'?** Set 'CLI_BRIDGE_HOST_PATH' in your '.env' to match your clone ` |
+| `README.md` | 110 | `> ⚠️ **Running in a Proxmox LXC?** You might need to add 'lxc.apparmor.profile: unconfined' to the container config.` |
 | `README.md` | 112 | `Want to build from source instead? Check the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
 | `README.md` | 165 | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
 | `README.md` | 179 | `All the config options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
 | `README.md` | 186 | `homelabarr-ce/` |
 | `README.md` | 196 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
 | `README.md` | 199 | `├── homelabarr.yml    # The Docker Compose file you run` |
-| `README.md` | 224 | `\| [CodeQL](https://github.com/smashingtags/homelabarr-ce/security/code-scanning) \| The actual code — injection bugs, X` |
+| `README.md` | 224 | `\| [CodeQL](https://github.com/smashingtags/homelabarr-ce/security/code-scanning) \| The actual code — injection bugs,` |
 | `README.md` | 225 | `\| [Snyk](https://snyk.io/test/github/smashingtags/homelabarr-ce) \| Every npm package and Docker base image for known v` |
 | `README.md` | 226 | `\| [Dependabot](https://github.com/smashingtags/homelabarr-ce/security/dependabot) \| Outdated packages that have securi` |
 | `README.md` | 227 | `\| [Docker Scout](https://hub.docker.com/r/smashingtags/homelabarr-frontend) \| The finished container images, plus supp` |
 | `README.md` | 247 | `User accounts, API keys, and sessions are stored in '/app/server/config/' inside the backend container. The 'homelabarr-` |
-| `README.md` | 261 | `[See pricing →](https://homelabarr.com#pricing)` |
-| `README.md` | 269 | `\| 🌐 **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 270 | `\| 📖 **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 271 | `\| 🎮 **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 272 | `\| 💬 **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 273 | `\| 📣 **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 283 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
+| `README.md` | 259 | `\| 🌐 **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
+| `README.md` | 260 | `\| 📖 **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
+| `README.md` | 261 | `\| 🎮 **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
+| `README.md` | 262 | `\| 💬 **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
+| `README.md` | 263 | `\| 📣 **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
+| `README.md` | 273 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 9 | `\| Latest release \| Yes — see [Releases](https://github.com/smashingtags/homelabarr-ce/releases/latest) \|` |
 
 ## Wiki content
 
-**79 references**
+**78 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -264,7 +263,7 @@
 | `wiki/docs/guides/cli-installation.md` | 46 | `cd /opt/homelabarr` |
 | `wiki/docs/guides/cli-installation.md` | 52 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/configuration.md` | 56 | `\| 'CLI_BRIDGE_HOST_PATH' \| '/opt/homelabarr' \| Path to the repo with app templates (must contain 'apps/') \|` |
-| `wiki/docs/guides/configuration.md` | 62 | `Instead of typing 'export' commands every time — which only last until you close your terminal — save your settings in a` |
+| `wiki/docs/guides/configuration.md` | 62 | `Instead of typing 'export' commands every time — which only last until you close your terminal — save your settings ` |
 | `wiki/docs/guides/configuration.md` | 91 | `docker compose -f homelabarr.yml --env-file .env up -d` |
 | `wiki/docs/guides/configuration.md` | 113 | `- 'homelabarr-data' — app data and logs` |
 | `wiki/docs/guides/configuration.md` | 114 | `- 'homelabarr-config' — user accounts, API keys, and sessions ('/app/server/config/')` |
@@ -274,7 +273,7 @@
 | `wiki/docs/guides/contributing.md` | 53 | `cd homelabarr-ce` |
 | `wiki/docs/guides/contributing.md` | 56 | `git remote add upstream https://github.com/smashingtags/homelabarr-ce.git` |
 | `wiki/docs/guides/contributing.md` | 387 | `- **Discord**: [HomelabARR Community](https://discord.gg/Pc7mXX786x)` |
-| `wiki/docs/guides/contributing.md` | 436 | `**☕ [Support on Ko-fi](https://ko-fi.com/homelabarr)** - Help fund development time, infrastructure costs, and project m` |
+| `wiki/docs/guides/contributing.md` | 436 | `**☕ [Support on Ko-fi](https://ko-fi.com/homelabarr)** - Help fund development time, infrastructure costs, and project` |
 | `wiki/docs/guides/faq.md` | 37 | `CE (Community Edition) is 100% free and open source under the MIT license. There's also a paid [HomelabARR Mobile](https` |
 | `wiki/docs/guides/faq.md` | 48 | `git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr` |
 | `wiki/docs/guides/faq.md` | 59 | `docker compose -f homelabarr.yml up -d` |
@@ -301,7 +300,7 @@
 | `wiki/docs/guides/mobile-app.md` | 80 | `- **Source:** [github.com/smashingtags/homelabarr-mobile](https://github.com/smashingtags/homelabarr-mobile)` |
 | `wiki/docs/guides/mobile-app.md` | 86 | `- **URL:** 'https://ce-demo.homelabarr.com'` |
 | `wiki/docs/guides/quick-start.md` | 43 | `git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr` |
-| `wiki/docs/guides/quick-start.md` | 46 | `This downloads the entire repo — including all 100+ app templates — to '/opt/homelabarr'. The 'apps/' folder inside is w` |
+| `wiki/docs/guides/quick-start.md` | 46 | `This downloads the entire repo — including all 100+ app templates — to '/opt/homelabarr'. The 'apps/' folder inside ` |
 | `wiki/docs/guides/quick-start.md` | 51 | `cd /opt/homelabarr` |
 | `wiki/docs/guides/quick-start.md` | 81 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/quick-start.md` | 129 | `curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh \| sudo bash` |
@@ -329,15 +328,14 @@
 | `wiki/mkdocs.yml` | 4 | `site_url: "https://wiki.homelabarr.com"` |
 | `wiki/mkdocs.yml` | 10 | `repo_url: https://github.com/smashingtags/homelabarr-ce` |
 | `wiki/mkdocs.yml` | 11 | `edit_uri: https://github.com/smashingtags/homelabarr-ce/edit/main/wiki/docs/` |
-| `wiki/mkdocs.yml` | 82 | `      link: https://homelabarr.com` |
-| `wiki/mkdocs.yml` | 85 | `      link: https://github.com/smashingtags/homelabarr-ce` |
-| `wiki/mkdocs.yml` | 88 | `      link: https://discord.gg/Pc7mXX786x` |
-| `wiki/mkdocs.yml` | 138 | `      - Discord: https://discord.gg/Pc7mXX786x` |
-| `wiki/mkdocs.yml` | 139 | `      - GitHub Discussions: https://github.com/smashingtags/homelabarr-ce/discussions` |
+| `wiki/mkdocs.yml` | 81 | `      link: https://homelabarr.com` |
+| `wiki/mkdocs.yml` | 84 | `      link: https://github.com/smashingtags/homelabarr-ce` |
+| `wiki/mkdocs.yml` | 87 | `      link: https://discord.gg/Pc7mXX786x` |
+| `wiki/mkdocs.yml` | 90 | `      link: https://github.com/smashingtags/homelabarr-ce/discussions` |
 
 ## Other
 
-**94 references**
+**93 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -413,7 +411,6 @@
 | `apps/monitoring/prometheus.yml` | 127 | `  - job_name: 'homelabarr-exporters'` |
 | `apps/monitoring/promtail-config.yml` | 21 | `          host: homelabarr-cli` |
 | `apps/monitoring/provisioning/dashboards/dashboard.yml` | 4 | `  - name: 'homelabarr-dashboards'` |
-| `Binary file apps/monitoring/scripts/__pycache__/auto-dashboard-generator.cpython-38.pyc matches` | Binary file apps/monitoring/scripts/__pycache__/auto-dashboard-generator.cpython-38.pyc matches | `Binary file apps/monitoring/scripts/__pycache__/auto-dashboard-generator.cpython-38.pyc matches` |
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 106 | `            "tags": ["homelabarr", "auto-generated", app_type, name],` |
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 112 | `            "uid": f"homelabarr-{name}",` |
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 428 | `        homelabarr_containers = [` |
