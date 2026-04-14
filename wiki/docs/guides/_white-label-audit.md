@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-04-14 12:40 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-04-14 13:01 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -17,9 +17,9 @@
 | File | Line | Match |
 | ---- | ---- | ----- |
 | `src/App.tsx` | 522 | `              const isEnhancedMount = app.name.includes('homelabarr-mount-enhanced') \|\|` |
-| `src/App.tsx` | 877 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
-| `src/App.tsx` | 878 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
-| `src/App.tsx` | 879 | `            <a href="https://github.com/smashingtags/homelabarr-ce" target="_blank" rel="noopener noreferrer" className=` |
+| `src/App.tsx` | 880 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
+| `src/App.tsx` | 881 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
+| `src/App.tsx` | 882 | `            <a href="https://github.com/smashingtags/homelabarr-ce" target="_blank" rel="noopener noreferrer" className=` |
 | `src/components/DeploymentProgressModal.tsx` | 135 | `      const token = localStorage.getItem('homelabarr_token');` |
 | `src/components/EnhancedMountOnboarding.tsx` | 36 | `      helpUrl: 'https://docs.homelabarr.com/installation/traefik'` |
 | `src/components/EnhancedMountOnboarding.tsx` | 44 | `      helpUrl: 'https://docs.homelabarr.com/installation/authelia'` |
