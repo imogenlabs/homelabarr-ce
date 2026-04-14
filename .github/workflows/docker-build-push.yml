@@ -20,6 +20,9 @@ env:
   FRONTEND_IMAGE_NAME: homelabarr-frontend
   BACKEND_IMAGE_NAME: homelabarr-backend
 
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
