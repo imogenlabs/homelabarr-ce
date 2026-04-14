@@ -86,6 +86,9 @@ extra:
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Pc7mXX786x
       name: Discord
+    - icon: fontawesome/solid/comments
+      link: https://github.com/smashingtags/homelabarr-ce/discussions
+      name: GitHub Discussions
     - icon: fontawesome/solid/building
       link: https://imogenlabs.ai
       name: Imogen Labs
@@ -130,10 +133,7 @@ nav:
       - Architecture: guides/architecture.md
       - CLI Bridge: guides/cli-bridge.md
       - Contributing: guides/contributing.md
-  - Community:
-      - Migration Guide: guides/migration.md
-      - Project History: guides/history.md
-      - White-Label & Forking: guides/white-label.md
-      - FAQ & Troubleshooting: guides/faq.md
-      - Discord: https://discord.gg/Pc7mXX786x
-      - GitHub Discussions: https://github.com/smashingtags/homelabarr-ce/discussions
+  - Migration Guide: guides/migration.md
+  - Project History: guides/history.md
+  - White-Label & Forking: guides/white-label.md
+  - FAQ & Troubleshooting: guides/faq.md
