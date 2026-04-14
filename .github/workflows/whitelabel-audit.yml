@@ -1,0 +1,37 @@
+name: Regenerate white-label audit
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    # Skip if the last commit was itself an audit regeneration,
+    # so we don't loop forever.
+    if: "!contains(github.event.head_commit.message, 'regenerate white-label audit')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need full history so the commit lands on main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run audit generator
+        run: bash scripts/generate-whitelabel-audit.sh
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- wiki/docs/guides/_white-label-audit.md; then
+            echo "No changes to audit — skipping commit."
+            exit 0
+          fi
+          git add wiki/docs/guides/_white-label-audit.md
+          git commit -m "chore: regenerate white-label audit [skip ci]"
+          git push
