@@ -288,12 +288,25 @@ export class CLIBridge {
   async deployWithTraefik(appPath, config) {
     // Ensure Traefik is installed and running
     await this.ensureTraefikRunning();
-    
-    // Deploy using docker-compose with Traefik network
-    return await this.executeDockerCompose(appPath, 'up -d', {
-      ...config,
-      DOCKERNETWORK: 'proxy'
-    });
+
+    // Parse compose so we can inject docker.sock GID for any service that needs it
+    const content = fs.readFileSync(appPath, 'utf8');
+    const doc = yaml.parse(content);
+    this.injectDockerGid(doc);
+
+    const tmpDir = path.join(process.cwd(), 'server', 'data');
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-traefik.yml`);
+    fs.writeFileSync(tmpPath, yaml.stringify(doc));
+
+    try {
+      return await this.executeDockerCompose(tmpPath, 'up -d', {
+        ...config,
+        DOCKERNETWORK: 'proxy'
+      });
+    } finally {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    }
   }
 
   /**
@@ -330,7 +343,11 @@ export class CLIBridge {
       }
     }
 
-    const tmpPath = appPath.replace('.yml', '-local.yml');
+    this.injectDockerGid(doc);
+
+    const tmpDir = path.join(process.cwd(), 'server', 'data');
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-local.yml`);
     fs.writeFileSync(tmpPath, yaml.stringify(doc));
 
     DeploymentLogger.logNetworkActivity('Local mode: rewrote compose file', {
@@ -357,11 +374,25 @@ export class CLIBridge {
     // Ensure both Traefik and Authelia are running
     await this.ensureTraefikRunning();
     await this.ensureAutheliaRunning();
-    
-    return await this.executeDockerCompose(appPath, 'up -d', {
-      ...config,
-      DOCKERNETWORK: 'proxy'
-    });
+
+    // Parse compose so we can inject docker.sock GID for any service that needs it
+    const content = fs.readFileSync(appPath, 'utf8');
+    const doc = yaml.parse(content);
+    this.injectDockerGid(doc);
+
+    const tmpDir = path.join(process.cwd(), 'server', 'data');
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-authelia.yml`);
+    fs.writeFileSync(tmpPath, yaml.stringify(doc));
+
+    try {
+      return await this.executeDockerCompose(tmpPath, 'up -d', {
+        ...config,
+        DOCKERNETWORK: 'proxy'
+      });
+    } finally {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    }
   }
 
   /**
@@ -406,6 +437,29 @@ export class CLIBridge {
         reject(error);
       });
     });
+  }
+
+  /**
+   * Inject the host docker group ID into any service that mounts docker.sock,
+   * so the container has permission to read/write the socket.
+   */
+  injectDockerGid(doc) {
+    if (!doc.services) return doc;
+    const gid = process.env.DOCKER_GID || '999';
+    for (const svcName of Object.keys(doc.services)) {
+      const svc = doc.services[svcName];
+      const volumes = svc.volumes || [];
+      const mountsSocket = volumes.some(v =>
+        typeof v === 'string' && v.includes('docker.sock')
+      );
+      if (mountsSocket) {
+        if (!svc.group_add) svc.group_add = [];
+        if (!svc.group_add.includes(gid)) {
+          svc.group_add.push(gid);
+        }
+      }
+    }
+    return doc;
   }
 
   /**

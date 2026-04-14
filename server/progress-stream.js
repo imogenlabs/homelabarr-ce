@@ -37,8 +37,9 @@ export class ProgressStreamManager extends EventEmitter {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
 
-    // Send initial connection event
+    // Send initial connection event with the server-assigned clientId
     this.sendToClient(clientId, 'connected', {
+      clientId,
       message: 'Connected to deployment progress stream',
       timestamp: new Date().toISOString()
     });
