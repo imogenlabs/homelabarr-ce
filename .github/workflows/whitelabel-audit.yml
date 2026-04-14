@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   regenerate:
@@ -15,23 +16,27 @@ jobs:
     # so we don't loop forever.
     if: "!contains(github.event.head_commit.message, 'regenerate white-label audit')"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          # Need full history so the commit lands on main
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run audit generator
         run: bash scripts/generate-whitelabel-audit.sh
 
-      - name: Commit if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- wiki/docs/guides/_white-label-audit.md; then
-            echo "No changes to audit — skipping commit."
-            exit 0
-          fi
-          git add wiki/docs/guides/_white-label-audit.md
-          git commit -m "chore: regenerate white-label audit [skip ci]"
-          git push
+      - name: Open PR if changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: regenerate white-label audit"
+          title: "chore: regenerate white-label audit"
+          body: |
+            Auto-generated update to `wiki/docs/guides/_white-label-audit.md` triggered by
+            recent changes to brand references in the codebase.
+
+            Produced by `.github/workflows/whitelabel-audit.yml` — merge to keep the
+            [White-Label & Forking guide](../wiki/docs/guides/white-label.md) current.
+
+            If this PR is stale (the audit has changed again since it was opened), it will
+            be superseded by a new one on the next main push.
+          branch: chore/regenerate-whitelabel-audit
+          delete-branch: true
+          add-paths: wiki/docs/guides/_white-label-audit.md
