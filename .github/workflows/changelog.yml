@@ -2,6 +2,10 @@ name: Generate changelog
 on:
   release:
     types: [ created ]
+
+permissions:
+  contents: read
+
 jobs:
   changelog-wiki:
     runs-on: ubuntu-latest
