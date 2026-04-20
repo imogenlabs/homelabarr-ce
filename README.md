@@ -30,8 +30,8 @@
     <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql">
         <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL">
     </a>
-    <a href="https://snyk.io/test/github/smashingtags/homelabarr-ce">
-        <img src="https://snyk.io/test/github/smashingtags/homelabarr-ce/badge.svg" alt="Snyk">
+    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml">
+        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml/badge.svg" alt="Docker Build">
     </a>
 </p>
 
