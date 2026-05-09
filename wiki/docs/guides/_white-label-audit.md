@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-04-14 13:01 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-04-23 17:59 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 359
+**Total brand references found:** 360
 
 ---
 
@@ -184,7 +184,7 @@
 
 ## Root documentation
 
-**58 references**
+**59 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -199,12 +199,12 @@
 | `CONTRIBUTING.md` | 17 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run ` |
 | `CONTRIBUTING.md` | 18 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
 | `CONTRIBUTING.md` | 19 | `\| 'dev' \| Active development — proposed changes \| [ce-dev.homelabarr.com](https://ce-dev.homelabarr.com) \| May bre` |
-| `CONTRIBUTING.md` | 55 | `- Open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues)` |
-| `CONTRIBUTING.md` | 56 | `- Or drop it in [#help](https://discord.gg/Pc7mXX786x) on Discord` |
-| `CONTRIBUTING.md` | 61 | `- **Discord**: [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x)` |
-| `CONTRIBUTING.md` | 62 | `- **Reddit**: [r/homelabarr](https://reddit.com/r/homelabarr)` |
-| `CONTRIBUTING.md` | 63 | `- **Ko-fi**: [ko-fi.com/homelabarr](https://ko-fi.com/homelabarr)` |
-| `CONTRIBUTING.md` | 64 | `- **Discussions**: [GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)` |
+| `CONTRIBUTING.md` | 57 | `- Open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues)` |
+| `CONTRIBUTING.md` | 58 | `- Or drop it in [#help](https://discord.gg/Pc7mXX786x) on Discord` |
+| `CONTRIBUTING.md` | 63 | `- **Discord**: [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x)` |
+| `CONTRIBUTING.md` | 64 | `- **Reddit**: [r/homelabarr](https://reddit.com/r/homelabarr)` |
+| `CONTRIBUTING.md` | 65 | `- **Ko-fi**: [ko-fi.com/homelabarr](https://ko-fi.com/homelabarr)` |
+| `CONTRIBUTING.md` | 66 | `- **Discussions**: [GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)` |
 | `README.md` | 4 | `    <a href="https://github.com/smashingtags/homelabarr-ce">` |
 | `README.md` | 12 | `    <a href="https://github.com/smashingtags/homelabarr-ce/releases/latest">` |
 | `README.md` | 13 | `        <img src="https://img.shields.io/github/v/release/smashingtags/homelabarr-ce?label=Release&logo=github" alt="Rel` |
@@ -215,8 +215,8 @@
 | `README.md` | 25 | `        <img src="https://img.shields.io/badge/Reddit-r/homelabarr-FF4500?logo=reddit&logoColor=white" alt="Reddit">` |
 | `README.md` | 30 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql">` |
 | `README.md` | 31 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql/badge.svg"` |
-| `README.md` | 33 | `    <a href="https://snyk.io/test/github/smashingtags/homelabarr-ce">` |
-| `README.md` | 34 | `        <img src="https://snyk.io/test/github/smashingtags/homelabarr-ce/badge.svg" alt="Snyk">` |
+| `README.md` | 33 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml">` |
+| `README.md` | 34 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml/badge.svg" alt="Docke` |
 | `README.md` | 39 | `    <a href="https://ce-demo.homelabarr.com">` |
 | `README.md` | 42 | `    <a href="https://homelabarr.com">` |
 | `README.md` | 43 | `        <img src="https://img.shields.io/badge/Website-homelabarr.com-FF8C1A?logo=firefox&logoColor=white" alt="HomelabA` |
@@ -246,6 +246,7 @@
 | `README.md` | 263 | `\| 📣 **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
 | `README.md` | 273 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 9 | `\| Latest release \| Yes — see [Releases](https://github.com/smashingtags/homelabarr-ce/releases/latest) \|` |
+| `SECURITY.md` | 19 | `- **Preferred:** [GitHub Security Advisory](https://github.com/smashingtags/homelabarr-ce/security/advisories/new) (priv` |
 
 ## Wiki content
 
