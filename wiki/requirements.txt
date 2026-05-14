@@ -8,12 +8,13 @@ mkdocs-macros-plugin
 mkdocs-awesome-pages-plugin
 mkdocs-git-revision-date-localized-plugin
 markdown>=3.8.1
-pygments
+pygments>=2.20.0
+pymdown-extensions>=10.16.1
 mkdocs-render-swagger-plugin
 mkdocs-mermaid2-plugin
 lightgallery
-wheel>=0.38.0
-setuptools>=65.5.1
+wheel>=0.46.2
+setuptools>=70.0.0
 urllib3>=1.26.19
 requests>=2.32.2
 zipp>=3.19.1
