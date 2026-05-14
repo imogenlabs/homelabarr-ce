@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-05-09 07:09 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-05-14 20:08 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 360
+**Total brand references found:** 356
 
 ---
 
@@ -65,14 +65,10 @@
 
 ## Docker (`Dockerfile*`, `homelabarr.yml`)
 
-**41 references**
+**37 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
-| `Dockerfile` | 21 | `RUN addgroup -g 1001 -S homelabarr &&     adduser -S homelabarr -u 1001 -G homelabarr` |
-| `Dockerfile` | 31 | `RUN mkdir -p /var/cache/nginx/client_temp              /var/cache/nginx/proxy_temp              /var/cache/nginx/fastcgi` |
-| `Dockerfile` | 33 | `USER homelabarr` |
-| `Dockerfile` | 46 | `LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"` |
 | `Dockerfile.backend` | 33 | `# Create homelabarr user with sudo access` |
 | `Dockerfile.backend` | 34 | `RUN addgroup -g 1001 homelabarr && \` |
 | `Dockerfile.backend` | 35 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr && \` |
