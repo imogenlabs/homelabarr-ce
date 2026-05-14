@@ -14,7 +14,7 @@ mkdocs-render-swagger-plugin
 mkdocs-mermaid2-plugin
 lightgallery
 wheel>=0.46.2
-setuptools>=70.0.0
-urllib3>=1.26.19
+setuptools>=78.1.1
+urllib3>=2.5.0
 requests>=2.32.2
 zipp>=3.19.1
