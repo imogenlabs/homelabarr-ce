@@ -34,7 +34,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cors": "^2.8.5",
-    "dockerode": "^4.0.2",
+    "dockerode": "^4.0.11",
     "express": "^4.18.3",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
