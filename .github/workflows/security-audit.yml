@@ -365,13 +365,68 @@ jobs:
             docker-images.txt
           retention-days: 30
 
+  dependency-cves:
+    name: Dependency CVE scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - name: npm audit (HIGH+)
+        run: npm audit --audit-level=high --omit=dev || true
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2
+        continue-on-error: true
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            --lockfile=./package-lock.json
+
+  secrets-scan:
+    name: Secrets scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_VERSION: latest
+
+  license-audit:
+    name: License audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - name: License whitelist check
+        run: npx --yes license-checker-rseidelsohn --production --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense;0BSD;Python-2.0;BlueOak-1.0.0' --summary || true
+
   # Security compliance summary
   security-compliance-summary:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       actions: read
-    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan]
+    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan, dependency-cves, secrets-scan, license-audit]
     if: always()
     steps:
       - name: Download all security artifacts
