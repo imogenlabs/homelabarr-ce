@@ -21,6 +21,7 @@ import {
   loadUsers,
   saveUsers,
   findUserById,
+  findUserByUsername,
   authenticate,
   loadSessions,
   saveSessions,
@@ -29,8 +30,18 @@ import {
   changePassword,
   createApiKey,
   listApiKeys,
-  revokeApiKey
+  revokeApiKey,
+  createLoginTicket,
+  consumeLoginTicket,
+  saveResetToken,
+  getResetTokenForUser,
+  clearResetToken
 } from './auth.js';
+import { createSession, isJtiActive, rotateRefresh, revokeSession, revokeAllForUser, listForUser, getSessionByJti } from './sessions.js';
+import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
+import transporter from './email.js';
+import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
 import { EnvironmentManager } from './environment-manager.js';
 import { NetworkManager } from './network-manager.js';
 import { DeploymentLogger } from './deployment-logger.js';
@@ -169,12 +180,15 @@ app.use(globalRateLimit);
 
 // M-R2-9: CSRF double-submit cookie validation for state-changing requests
 app.use((req, res, next) => {
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && req.path !== '/auth/login' && req.path !== '/csp-report') {
+  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/csp-report'];
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !csrfExempt.includes(req.path)) {
     const cookieTok = req.cookies?.hl_csrf;
     const hdrTok = req.headers['x-csrf-token'];
     if (cookieTok && hdrTok) {
       try {
-        if (!crypto.timingSafeEqual(Buffer.from(String(cookieTok)), Buffer.from(String(hdrTok)))) {
+        const a = Buffer.from(String(cookieTok));
+        const b = Buffer.from(String(hdrTok));
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
           return res.status(403).json({ error: 'CSRF validation failed' });
         }
       } catch {
@@ -248,39 +262,43 @@ app.post('/auth/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: result.error });
     }
 
-    // Update session with request info
-    const sessions = loadSessions();
-    const session = sessions.find(s => s.id === result.sessionId);
-    if (session) {
-      session.userAgent = req.headers['user-agent'] || '';
-      session.ipAddress = req.ip || req.connection.remoteAddress || '';
-      saveSessions(sessions);
+    // R3: Check if user has MFA enabled — if so, return a ticket instead of cookies
+    const mfa = getMfaForUser(result.user.id);
+    if (mfa?.secret) {
+      const ticket = createLoginTicket(result.user.id);
+      return res.json({ success: true, mfa_required: true, ticket });
     }
 
+    // No MFA — issue session + refresh cookies
+    const { password: _, ...safeUser } = result.user;
     logger.info(`User ${result.user.username} logged in from ${req.ip}`);
 
-    // C-R2-1: Set httpOnly session cookie (not readable by JS)
     res.cookie('hl_session', result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 8 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000,
     });
-    // M-R2-9: Set CSRF token cookie (readable by JS for double-submit)
+    if (result.refresh && result.jti) {
+      res.cookie('hl_refresh', result.refresh + '.' + result.jti, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 14 * 24 * 60 * 60 * 1000,
+      });
+    }
     const csrfToken = crypto.randomBytes(32).toString('hex');
     res.cookie('hl_csrf', csrfToken, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 8 * 60 * 60 * 1000,
+      maxAge: 14 * 24 * 60 * 60 * 1000,
     });
 
-    res.json({
-      success: true,
-      user: result.user
-    });
+    res.json({ success: true, user: safeUser });
 
     logActivity({
       userId: result.user.id,
@@ -312,7 +330,11 @@ app.post('/auth/logout', requireAuth, (req, res) => {
 
     // Clear auth cookies
     res.clearCookie('hl_session', { path: '/' });
+    res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
     res.clearCookie('hl_csrf', { path: '/' });
+
+    // R3: Revoke the session by jti
+    if (req.user?.jti) revokeSession(req.user.jti);
 
     logger.info(`User ${req.user.username} logged out`);
     res.json({ success: true });
@@ -367,6 +389,9 @@ app.post('/auth/change-password', requireAuth, async (req, res) => {
       return res.status(400).json({ error: result.error });
     }
 
+    // R3: Revoke all other sessions after password change
+    revokeAllForUser(req.user.sub || req.user.id, req.user.jti);
+
     logger.info(`User ${req.user.username} changed password`);
     res.json({ success: true });
 
@@ -385,32 +410,204 @@ app.post('/auth/change-password', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/auth/sessions', requireAuth, (req, res) => {
-  const sessions = getUserSessions(req.user.id);
-  const sanitizedSessions = sessions.map(session => ({
-    id: session.id,
-    createdAt: session.createdAt,
-    lastActivity: session.lastActivity,
-    userAgent: session.userAgent,
-    ipAddress: session.ipAddress
-  }));
+// R3: MFA second-step login
+app.post('/auth/login/mfa', loginLimiter, async (req, res) => {
+  try {
+    const { ticket, code, backup_code } = req.body;
+    if (!ticket) return res.status(400).json({ error: 'Ticket required' });
+    const userId = consumeLoginTicket(ticket);
+    if (!userId) return res.status(401).json({ error: 'Invalid or expired ticket' });
+    const mfa = getMfaForUser(userId);
+    if (!mfa?.secret) return res.status(400).json({ error: 'MFA not enabled' });
 
-  res.json(sanitizedSessions);
+    let ok = false;
+    if (code) {
+      ok = verifyTotp(mfa.secret, code);
+    } else if (backup_code) {
+      const idx = await verifyBackupCode(backup_code, mfa.backupHashes);
+      if (idx >= 0) {
+        mfa.backupHashes[idx] = null;
+        saveMfaForUser(userId, mfa);
+        ok = true;
+      }
+    }
+    if (!ok) return res.status(401).json({ error: 'Invalid MFA code' });
+
+    const user = findUserById(userId);
+    if (!user) return res.status(401).json({ error: 'User not found' });
+    const { jti, refresh } = createSession({ userId, userAgent: req.headers['user-agent'], ip: req.ip });
+    const token = generateToken(user, jti);
+    const { password: pw, ...safeUser } = user;
+
+    res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+    res.cookie('hl_refresh', refresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    sendError(res, 500, 'MFA login failed', error);
+  }
 });
 
-app.delete('/auth/sessions/:sessionId', requireAuth, (req, res) => {
-  const { sessionId } = req.params;
-  const sessions = getUserSessions(req.user.id);
-  const session = sessions.find(s => s.id === sessionId);
+// R3: Token refresh via rotate-on-use refresh cookie
+app.post('/auth/refresh', (req, res) => {
+  try {
+    const raw = req.cookies?.hl_refresh;
+    if (!raw) return res.status(401).json({ error: 'No refresh token' });
+    const dotIdx = raw.lastIndexOf('.');
+    if (dotIdx === -1) return res.status(400).json({ error: 'Bad refresh format' });
+    const presented = raw.substring(0, dotIdx);
+    const jti = raw.substring(dotIdx + 1);
 
-  if (!session) {
-    return res.status(404).json({ error: 'Session not found' });
+    const newRefresh = rotateRefresh(jti, presented, req.headers['user-agent'], req.ip);
+    if (!newRefresh) {
+      res.clearCookie('hl_session', { path: '/' });
+      res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
+      return res.status(401).json({ error: 'Refresh invalid or reused' });
+    }
+
+    const session = getSessionByJti(jti);
+    if (!session) return res.status(401).json({ error: 'Session not found' });
+    const user = findUserById(session.user_id);
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    const token = generateToken(user, jti);
+    res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+    res.cookie('hl_refresh', newRefresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ success: true });
+  } catch (error) {
+    sendError(res, 500, 'Token refresh failed', error);
   }
+});
 
-  invalidateSession(sessionId);
-  logger.info(`User ${req.user.username} invalidated session ${sessionId}`);
+// R3: List active sessions for current user
+app.get('/auth/sessions', requireAuth, (req, res) => {
+  const userId = req.user.sub || req.user.id;
+  const rows = listForUser(userId);
+  res.json({
+    current_jti: req.user.jti,
+    sessions: rows.map(r => ({
+      jti: r.jti, user_agent: r.user_agent, ip: r.ip,
+      created_at: r.created_at, last_seen_at: r.last_seen_at,
+      expires_at: r.expires_at, revoked: !!r.revoked_at,
+      is_current: r.jti === req.user.jti,
+    })),
+  });
+});
 
+// R3: Revoke a single session
+app.delete('/auth/sessions/:jti', requireAuth, (req, res) => {
+  const userId = req.user.sub || req.user.id;
+  const session = getSessionByJti(req.params.jti);
+  if (!session || session.user_id !== userId) return res.status(404).json({ error: 'Not found' });
+  if (req.params.jti === req.user.jti) {
+    res.clearCookie('hl_session', { path: '/' });
+    res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
+  }
+  revokeSession(req.params.jti);
   res.json({ success: true });
+});
+
+// R3: Revoke all sessions except current
+app.post('/auth/sessions/revoke-all', requireAuth, (req, res) => {
+  const userId = req.user.sub || req.user.id;
+  revokeAllForUser(userId, req.user.jti);
+  res.json({ success: true });
+});
+
+// R3: MFA setup — generate TOTP secret + QR code
+app.post('/auth/mfa/setup', requireAuth, async (req, res) => {
+  try {
+    const totp = newTotp(req.user.username);
+    setPendingMfa(req.user.sub || req.user.id, { secret: totp.secret.base32, exp: Date.now() + 5 * 60 * 1000 });
+    const uri = totp.toString();
+    const qr = await QRCode.toDataURL(uri);
+    res.json({ uri, qr });
+  } catch (error) {
+    sendError(res, 500, 'MFA setup failed', error);
+  }
+});
+
+// R3: MFA verify — confirm TOTP code and enable MFA
+app.post('/auth/mfa/verify', requireAuth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const userId = req.user.sub || req.user.id;
+    const pending = getPendingMfa(userId);
+    if (!pending) return res.status(400).json({ error: 'No pending MFA setup' });
+    if (!verifyTotp(pending.secret, code)) return res.status(400).json({ error: 'Invalid code' });
+    const backup = makeBackupCodes(10);
+    const backupHashes = await hashBackupCodes(backup);
+    saveMfaForUser(userId, { secret: pending.secret, backupHashes, enabledAt: Date.now() });
+    clearPendingMfa(userId);
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ enabled: true, backup_codes: backup });
+  } catch (error) {
+    sendError(res, 500, 'MFA verification failed', error);
+  }
+});
+
+// R3: MFA disable — requires password confirmation
+app.post('/auth/mfa/disable', requireAuth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.sub || req.user.id;
+    const user = findUserById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Invalid password' });
+    disableMfaForUser(userId);
+    res.json({ disabled: true });
+  } catch (error) {
+    sendError(res, 500, 'MFA disable failed', error);
+  }
+});
+
+// R3: Forgot password — send reset email
+app.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), async (req, res) => {
+  const { username } = req.body || {};
+  const user = username ? findUserByUsername(username) : null;
+  if (user?.email) {
+    const raw = crypto.randomBytes(32).toString('base64url');
+    const hash = crypto.createHash('sha256').update(raw).digest('hex');
+    saveResetToken(user.id, hash, Date.now() + 30 * 60 * 1000);
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
+    const url = `${baseUrl}/reset-password?u=${encodeURIComponent(user.id)}&t=${raw}`;
+    transporter.sendMail({
+      from: process.env.SMTP_FROM || 'homelabarr@localhost',
+      to: user.email,
+      subject: 'HomelabARR — password reset',
+      text: `Reset link (valid 30 minutes): ${url}\nIf you did not request this, ignore this email.`,
+    }).catch(err => logger.error('reset_email_failed', { err: err.message }));
+  }
+  res.status(204).end();
+});
+
+// R3: Reset password — consume reset token and update password
+app.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), async (req, res) => {
+  try {
+    const { user_id, token, new_password } = req.body || {};
+    if (!user_id || !token || !new_password) return res.status(400).json({ error: 'Missing fields' });
+    if (typeof new_password !== 'string' || new_password.length < 12) return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    const stored = getResetTokenForUser(user_id);
+    if (!stored || stored.exp < Date.now()) return res.status(400).json({ error: 'Invalid or expired token' });
+    const presentedHash = crypto.createHash('sha256').update(token).digest('hex');
+    const a = Buffer.from(stored.hash, 'hex');
+    const b = Buffer.from(presentedHash, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(400).json({ error: 'Invalid or expired token' });
+    const passwordHash = await bcrypt.hash(new_password, 12);
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === user_id);
+    if (idx === -1) return res.status(400).json({ error: 'User not found' });
+    users[idx].password = passwordHash;
+    saveUsers(users);
+    clearResetToken(user_id);
+    revokeAllForUser(user_id);
+    res.json({ success: true });
+  } catch (error) {
+    sendError(res, 500, 'Password reset failed', error);
+  }
 });
 
 // Admin-only user management routes
@@ -510,7 +707,6 @@ app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const bcrypt = await import('bcryptjs');
     users[userIndex].password = await bcrypt.hash(newPassword, 12);
     saveUsers(users);
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../lib/api';
 
 export interface User {
   id: string;
@@ -11,7 +12,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<{ mfa_required?: boolean; ticket?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -28,28 +29,13 @@ export function useAuth() {
   return context;
 }
 
-function getCsrfToken(): string {
-  return document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
-}
-
-async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
-  const headers: Record<string, string> = {
-    'X-Requested-With': 'XMLHttpRequest',
-    ...(opts.headers as Record<string, string> || {}),
-  };
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes((opts.method || 'GET').toUpperCase())) {
-    headers['X-CSRF-Token'] = getCsrfToken();
-  }
-  return fetch(url, { ...opts, headers, credentials: 'same-origin' });
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/auth/me');
+      const res = await apiFetch('/auth/me');
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
@@ -67,8 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    const handler = () => setUser(null);
+    window.addEventListener('hl-session-dead', handler);
+    return () => window.removeEventListener('hl-session-dead', handler);
+  }, []);
+
   const login = async (username: string, password: string) => {
-    const res = await apiFetch('/api/auth/login', {
+    const res = await apiFetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -80,13 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const data = await res.json();
+    if (data.mfa_required) {
+      return { mfa_required: true, ticket: data.ticket as string };
+    }
     setUser(data.user);
+    return {};
   };
 
   const logout = async () => {
     try {
-      await apiFetch('/api/auth/logout', { method: 'POST' });
-    } catch {}
+      await apiFetch('/auth/logout', { method: 'POST' });
+    } catch { /* ignore */ }
     setUser(null);
   };
 
