@@ -1,7 +1,8 @@
 import rateLimit from 'express-rate-limit';
+import { db } from './db.js';
 
 export class SqliteStore {
-  constructor(db, windowMs) {
+  constructor(windowMs) {
     this.db = db;
     this.windowMs = windowMs;
     db.exec(`
@@ -30,20 +31,20 @@ export class SqliteStore {
   async resetKey(key) { this.db.prepare('DELETE FROM rate_buckets WHERE key=?').run(key); }
 }
 
-export function createLoginLimiter(db) {
+export function createLoginLimiter() {
   return rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => 'login:' + req.ip,
-    store: new SqliteStore(db, 15 * 60 * 1000),
+    store: new SqliteStore(15 * 60 * 1000),
     skipSuccessfulRequests: true,
     handler: (_req, res) => res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' }),
   });
 }
 
-export function createLockoutGuard(db) {
+export function createLockoutGuard() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS account_lockouts (
       username TEXT PRIMARY KEY, fail_count INTEGER NOT NULL DEFAULT 0, locked_until INTEGER

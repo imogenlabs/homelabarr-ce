@@ -55,7 +55,6 @@ import { initAudit, audit, verifyChain, getRecentAuditEvents } from './audit.js'
 import { maybeAlert } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
 import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
-import Database from 'better-sqlite3';
 
 function getRequestMeta(req) {
   return {
@@ -152,9 +151,7 @@ const corsOptions = EnvironmentManager.getCorsOptions();
 
 const app = express();
 
-const auditDb = new Database(path.join(process.env.DATA_DIR || path.join(process.cwd(), 'data'), 'sessions.db'));
-auditDb.pragma('journal_mode = WAL');
-initAudit(auditDb);
+initAudit();
 
 const chain = verifyChain();
 if (!chain.ok) {
@@ -165,7 +162,7 @@ if (!chain.ok) {
   audit({ event: 'audit.chain.verified', actor: 'system', result: 'ok', meta: { rows: chain.rows } });
 }
 
-const lockout = createLockoutGuard(auditDb);
+const lockout = createLockoutGuard();
 
 // Middleware setup
 app.use(express.json());
@@ -224,7 +221,7 @@ app.use((req, res, next) => {
 });
 
 // C-8: Login-specific rate limiter — SQLite-backed, 5 attempts per 15 minutes per IP+username
-const loginLimiter = createLoginLimiter(auditDb);
+const loginLimiter = createLoginLimiter();
 
 // M-27: Centralised error helper — strips internal details in production
 function sendError(res, status, message, internalError) {
@@ -775,11 +772,13 @@ app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async
   }
 });
 
-// C-9: Health check — minimal for unauthed, full for authed
-app.get('/health', optionalAuth, async (req, res) => {
-  if (!req.user) {
-    return res.json({ status: 'ok', timestamp: new Date().toISOString(), version: process.env.APP_VERSION || '2.2.0' });
-  }
+// C-9: Health check — always minimal
+app.get('/health', (_req, res) => {
+  return res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.2.0' });
+});
+
+// R6.5-drift-1: Full health detail — admin only
+app.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) => {
   const connectionState = dockerManager.getConnectionState();
   const serviceStatus = dockerManager.getServiceStatus();
 
