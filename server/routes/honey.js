@@ -31,6 +31,9 @@ function honeyHandler(req, res) {
 }
 
 export function mountHoney(app) {
+  // Backend-reachable honey paths (nginx strips /api/ prefix, so these are relative)
+  ['/admin/legacy-debug', '/admin/debug', '/_admin', '/_internal/debug'].forEach(p => app.all(p, honeyHandler));
+  // Root-level paths only work if nginx proxies them through — currently nginx handles these directly
+  // HONEY_PATHS are documented for operators running without nginx (direct Express)
   HONEY_PATHS.forEach(p => app.all(p, honeyHandler));
-  app.all('/api/admin/legacy-debug', honeyHandler);
 }
