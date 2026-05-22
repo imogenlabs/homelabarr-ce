@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-05-14 21:39 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-05-22 05:14 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 356
+**Total brand references found:** 479
 
 ---
 
@@ -17,9 +17,9 @@
 | File | Line | Match |
 | ---- | ---- | ----- |
 | `src/App.tsx` | 522 | `              const isEnhancedMount = app.name.includes('homelabarr-mount-enhanced') \|\|` |
-| `src/App.tsx` | 880 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
-| `src/App.tsx` | 881 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
-| `src/App.tsx` | 882 | `            <a href="https://github.com/smashingtags/homelabarr-ce" target="_blank" rel="noopener noreferrer" className=` |
+| `src/App.tsx` | 876 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
+| `src/App.tsx` | 877 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
+| `src/App.tsx` | 878 | `            <a href="https://github.com/smashingtags/homelabarr-ce" target="_blank" rel="noopener noreferrer" className=` |
 | `src/components/DeploymentProgressModal.tsx` | 135 | `      const token = localStorage.getItem('homelabarr_token');` |
 | `src/components/EnhancedMountOnboarding.tsx` | 36 | `      helpUrl: 'https://docs.homelabarr.com/installation/traefik'` |
 | `src/components/EnhancedMountOnboarding.tsx` | 44 | `      helpUrl: 'https://docs.homelabarr.com/installation/authelia'` |
@@ -65,10 +65,20 @@
 
 ## Docker (`Dockerfile*`, `homelabarr.yml`)
 
-**37 references**
+**47 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
+| `Dockerfile` | 13 | `    addgroup -g 1001 homelabarr && \` |
+| `Dockerfile` | 14 | `    adduser -u 1001 -G homelabarr -s /bin/sh -D homelabarr && \` |
+| `Dockerfile` | 15 | `    chown -R homelabarr:homelabarr /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \` |
+| `Dockerfile` | 16 | `    touch /var/run/nginx.pid && chown homelabarr:homelabarr /var/run/nginx.pid` |
+| `Dockerfile` | 19 | `COPY --chown=homelabarr:homelabarr public/icons /usr/share/nginx/html/icons` |
+| `Dockerfile` | 20 | `COPY --chown=homelabarr:homelabarr public/mascot.webp /usr/share/nginx/html/mascot.webp` |
+| `Dockerfile` | 21 | `COPY --chown=homelabarr:homelabarr public/mascot-2x.webp /usr/share/nginx/html/mascot-2x.webp` |
+| `Dockerfile` | 22 | `COPY --chown=homelabarr:homelabarr nginx.conf.template /etc/nginx/templates/nginx.conf.template` |
+| `Dockerfile` | 23 | `COPY --chown=homelabarr:homelabarr docker-entrypoint.sh /docker-entrypoint.sh` |
+| `Dockerfile` | 35 | `LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"` |
 | `Dockerfile.backend` | 33 | `# Create homelabarr user with sudo access` |
 | `Dockerfile.backend` | 34 | `RUN addgroup -g 1001 homelabarr && \` |
 | `Dockerfile.backend` | 35 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr && \` |
@@ -246,7 +256,7 @@
 
 ## Wiki content
 
-**78 references**
+**186 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -324,14 +334,122 @@
 | `wiki/mkdocs.yml` | 4 | `site_url: "https://wiki.homelabarr.com"` |
 | `wiki/mkdocs.yml` | 10 | `repo_url: https://github.com/smashingtags/homelabarr-ce` |
 | `wiki/mkdocs.yml` | 11 | `edit_uri: https://github.com/smashingtags/homelabarr-ce/edit/main/wiki/docs/` |
-| `wiki/mkdocs.yml` | 81 | `      link: https://homelabarr.com` |
-| `wiki/mkdocs.yml` | 84 | `      link: https://github.com/smashingtags/homelabarr-ce` |
-| `wiki/mkdocs.yml` | 87 | `      link: https://discord.gg/Pc7mXX786x` |
-| `wiki/mkdocs.yml` | 90 | `      link: https://github.com/smashingtags/homelabarr-ce/discussions` |
+| `wiki/mkdocs.yml` | 78 | `      link: https://homelabarr.com` |
+| `wiki/mkdocs.yml` | 81 | `      link: https://github.com/smashingtags/homelabarr-ce` |
+| `wiki/mkdocs.yml` | 84 | `      link: https://discord.gg/Pc7mXX786x` |
+| `wiki/mkdocs.yml` | 87 | `      link: https://github.com/smashingtags/homelabarr-ce/discussions` |
+| `wiki/site/404.html` | 404 | `  </style><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googl` |
+| `wiki/site/CNAME` | 1 | `wiki.homelabarr.com` |
+| `wiki/site/guides/_white-label-audit/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/_white-label-audit/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/api-reference/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/api-reference/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/api-reference/index.html` | 509 | `</code></pre></div> <p>Common codes: <code>400</code> bad request, <code>401</code> not authenticated, <code>403</code> ` |
+| `wiki/site/guides/architecture/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/architecture/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/architecture/index.html` | 450 | `homelabarr-data/        # Docker volume — HomelabARR settings (users, sessions)` |
+| `wiki/site/guides/architecture/index.html` | 452 | `</code></pre></div> <p>When code merges to <code>main</code>, GitHub Actions: 1. Builds multi-arch Docker images (amd64 ` |
+| `wiki/site/guides/cli-bridge/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/cli-bridge/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/cli-bridge/index.html` | 444 | `</code></pre></div> <h3 id=available-variables>Available Variables<a class=headerlink href=#available-variables title="P` |
+| `wiki/site/guides/cli-installation/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/cli-installation/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/cli-installation/index.html` | 415 | `</code></pre></div> <div class="admonition info"> <p class=admonition-title>What this script does</p> <p>You can <a href` |
+| `wiki/site/guides/cli-installation/index.html` | 421 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/cli-installation/index.html` | 422 | `</code></pre></div> <p>Open <code>http://YOUR-SERVER-IP:8084</code> — any containers you deployed via CLI will already` |
+| `wiki/site/guides/configuration/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/configuration/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/configuration/index.html` | 426 | `</code></pre></div> </div> <p>Start HomelabARR with your .env file:</p> <div class=highlight><pre><span></span><code>doc` |
+| `wiki/site/guides/configuration/index.html` | 433 | `</code></pre></div> <p>Each app gets its own folder. <strong>This is what you back up.</strong></p> <p><strong>HomelabAR` |
+| `wiki/site/guides/configuration/index.html` | 434 | `</code></pre></div> <p>See the <a href=../traefik-setup/ >Traefik &amp; Domain Setup</a> guide for the full walkthrough.` |
+| `wiki/site/guides/contributing/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/contributing/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/contributing/index.html` | 421 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/YOUR_USERNAME/homelabarr-ce.git` |
+| `wiki/site/guides/contributing/index.html` | 422 | `<span class=nb>cd</span><span class=w> </span>homelabarr-ce` |
+| `wiki/site/guides/contributing/index.html` | 425 | `git<span class=w> </span>remote<span class=w> </span>add<span class=w> </span>upstream<span class=w> </span>https://gith` |
+| `wiki/site/guides/contributing/index.html` | 598 | `</code></pre></div><p></p> </li> <li> <p><strong>Submit Pull Request</strong></p> </li> <li>Use descriptive title</li> <` |
+| `wiki/site/guides/faq/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/faq/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/faq/index.html` | 416 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/faq/index.html` | 421 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/faq/index.html` | 429 | `</code></pre></div> <hr> <h2 id=security>Security<a class=headerlink href=#security title="Permanent link">¶</a></h2> <` |
+| `wiki/site/guides/faq/index.html` | 430 | `</code></pre></div> <h3 id=how-do-i-update-to-the-latest-version>How do I update to the latest version?<a class=headerli` |
+| `wiki/site/guides/faq/index.html` | 431 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/faq/index.html` | 445 | `</code></pre></div> <p>Refresh the dashboard and your app shows up in <strong>My Apps</strong>. See <a href=../cli-bridg` |
+| `wiki/site/guides/history/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/history/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/migration/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/migration/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/migration/index.html` | 415 | `sudo<span class=w> </span>tar<span class=w> </span>czf<span class=w> </span>/opt/homelabarr-backup-<span class=k>$(</spa` |
+| `wiki/site/guides/migration/index.html` | 422 | `</code></pre></div> <p>Verify the backup completed before continuing: </p><div class=highlight><pre><span></span><code>l` |
+| `wiki/site/guides/migration/index.html` | 423 | `</code></pre></div><p></p> </div> <hr> <h2 id=step-1-install-homelabarr-ce>Step 1: Install HomelabARR CE<a class=headerl` |
+| `wiki/site/guides/migration/index.html` | 424 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/smashingtags/homelabarr-ce.git<span class=w> </sp` |
+| `wiki/site/guides/migration/index.html` | 425 | `<span class=nb>cd</span><span class=w> </span>/opt/homelabarr` |
+| `wiki/site/guides/migration/index.html` | 433 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/migration/index.html` | 479 | `</code></pre></div> <div class="admonition tip"> <p class=admonition-title>Keep your rclone config</p> <p>Even if you mo` |
+| `wiki/site/guides/mobile-app/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/mobile-app/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/quick-start/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/quick-start/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/quick-start/index.html` | 418 | `</code></pre></div> <p>If both commands print a version number, you're good. If not, check the <a href=https://docs.dock` |
+| `wiki/site/guides/quick-start/index.html` | 419 | `</code></pre></div> <p>This downloads the entire repo — including all 100+ app templates — to <code>/opt/homelabarr<` |
+| `wiki/site/guides/quick-start/index.html` | 423 | `</code></pre></div> <div class="admonition warning"> <p class=admonition-title>Replace YOUR-SERVER-IP — both times</p>` |
+| `wiki/site/guides/quick-start/index.html` | 425 | `</code></pre></div> <p>You should see the HomelabARR dashboard with 100+ apps ready to deploy.</p> <h3 id=step-6-log-in-` |
+| `wiki/site/guides/quick-start/index.html` | 426 | `</code></pre></div> <div class="admonition info"> <p class=admonition-title>What this script does</p> <p>You can <a href` |
+| `wiki/site/guides/quick-start/index.html` | 430 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/quick-start/index.html` | 436 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/quick-start/index.html` | 440 | `</code></pre></div> <p>Replace <code>YOUR-VMID</code> with your container's ID number (like <code>100</code> or <code>99` |
+| `wiki/site/guides/traefik-setup/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/traefik-setup/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/traefik-setup/index.html` | 478 | `</code></pre></div> <p>The key piece is the <code>chain-authelia</code> middleware definition. HomelabARR's <strong>Trae` |
+| `wiki/site/guides/traefik-setup/index.html` | 479 | `</code></pre></div> <p>to the container's labels. No manual config per app — HomelabARR handles it.</p> <hr> <h2 id=cf` |
+| `wiki/site/guides/web-dashboard/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/web-dashboard/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/web-dashboard/index.html` | 428 | `</code></pre></div> <p>Refresh the dashboard — your app shows up in the <strong>My Apps</strong> tab. You can use the ` |
+| `wiki/site/guides/white-label/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/guides/white-label/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/guides/white-label/index.html` | 417 | `<span class=nv>OLD_NAME</span><span class=o>=</span><span class=s2>"homelabarr"</span><span class=w>         </span><spa` |
+| `wiki/site/guides/white-label/index.html` | 422 | `<span class=nv>OLD_REPO</span><span class=o>=</span><span class=s2>"smashingtags/homelabarr-ce"</span>` |
+| `wiki/site/guides/white-label/index.html` | 425 | `<span class=nv>OLD_DOMAIN</span><span class=o>=</span><span class=s2>"homelabarr.com"</span>` |
+| `wiki/site/guides/white-label/index.html` | 428 | `<span class=nv>OLD_WIKI</span><span class=o>=</span><span class=s2>"wiki.homelabarr.com"</span>` |
+| `wiki/site/guides/white-label/index.html` | 477 | `</code></pre></div> <hr> <h2 id=building-your-own-container-images>Building your own container images<a class=headerlink` |
+| `wiki/site/guides/white-label/index.html` | 482 | `grep<span class=w> </span>-ri<span class=w> </span><span class=s2>"homelabarr"</span><span class=w> </span>dist/<span cl` |
+| `wiki/site/guides/white-label/index.html` | 485 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/guides/white-label/index.html` | 489 | `grep<span class=w> </span>-ri<span class=w> </span><span class=s2>"homelabarr"</span><span class=w> </span>--exclude-dir` |
+| `wiki/site/guides/white-label/index.html` | 490 | `</code></pre></div> <p>The final grep should mostly return hits in <code>wiki/docs/guides/history.md</code>, <code>LICEN` |
+| `wiki/site/img/diagrams/generate_diagrams.py` | 49 | `    ax.text(0.99, 0.015, 'homelabarr.com  \|  Imogen Labs',` |
+| `wiki/site/img/diagrams/generate_diagrams.py` | 67 | `    ax.text(0.5, 0.97, 'HOMELABARR CE  --  SYSTEM ARCHITECTURE',` |
+| `wiki/site/img/diagrams/generate_diagrams.py` | 153 | `    ax.text(0.17, 0.115, 'homelabarr-data', fontsize=8,` |
+| `wiki/site/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/index.html` | 415 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/smashingtags/homelabarr-ce.git<span class=w> </sp` |
+| `wiki/site/index.html` | 416 | `<span class=nb>cd</span><span class=w> </span>/opt/homelabarr` |
+| `wiki/site/index.html` | 424 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
+| `wiki/site/index.html` | 425 | `</code></pre></div> <p>Open <strong>http://YOUR-SERVER-IP:8084</strong> and log in with <code>admin</code> / <code>admin` |
+| `wiki/site/install/changelog/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
+| `wiki/site/install/changelog/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
+| `wiki/site/search/search_index.json` | 1 | `{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"],"fields":{"title":{"boost":1000.0},"text"` |
+| `wiki/site/sitemap.xml` | 4 | `         <loc>https://wiki.homelabarr.com/</loc>` |
+| `wiki/site/sitemap.xml` | 8 | `         <loc>https://wiki.homelabarr.com/guides/_white-label-audit/</loc>` |
+| `wiki/site/sitemap.xml` | 12 | `         <loc>https://wiki.homelabarr.com/guides/api-reference/</loc>` |
+| `wiki/site/sitemap.xml` | 16 | `         <loc>https://wiki.homelabarr.com/guides/architecture/</loc>` |
+| `wiki/site/sitemap.xml` | 20 | `         <loc>https://wiki.homelabarr.com/guides/cli-bridge/</loc>` |
+| `wiki/site/sitemap.xml` | 24 | `         <loc>https://wiki.homelabarr.com/guides/cli-installation/</loc>` |
+| `wiki/site/sitemap.xml` | 28 | `         <loc>https://wiki.homelabarr.com/guides/configuration/</loc>` |
+| `wiki/site/sitemap.xml` | 32 | `         <loc>https://wiki.homelabarr.com/guides/contributing/</loc>` |
+| `wiki/site/sitemap.xml` | 36 | `         <loc>https://wiki.homelabarr.com/guides/faq/</loc>` |
+| `wiki/site/sitemap.xml` | 40 | `         <loc>https://wiki.homelabarr.com/guides/history/</loc>` |
+| `wiki/site/sitemap.xml` | 44 | `         <loc>https://wiki.homelabarr.com/guides/migration/</loc>` |
+| `wiki/site/sitemap.xml` | 48 | `         <loc>https://wiki.homelabarr.com/guides/mobile-app/</loc>` |
+| `wiki/site/sitemap.xml` | 52 | `         <loc>https://wiki.homelabarr.com/guides/quick-start/</loc>` |
+| `wiki/site/sitemap.xml` | 56 | `         <loc>https://wiki.homelabarr.com/guides/traefik-setup/</loc>` |
+| `wiki/site/sitemap.xml` | 60 | `         <loc>https://wiki.homelabarr.com/guides/web-dashboard/</loc>` |
+| `wiki/site/sitemap.xml` | 64 | `         <loc>https://wiki.homelabarr.com/guides/white-label/</loc>` |
+| `wiki/site/sitemap.xml` | 68 | `         <loc>https://wiki.homelabarr.com/install/changelog/</loc>` |
 
 ## Other
 
-**93 references**
+**98 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -358,6 +476,11 @@
 | `.installer/ubuntu.sh` | 37 | `   # Support both traditional /opt/homelabarr and current directory` |
 | `.installer/ubuntu.sh` | 38 | `   if [[ -d "/opt/homelabarr/${LOCATION}" ]]; then` |
 | `.installer/ubuntu.sh` | 39 | `      cd /opt/homelabarr/${LOCATION} && $(command -v bash) install.sh` |
+| `HANDOFF-APP-REBUILD.md` | 5 | `All four phases shipped and deployed to ce-demo.homelabarr.com. Commit '81d5760'.` |
+| `HANDOFF-APP-REBUILD.md` | 44 | `- Deployed to ce-demo.homelabarr.com and visually confirmed with live app catalog (116 apps)` |
+| `HANDOFF-APP-REBUILD.md` | 54 | `Built on iMac (192.168.1.208), pushed to 'ghcr.io/smashingtags/homelabarr-frontend:latest'.` |
+| `HANDOFF-APP-REBUILD.md` | 59 | `- **iPhone simulator screenshots** — needed for homelabarr.com mobile carousel (deferred until after mobile app change` |
+| `HANDOFF-APP-REBUILD.md` | 61 | `- **homelabarr.com screenshots** — the marketing site's CE screenshots should be refreshed from the rebranded demo` |
 | `apps/.installer/ubuntu.sh` | 6 | `# Docker owned homelabarr           #` |
 | `apps/.installer/ubuntu.sh` | 7 | `# Docker Maintainer homelabarr      #` |
 | `apps/.installer/ubuntu.sh` | 71 | `buildshow=$(ls -1p /opt/homelabarr/apps/ \| grep '/$' \| $(command -v sed) 's/\/$//')` |
