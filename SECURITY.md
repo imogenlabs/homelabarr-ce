@@ -52,7 +52,8 @@ Instead, please report security issues privately:
 - **CSRF:** 256-bit token in non-HttpOnly `hl_csrf` cookie; echo via `X-CSRF-Token` header; `X-Requested-With: XMLHttpRequest` also required. Constant-time compare (`crypto.timingSafeEqual`)
 - **Sessions** tracked by `jti` claim in the JWT. Revocation = setting `revoked_at` on the DB row. Users can list and revoke sessions via Settings
 - **MFA:** TOTP (`otpauth`, 30s window, ±1 step skew); 10 single-use backup codes (bcrypt-hashed at rest). Required for `role=admin`; opt-in otherwise
-- **Password storage:** bcrypt cost 12; transparent rehash-on-login for legacy hashes
+- **Password hashing:** bcrypt cost 12 via `bcryptjs` (pure-JS for portability). This is ~10x slower than native `bcrypt` but avoids native compilation requirements. The work factor of 12 meets OWASP 2025 ASVS L2 requirements.
+- **Password storage:** transparent rehash-on-login for legacy hashes
 - **Password reset:** 30-minute single-use 256-bit token, SHA-256 hashed at rest, all sessions revoked on success
 - **Account lockout:** 5 failures / 15min per IP+username; email notification to victim on threshold
 - **API keys:** HMAC-SHA256 hashed before storage (never stored in plaintext); `hlr_` prefix; validated via `Authorization: Bearer hlr_...` header (mobile/CLI)
@@ -126,15 +127,27 @@ This policy covers the HomelabARR CE application code, Docker images, and offici
 
 ## Verifying Release Artifacts
 
-All HomelabARR CE container images are signed via Sigstore (cosign keyless) and published with SLSA build provenance and SBOMs.
+All HomelabARR CE container images published to GHCR are:
+- Built reproducibly by GitHub Actions (`.github/workflows/docker-build-push.yml`)
+- Signed via Sigstore (cosign keyless, OIDC issuer `token.actions.githubusercontent.com`)
+- Accompanied by SLSA build provenance and a BuildKit-attested SBOM
+- Scanned with Trivy on the pushed digest; CRITICAL/HIGH findings block release
 
-Before pulling, verify the signature:
+To verify before pulling:
 
 ```
 cosign verify \
   --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:<version>
+  ghcr.io/smashingtags/homelabarr-backend:<tag>
+```
+
+To extract the SBOM:
+
+```
+docker buildx imagetools inspect \
+  ghcr.io/smashingtags/homelabarr-backend:<tag> \
+  --format '{{ json .SBOM.SPDX }}' > backend.spdx.json
 ```
 
 ## Production Deployment Checklist
