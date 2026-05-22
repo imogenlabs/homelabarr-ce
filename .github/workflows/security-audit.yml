@@ -348,7 +348,7 @@ jobs:
           fi
 
       - name: Upload vulnerability scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
         if: always() && hashFiles('trivy-results/*.sarif') != ''
         with:
           sarif_file: 'trivy-results/'
@@ -470,7 +470,7 @@ jobs:
     if: always()
     steps:
       - name: Download all security artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           path: security-reports
 
@@ -510,7 +510,7 @@ jobs:
 
       - name: Comment PR with security summary
         if: github.event_name == 'pull_request' && (needs.shell-security-analysis.result != 'skipped' || needs.compose-security-validation.result != 'skipped' || needs.docker-vulnerability-scan.result != 'skipped')
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # v8
         with:
           script: |
             const fs = require('fs');
