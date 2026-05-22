@@ -31,3 +31,13 @@ EOF
 apparmor_parser -r /etc/apparmor.d/homelabarr-backend
 aa-status | grep homelabarr-backend || echo "Profile loaded"
 echo "AppArmor profile installed: homelabarr-backend"
+
+# Switch to enforce mode
+aa-enforce /etc/apparmor.d/homelabarr-backend
+aa-enforce /etc/apparmor.d/homelabarr-frontend 2>/dev/null || true
+systemctl reload apparmor 2>/dev/null || true
+
+if ! aa-status 2>/dev/null | grep -E 'homelabarr-(backend|frontend)' | grep -q 'enforce'; then
+  echo 'WARNING: AppArmor profile may not be in enforce mode'
+fi
+echo 'AppArmor: homelabarr profiles configured'
