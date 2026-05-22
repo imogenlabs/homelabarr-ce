@@ -1,0 +1,32 @@
+title = "homelabarr-ce gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "homelabarr-jwt-secret"
+description = "Possible JWT signing secret committed to repo"
+regex = '''(?i)(jwt[_-]?secret|access[_-]?token[_-]?ttl)\s*[:=]\s*['"]?[A-Za-z0-9+/=._-]{20,}'''
+keywords = ["jwt_secret", "JWT_SECRET"]
+
+[[rules]]
+id = "homelabarr-admin-password"
+description = "Default admin password committed in env files"
+regex = '''(?i)default[_-]?admin[_-]?password\s*[:=]\s*['"]?(?!\$\{)\S{4,}'''
+keywords = ["default_admin_password", "DEFAULT_ADMIN_PASSWORD"]
+
+[allowlist]
+description = "Examples and placeholders allowed"
+regexes = [
+  '''CHANGE-THIS-TO-A-SECURE-SECRET''',
+  '''must be set on first boot''',
+  '''must be set''',
+  '''openssl rand''',
+]
+paths = [
+  '''(?i)\.env\.example$''',
+  '''(?i)SECURITY\.md$''',
+  '''(?i)README\.md$''',
+  '''(?i)CLAUDE\.md$''',
+  '''(?i)security-audit.*\.md$''',
+]
