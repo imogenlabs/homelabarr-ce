@@ -1,0 +1,113 @@
+# C-R9-2: ZAP DAST authenticated active scan
+# Runs nightly and on security/* branches for deep vulnerability discovery
+name: DAST Active Scan
+
+on:
+  push:
+    branches:
+      - 'security/**'
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target URL'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  ZAP_TARGET: ${{ inputs.target || 'https://ce-demo.homelabarr.com' }}
+
+jobs:
+  zap-active:
+    name: ZAP Authenticated Active Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Mint short-lived scanner JWT
+        id: jwt
+        env:
+          MINT_KEY: ${{ secrets.DAST_MINT_KEY }}
+        run: |
+          set -e
+          test -n "$MINT_KEY" || { echo '::error::DAST_MINT_KEY secret not set'; exit 1; }
+          R=$(curl -fsS -X POST "$ZAP_TARGET/api/auth/cli-mint" \
+            -H "X-Mint-Key: $MINT_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"u":"dast-scanner","role":"scanner","ttl_s":1800}')
+          T=$(echo "$R" | jq -r .a)
+          test -n "$T" -a "$T" != 'null' || { echo '::error::Mint exchange failed'; echo "$R"; exit 1; }
+          echo "::add-mask::$T"
+          echo "jwt=$T" >> $GITHUB_OUTPUT
+
+      - name: ZAP Full Scan (authenticated)
+        uses: zaproxy/action-full-scan@d2a07475d467566c9a3e3c700f31f47724aa1060 # v0.10.0
+        with:
+          target: ${{ env.ZAP_TARGET }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: >-
+            -a -j -z "
+            -config replacer.full_list(0).description=auth
+            -config replacer.full_list(0).enabled=true
+            -config replacer.full_list(0).matchtype=REQ_HEADER
+            -config replacer.full_list(0).matchstr=Authorization
+            -config replacer.full_list(0).regex=false
+            -config replacer.full_list(0).replacement=Bearer ${{ steps.jwt.outputs.jwt }}
+            -config rules.cookie.ignorelist=__cf_bm,cf_clearance
+            -config api.disablekey=true
+            "
+          fail_action: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify audit hash chain held
+        if: always()
+        run: |
+          STATE=$(curl -fsS -H 'Authorization: Bearer ${{ steps.jwt.outputs.jwt }}' \
+            "$ZAP_TARGET/api/audit?limit=1" | jq -r '.chain.ok')
+          if [ "$STATE" != 'true' ]; then
+            echo '::error::AUDIT CHAIN BROKEN POST-SCAN'
+            exit 2
+          fi
+          echo 'Audit chain intact after scan'
+
+      - name: Notify on HIGH/CRITICAL findings
+        if: failure()
+        env:
+          ALERT_HMAC_KEY: ${{ secrets.ALERT_HMAC_KEY }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          test -f report_json.json || exit 0
+          test -n "$ALERT_WEBHOOK_URL" || exit 0
+          BODY=$(jq -c '{
+            event: "dast.finding",
+            run_id: $ENV.GITHUB_RUN_ID,
+            repo: $ENV.GITHUB_REPOSITORY,
+            findings: [.site[].alerts[] | select((.riskcode|tonumber) >= 2) | {
+              id: .pluginid, name: .name, risk: .riskdesc, count: (.instances|length)
+            }]
+          }' report_json.json)
+          SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$ALERT_HMAC_KEY" -binary | base64)
+          curl -fsS -X POST "$ALERT_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -H "X-Sig: $SIG" \
+            --data-binary "$BODY" || true
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zap-active-${{ github.run_id }}
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
+          retention-days: 90

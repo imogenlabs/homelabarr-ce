@@ -2,6 +2,7 @@
 # Multi-stage build: Node for building, nginx for serving
 
 FROM node:24-alpine AS build
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --no-audit --loglevel=error --no-fund
@@ -9,6 +10,7 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
+RUN apk add --no-cache gettext
 RUN apk upgrade --no-cache && \
     addgroup -g 1001 homelabarr && \
     adduser -u 1001 -G homelabarr -s /bin/sh -D homelabarr && \
@@ -33,5 +35,7 @@ LABEL org.opencontainers.image.description="React frontend for HomelabARR CE con
 LABEL org.opencontainers.image.vendor="Imogen Labs"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"
+
+USER homelabarr
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

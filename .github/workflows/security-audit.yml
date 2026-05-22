@@ -45,11 +45,11 @@ jobs:
       compose: ${{ steps.changes.outputs.compose }}
       security: ${{ steps.changes.outputs.security }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
         id: changes
         with:
           filters: |
@@ -79,7 +79,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.scripts == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install security analysis tools
         run: |
@@ -139,7 +139,7 @@ jobs:
           fi
 
       - name: Upload shell analysis results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: shell-security-analysis-${{ github.sha }}
@@ -155,7 +155,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.compose == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install Docker Compose and validation tools
         run: |
@@ -220,7 +220,7 @@ jobs:
           }
 
       - name: Upload compose validation results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: compose-security-validation-${{ github.sha }}
@@ -236,7 +236,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install Trivy scanner
         run: |
@@ -348,7 +348,7 @@ jobs:
           fi
 
       - name: Upload vulnerability scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
         if: always() && hashFiles('trivy-results/*.sarif') != ''
         with:
           sarif_file: 'trivy-results/'
@@ -356,7 +356,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload vulnerability reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: docker-vulnerability-scan-${{ github.sha }}
@@ -365,17 +365,112 @@ jobs:
             docker-images.txt
           retention-days: 30
 
+  dependency-cves:
+    name: Dependency CVE scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - name: npm audit (HIGH+)
+        run: npm audit --audit-level=high --omit=dev || true
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2  # v2.3.8
+        continue-on-error: true
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            --lockfile=./package-lock.json
+
+  secrets-scan:
+    name: Secrets scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc  # v2
+        env:
+          GITLEAKS_VERSION: latest
+
+  license-audit:
+    name: License audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - name: License whitelist check
+        run: npx --yes license-checker-rseidelsohn --production --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense;0BSD;Python-2.0;BlueOak-1.0.0' --summary || true
+
+  bundle-secret-scan:
+    name: Bundle secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Scan dist for secret-shaped strings
+        run: |
+          if grep -rEn 'jwt_secret|JWT_SECRET|sqlcipher_key|SQLCIPHER_KEY|alert_webhook_secret' dist/ ; then
+            echo "::error::Secret-shaped string found in client bundle"
+            exit 1
+          fi
+          echo "Bundle clean — no secret-shaped strings found"
+
+  sbom-npm:
+    name: CycloneDX SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npx --yes @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom-npm.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: sbom-npm-cyclonedx
+          path: sbom-npm.cdx.json
+          retention-days: 90
+
   # Security compliance summary
   security-compliance-summary:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       actions: read
-    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan]
+    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan, dependency-cves, secrets-scan, license-audit, bundle-secret-scan, sbom-npm]
     if: always()
     steps:
       - name: Download all security artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           path: security-reports
 
@@ -407,7 +502,7 @@ jobs:
           cat security-summary.md
 
       - name: Upload security compliance summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: security-compliance-summary-${{ github.sha }}
           path: security-summary.md
@@ -415,7 +510,7 @@ jobs:
 
       - name: Comment PR with security summary
         if: github.event_name == 'pull_request' && (needs.shell-security-analysis.result != 'skipped' || needs.compose-security-validation.result != 'skipped' || needs.docker-vulnerability-scan.result != 'skipped')
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # v8
         with:
           script: |
             const fs = require('fs');

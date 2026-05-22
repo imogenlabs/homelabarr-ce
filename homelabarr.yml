@@ -1,27 +1,108 @@
 # HomelabARR GHCR Production Deployment
-# This file provides a production-ready deployment using pre-built images from GitHub Container Registry
 #
-# IMPORTANT: Before deploying, ensure you have:
-# 1. Set CLI_BRIDGE_HOST_PATH to your actual homelabarr installation path
-# 2. Configured your DOCKER_GID to match your system's docker group
-# 3. Set secure authentication credentials
-# 4. Updated CORS_ORIGIN to your specific domain
+# REQUIRED before deploying:
+#   ./secrets/      — run scripts/init-secrets.sh to bootstrap secret files
+#   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)
+#
+# OPTIONAL (defaults shown):
+#   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)
+#   FRONTEND_PORT         — host port for the dashboard (default: 8084)
 #
 # Usage:
-#   docker-compose -f homelabarr.yml up -d
+#   docker compose -f homelabarr.yml up -d
+
+secrets:
+  jwt_key_current:
+    file: ${JWT_SECRET_FILE:-./secrets/jwt_key_current}
+  jwt_key_previous:
+    file: ${JWT_KEY_PREVIOUS_FILE:-./secrets/jwt_key_previous}
+  default_admin_password:
+    file: ${DEFAULT_ADMIN_PASSWORD_FILE:-./secrets/default_admin_password}
+  alert_webhook_secret:
+    file: ${ALERT_WEBHOOK_SECRET_FILE:-./secrets/alert_webhook_secret}
+  sqlcipher_key:
+    file: ${SQLCIPHER_KEY_FILE:-./secrets/sqlcipher_key}
 
 services:
+  # Docker socket proxy — allow-listed API access only, no EXEC/BUILD
+  socket-proxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: homelabarr-socket-proxy
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=warning
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - INFO=1
+      - VERSION=1
+      - PING=1
+      - EVENTS=1
+      - POST=1
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - ALLOW_RESTARTS=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - EXEC=0
+      - GRPC=0
+      - PLUGINS=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - NODES=0
+      - SERVICES=0
+      - TASKS=0
+      - DISTRIBUTION=0
+    privileged: false
+    read_only: true
+    tmpfs:
+      - /run
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - homelabarr-internal
+    pids_limit: 64
+    mem_limit: 64m
+    cpus: 0.25
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:2375/_ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
   frontend:
     image: ghcr.io/smashingtags/homelabarr-frontend:latest
     container_name: homelabarr-frontend
     restart: unless-stopped
+    user: "101:101"
     environment:
-      - NODE_ENV=production
-      - LOG_LEVEL=info
+      - BACKEND_URL=http://backend:8092
+      - LOG_LEVEL=${LOG_LEVEL:-warn}
     ports:
       - "${FRONTEND_PORT:-8084}:8080"
     networks:
       - homelabarr
+    cap_drop:
+      - ALL
+    security_opt:
+      - apparmor=homelabarr-frontend
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,noexec,nosuid,nodev,size=32m
+      - /var/run:rw,noexec,nosuid,nodev,size=2m
+      - /etc/nginx/conf.d:rw,noexec,nosuid,nodev,size=1m
+      - /tmp:rw,noexec,nosuid,nodev,size=8m
+    pids_limit: 128
+    mem_limit: 128m
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -35,71 +116,67 @@ services:
     image: ghcr.io/smashingtags/homelabarr-backend:latest
     container_name: homelabarr-backend
     restart: unless-stopped
+    user: "1001:1001"
     environment:
-      # Production environment
       - NODE_ENV=production
       - PORT=8092
-      - LOG_LEVEL=info
-
-      # CORS configuration - SET TO YOUR SPECIFIC DOMAIN(S)
-      - CORS_ORIGIN=${CORS_ORIGIN:-https://your-domain.com}
-
-      # Docker configuration
-      - DOCKER_SOCKET=${DOCKER_SOCKET:-/var/run/docker.sock}
-      - DOCKER_GID=${DOCKER_GID:-999}
-
-      # CLI Bridge configuration - CRITICAL for HomelabARR CLI integration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN:?CORS_ORIGIN must be set to your public domain}
+      - DOCKER_HOST=tcp://socket-proxy:2375
       - CLI_BRIDGE_PATH=/homelabarr
       - CLI_INTEGRATION_ENABLED=true
-
-      # Authentication - CHANGE THESE VALUES
       - AUTH_ENABLED=${AUTH_ENABLED:-true}
-      - JWT_SECRET=${JWT_SECRET:-CHANGE-THIS-TO-A-SECURE-SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
-      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin}
-
-      # Network configuration
+      - SECRET_ROOT=/run/secrets
+      - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-15m}
+      - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-14d}
       - BIND_ADDRESS=0.0.0.0
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8084}
-      - BACKEND_URL=${BACKEND_URL:-http://localhost:8092}
-
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
+      - ALERT_EVENTS=${ALERT_EVENTS:-login.locked,audit.chain.broken,session.refresh.fail}
+      - AUDIT_STRICT=${AUDIT_STRICT:-0}
     volumes:
-      # Docker socket access for container management
-      - /var/run/docker.sock:/var/run/docker.sock:rw
-
-      # CLI Bridge mount - CRITICAL: Update this path to your actual homelabarr installation
-      # Examples:
-      #   - /opt/homelabarr:/homelabarr:rw                    # Standard Linux installation
-      #   - /home/user/homelabarr:/homelabarr:rw              # User installation
-      #   - /Users/username/homelabarr:/homelabarr:rw         # macOS installation
-      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:rw
-
-      # Data persistence
+      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro
       - homelabarr-data:/app/data
-
-      # Auth persistence (users, API keys, sessions)
       - homelabarr-config:/app/server/config
-
-      # Activity log persistence
       - homelabarr-activity:/app/server/activity-data
-
-    ports:
-      - "${BACKEND_PORT:-8092}:8092"
     networks:
       - homelabarr
-    group_add:
-      - "${DOCKER_GID:-999}"  # Must match your host system's docker group ID
+      - homelabarr-internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - apparmor=homelabarr-backend
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /run:rw,noexec,nosuid,nodev,size=8m
+    pids_limit: 256
+    mem_limit: 768m
+    cpus: 1.5
+    secrets:
+      - jwt_key_current
+      - jwt_key_previous
+      - default_admin_password
+      - alert_webhook_secret
+      - sqlcipher_key
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8092/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8092/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
+    depends_on:
+      socket-proxy:
+        condition: service_healthy
 
 networks:
   homelabarr:
     name: homelabarr
     driver: bridge
+  homelabarr-internal:
+    name: homelabarr-internal
+    driver: bridge
+    internal: true
 
 volumes:
   homelabarr-data:

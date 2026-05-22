@@ -4,13 +4,18 @@ import path from 'path';
 import yaml from 'yaml';
 import { DeploymentLogger } from './deployment-logger.js';
 
-/**
- * Sanitize a path component to prevent directory traversal attacks.
- * Strips .., /, \, and null bytes from user-supplied path segments.
- */
-function sanitizePathComponent(input) {
-  if (!input || typeof input !== 'string') return '';
-  return input.replace(/[\/\\\.]{2,}/g, '').replace(/[\/\\\0]/g, '').replace(/^\.+/, '');
+function safeJoin(base, ...parts) {
+  for (const p of parts) {
+    if (typeof p !== 'string' || !/^[a-z0-9][a-z0-9_.-]{0,63}$/i.test(p)) {
+      throw new Error(`Invalid path component: ${JSON.stringify(p)}`);
+    }
+  }
+  const resolved = path.resolve(base, ...parts);
+  const baseResolved = path.resolve(base) + path.sep;
+  if (!resolved.startsWith(baseResolved) && resolved !== path.resolve(base)) {
+    throw new Error('Path traversal detected');
+  }
+  return resolved;
 }
 
 /**
@@ -53,6 +58,18 @@ export class CLIBridge {
     MOUNT_ENHANCED_IMAGE: 'rclone/rclone:latest',
     RESTARTAPP: 'unless-stopped',
   };
+
+  static ALLOWED_TEMPLATE_VARS = new Set([
+    'PUID', 'PGID', 'TZ', 'DOMAIN', 'APPDATA', 'CONFIG', 'DOCKERNETWORK',
+    'UMASK', 'HOST_IP', 'LOCAL_IP', 'CONTAINER_NAME',
+    // Media paths
+    'MEDIA', 'DOWNLOADS', 'TV', 'MOVIES', 'MUSIC', 'BOOKS', 'COMICS',
+    // Service-specific
+    'PLEX_CLAIM', 'VPN_PROVIDER', 'VPN_USERNAME', 'VPN_PASSWORD',
+    'WIREGUARD_PRIVATE_KEY', 'WIREGUARD_ADDRESSES',
+    // Port overrides (prefixed)
+    ...Array.from({length: 20}, (_, i) => `PORT_${i}`),
+  ]);
 
   static resolveTemplateVar(value) {
     if (!value || typeof value !== 'string') return value;
@@ -226,8 +243,8 @@ export class CLIBridge {
    */
   async deployApplication(appId, config, deploymentMode) {
     const [category, appName] = appId.split('-');
-    const appPath = path.join(this.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
-    
+    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
+
     if (!fs.existsSync(appPath)) {
       throw new Error(`Application ${appId} not found at ${appPath}`);
     }
@@ -400,12 +417,24 @@ export class CLIBridge {
    */
   async executeDockerCompose(appPath, command, envVars = {}) {
     return new Promise((resolve, reject) => {
-      const env = {
-        ...process.env,
-        ...envVars
-      };
+      const filtered = {};
+      for (const [k, v] of Object.entries(envVars)) {
+        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k)) continue;
+        if (typeof v !== 'string' || v.length > 256 || /[\r\n\0`$]/.test(v)) {
+          throw new Error(`Invalid template variable value for ${k}`);
+        }
+        filtered[k] = v;
+      }
+      const env = { ...process.env, ...filtered };
 
-      const dockerCompose = spawn('docker-compose', ['-f', appPath, ...command.split(' ')], {
+      const args = ['-f', appPath];
+      if (command === 'up -d') args.push('up', '-d');
+      else if (command === 'down') args.push('down');
+      else if (command === 'down -v') args.push('down', '-v');
+      else if (command.startsWith('logs')) args.push('logs', '--tail=' + (command.match(/--tail=(\d+)/)?.[1] || '100'));
+      else throw new Error(`Unsupported compose command: ${command}`);
+
+      const dockerCompose = spawn('docker-compose', args, {
         env,
         cwd: path.dirname(appPath),
         stdio: ['pipe', 'pipe', 'pipe']
@@ -534,7 +563,7 @@ export class CLIBridge {
    */
   async stopApplication(appId) {
     const [category, appName] = appId.split('-');
-    const appPath = path.join(this.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
+    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     return await this.executeDockerCompose(appPath, 'down');
   }
@@ -544,7 +573,7 @@ export class CLIBridge {
    */
   async removeApplication(appId, removeVolumes = false) {
     const [category, appName] = appId.split('-');
-    const appPath = path.join(this.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
+    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     const command = removeVolumes ? 'down -v' : 'down';
     return await this.executeDockerCompose(appPath, command);
@@ -555,7 +584,7 @@ export class CLIBridge {
    */
   async getApplicationLogs(appId, lines = 100) {
     const [category, appName] = appId.split('-');
-    const appPath = path.join(this.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
+    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     return await this.executeDockerCompose(appPath, `logs --tail=${lines}`);
   }
