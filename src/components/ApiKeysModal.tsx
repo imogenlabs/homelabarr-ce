@@ -22,7 +22,7 @@ interface ApiKeysModalProps {
 }
 
 export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { success, error } = useNotifications();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,12 +32,16 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
   const [copied, setCopied] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
+  const getCsrfToken = () =>
+    document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
+
   const fetchKeys = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
       const res = await fetch("/api/auth/api-keys", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        credentials: "same-origin",
       });
       if (res.ok) {
         const data = await res.json();
@@ -59,15 +63,17 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
   }, [isOpen]);
 
   const createKey = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setCreating(true);
     try {
       const res = await fetch("/api/auth/api-keys", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRF-Token": getCsrfToken(),
           "Content-Type": "application/json",
         },
+        credentials: "same-origin",
         body: JSON.stringify({ label: newLabel }),
       });
       if (res.ok) {
@@ -86,11 +92,15 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
   };
 
   const revokeKey = async (keyId: string) => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
       const res = await fetch(`/api/auth/api-keys/${keyId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRF-Token": getCsrfToken(),
+        },
+        credentials: "same-origin",
       });
       if (res.ok) {
         success("Revoked", "API key has been revoked");

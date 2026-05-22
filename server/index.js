@@ -36,7 +36,8 @@ import { NetworkManager } from './network-manager.js';
 import { DeploymentLogger } from './deployment-logger.js';
 import { CLIBridge } from './cli-bridge.js';
 import { progressStream, StreamingCLIBridge } from './progress-stream.js';
-import { randomUUID } from 'crypto';
+import crypto, { randomUUID } from 'crypto';
+import cookieParser from 'cookie-parser';
 import { initializeActivityLog, logActivity, getActivities } from './activity-logger.js';
 import { getUserStars, addStar, removeStar } from './stars.js';
 
@@ -148,6 +149,13 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   referrerPolicy: false,
 }));
+app.use(cookieParser());
+
+// CSP violation report endpoint (M-R2-6 / L-R2-12) — before auth routes, no auth required
+app.post('/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'] }), (req, res) => {
+  logger.warn('CSP violation', { ip: req.ip, report: req.body });
+  res.status(204).end();
+});
 
 // Global rate limiting — 100 requests per minute per IP
 const globalRateLimit = rateLimit({
@@ -158,6 +166,27 @@ const globalRateLimit = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use(globalRateLimit);
+
+// M-R2-9: CSRF double-submit cookie validation for state-changing requests
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && req.path !== '/auth/login' && req.path !== '/csp-report') {
+    const cookieTok = req.cookies?.hl_csrf;
+    const hdrTok = req.headers['x-csrf-token'];
+    if (cookieTok && hdrTok) {
+      try {
+        if (!crypto.timingSafeEqual(Buffer.from(String(cookieTok)), Buffer.from(String(hdrTok)))) {
+          return res.status(403).json({ error: 'CSRF validation failed' });
+        }
+      } catch {
+        return res.status(403).json({ error: 'CSRF validation failed' });
+      }
+    }
+    if (req.headers['x-requested-with'] !== 'XMLHttpRequest' && !req.headers.authorization?.startsWith('hlr_')) {
+      return res.status(403).json({ error: 'XHR required' });
+    }
+  }
+  next();
+});
 
 // C-8: Login-specific rate limiter — 5 attempts per 15 minutes per IP+username
 const loginLimiter = rateLimit({
@@ -230,10 +259,27 @@ app.post('/auth/login', loginLimiter, async (req, res) => {
 
     logger.info(`User ${result.user.username} logged in from ${req.ip}`);
 
+    // C-R2-1: Set httpOnly session cookie (not readable by JS)
+    res.cookie('hl_session', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+    // M-R2-9: Set CSRF token cookie (readable by JS for double-submit)
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+
     res.json({
       success: true,
-      user: result.user,
-      token: result.token
+      user: result.user
     });
 
     logActivity({
@@ -253,17 +299,20 @@ app.post('/auth/login', loginLimiter, async (req, res) => {
 
 app.post('/auth/logout', requireAuth, (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    // Invalidate session — check cookie first, then Authorization header
+    const token = req.cookies?.hl_session || (req.headers.authorization?.startsWith('Bearer ') && req.headers.authorization.substring(7));
 
     if (token) {
-      // Find and invalidate the session
       const sessions = loadSessions();
       const session = sessions.find(s => s.token === token);
       if (session) {
         invalidateSession(session.id);
       }
     }
+
+    // Clear auth cookies
+    res.clearCookie('hl_session', { path: '/' });
+    res.clearCookie('hl_csrf', { path: '/' });
 
     logger.info(`User ${req.user.username} logged out`);
     res.json({ success: true });

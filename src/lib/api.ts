@@ -4,23 +4,30 @@ import { DeploymentMode } from '../types';
 // In development (npm run dev), Vite proxy handles the forwarding
 const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8092' : '/api';
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('homelabarr_token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+function getCsrfToken(): string {
+  return document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
+}
+
+function apiHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'X-Requested-With': 'XMLHttpRequest',
+    ...extra,
+  };
+}
+
+function mutationHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    ...apiHeaders(extra),
+    'X-CSRF-Token': getCsrfToken(),
+  };
 }
 
 async function handleResponse(response: Response) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
-    
-    // Handle authentication errors
     if (response.status === 401) {
-      // Token expired or invalid, clear auth state
-      localStorage.removeItem('homelabarr_token');
-      localStorage.removeItem('homelabarr_user');
-      window.location.reload(); // Force re-authentication
+      window.location.reload();
     }
-    
     throw new Error(error.details || error.error || 'Request failed');
   }
   return response.json();
@@ -98,7 +105,8 @@ export async function getContainers(includeStats = false) {
   const url = includeStats ? `${API_BASE_URL}/containers?stats=true` : `${API_BASE_URL}/containers`;
   try {
     const response = await fetch(url, {
-      headers: getAuthHeaders()
+      headers: apiHeaders(),
+      credentials: 'same-origin' as const,
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
@@ -119,24 +127,26 @@ export async function getContainers(includeStats = false) {
 
 function isDemoEnvironment(): boolean {
   const host = window.location.hostname;
-  return host.includes('dev.') || host.includes('ce-dev.') || 
+  return host.includes('dev.') || host.includes('ce-dev.') ||
          host.includes('staging.') || host.includes('ce-staging.') ||
          host === 'localhost' || host === '127.0.0.1';
 }
 
 export async function getContainerStats(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}/stats`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getContainerLogs(containerId: string, tail: number = 100) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}/logs?tail=${tail}`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   const data = await handleResponse(response);
-  
+
   // Parse the logs string into the expected format
   if (data.logs) {
     const logLines = data.logs.split('\n').filter((line: string) => line.trim());
@@ -149,7 +159,7 @@ export async function getContainerLogs(containerId: string, tail: number = 100) 
           message: timestampMatch[2]
         };
       }
-      
+
       // If no timestamp, use current time
       return {
         timestamp: new Date().toLocaleString(),
@@ -157,14 +167,15 @@ export async function getContainerLogs(containerId: string, tail: number = 100) 
       };
     });
   }
-  
+
   return [];
 }
 
 export async function startContainer(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}/start`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -172,7 +183,8 @@ export async function startContainer(containerId: string) {
 export async function stopContainer(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}/stop`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -180,7 +192,8 @@ export async function stopContainer(containerId: string) {
 export async function restartContainer(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}/restart`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -192,10 +205,8 @@ export async function deployApp(
 ) {
   const response = await fetch(`${API_BASE_URL}/deploy`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders()
-    },
+    headers: mutationHeaders({ 'Content-Type': 'application/json' }),
+    credentials: 'same-origin' as const,
     body: JSON.stringify({
       appId,
       config,
@@ -209,14 +220,16 @@ export async function deployApp(
 
 export async function getApplicationCatalog() {
   const response = await fetch(`${API_BASE_URL}/applications`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getDeploymentModes() {
   const response = await fetch(`${API_BASE_URL}/deployment-modes`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -224,7 +237,8 @@ export async function getDeploymentModes() {
 export async function stopApplication(appId: string) {
   const response = await fetch(`${API_BASE_URL}/applications/${appId}/stop`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -232,14 +246,16 @@ export async function stopApplication(appId: string) {
 export async function removeApplication(appId: string, removeVolumes: boolean = false) {
   const response = await fetch(`${API_BASE_URL}/applications/${appId}?removeVolumes=${removeVolumes}`, {
     method: 'DELETE',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getApplicationLogs(appId: string, lines: number = 100) {
   const response = await fetch(`${API_BASE_URL}/applications/${appId}/logs?lines=${lines}`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -247,21 +263,24 @@ export async function getApplicationLogs(appId: string, lines: number = 100) {
 export async function removeContainer(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/containers/${containerId}`, {
     method: 'DELETE',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function checkUsedPorts() {
   const response = await fetch(`${API_BASE_URL}/ports/check`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function findAvailablePort(startPort: number = 8000, endPort: number = 9000) {
   const response = await fetch(`${API_BASE_URL}/ports/available?start=${startPort}&end=${endPort}`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -269,7 +288,8 @@ export async function findAvailablePort(startPort: number = 8000, endPort: numbe
 // Starred Apps API functions
 export async function getStars(): Promise<{ stars: string[] }> {
   const response = await fetch(`${API_BASE_URL}/auth/me/stars`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -277,7 +297,8 @@ export async function getStars(): Promise<{ stars: string[] }> {
 export async function starApp(appId: string): Promise<{ stars: string[] }> {
   const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -285,7 +306,8 @@ export async function starApp(appId: string): Promise<{ stars: string[] }> {
 export async function unstarApp(appId: string): Promise<{ stars: string[] }> {
   const response = await fetch(`${API_BASE_URL}/auth/me/stars/${encodeURIComponent(appId)}`, {
     method: 'DELETE',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
@@ -293,43 +315,45 @@ export async function unstarApp(appId: string): Promise<{ stars: string[] }> {
 // Enhanced Mount Container API functions
 export async function getEnhancedMountStatus(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/status`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getEnhancedMountProviders(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/providers`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getEnhancedMountCosts(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/costs`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function getEnhancedMountPerformance(containerId: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/performance`, {
-    headers: getAuthHeaders()
+    headers: apiHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
 
 export async function enableEnhancedMountProvider(
-  containerId: string, 
-  provider: string, 
+  containerId: string,
+  provider: string,
   config: Record<string, any>
 ) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/providers/${provider}/enable`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders()
-    },
+    headers: mutationHeaders({ 'Content-Type': 'application/json' }),
+    credentials: 'same-origin' as const,
     body: JSON.stringify(config)
   });
   return handleResponse(response);
@@ -338,7 +362,8 @@ export async function enableEnhancedMountProvider(
 export async function disableEnhancedMountProvider(containerId: string, provider: string) {
   const response = await fetch(`${API_BASE_URL}/enhanced-mount/${containerId}/providers/${provider}/disable`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: mutationHeaders(),
+    credentials: 'same-origin' as const,
   });
   return handleResponse(response);
 }
