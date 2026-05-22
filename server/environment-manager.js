@@ -66,9 +66,32 @@ export class EnvironmentManager {
   static getConfiguration() {
     if (!this.#initialized) {
       this.#config = this.#buildConfiguration();
+      this.#validateCritical(this.#config);
       this.#initialized = true;
     }
     return this.#config;
+  }
+
+  /**
+   * Validate critical security configuration at startup
+   * @private
+   */
+  static #validateCritical(config) {
+    if (!config.jwtSecret || config.jwtSecret.length < 32) {
+      console.error('FATAL: JWT_SECRET must be set to a value of at least 32 characters.');
+      console.error('Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+      process.exit(1);
+    }
+
+    if (!config.authEnabled) {
+      const bind = config.bindAddress;
+      if (bind !== '127.0.0.1' && bind !== '::1') {
+        console.error('FATAL: AUTH_ENABLED=false requires BIND_ADDRESS=127.0.0.1');
+        console.error('Disabling authentication while bound to ' + bind + ' exposes the Docker socket to the network.');
+        process.exit(1);
+      }
+      console.warn('WARNING: Authentication disabled. Backend bound to loopback only.');
+    }
   }
 
   /**
@@ -98,7 +121,7 @@ export class EnvironmentManager {
       
       // Authentication configuration
       authEnabled: process.env.AUTH_ENABLED !== 'false',
-      jwtSecret: process.env.JWT_SECRET || 'homelabarr-default-secret-change-in-production',
+      jwtSecret: process.env.JWT_SECRET,
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
       
       // Logging configuration
@@ -153,8 +176,7 @@ export class EnvironmentManager {
     }
     
     if (environment === 'development') {
-      // In development, use wildcard for maximum compatibility
-      return '*';
+      return ['http://localhost:5173', 'http://localhost:8080', 'http://127.0.0.1:5173', 'http://127.0.0.1:8080'];
     }
     
     // Production should have explicit origins configured
@@ -205,10 +227,10 @@ export class EnvironmentManager {
 
     // Validate required environment variables
     if (config.environment === 'production') {
-      if (config.jwtSecret === 'homelabarr-default-secret-change-in-production') {
-        errors.push('JWT_SECRET must be set to a secure value in production');
+      if (!config.jwtSecret || config.jwtSecret.length < 32) {
+        errors.push('JWT_SECRET must be set to a value of at least 32 characters');
       }
-      
+
       if (!config.corsOrigin || config.corsOrigin.length === 0) {
         errors.push('CORS_ORIGIN must be configured in production');
       }
@@ -270,7 +292,7 @@ export class EnvironmentManager {
     }
     
     if (config.environment === 'development') {
-      console.log(`🔗 CORS Mode: Development (wildcard origins, comprehensive headers, request logging enabled)`);
+      console.log(`🔗 CORS Mode: Development (localhost + RFC-1918 origins, comprehensive headers, request logging enabled)`);
     } else {
       console.log(`🔗 CORS Mode: Production (strict origin validation, limited headers)`);
     }
