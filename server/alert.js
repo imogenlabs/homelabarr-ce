@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
+import { readSecret } from './secrets.js';
 
 const COOLDOWN_MS = 5 * 60 * 1000;
 const lastSentByKey = new Map();
 
 const ALERT_HOOK_URL = process.env.ALERT_WEBHOOK_URL || '';
-const ALERT_SECRET = process.env.ALERT_WEBHOOK_SECRET || '';
+const ALERT_SECRET = readSecret('ALERT_WEBHOOK_SECRET', { required: false }) || '';
 const ALERT_ON = new Set((process.env.ALERT_EVENTS || 'login.locked,audit.chain.broken,session.refresh.fail').split(','));
 
 export async function maybeAlert(payload) {

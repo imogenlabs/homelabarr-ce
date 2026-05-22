@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { readSecret } from './secrets.js';
 import { createSession, isJtiActive, getSessionByJti, rotateRefresh, revokeSession, revokeAllForUser, listForUser } from './sessions.js';
 import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
 import transporter from './email.js';
@@ -11,11 +12,11 @@ import QRCode from 'qrcode';
 // Configuration
 const BCRYPT_COST = 12;
 const ACCESS_TTL_SEC = 15 * 60;
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const JWT_SECRET = readSecret('JWT_SECRET', { required: false }) || readSecret('JWT_KEY_CURRENT', { required: false }) || process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
 const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
-const API_KEY_HMAC_KEY = process.env.API_KEY_HMAC_KEY || process.env.JWT_SECRET;
+const API_KEY_HMAC_KEY = readSecret('API_KEY_HMAC_KEY', { required: false }) || JWT_SECRET;
 
 const ROLE_HIERARCHY = { user: 1, operator: 2, admin: 3 };
 

@@ -144,6 +144,35 @@ jobs:
         COSIGN_EXPERIMENTAL: "1"
       run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
 
+    - name: Trivy scan frontend
+      if: github.event_name != 'pull_request'
+      uses: aquasecurity/trivy-action@0.28.0
+      continue-on-error: true
+      with:
+        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+        format: sarif
+        output: trivy-frontend.sarif
+        severity: CRITICAL,HIGH
+        ignore-unfixed: true
+
+    - name: Trivy scan backend
+      if: github.event_name != 'pull_request'
+      uses: aquasecurity/trivy-action@0.28.0
+      continue-on-error: true
+      with:
+        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
+        format: sarif
+        output: trivy-backend.sarif
+        severity: CRITICAL,HIGH
+        ignore-unfixed: true
+
+    - name: Upload Trivy SARIF
+      if: always() && github.event_name != 'pull_request'
+      uses: github/codeql-action/upload-sarif@fee9466b8957867761f2d78f922ab084e3e2dd17  # v3
+      with:
+        sarif_file: trivy-backend.sarif
+        category: trivy-image
+
     - name: Test image functionality
       if: github.event_name == 'pull_request'
       run: |
