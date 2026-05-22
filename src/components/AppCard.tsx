@@ -1,8 +1,9 @@
 import { AppTemplate, CLIApplication } from "../types";
 import { Shield, Network, Monitor, Star } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getAppIconPath, getCdnFallbackUrl } from '../utils/iconMap';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -60,11 +61,19 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
           />
         </div>
         <div className="min-w-0 flex-1">
-          <CardTitle className="text-base font-semibold truncate">{app.name}</CardTitle>
-          {cliApp && (
-            <CardDescription className="truncate text-xs mt-0.5">
-              {cliApp.image.split(":")[0]}
-            </CardDescription>
+          {cliApp ? (
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CardTitle className="text-base font-semibold truncate cursor-default">{app.name}</CardTitle>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="font-mono text-xs">
+                  {cliApp.image}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <CardTitle className="text-base font-semibold truncate">{app.name}</CardTitle>
           )}
         </div>
       </CardHeader>
