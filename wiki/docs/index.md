@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/mascot-600.webp" srcset="img/mascot-600.webp 1x, img/mascot-1200.webp 2x" alt="HomelabARR" width="600">
+  <img src="img/mascot-600.webp" alt="HomelabARR" width="180" style="max-width: 180px;">
 </p>
 
 # HomelabARR CE
