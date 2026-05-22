@@ -1,0 +1,44 @@
+# C-R9-1: ZAP DAST passive baseline scan
+# Runs on PRs (passive only) and nightly to catch regressions
+name: DAST Baseline Scan
+
+on:
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: '15 3 * * *' # 03:15 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  zap-baseline:
+    name: ZAP Passive Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@0619037bb784a56e2e06b104f0ebe157e076f075 # v0.13.0
+        with:
+          target: 'https://ce-demo.homelabarr.com'
+          rules_file_name: '.zap/rules.tsv'
+          fail_action: true
+          cmd_options: '-a -j'
+          artifact_name: 'zap-baseline-report'
+
+      - name: Upload ZAP Report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zap-baseline-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          retention-days: 30

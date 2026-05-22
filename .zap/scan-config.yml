@@ -1,0 +1,44 @@
+# H-R9-4: ZAP scan context configuration for HomelabARR-CE
+context:
+  name: homelabarr-ce
+  urls:
+    - https://ce-demo.homelabarr.com
+
+  includePaths:
+    - https://ce-demo.homelabarr.com/.*
+
+  excludePaths:
+    - https://ce-demo.homelabarr.com/assets/.*
+    - https://ce-demo.homelabarr.com/fonts/.*
+    - https://ce-demo.homelabarr.com/icons/.*
+    - https://ce-demo.homelabarr.com/favicon\.svg
+    - https://ce-demo.homelabarr.com/robots\.txt
+    - https://ce-demo.homelabarr.com/sitemap\.xml
+    - https://ce-demo.homelabarr.com/\.well-known/.*
+
+  authentication:
+    method: json
+    loginUrl: https://ce-demo.homelabarr.com/api/auth/login
+    loginRequestData: '{"username":"{%username%}","password":"{%password%}"}'
+    tokenExtract: '$.token'
+    tokenHeader: 'Authorization: Bearer {%token%}'
+
+  users:
+    - name: dast-scanner
+      credentials:
+        username: '{%DAST_USERNAME%}'
+        password: '{%DAST_PASSWORD%}'
+
+  sessionManagement:
+    method: headers
+    headers:
+      - 'Authorization: Bearer {%token%}'
+
+  technology:
+    include:
+      - Db.SQLite
+      - Language.JavaScript
+      - OS.Linux
+      - SCM.Git
+      - WS.Node.js
+      - WS.Nginx
