@@ -165,6 +165,18 @@ const loginLimiter = rateLimit({
   keyGenerator: (req) => `${req.ip}:${(req.body?.username || '').toLowerCase()}`,
 });
 
+// M-27: Centralised error helper — strips internal details in production
+function sendError(res, status, message, internalError) {
+  if (internalError) {
+    logger.error(message, { error: internalError.message || internalError, stack: internalError.stack });
+  }
+  const body = { error: message };
+  if (isDevelopment && internalError) {
+    body.details = internalError.message || String(internalError);
+  }
+  res.status(status).json(body);
+}
+
 // Enhanced preflight OPTIONS handler for development mode
 if (isDevelopment) {
   app.options('*', (req, res) => {
@@ -1016,11 +1028,7 @@ app.get('/applications', async (req, res) => {
       });
     }
   } catch (error) {
-    logger.error('Error loading applications:', error);
-    res.status(500).json({
-      error: 'Failed to load applications',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to load applications', error);
   }
 });
 
@@ -1046,11 +1054,7 @@ app.post('/applications/:appId/stop', authEnabled ? requireAuth : optionalAuth, 
       });
     }
   } catch (error) {
-    logger.error('Error stopping application:', error);
-    res.status(500).json({
-      error: 'Failed to stop application',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to stop application', error);
   }
 });
 
@@ -1075,11 +1079,7 @@ app.delete('/applications/:appId', authEnabled ? requireAuth : optionalAuth, asy
       });
     }
   } catch (error) {
-    logger.error('Error removing application:', error);
-    res.status(500).json({
-      error: 'Failed to remove application',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to remove application', error);
   }
 });
 
@@ -1104,11 +1104,7 @@ app.get('/applications/:appId/logs', authEnabled ? requireAuth : optionalAuth, a
       });
     }
   } catch (error) {
-    logger.error('Error getting application logs:', error);
-    res.status(500).json({
-      error: 'Failed to get application logs',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get application logs', error);
   }
 });
 
@@ -1154,11 +1150,7 @@ app.get('/stream/progress', requireAuth, (req, res) => {
     progressStream.sendToClient(clientId, 'statistics', stats);
     
   } catch (error) {
-    logger.error('Error setting up progress stream:', error);
-    res.status(500).json({
-      error: 'Failed to setup progress stream',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to setup progress stream', error);
   }
 });
 
@@ -1184,11 +1176,7 @@ app.post('/stream/deployments/:deploymentId/subscribe', authEnabled ? requireAut
       clientId
     });
   } catch (error) {
-    logger.error('Error subscribing to deployment:', error);
-    res.status(500).json({
-      error: 'Failed to subscribe to deployment',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to subscribe to deployment', error);
   }
 });
 
@@ -1217,11 +1205,7 @@ app.get('/deployments/:deploymentId/status', authEnabled ? requireAuth : optiona
       });
     }
   } catch (error) {
-    logger.error('Error getting deployment status:', error);
-    res.status(500).json({
-      error: 'Failed to get deployment status',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get deployment status', error);
   }
 });
 
@@ -1244,11 +1228,7 @@ app.get('/deployments/active', authEnabled ? requireAuth : optionalAuth, (req, r
       });
     }
   } catch (error) {
-    logger.error('Error getting active deployments:', error);
-    res.status(500).json({
-      error: 'Failed to get active deployments',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get active deployments', error);
   }
 });
 
@@ -1313,16 +1293,7 @@ app.get('/ports/check', requireAuth, async (req, res) => {
       });
     }
   } catch (error) {
-    logger.error('Error checking ports:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      usedPorts: [],
-      docker: {
-        status: 'error',
-        message: 'Failed to check ports'
-      }
-    });
+    sendError(res, 500, 'Failed to check ports', error);
   }
 });
 
@@ -3562,14 +3533,10 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
         setTimeout(() => {
           if (!res.headersSent) {
             dockerProcess.kill();
-            return res.status(500).json({
-              success: false,
-              error: 'Deployment timeout',
-              details: 'Docker deployment took too long'
-            });
+            return sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long'));
           }
         }, 30000);
-        
+
         // Return success immediately for MVP testing
         logActivity({
           userId: req.user?.id || 'anonymous',
@@ -3594,12 +3561,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
         });
 
       } catch (cliError) {
-        logger.error('Docker CLI deployment failed:', cliError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Docker CLI deployment failed',
-          details: cliError.message
-        });
+        return sendError(res, 500, 'Docker CLI deployment failed', cliError);
       }
     }
 
@@ -3702,36 +3664,22 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
                 port: parseInt(port)
               }));
             } else {
-              logger.error(`❌ Docker deployment failed with code ${code}: ${errorOutput}`);
-              resolve(res.status(500).json({
-                success: false,
-                error: 'Docker deployment failed',
-                details: errorOutput || `Process exited with code ${code}`,
-                dockerStatus: 'cli-error'
-              }));
+              logger.error(`Docker deployment failed with code ${code}: ${errorOutput}`);
+              resolve(sendError(res, 500, 'Docker deployment failed', new Error(errorOutput || `Process exited with code ${code}`)));
             }
           });
-          
+
           // Set timeout for the deployment
           setTimeout(() => {
             if (!res.headersSent) {
               dockerProcess.kill();
-              resolve(res.status(500).json({
-                success: false,
-                error: 'Deployment timeout',
-                details: 'Docker deployment took too long'
-              }));
+              resolve(sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long')));
             }
           }, 30000);
         });
-        
+
       } catch (cliError) {
-        logger.error('Docker CLI deployment failed:', cliError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Docker CLI deployment failed',
-          details: cliError.message
-        });
+        return sendError(res, 500, 'Docker CLI deployment failed', cliError);
       }
     }
 
@@ -3807,28 +3755,19 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
               port: parseInt(port)
             });
           } else {
-            logger.error(`❌ Docker deployment failed with code ${code}: ${errorOutput}`);
-            res.status(500).json({
-              success: false,
-              error: 'Docker deployment failed',
-              details: errorOutput || `Process exited with code ${code}`,
-              dockerStatus: 'cli-error'
-            });
+            logger.error(`Docker deployment failed with code ${code}: ${errorOutput}`);
+            sendError(res, 500, 'Docker deployment failed', new Error(errorOutput || `Process exited with code ${code}`));
           }
         });
-        
+
         // Set timeout for the deployment
         setTimeout(() => {
           if (!res.headersSent) {
             dockerProcess.kill();
-            res.status(500).json({
-              success: false,
-              error: 'Deployment timeout',
-              details: 'Docker deployment took too long'
-            });
+            sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long'));
           }
         }, 30000);
-        
+
         return; // Don't continue to old template mode
       }
       
@@ -3841,12 +3780,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
       });
       
     } catch (cliError) {
-      logger.error('CLI deployment setup failed:', cliError.message);
-      return res.status(500).json({
-        success: false,
-        error: 'CLI deployment failed',
-        details: cliError.message
-      });
+      return sendError(res, 500, 'CLI deployment failed', cliError);
     }
 
     // Read template file
@@ -4182,12 +4116,7 @@ app.get('/enhanced-mount/:containerId/status', requireAuth, async (req, res) => 
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount status for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount status',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount status', error);
   }
 });
 
@@ -4220,12 +4149,7 @@ app.get('/enhanced-mount/:containerId/providers', requireAuth, async (req, res) 
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount providers for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount providers',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount providers', error);
   }
 });
 
@@ -4258,12 +4182,7 @@ app.get('/enhanced-mount/:containerId/costs', requireAuth, async (req, res) => {
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount costs for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount costs',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount costs', error);
   }
 });
 
@@ -4296,12 +4215,7 @@ app.get('/enhanced-mount/:containerId/performance', requireAuth, async (req, res
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount performance for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount performance',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount performance', error);
   }
 });
 
@@ -4353,12 +4267,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth,
       data: data
     });
   } catch (error) {
-    logger.error(`Error enabling provider ${req.params.provider} for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: `Failed to enable provider ${req.params.provider}`,
-      details: error.message
-    });
+    sendError(res, 500, `Failed to enable provider ${req.params.provider}`, error);
   }
 });
 
@@ -4402,12 +4311,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth
       data: data
     });
   } catch (error) {
-    logger.error(`Error disabling provider ${req.params.provider} for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: `Failed to disable provider ${req.params.provider}`,
-      details: error.message
-    });
+    sendError(res, 500, `Failed to disable provider ${req.params.provider}`, error);
   }
 });
 
@@ -4449,12 +4353,7 @@ app.post('/enhanced-mount/:containerId/auth/start', requireAuth, async (req, res
       data: data
     });
   } catch (error) {
-    logger.error(`Error starting auth for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to start authentication',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to start authentication', error);
   }
 });
 
@@ -4495,12 +4394,7 @@ app.post('/enhanced-mount/:containerId/auth/complete', requireAuth, async (req, 
       data: data
     });
   } catch (error) {
-    logger.error(`Error completing auth for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to complete authentication',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to complete authentication', error);
   }
 });
 
@@ -4541,12 +4435,7 @@ app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth, async (req, r
       data: data
     });
   } catch (error) {
-    logger.error(`Error configuring API key for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to configure API credentials',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to configure API credentials', error);
   }
 });
 
@@ -4588,22 +4477,13 @@ app.post('/enhanced-mount/:containerId/auth/test', requireAuth, async (req, res)
       data: data
     });
   } catch (error) {
-    logger.error(`Error testing connection for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test connection',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to test connection', error);
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+  sendError(res, 500, 'Internal Server Error', err);
 });
 
 // Graceful shutdown handlers
