@@ -159,6 +159,14 @@ docker buildx imagetools inspect \
 - `docker inspect homelabarr-backend` shows `ReadonlyRootfs: true` and `CapDrop: [ALL]`
 - Images pinned to a tag AND sha256 digest in your compose file
 
+## Incident Response
+
+1. **Read recent security events** — `GET /api/audit?limit=500` (requires admin auth)
+2. **Revoke all sessions** — `POST /api/auth/sessions/revoke-all` or directly: `sqlite3 /app/data/sessions.db "UPDATE sessions SET revoked_at = strftime('%s','now') * 1000 WHERE revoked_at IS NULL;"`
+3. **Rotate JWT_SECRET** — regenerate with `openssl rand -base64 48`, update the env, restart backend. All outstanding tokens become invalid.
+4. **Verify audit chain integrity** — `GET /api/audit` returns `chain.ok: true/false`
+5. **Archive audit logs** — rotated JSONL files at `/app/server/activity-data/audit-*.jsonl.gz`
+
 ## Acknowledgments
 
 We appreciate responsible disclosure and will credit security researchers who report valid vulnerabilities.
