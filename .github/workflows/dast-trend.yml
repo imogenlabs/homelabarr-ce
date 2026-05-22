@@ -1,0 +1,32 @@
+name: DAST Trend
+on:
+  schedule:
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  trend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Generate trend report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p docs
+          echo "# DAST Trend Report" > docs/dast-trend.md
+          echo "" >> docs/dast-trend.md
+          echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> docs/dast-trend.md
+          echo "" >> docs/dast-trend.md
+          echo "| Date | Workflow | Status | Findings |" >> docs/dast-trend.md
+          echo "|------|---------|--------|----------|" >> docs/dast-trend.md
+          gh run list --workflow=dast-active.yml --limit=7 --json databaseId,conclusion,createdAt \
+            --jq '.[] | "| \(.createdAt) | dast-active | \(.conclusion) | - |"' >> docs/dast-trend.md 2>/dev/null || true
+          git config user.name 'dast-trend-bot'
+          git config user.email 'noreply@github.com'
+          git add docs/dast-trend.md
+          git diff --cached --quiet || git commit -m 'chore(dast): weekly trend update'
+          git push || true
