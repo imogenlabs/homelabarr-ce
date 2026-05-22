@@ -9,6 +9,13 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
 const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
+const API_KEY_HMAC_KEY = process.env.API_KEY_HMAC_KEY || process.env.JWT_SECRET;
+
+const ROLE_HIERARCHY = { user: 1, operator: 2, admin: 3 };
+
+function hasRole(userRole, requiredRole) {
+  return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
+}
 
 // Ensure config directory exists
 const configDir = path.dirname(USERS_FILE);
@@ -77,6 +84,7 @@ export async function createUser(userData) {
     email: userData.email || '',
     role: userData.role || 'user',
     password: hashedPassword,
+    mustChangePassword: userData.mustChangePassword || false,
     createdAt: new Date().toISOString(),
     lastLogin: null
   };
@@ -134,7 +142,7 @@ export function verifyToken(token) {
 }
 
 export function generateUserId() {
-  return 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+  return 'user_' + crypto.randomBytes(12).toString('hex');
 }
 
 
@@ -159,44 +167,60 @@ export function saveApiKeys(keys) {
   }
 }
 
-export function generateApiKey() {
-  return 'hlr_' + crypto.randomBytes(32).toString('hex');
-}
-
 export function createApiKey(userId, label) {
   const keys = loadApiKeys();
-  const key = generateApiKey();
+  const key = 'hlr_' + crypto.randomBytes(32).toString('hex');
+  const lookup = key.slice(0, 12);
+  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
   const entry = {
     id: 'key_' + crypto.randomBytes(8).toString('hex'),
-    key: key,
-    userId: userId,
+    lookup,
+    hash,
+    userId,
     label: label || 'Mobile App',
     createdAt: new Date().toISOString(),
     lastUsed: null,
-    revoked: false
+    revoked: false,
   };
   keys.push(entry);
   saveApiKeys(keys);
-  return entry;
+  return { ...entry, key };
 }
 
 export function validateApiKey(key) {
   if (!key || !key.startsWith('hlr_')) return null;
+  const lookup = key.slice(0, 12);
+  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
   const keys = loadApiKeys();
-  const entry = keys.find(k => k.key === key && !k.revoked);
-  if (!entry) return null;
-  entry.lastUsed = new Date().toISOString();
-  saveApiKeys(keys);
-  const user = findUserById(entry.userId);
-  if (!user) return null;
-  return { id: user.id, username: user.username, role: user.role, apiKey: true };
+  for (const entry of keys.filter(k => !k.revoked && (k.lookup === lookup || k.key))) {
+    if (entry.hash && entry.hash.length === hash.length &&
+        crypto.timingSafeEqual(Buffer.from(entry.hash, 'hex'), Buffer.from(hash, 'hex'))) {
+      entry.lastUsed = new Date().toISOString();
+      saveApiKeys(keys);
+      const user = findUserById(entry.userId);
+      if (!user) return null;
+      return { id: user.id, username: user.username, role: user.role, apiKey: true };
+    }
+    // Legacy fallback: unhashed key stored as entry.key (migrate on next validate)
+    if (entry.key === key) {
+      entry.hash = hash;
+      entry.lookup = lookup;
+      delete entry.key;
+      entry.lastUsed = new Date().toISOString();
+      saveApiKeys(keys);
+      const user = findUserById(entry.userId);
+      if (!user) return null;
+      return { id: user.id, username: user.username, role: user.role, apiKey: true };
+    }
+  }
+  return null;
 }
 
 export function listApiKeys(userId) {
   const keys = loadApiKeys();
   return keys
     .filter(k => k.userId === userId && !k.revoked)
-    .map(({ key, ...rest }) => ({ ...rest, keyPreview: key.slice(0, 8) + '...' + key.slice(-4) }));
+    .map(({ key, hash, ...rest }) => ({ ...rest, keyPreview: rest.lookup || 'hlr_****' }));
 }
 
 export function revokeApiKey(keyId, userId) {
@@ -331,7 +355,8 @@ export async function initializeAuth() {
     try {
       await createUser({
         ...DEFAULT_ADMIN,
-        password: defaultPassword
+        password: defaultPassword,
+        mustChangePassword: true,
       });
       
       console.log('✅ Default admin user created:');
@@ -345,108 +370,38 @@ export async function initializeAuth() {
 }
 
 // Middleware functions
-export function requireAuth(role) {
-  // If called with parameters (req, res, next), it's being used as direct middleware
-  if (arguments.length === 3 || (arguments.length === 1 && typeof role === 'object')) {
-    const [req, res, next] = arguments.length === 3 ? arguments : [role, arguments[1], arguments[2]];
-    
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
-        details: 'Please provide a valid authentication token'
-      });
-    }
-    
-    const token = authHeader.substring(7);
-    
-    // Try API key first (hlr_ prefix)
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) { req.user = apiUser; next(); return; }
-      return res.status(401).json({ error: 'Invalid API key' });
-    }
-    
-    const decoded = verifyToken(token);
-    
-    if (!decoded) {
-      return res.status(401).json({ 
-        error: 'Invalid token',
-        details: 'Authentication token is invalid or expired'
-      });
-    }
-    
-    // Add user info to request
-    req.user = decoded;
-    next();
-    return;
+export function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
-  
-  // If called with no arguments or a role, return a middleware function
-  return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
-        details: 'Please provide a valid authentication token'
-      });
-    }
-    
-    const token = authHeader.substring(7);
-    
-    // Try API key first
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) {
-        req.user = apiUser;
-        if (role && apiUser.role !== role && apiUser.role !== 'admin') {
-          return res.status(403).json({ error: 'Insufficient permissions' });
-        }
-        next(); return;
-      }
-      return res.status(401).json({ error: 'Invalid API key' });
-    }
-    
-    const decoded = verifyToken(token);
-    
-    if (!decoded) {
-      return res.status(401).json({ 
-        error: 'Invalid token',
-        details: 'Authentication token is invalid or expired'
-      });
-    }
-    
-    // Check role if specified
-    if (role && decoded.role !== role && decoded.role !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Insufficient permissions',
-        details: `Role '${role}' required`
-      });
-    }
-    
-    // Add user info to request
-    req.user = decoded;
-    next();
-  };
+
+  const token = authHeader.substring(7);
+
+  if (token.startsWith('hlr_')) {
+    const apiUser = validateApiKey(token);
+    if (apiUser) { req.user = apiUser; return next(); }
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  req.user = decoded;
+  next();
 }
 
 export function requireRole(role) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ 
-        error: 'Authentication required' 
-      });
+      return res.status(401).json({ error: 'Authentication required' });
     }
-    
-    if (req.user.role !== role && req.user.role !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Insufficient permissions',
-        details: `This action requires ${role} role or higher`
-      });
+    if (!hasRole(req.user.role, role)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
     }
-    
     next();
   };
 }
@@ -454,7 +409,7 @@ export function requireRole(role) {
 // Optional authentication middleware (allows both authenticated and unauthenticated access)
 export function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     if (token.startsWith('hlr_')) {
@@ -465,6 +420,8 @@ export function optionalAuth(req, res, next) {
       if (decoded) req.user = decoded;
     }
   }
-  
+
   next();
 }
+
+export { hasRole, ROLE_HIERARCHY };

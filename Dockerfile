@@ -34,4 +34,6 @@ LABEL org.opencontainers.image.vendor="Imogen Labs"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"
 
+USER homelabarr
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
