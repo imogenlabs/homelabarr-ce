@@ -2,6 +2,7 @@
 # Multi-stage build: Node for building, nginx for serving
 
 FROM node:24-alpine AS build
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --no-audit --loglevel=error --no-fund
