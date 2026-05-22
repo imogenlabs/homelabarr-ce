@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "id": "RULE-HLA-1",
+      "name": "Docker Socket Exfil Detection",
+      "description": "Detect attempts to access the Docker socket or engine API through path traversal or proxy bypass",
+      "type": "active",
+      "vectors": [
+        {
+          "method": "GET",
+          "paths": [
+            "/api/containers/../../../var/run/docker.sock",
+            "/api/exec?cmd=curl+--unix-socket+/var/run/docker.sock+http://localhost/info",
+            "/api/proxy/http%3A%2F%2Flocalhost%3A2375%2Fcontainers%2Fjson"
+          ],
+          "expect": {
+            "status_not": [200],
+            "body_not_contains": ["ContainersRunning", "DockerRootDir", "ServerVersion"]
+          }
+        }
+      ],
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "cwe": 22,
+      "wasc": 33,
+      "reference": "https://owasp.org/www-community/attacks/Path_Traversal"
+    },
+    {
+      "id": "RULE-HLA-2",
+      "name": "Template Traversal Injection",
+      "description": "Detect path traversal in template rendering endpoints that could leak server-side files",
+      "type": "active",
+      "vectors": [
+        {
+          "method": "GET",
+          "paths": [
+            "/api/templates/..%2F..%2F..%2Fetc%2Fpasswd",
+            "/api/templates/....//....//....//etc/shadow",
+            "/api/compose?template=../../../../etc/hostname",
+            "/api/stacks?file=../../../.env"
+          ],
+          "expect": {
+            "status_not": [200],
+            "body_not_contains": ["root:", "DB_PASSWORD", "JWT_SECRET", "ADMIN_PASSWORD"]
+          }
+        }
+      ],
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "cwe": 22,
+      "wasc": 33,
+      "reference": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/01-Testing_Directory_Traversal_File_Include"
+    },
+    {
+      "id": "RULE-HLA-3",
+      "name": "Audit Chain Header Spoof",
+      "description": "Verify audit log integrity cannot be spoofed via X-Forwarded-For, X-Real-IP, or X-Request-ID header injection",
+      "type": "active",
+      "vectors": [
+        {
+          "method": "POST",
+          "path": "/api/containers",
+          "headers": {
+            "X-Forwarded-For": "10.0.0.1, 192.168.1.1",
+            "X-Real-IP": "10.0.0.1",
+            "X-Request-ID": "spoofed-request-id-12345"
+          },
+          "body": "{\"action\":\"start\",\"id\":\"test\"}",
+          "expect": {
+            "audit_source_ip_not": "10.0.0.1",
+            "audit_request_id_not": "spoofed-request-id-12345",
+            "description": "Audit log must record the real client IP from the trusted proxy chain, not attacker-supplied headers"
+          }
+        }
+      ],
+      "severity": "MEDIUM",
+      "confidence": "MEDIUM",
+      "cwe": 290,
+      "wasc": 15,
+      "reference": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/04-Testing_for_Bypassing_Authentication_Schema"
+    }
+  ]
+}

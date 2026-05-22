@@ -55,6 +55,7 @@ import { initAudit, audit, verifyChain, getRecentAuditEvents } from './audit.js'
 import { maybeAlert } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
 import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import { readSecret } from './secrets.js';
 
 function getRequestMeta(req) {
   return {
@@ -150,6 +151,8 @@ const chmod = promisify(fs.chmod);
 const corsOptions = EnvironmentManager.getCorsOptions();
 
 const app = express();
+app.disable('x-powered-by');
+app.use((req, res, next) => { res.removeHeader('Server'); next(); });
 
 initAudit();
 
@@ -173,10 +176,15 @@ app.use(DeploymentLogger.createCorsLoggingMiddleware());
 app.use(cors(corsOptions));
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginOpenerPolicy: false,
-  crossOriginResourcePolicy: false,
-  referrerPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-site' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
+  next();
+});
 app.use(cookieParser());
 app.use(requestContext);
 
@@ -198,7 +206,7 @@ app.use(globalRateLimit);
 
 // M-R2-9: CSRF double-submit cookie validation for state-changing requests
 app.use((req, res, next) => {
-  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/csp-report'];
+  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/cli-mint', '/csp-report'];
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !csrfExempt.includes(req.path)) {
     const cookieTok = req.cookies?.hl_csrf;
     const hdrTok = req.headers['x-csrf-token'];
@@ -772,9 +780,28 @@ app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async
   }
 });
 
-// C-9: Health check — always minimal
+// H-R9-5: CLI mint endpoint — issue short-lived tokens for scanners/CLI tools
+app.post('/auth/cli-mint', express.json({ limit: '1kb' }), async (req, res) => {
+  const mintKey = req.get('X-Mint-Key');
+  const want = process.env.CLI_MINT_KEY || readSecret('CLI_MINT_KEY', { required: false });
+  if (!want || !mintKey) return res.status(403).json({ ok: false });
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(mintKey), Buffer.from(want))) {
+      return res.status(403).json({ ok: false });
+    }
+  } catch { return res.status(403).json({ ok: false }); }
+  const { u, role = 'viewer', ttl_s = 1800 } = req.body || {};
+  if (!u || typeof u !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(u)) return res.status(400).json({ ok: false });
+  if (!['viewer', 'scanner'].includes(role)) return res.status(400).json({ ok: false });
+  if (ttl_s < 60 || ttl_s > 3600) return res.status(400).json({ ok: false });
+  const token = generateToken({ id: u, username: u, role }, 'mint-' + crypto.randomBytes(8).toString('hex'));
+  audit({ actor: u, ip: req.ip, event: 'auth.cli_mint', result: 'ok', meta: { role, ttl_s } });
+  res.json({ a: token, exp: Math.floor(Date.now() / 1000) + ttl_s });
+});
+
+// CF-D: Health check — minimal, no server info leaked
 app.get('/health', (_req, res) => {
-  return res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.2.0' });
+  return res.json({ ok: true, ts: Math.floor(Date.now() / 1000), state: 'ready' });
 });
 
 // R6.5-drift-1: Full health detail — admin only
@@ -1172,6 +1199,24 @@ app.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) =>
 
     res.status(200).json(errorResponse);
   }
+});
+
+// H-R9-6: Route manifest — scanner/admin only
+app.get('/_routes', requireAuth, (req, res) => {
+  if (req.user.role !== 'scanner' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'scanner or admin role required' });
+  }
+  const routes = [];
+  app._router.stack.forEach(layer => {
+    if (layer.route) {
+      routes.push({
+        path: layer.route.path,
+        methods: Object.keys(layer.route.methods).filter(m => layer.route.methods[m]).map(m => m.toUpperCase()),
+      });
+    }
+  });
+  routes.sort((a, b) => a.path.localeCompare(b.path));
+  res.json({ count: routes.length, routes });
 });
 
 // ─── API Key Routes ─────────────────────────────────────────────────────
