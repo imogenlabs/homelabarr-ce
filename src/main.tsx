@@ -9,6 +9,10 @@ import "./index.css";
 import { getTheme, setTheme } from "./lib/theme";
 import { Toaster } from "@/components/ui/sonner";
 
+try {
+  ['homelabarr_token', 'homelabarr_user', 'homelabarr_jwt'].forEach(k => localStorage.removeItem(k));
+} catch {}
+
 setTheme(getTheme());
 
 createRoot(document.getElementById("root")!).render(
