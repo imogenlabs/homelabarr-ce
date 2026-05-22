@@ -463,7 +463,7 @@ export default function App() {
                 variant={sortField === 'name' ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={() => handleSort('name')}
-                className={sortField === 'name' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : ''}
+                className={sortField === 'name' ? 'bg-secondary text-foreground border-border' : ''}
               >
                 Name
                 {sortField === 'name' && (
@@ -474,7 +474,7 @@ export default function App() {
                 variant={sortField === 'status' ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={() => handleSort('status')}
-                className={sortField === 'status' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : ''}
+                className={sortField === 'status' ? 'bg-secondary text-foreground border-border' : ''}
               >
                 Status
                 {sortField === 'status' && (
@@ -485,7 +485,7 @@ export default function App() {
                 variant={sortField === 'deployedAt' ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={() => handleSort('deployedAt')}
-                className={sortField === 'deployedAt' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : ''}
+                className={sortField === 'deployedAt' ? 'bg-secondary text-foreground border-border' : ''}
               >
                 Deployment Date
                 {sortField === 'deployedAt' && (
@@ -496,7 +496,7 @@ export default function App() {
                 variant={sortField === 'uptime' ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={() => handleSort('uptime')}
-                className={sortField === 'uptime' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : ''}
+                className={sortField === 'uptime' ? 'bg-secondary text-foreground border-border' : ''}
               >
                 Uptime
                 {sortField === 'uptime' && (
@@ -511,7 +511,7 @@ export default function App() {
                 info('Refreshing Statistics', 'Updating container statistics...');
                 fetchContainers(true);
               }}
-              className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-800"
+              className=""
             >
               <RefreshCw className="w-4 h-4 mr-1" />
               Refresh Stats
@@ -535,7 +535,7 @@ export default function App() {
                         containerId: app.id,
                         containerName: app.name
                       })}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                      className="w-full"
                     >
                       Enhanced Mount Dashboard
                     </Button>
@@ -552,8 +552,8 @@ export default function App() {
     if (catalogLoading) {
       return (
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600 dark:text-gray-400">Loading applications...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+          <span className="ml-3 text-muted-foreground">Loading applications...</span>
         </div>
       );
     }
@@ -588,22 +588,22 @@ export default function App() {
       <div>
         {/* Category Header */}
         {!searchQuery && currentCategoryInfo && (
-          <div className="mb-6 p-6 bg-white dark:bg-[hsl(222,28%,10%)] rounded-lg border border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-black/20">
+          <div className="mb-6 p-6 bg-card rounded-lg border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <currentCategoryInfo.icon className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
+                <currentCategoryInfo.icon className="w-8 h-8 text-muted-foreground mr-3" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-foreground">
                     {currentCategoryInfo.name}
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-muted-foreground mt-1">
                     {currentCategoryInfo.description}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold text-blue-600">{filteredApps.length}</span>
-                <p className="text-sm text-gray-500 dark:text-gray-400">applications</p>
+                <span className="text-2xl font-bold text-foreground">{filteredApps.length}</span>
+                <p className="text-sm text-muted-foreground">applications</p>
               </div>
             </div>
           </div>
@@ -611,20 +611,20 @@ export default function App() {
 
         {/* Search Results Header */}
         {searchQuery && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="mb-6 p-4 bg-secondary rounded-lg border border-border">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                <h2 className="text-lg font-semibold text-foreground">
                   Search Results for "{searchQuery}"
                 </h2>
-                <p className="text-blue-700 dark:text-blue-300 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Found {filteredApps.length} applications matching your search
                 </p>
               </div>
               <Button
                 variant="link"
                 onClick={() => setSearchQuery('')}
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 px-0"
+                className="text-muted-foreground hover:text-foreground px-0"
               >
                 Clear search
               </Button>
@@ -639,7 +639,7 @@ export default function App() {
               variant="outline"
               size="sm"
               onClick={() => setCatalogSort(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="text-gray-600 dark:text-gray-300 border-gray-300 dark:border-white/[0.15] hover:bg-gray-100 dark:hover:bg-white/[0.05]"
+              className=""
             >
               <ArrowUpDown className="w-4 h-4 mr-1.5" />
               {catalogSort === 'asc' ? 'A → Z' : 'Z → A'}
@@ -665,11 +665,11 @@ export default function App() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Search className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <Search className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               {searchQuery ? 'No results found' : 'No applications in this category'}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-muted-foreground">
               {searchQuery
                 ? 'Try different keywords or browse categories above'
                 : 'Select a different category to see available applications'
@@ -682,20 +682,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[hsl(222,30%,8%)]/80 backdrop-blur-xl shadow-sm dark:shadow-black/20 border-b border-gray-200/50 dark:border-white/[0.06]">
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
           <div className="flex items-center gap-2 md:gap-3 order-1 md:order-none">
-            <img src="/mascot.webp" srcSet="/mascot.webp 1x, /mascot-2x.webp 2x" alt="" className="h-20 w-20 md:h-24 md:w-24 object-contain flex-shrink-0" />
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Homelab<span className="bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">ARR</span></h1>
+            <img src="/mascot.webp" srcSet="/mascot.webp 1x, /mascot-2x.webp 2x" alt="" className="h-8 w-8 md:h-10 md:w-10 object-contain flex-shrink-0" />
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">HomelabARR</h1>
             {/* Connection status indicator */}
             {!catalogLoading && (
-              <span className={`inline-flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-medium px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full ${
-                catalogSource === 'cli'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-              }`}>
+              <span className="inline-flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-medium px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full bg-secondary text-secondary-foreground">
                 <span className={`w-1.5 h-1.5 rounded-full ${
                   catalogSource === 'cli' ? 'bg-green-500' : 'bg-yellow-500'
                 }`} />
@@ -711,7 +707,7 @@ export default function App() {
               aria-label="Port Manager"
               title="Manage Ports"
             >
-              <Network className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Network className="w-5 h-5 text-muted-foreground" />
             </Button>
             <Button
               variant="ghost"
@@ -719,7 +715,7 @@ export default function App() {
               onClick={() => setHelpModalOpen(true)}
               aria-label="Help"
             >
-              <HelpCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <HelpCircle className="w-5 h-5 text-muted-foreground" />
             </Button>
             <ThemeToggle />
 
@@ -728,7 +724,7 @@ export default function App() {
             ) : (
               <Button
                 onClick={() => setLoginModalOpen(true)}
-                className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white shadow-md shadow-indigo-500/20 text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2"
+                className="text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2"
               >
                 Sign In
               </Button>
@@ -744,18 +740,18 @@ export default function App() {
         {/* Search Bar */}
         <div className="relative mb-8">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-indigo-400" />
+            <Search className="h-5 w-5 text-muted-foreground" />
           </div>
           <Input
             type="text"
             placeholder="Search apps..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-auto w-full pl-12 pr-24 py-4 bg-white dark:bg-[hsl(222,28%,10%)] rounded-2xl border-gray-200 dark:border-white/[0.08] shadow-sm hover:shadow-md focus-visible:shadow-lg focus-visible:shadow-indigo-500/10 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-400 dark:focus-visible:border-indigo-500 transition-all duration-200 text-base"
+            className="h-auto w-full pl-12 pr-24 py-4 bg-card rounded-lg border-border transition-all duration-200 text-base"
           />
           {searchQuery && (
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-              <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-lg">
                 {filteredApps.length} results
               </span>
             </div>
@@ -776,8 +772,8 @@ export default function App() {
                     className={cn(
                       "flex items-center whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border snap-start shrink-0",
                       isActive
-                        ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/25 border-transparent ring-0"
-                        : "border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[hsl(222,28%,10%)] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[hsl(222,28%,13%)] hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:text-gray-900 dark:hover:text-white"
+                        ? "bg-primary text-primary-foreground border-transparent"
+                        : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
                     )}
                   >
                     <Icon className="w-4 h-4 mr-2 shrink-0" />
@@ -865,13 +861,13 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-border/40 dark:border-white/[0.06] bg-background/80 dark:bg-transparent py-4 px-6 mt-8">
+      <footer className="w-full border-t border-border/40 bg-background/80 py-4 px-6 mt-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span>Built with</span>
             <span className="text-red-500">♥</span>
             <span>by</span>
-            <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 dark:text-indigo-400 underline decoration-indigo-400/50 hover:decoration-indigo-500 transition-colors">Imogen Labs AI</a>
+            <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground transition-colors">Imogen Labs AI</a>
           </div>
           <div className="flex items-center gap-4">
             <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Docs</a>

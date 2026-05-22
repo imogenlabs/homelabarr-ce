@@ -102,7 +102,7 @@ export function DeployModal({
                       type="radio"
                       checked={deploymentMode.type === mode.type}
                       onChange={() => setDeploymentMode(mode)}
-                      className="h-4 w-4 text-blue-600 mt-0.5"
+                      className="h-4 w-4 text-foreground mt-0.5"
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium">{mode.name || mode.type}</div>
@@ -122,11 +122,11 @@ export function DeployModal({
               ) : (
                 <div className="space-y-3">
                   <label className="flex items-center space-x-3">
-                    <input type="radio" checked={deploymentMode.type === "local"} onChange={() => setDeploymentMode({ type: "local", name: "Local", description: "Direct port mapping", features: [], icon: Home })} className="h-4 w-4 text-blue-600" />
+                    <input type="radio" checked={deploymentMode.type === "local"} onChange={() => setDeploymentMode({ type: "local", name: "Local", description: "Direct port mapping", features: [], icon: Home })} className="h-4 w-4 text-foreground" />
                     <span className="text-sm">Local (Direct Port Mapping)</span>
                   </label>
                   <label className="flex items-center space-x-3">
-                    <input type="radio" checked={deploymentMode.type === "traefik"} onChange={() => setDeploymentMode({ type: "traefik", name: "Traefik", description: "Reverse proxy", features: [], icon: Home })} className="h-4 w-4 text-blue-600" />
+                    <input type="radio" checked={deploymentMode.type === "traefik"} onChange={() => setDeploymentMode({ type: "traefik", name: "Traefik", description: "Reverse proxy", features: [], icon: Home })} className="h-4 w-4 text-foreground" />
                     <span className="text-sm">Traefik (Reverse Proxy)</span>
                   </label>
                   {(deploymentMode.type === "traefik" || deploymentMode.type === "authelia") && (
@@ -141,7 +141,7 @@ export function DeployModal({
                             : { type: "traefik", name: "Traefik", description: "Reverse proxy", features: [], icon: Home }
                           );
                         }}
-                        className="h-4 w-4 text-blue-600 rounded"
+                        className="h-4 w-4 text-foreground rounded"
                       />
                       <span className="text-sm">Enable Authelia Authentication</span>
                     </label>

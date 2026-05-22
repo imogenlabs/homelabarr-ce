@@ -22,7 +22,7 @@ export function DeploymentProgress({ steps }: DeploymentProgressProps) {
               <CheckCircle className="w-5 h-5 text-green-500" />
             )}
             {step.status === 'active' && (
-              <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
             )}
             {step.status === 'pending' && (
               <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />
@@ -34,7 +34,7 @@ export function DeploymentProgress({ steps }: DeploymentProgressProps) {
           <div className="flex-1">
             <p className={`text-sm font-medium ${
               step.status === 'completed' ? 'text-green-700 dark:text-green-300' :
-              step.status === 'active' ? 'text-blue-700 dark:text-blue-300' :
+              step.status === 'active' ? 'text-muted-foreground' :
               step.status === 'error' ? 'text-red-700 dark:text-red-300' :
               'text-gray-500 dark:text-gray-400'
             }`}>

@@ -47,7 +47,7 @@ export function DeployedAppCard({ app, onViewLogs, onRefresh }: DeployedAppCardP
             href={app.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+            className="text-muted-foreground hover:text-foreground hover:underline text-sm"
           >
             {app.url}
           </a>
