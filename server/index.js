@@ -56,6 +56,8 @@ import { maybeAlert } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
 import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
 import { readSecret } from './secrets.js';
+import { attackTag } from './middleware/attackTag.js';
+import { mountHoney } from './routes/honey.js';
 
 function getRequestMeta(req) {
   return {
@@ -187,6 +189,8 @@ app.use((req, res, next) => {
 });
 app.use(cookieParser());
 app.use(requestContext);
+app.use(attackTag);
+mountHoney(app);
 
 // CSP violation report endpoint (M-R2-6 / L-R2-12) — before auth routes, no auth required
 app.post('/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'] }), (req, res) => {
