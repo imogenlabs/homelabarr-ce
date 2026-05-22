@@ -258,8 +258,7 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
                 {app.description}
               </p>
               
-              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-                <span>{app.image.split(':')[0]}</span>
+              <div className="flex items-center justify-end text-xs text-muted-foreground">
                 <div className="flex items-center space-x-2">
                   {app.requiresTraefik && (
                     <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded">
