@@ -167,6 +167,37 @@ docker buildx imagetools inspect \
 4. **Verify audit chain integrity** — `GET /api/audit` returns `chain.ok: true/false`
 5. **Archive audit logs** — rotated JSONL files at `/app/server/activity-data/audit-*.jsonl.gz`
 
+## Key Rotation Runbook
+
+| Secret | Cadence | Script | Side effects |
+|--------|---------|--------|--------------|
+| JWT_KEY_CURRENT | 90 days | `scripts/rotate-jwt-key.sh` | None (previous key honored for REFRESH_TOKEN_TTL) |
+| SQLCIPHER_KEY | 180 days | `scripts/rotate-sqlcipher-key.sh` | ~1s downtime during rekey |
+| ALERT_WEBHOOK_SECRET | 365 days | Edit `./secrets/alert_webhook_secret`, restart backend | Downstream receiver must rotate simultaneously |
+| DEFAULT_ADMIN_PASSWORD | One-shot | `scripts/init-secrets.sh` (first boot only) | N/A |
+
+## Secrets Management
+
+`readSecret()` resolves in this order:
+1. `/run/secrets/<lowercased name>` (Docker Compose `secrets:` file mount -- default)
+2. `$<NAME>_FILE` environment variable pointing to a file path
+3. `$<NAME>` direct environment variable (legacy, discouraged)
+
+### Using with Vault / SOPS / 1Password
+
+Any tool that materializes secrets to disk works with the `_FILE` indirection:
+- **Vault Agent:** template that writes to `/run/secrets/jwt_key_current`, restart backend on lease refresh
+- **SOPS:** `sops -d secrets.enc.yaml | yq -o=json | jq -r '.jwt_secret' > ./secrets/jwt_key_current`
+- **1Password Connect:** `op inject -i secrets.tmpl -o ./secrets/jwt_key_current`
+
+## Backup & Recovery
+
+Run `scripts/backup.sh` daily. It produces:
+- An encrypted DB snapshot (safe to store with normal backup tools)
+- A secrets archive (store in a SEPARATE trust zone -- password manager, encrypted USB, not alongside the DB)
+
+**WARNING:** Losing both the volume AND the secrets archive = unrecoverable data loss. This is the cost of at-rest encryption.
+
 ## Acknowledgments
 
 We appreciate responsible disclosure and will credit security researchers who report valid vulnerabilities.

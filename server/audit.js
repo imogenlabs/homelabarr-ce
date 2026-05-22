@@ -3,14 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { db } from './db.js';
 
 const AUDIT_DIR = process.env.AUDIT_DIR || path.join(process.cwd(), 'server', 'activity-data');
 
-let db = null;
 let auditLogger = null;
 
-export function initAudit(database) {
-  db = database;
+export function initAudit() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS audit_events (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -420,13 +420,53 @@ jobs:
       - name: License whitelist check
         run: npx --yes license-checker-rseidelsohn --production --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense;0BSD;Python-2.0;BlueOak-1.0.0' --summary || true
 
+  bundle-secret-scan:
+    name: Bundle secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Scan dist for secret-shaped strings
+        run: |
+          if grep -rEn 'jwt_secret|JWT_SECRET|sqlcipher_key|SQLCIPHER_KEY|alert_webhook_secret' dist/ ; then
+            echo "::error::Secret-shaped string found in client bundle"
+            exit 1
+          fi
+          echo "Bundle clean — no secret-shaped strings found"
+
+  sbom-npm:
+    name: CycloneDX SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npx --yes @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom-npm.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: sbom-npm-cyclonedx
+          path: sbom-npm.cdx.json
+          retention-days: 90
+
   # Security compliance summary
   security-compliance-summary:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       actions: read
-    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan, dependency-cves, secrets-scan, license-audit]
+    needs: [shell-security-analysis, compose-security-validation, docker-vulnerability-scan, dependency-cves, secrets-scan, license-audit, bundle-secret-scan, sbom-npm]
     if: always()
     steps:
       - name: Download all security artifacts
