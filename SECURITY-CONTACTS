@@ -1,1 +1,4 @@
-michael@mjashley.com
+# HomelabARR-CE security contacts
+# Coordinated disclosure: 90 days from confirmed receipt
+primary:      michael@mjashley.com
+response_sla: 72h initial ack, weekly status thereafter
