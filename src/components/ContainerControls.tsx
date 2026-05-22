@@ -76,7 +76,7 @@ export function ContainerControls({ containerId, status, onAction }: ContainerCo
         )}
         disabled={loadingAction === 'restart'}
         title="Restart"
-        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+        className="text-muted-foreground hover:text-foreground hover:bg-accent"
       >
         <RefreshCw className={`w-4 h-4 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
       </Button>
@@ -90,7 +90,7 @@ export function ContainerControls({ containerId, status, onAction }: ContainerCo
         )}
         disabled={loadingAction === 'remove'}
         title="Remove"
-        className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        className="text-muted-foreground hover:text-foreground hover:bg-accent"
       >
         <Trash2 className={`w-4 h-4 ${loadingAction === 'remove' ? 'animate-pulse' : ''}`} />
       </Button>

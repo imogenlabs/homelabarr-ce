@@ -273,7 +273,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
             onClick={() => setActiveTab('password')}
             className={`px-6 py-3 text-sm font-medium border-b-2 ${
               activeTab === 'password'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                ? 'border-foreground text-foreground'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
@@ -285,7 +285,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
               onClick={() => setActiveTab('users')}
               className={`px-6 py-3 text-sm font-medium border-b-2 ${
                 activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  ? 'border-foreground text-foreground'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
@@ -298,7 +298,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-3 text-sm font-medium border-b-2 ${
                 activeTab === 'activity'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  ? 'border-foreground text-foreground'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
@@ -319,7 +319,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="current-password"
                 />
@@ -333,7 +333,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -347,7 +347,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -356,7 +356,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
               <div className="flex justify-end pt-4">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 flex items-center"
+                  className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center"
                   disabled={loading}
                 >
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -619,12 +619,12 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  user_login: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  user_logout: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  user_created: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  user_deleted: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  user_password_reset: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  password_changed: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  user_login: 'bg-secondary text-muted-foreground border-border',
+  user_logout: 'bg-secondary text-muted-foreground border-border',
+  user_created: 'bg-secondary text-muted-foreground border-border',
+  user_deleted: 'bg-secondary text-muted-foreground border-border',
+  user_password_reset: 'bg-secondary text-muted-foreground border-border',
+  password_changed: 'bg-secondary text-muted-foreground border-border',
   container_started: 'bg-green-500/20 text-green-400 border-green-500/30',
   container_stopped: 'bg-red-500/20 text-red-400 border-red-500/30',
   container_restarted: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',

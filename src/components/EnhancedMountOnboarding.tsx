@@ -107,7 +107,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
       case 'failed':
         return <XCircle className="w-5 h-5 text-red-500" />;
       case 'checking':
-        return <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />;
+        return <div className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />;
       default:
         return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
     }
@@ -128,8 +128,8 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <Settings className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-secondary rounded-lg">
+                <Settings className="w-6 h-6 text-muted-foreground" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -199,7 +199,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
                         href={prereq.helpUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                        className="text-muted-foreground hover:text-foreground"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -213,14 +213,14 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
 
           {/* Installation Guide */}
           {hasFailures && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="mb-6 p-4 bg-secondary border border-border rounded-lg">
               <div className="flex items-start space-x-3">
-                <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <Info className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
+                  <h3 className="font-medium text-muted-foreground mb-2">
                     Quick Installation Guide
                   </h3>
-                  <div className="text-sm text-blue-700 dark:text-blue-400 space-y-2">
+                  <div className="text-sm text-muted-foreground space-y-2">
                     <p>To install the required components, run these commands in your HomelabARR CLI:</p>
                     <div className="bg-white dark:bg-gray-800 p-3 rounded border font-mono text-xs">
                       <div>sudo ./traefik/install.sh</div>
@@ -285,7 +285,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
             <div className="flex space-x-3">
               <button
                 onClick={checkPrerequisites}
-                className="px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800"
+                className="px-4 py-2 text-sm font-medium text-secondary-foreground bg-secondary rounded-md hover:bg-accent"
               >
                 Recheck
               </button>
@@ -295,7 +295,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
                 disabled={!allRequiredPassed && !userAcknowledged}
                 className={`px-4 py-2 text-sm font-medium rounded-md ${
                   allRequiredPassed || userAcknowledged
-                    ? 'text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500'
+                    ? 'text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring'
                     : 'text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
                 }`}
               >

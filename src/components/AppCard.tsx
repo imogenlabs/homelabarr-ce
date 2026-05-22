@@ -18,9 +18,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
   const cliApp = (app as any)._cliApp as CLIApplication | undefined;
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/20 hover:translate-y-[-3px] flex flex-col h-full border-0 ring-1 ring-gray-200 dark:ring-white/[0.08] hover:ring-indigo-400/50 dark:hover:ring-indigo-500/40 bg-white dark:bg-[hsl(222,28%,10%)]">
-      {/* Category accent stripe */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+    <Card className="group relative overflow-hidden transition-colors duration-200 flex flex-col h-full hover:border-muted-foreground/30">
 
       {/* Star button */}
       {onToggleStar && (
@@ -40,7 +38,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
       )}
 
       <CardHeader className="flex flex-row items-center gap-4 pt-5 pb-3">
-        <div className="p-3 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 rounded-xl ring-1 ring-indigo-100 dark:ring-indigo-800/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-indigo-500/20">
+        <div className="p-2.5 bg-secondary rounded-lg border border-border">
           <img
             src={getAppIconPath(app.name, theme)}
             alt={`${app.name} icon`}
@@ -54,7 +52,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
               } else {
                 target.style.display = "none";
                 const letter = document.createElement("span");
-                letter.className = "w-7 h-7 flex items-center justify-center rounded-md bg-indigo-500/20 text-indigo-300 text-sm font-bold";
+                letter.className = "w-7 h-7 flex items-center justify-center rounded-md bg-secondary text-muted-foreground text-sm font-bold";
                 letter.textContent = (target.alt || "?")[0].toUpperCase();
                 target.parentElement?.appendChild(letter);
               }
@@ -77,22 +75,22 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
         </p>
         <div className="flex flex-wrap gap-1.5">
           {cliApp?.requiresTraefik && (
-            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50" variant="outline">
+            <Badge variant="outline">
               <Network className="w-3 h-3 mr-1" />
               Traefik
             </Badge>
           )}
           {cliApp?.requiresAuthelia && (
-            <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800/50" variant="outline">
+            <Badge variant="outline">
               <Shield className="w-3 h-3 mr-1" />
               Auth
             </Badge>
           )}
           {!cliApp && app.deploymentModes && app.deploymentModes.map(mode => {
             const styles: Record<string, string> = {
-              traefik: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50",
-              authelia: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800/50",
-              local: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 border-sky-200 dark:border-sky-800/50",
+              traefik: "",
+              authelia: "",
+              local: "",
             };
             const icons: Record<string, typeof Network> = { traefik: Network, authelia: Shield, local: Monitor };
             const labels: Record<string, string> = { traefik: "Traefik", authelia: "Authelia", local: "Local" };
@@ -104,7 +102,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
               </Badge>
             );
           })}
-          <Badge variant="outline" className="capitalize text-xs bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+          <Badge variant="secondary" className="capitalize text-xs">
             {cliApp?.category || app.category}
           </Badge>
         </div>
@@ -113,7 +111,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
       <CardFooter className="pt-0 pb-4">
         <Button
           onClick={() => onDeploy(app)}
-          className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-medium shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-200"
+          className="w-full"
           size="default"
         >
           Deploy
