@@ -371,14 +371,19 @@ export async function initializeAuth() {
 
 // Middleware functions
 export function requireAuth(req, res, next) {
+  // C-R2-1: Try httpOnly cookie first (browser), then Authorization header (API keys / mobile)
+  let token = req.cookies?.hl_session;
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token && authHeader?.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  }
+
+  if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  const token = authHeader.substring(7);
-
+  // API key (hlr_ prefix) — always via Authorization header, not cookie
   if (token.startsWith('hlr_')) {
     const apiUser = validateApiKey(token);
     if (apiUser) { req.user = apiUser; return next(); }
@@ -408,10 +413,15 @@ export function requireRole(role) {
 
 // Optional authentication middleware (allows both authenticated and unauthenticated access)
 export function optionalAuth(req, res, next) {
+  // C-R2-1: Try httpOnly cookie first, then Authorization header
+  let token = req.cookies?.hl_session;
   const authHeader = req.headers.authorization;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
+  if (!token && authHeader?.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  }
+
+  if (token) {
     if (token.startsWith('hlr_')) {
       const apiUser = validateApiKey(token);
       if (apiUser) req.user = apiUser;
