@@ -43,9 +43,16 @@ Functional status colors preserved: green (running/success), red (error/stopped)
 - Mobile viewport (430x932) verified
 - Deployed to ce-demo.homelabarr.com and visually confirmed with live app catalog (116 apps)
 
+### Card cleanup — DONE (post-rebrand)
+- Registry paths (e.g. `lscr.io/linuxserver/bazarr:latest`) removed from card subtitle → moved to Tooltip on hover
+- Junk descriptions filtered: any description ending with "container" or matching a bare Docker image ref is hidden
+- Cards now show only: title, badges, category, Deploy button
+- Apps with real descriptions (e.g. Cf Companion) still show them
+
 ### Dockerfile — DONE
 Frontend Dockerfile was a 2-line stub. Completed as multi-stage build: node:24-alpine → nginx:1.27-alpine.
 Built on iMac (192.168.1.208), pushed to `ghcr.io/smashingtags/homelabarr-frontend:latest`.
+Docker build cache issue discovered: must use `--no-cache` or Vite produces identical content hashes and compose doesn't detect the change.
 
 ## What's Still Open
 
