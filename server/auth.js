@@ -3,10 +3,16 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { createSession, isJtiActive, getSessionByJti, rotateRefresh, revokeSession, revokeAllForUser, listForUser } from './sessions.js';
+import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
+import transporter from './email.js';
+import QRCode from 'qrcode';
 
 // Configuration
+const BCRYPT_COST = 12;
+const ACCESS_TTL_SEC = 15 * 60;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
 const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
 const API_KEY_HMAC_KEY = process.env.API_KEY_HMAC_KEY || process.env.JWT_SECRET;
@@ -76,7 +82,7 @@ export async function createUser(userData) {
   }
   
   // Hash password
-  const hashedPassword = await bcrypt.hash(userData.password, 12);
+  const hashedPassword = await bcrypt.hash(userData.password, BCRYPT_COST);
   
   const newUser = {
     id: generateUserId(),
@@ -107,7 +113,15 @@ export async function validatePassword(username, password) {
   if (!isValid) {
     return null;
   }
-  
+
+  const currentCost = Number(user.password.match(/^\$2[aby]\$(\d+)\$/)?.[1] || 0);
+  if (currentCost < BCRYPT_COST) {
+    const newHash = await bcrypt.hash(password, BCRYPT_COST);
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx !== -1) { users[idx].password = newHash; saveUsers(users); }
+  }
+
   // Update last login
   const users = loadUsers();
   const userIndex = users.findIndex(u => u.id === user.id);
@@ -121,22 +135,20 @@ export async function validatePassword(username, password) {
   return userWithoutPassword;
 }
 
-export function generateToken(user) {
+export function generateToken(user, jti) {
   return jwt.sign(
-    { 
-      id: user.id, 
-      username: user.username, 
-      role: user.role 
-    },
+    { sub: user.id, id: user.id, username: user.username, role: user.role, jti },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
   );
 }
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    if (decoded.jti && !isJtiActive(decoded.jti)) return null;
+    return decoded;
+  } catch {
     return null;
   }
 }
@@ -274,35 +286,12 @@ export function invalidateSession(sessionId) {
 export async function authenticate(username, password) {
   try {
     const user = await validatePassword(username, password);
-    if (!user) {
-      return { success: false, error: 'Invalid username or password' };
-    }
+    if (!user) return { success: false, error: 'Invalid username or password' };
 
-    const token = generateToken(user);
-    const sessionId = 'session_' + crypto.randomBytes(12).toString('hex') + Date.now().toString(36);
-    
-    // Create session
-    const sessions = loadSessions();
-    const session = {
-      id: sessionId,
-      userId: user.id,
-      token: token,
-      createdAt: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      userAgent: '',
-      ipAddress: '',
-      invalidated: false
-    };
-    
-    sessions.push(session);
-    saveSessions(sessions);
+    const { jti, refresh } = createSession({ userId: user.id, userAgent: '', ipAddress: '' });
+    const token = generateToken(user, jti);
 
-    return {
-      success: true,
-      user: user,
-      token: token,
-      sessionId: sessionId
-    };
+    return { success: true, user, token, jti, refresh };
   } catch (error) {
     console.error('Authentication error:', error);
     return { success: false, error: 'Authentication failed' };
@@ -324,7 +313,7 @@ export async function changePassword(userId, currentPassword, newPassword) {
     }
 
     // Hash new password
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, BCRYPT_COST);
     
     // Update user
     const users = loadUsers();
@@ -429,6 +418,55 @@ export function optionalAuth(req, res, next) {
   }
 
   next();
+}
+
+// ─── Login Ticket System (MFA) ──────────────────────────────────────────
+const loginTickets = new Map();
+const LOGIN_TICKET_TTL = 5 * 60 * 1000;
+
+export function createLoginTicket(userId) {
+  const ticket = crypto.randomBytes(32).toString('hex');
+  loginTickets.set(ticket, { userId, exp: Date.now() + LOGIN_TICKET_TTL });
+  return ticket;
+}
+
+export function consumeLoginTicket(ticket) {
+  const entry = loginTickets.get(ticket);
+  if (!entry || entry.exp < Date.now()) { loginTickets.delete(ticket); return null; }
+  loginTickets.delete(ticket);
+  return entry.userId;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of loginTickets) { if (v.exp < now) loginTickets.delete(k); }
+}, 60 * 1000).unref();
+
+// ─── Password Reset Token Storage ───────────────────────────────────────
+const RESET_FILE = path.join(process.cwd(), 'server', 'config', 'resets.json');
+
+function loadResets() {
+  try { return JSON.parse(fs.readFileSync(RESET_FILE, 'utf8')); } catch { return {}; }
+}
+function saveResets(data) {
+  fs.writeFileSync(RESET_FILE, JSON.stringify(data, null, 2));
+}
+
+export function saveResetToken(userId, hash, exp) {
+  const all = loadResets();
+  all[userId] = { hash, exp };
+  saveResets(all);
+}
+
+export function getResetTokenForUser(userId) {
+  const all = loadResets();
+  return all[userId] || null;
+}
+
+export function clearResetToken(userId) {
+  const all = loadResets();
+  delete all[userId];
+  saveResets(all);
 }
 
 export { hasRole, ROLE_HIERARCHY };
