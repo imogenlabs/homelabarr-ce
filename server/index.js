@@ -142,7 +142,12 @@ app.use(express.json());
 app.use(DeploymentLogger.createCorsLoggingMiddleware());
 
 app.use(cors(corsOptions));
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
+  referrerPolicy: false,
+}));
 
 // Global rate limiting — 100 requests per minute per IP
 const globalRateLimit = rateLimit({
