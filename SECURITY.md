@@ -45,13 +45,18 @@ Instead, please report security issues privately:
 
 ## Security Architecture
 
-### Authentication
+### Authentication & Session Model
 
-- JWT-based authentication with HMAC-SHA256 signing
+- **Access token:** HS256 JWT, 15-minute TTL, carried in `HttpOnly; Secure; SameSite=Strict` cookie `hl_session`, path `/`
+- **Refresh token:** opaque 256-bit base64url string, SHA-256 hashed at rest in SQLite (`data/sessions.db`), 14-day TTL, carried in `HttpOnly; Secure; SameSite=Strict` cookie `hl_refresh`, path `/api/auth/refresh`
+- **CSRF:** 256-bit token in non-HttpOnly `hl_csrf` cookie; echo via `X-CSRF-Token` header; `X-Requested-With: XMLHttpRequest` also required. Constant-time compare (`crypto.timingSafeEqual`)
+- **Sessions** tracked by `jti` claim in the JWT. Revocation = setting `revoked_at` on the DB row. Users can list and revoke sessions via Settings
+- **MFA:** TOTP (`otpauth`, 30s window, ±1 step skew); 10 single-use backup codes (bcrypt-hashed at rest). Required for `role=admin`; opt-in otherwise
+- **Password storage:** bcrypt cost 12; transparent rehash-on-login for legacy hashes
+- **Password reset:** 30-minute single-use 256-bit token, SHA-256 hashed at rest, all sessions revoked on success
+- **Account lockout:** 5 failures / 15min per IP+username; email notification to victim on threshold
+- **API keys:** HMAC-SHA256 hashed before storage (never stored in plaintext); `hlr_` prefix; validated via `Authorization: Bearer hlr_...` header (mobile/CLI)
 - `JWT_SECRET` is **required** (minimum 32 characters) — the server refuses to start without it
-- Login is rate-limited to 5 attempts per 15 minutes per IP + username
-- Default admin account requires password change on first login
-- API keys are HMAC-SHA256 hashed before storage (never stored in plaintext)
 - User IDs generated with `crypto.randomBytes`, not `Math.random`
 
 ### Authorization
