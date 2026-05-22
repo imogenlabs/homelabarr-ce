@@ -14,8 +14,10 @@ interface AppCardProps {
   onToggleStar?: (appId: string) => void;
 }
 
-const isDockerImageString = (text: string) =>
-  /^[\w.-]+\/[\w.-]+(:\S+)?\s*(container)?$/i.test(text.trim());
+const isDockerImageString = (text: string) => {
+  const t = text.trim();
+  return t.includes('/') && (/:\S+/.test(t) || /container\s*$/i.test(t));
+};
 
 export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCardProps) {
   const { theme } = useTheme();
