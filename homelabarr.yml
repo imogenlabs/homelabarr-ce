@@ -1,7 +1,7 @@
 # HomelabARR GHCR Production Deployment
 #
 # REQUIRED before deploying:
-#   JWT_SECRET      — generate with: openssl rand -base64 48
+#   ./secrets/      — run scripts/init-secrets.sh to bootstrap secret files
 #   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)
 #
 # OPTIONAL (defaults shown):
@@ -10,6 +10,18 @@
 #
 # Usage:
 #   docker compose -f homelabarr.yml up -d
+
+secrets:
+  jwt_key_current:
+    file: ${JWT_SECRET_FILE:-./secrets/jwt_key_current}
+  jwt_key_previous:
+    file: ${JWT_KEY_PREVIOUS_FILE:-./secrets/jwt_key_previous}
+  default_admin_password:
+    file: ${DEFAULT_ADMIN_PASSWORD_FILE:-./secrets/default_admin_password}
+  alert_webhook_secret:
+    file: ${ALERT_WEBHOOK_SECRET_FILE:-./secrets/alert_webhook_secret}
+  sqlcipher_key:
+    file: ${SQLCIPHER_KEY_FILE:-./secrets/sqlcipher_key}
 
 services:
   # Docker socket proxy — allow-listed API access only, no EXEC/BUILD
@@ -113,12 +125,11 @@ services:
       - CLI_BRIDGE_PATH=/homelabarr
       - CLI_INTEGRATION_ENABLED=true
       - AUTH_ENABLED=${AUTH_ENABLED:-true}
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set — generate with: openssl rand -base64 48}
+      - SECRET_ROOT=/run/secrets
       - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-15m}
       - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-14d}
       - BIND_ADDRESS=0.0.0.0
       - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
-      - ALERT_WEBHOOK_SECRET=${ALERT_WEBHOOK_SECRET:-}
       - ALERT_EVENTS=${ALERT_EVENTS:-login.locked,audit.chain.broken,session.refresh.fail}
       - AUDIT_STRICT=${AUDIT_STRICT:-0}
     volumes:
@@ -140,6 +151,12 @@ services:
     pids_limit: 256
     mem_limit: 768m
     cpus: 1.5
+    secrets:
+      - jwt_key_current
+      - jwt_key_previous
+      - default_admin_password
+      - alert_webhook_secret
+      - sqlcipher_key
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8092/health"]
       interval: 30s
