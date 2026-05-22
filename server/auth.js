@@ -371,23 +371,24 @@ export async function initializeAuth() {
 
 // Middleware functions
 export function requireAuth(req, res, next) {
-  // C-R2-1: Try httpOnly cookie first (browser), then Authorization header (API keys / mobile)
-  let token = req.cookies?.hl_session;
   const authHeader = req.headers.authorization;
 
-  if (!token && authHeader?.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
-  }
-
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  // API key (hlr_ prefix) — always via Authorization header, not cookie
-  if (token.startsWith('hlr_')) {
-    const apiUser = validateApiKey(token);
+  // API keys via Authorization header (mobile app / CLI)
+  if (authHeader?.startsWith('Bearer hlr_')) {
+    const apiUser = validateApiKey(authHeader.substring(7));
     if (apiUser) { req.user = apiUser; return next(); }
     return res.status(401).json({ error: 'Invalid API key' });
+  }
+
+  // Log legacy Bearer JWT attempts (H-R2.5-2 deprecation window)
+  if (authHeader?.startsWith('Bearer ') && !authHeader.startsWith('Bearer hlr_')) {
+    console.warn('legacy_bearer_seen', { ip: req.ip, path: req.path });
+  }
+
+  // Cookie-only JWT auth (C-R2.5-1)
+  const token = req.cookies?.hl_session;
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   const decoded = verifyToken(token);
@@ -413,19 +414,15 @@ export function requireRole(role) {
 
 // Optional authentication middleware (allows both authenticated and unauthenticated access)
 export function optionalAuth(req, res, next) {
-  // C-R2-1: Try httpOnly cookie first, then Authorization header
-  let token = req.cookies?.hl_session;
+  // API key via header
   const authHeader = req.headers.authorization;
-
-  if (!token && authHeader?.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
-  }
-
-  if (token) {
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) req.user = apiUser;
-    } else {
+  if (authHeader?.startsWith('Bearer hlr_')) {
+    const apiUser = validateApiKey(authHeader.substring(7));
+    if (apiUser) req.user = apiUser;
+  } else {
+    // Cookie-based JWT
+    const token = req.cookies?.hl_session;
+    if (token) {
       const decoded = verifyToken(token);
       if (decoded) req.user = decoded;
     }
