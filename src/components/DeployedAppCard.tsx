@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { AppIcon } from "./AppIcon";
+import { safeExternalHref } from "@/lib/safeUrl";
 
 interface DeployedAppCardProps {
   app: DeployedApp;
@@ -18,6 +19,7 @@ interface DeployedAppCardProps {
 
 export function DeployedAppCard({ app, onViewLogs, onRefresh }: DeployedAppCardProps) {
   const [showStats, setShowStats] = useState(false);
+  const safeUrl = safeExternalHref(app.url);
 
   return (
     <Card className="overflow-hidden dark:bg-card">
@@ -42,14 +44,14 @@ export function DeployedAppCard({ app, onViewLogs, onRefresh }: DeployedAppCardP
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {app.url && (
+        {safeUrl && (
           <a
-            href={app.url}
+            href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground hover:underline text-sm"
           >
-            {app.url}
+            {safeUrl}
           </a>
         )}
 

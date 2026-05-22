@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 export interface User {
   id: string;
@@ -6,13 +6,13 @@ export interface User {
   email: string;
   role: 'admin' | 'user';
   lastLogin: string | null;
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
@@ -28,107 +28,73 @@ export function useAuth() {
   return context;
 }
 
-const TOKEN_KEY = 'homelabarr_token';
-const USER_KEY = 'homelabarr_user';
+function getCsrfToken(): string {
+  return document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
+}
+
+async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
+  const headers: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+    ...(opts.headers as Record<string, string> || {}),
+  };
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes((opts.method || 'GET').toUpperCase())) {
+    headers['X-CSRF-Token'] = getCsrfToken();
+  }
+  return fetch(url, { ...opts, headers, credentials: 'same-origin' });
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state from localStorage
-  useEffect(() => {
-    const savedToken = localStorage.getItem(TOKEN_KEY);
-    const savedUser = localStorage.getItem(USER_KEY);
-
-    if (savedToken && savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        setToken(savedToken);
-        setUser(parsedUser);
-        
-        // Verify token is still valid
-        verifyToken(savedToken).catch(() => {
-          // Token is invalid, clear auth state
-          logout();
-        });
-      } catch (error) {
-        console.error('Error parsing saved user data:', error);
-        logout();
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
       }
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   }, []);
 
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   const login = async (username: string, password: string) => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+    const res = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || error.error || 'Login failed');
-      }
-
-      const data = await response.json();
-      
-      setToken(data.token);
-      setUser(data.user);
-      
-      localStorage.setItem(TOKEN_KEY, data.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Login failed' }));
+      throw new Error(err.details || err.error || 'Login failed');
     }
+
+    const data = await res.json();
+    setUser(data.user);
   };
 
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    try {
+      await apiFetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
     setUser(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
   };
 
-  const verifyToken = async (tokenToVerify: string) => {
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${tokenToVerify}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Token verification failed');
-      }
-
-      const data = await response.json();
-      setUser(data.user);
-      return data.user;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      login,
-      logout,
-      isAuthenticated,
-      isAdmin,
-      loading
-    }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   );

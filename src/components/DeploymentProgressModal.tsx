@@ -132,13 +132,15 @@ export function DeploymentProgressModal({
     setClientId(cId);
     
     try {
-      const token = localStorage.getItem('homelabarr_token');
+      const csrfToken = document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(`/api/stream/deployments/${deploymentId}/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': csrfToken,
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ clientId: cId }),
       });
 
