@@ -117,6 +117,10 @@ services:
       - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-15m}
       - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-14d}
       - BIND_ADDRESS=0.0.0.0
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
+      - ALERT_WEBHOOK_SECRET=${ALERT_WEBHOOK_SECRET:-}
+      - ALERT_EVENTS=${ALERT_EVENTS:-login.locked,audit.chain.broken,session.refresh.fail}
+      - AUDIT_STRICT=${AUDIT_STRICT:-0}
     volumes:
       - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro
       - homelabarr-data:/app/data

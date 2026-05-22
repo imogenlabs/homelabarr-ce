@@ -51,6 +51,11 @@ import crypto, { randomUUID } from 'crypto';
 import cookieParser from 'cookie-parser';
 import { initializeActivityLog, logActivity, getActivities } from './activity-logger.js';
 import { getUserStars, addStar, removeStar } from './stars.js';
+import { initAudit, audit, verifyChain, getRecentAuditEvents } from './audit.js';
+import { maybeAlert } from './alert.js';
+import { logger as structuredLogger, requestContext } from './log.js';
+import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import Database from 'better-sqlite3';
 
 function getRequestMeta(req) {
   return {
@@ -147,6 +152,21 @@ const corsOptions = EnvironmentManager.getCorsOptions();
 
 const app = express();
 
+const auditDb = new Database(path.join(process.env.DATA_DIR || path.join(process.cwd(), 'data'), 'sessions.db'));
+auditDb.pragma('journal_mode = WAL');
+initAudit(auditDb);
+
+const chain = verifyChain();
+if (!chain.ok) {
+  audit({ event: 'audit.chain.broken', actor: 'system', result: 'fail', meta: chain });
+  maybeAlert({ event: 'audit.chain.broken', actor: 'system', meta: chain });
+  if (process.env.AUDIT_STRICT === '1') { console.error('Audit chain broken — refusing to start'); process.exit(1); }
+} else {
+  audit({ event: 'audit.chain.verified', actor: 'system', result: 'ok', meta: { rows: chain.rows } });
+}
+
+const lockout = createLockoutGuard(auditDb);
+
 // Middleware setup
 app.use(express.json());
 
@@ -161,6 +181,7 @@ app.use(helmet({
   referrerPolicy: false,
 }));
 app.use(cookieParser());
+app.use(requestContext);
 
 // CSP violation report endpoint (M-R2-6 / L-R2-12) — before auth routes, no auth required
 app.post('/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'] }), (req, res) => {
@@ -202,16 +223,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// C-8: Login-specific rate limiter — 5 attempts per 15 minutes per IP+username
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
-  keyGenerator: (req) => `${req.ip}:${(req.body?.username || '').toLowerCase()}`,
-});
+// C-8: Login-specific rate limiter — SQLite-backed, 5 attempts per 15 minutes per IP+username
+const loginLimiter = createLoginLimiter(auditDb);
 
 // M-27: Centralised error helper — strips internal details in production
 function sendError(res, status, message, internalError) {
@@ -256,9 +269,18 @@ app.post('/auth/login', loginLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
+    if (lockout.isLocked(username)) {
+      audit({ actor: username, ip: req.ip, event: 'login.locked', result: 'denied', meta: {} });
+      maybeAlert({ event: 'login.locked', actor: username, ip: req.ip });
+      return res.status(423).json({ error: 'Account temporarily locked. Try again in 30 minutes.' });
+    }
+
     const result = await authenticate(username, password);
 
     if (!result.success) {
+      lockout.onFail(username);
+      audit({ actor: username, ip: req.ip, event: 'login.fail', result: 'fail', meta: {} });
+      maybeAlert({ event: 'login.fail', actor: username, ip: req.ip });
       return res.status(401).json({ error: result.error });
     }
 
@@ -300,6 +322,9 @@ app.post('/auth/login', loginLimiter, async (req, res) => {
 
     res.json({ success: true, user: safeUser });
 
+    lockout.onSuccess(username);
+    audit({ actor: username, ip: req.ip, event: 'login.success', result: 'ok', meta: {} });
+
     logActivity({
       userId: result.user.id,
       username: result.user.username,
@@ -335,6 +360,8 @@ app.post('/auth/logout', requireAuth, (req, res) => {
 
     // R3: Revoke the session by jti
     if (req.user?.jti) revokeSession(req.user.jti);
+
+    audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke', result: 'ok', target: req.user?.jti, meta: {} });
 
     logger.info(`User ${req.user.username} logged out`);
     res.json({ success: true });
@@ -508,6 +535,7 @@ app.delete('/auth/sessions/:jti', requireAuth, (req, res) => {
     res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
   }
   revokeSession(req.params.jti);
+  audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke', result: 'ok', target: req.params.jti, meta: {} });
   res.json({ success: true });
 });
 
@@ -515,7 +543,17 @@ app.delete('/auth/sessions/:jti', requireAuth, (req, res) => {
 app.post('/auth/sessions/revoke-all', requireAuth, (req, res) => {
   const userId = req.user.sub || req.user.id;
   revokeAllForUser(userId, req.user.jti);
+  audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke_all', result: 'ok', meta: {} });
   res.json({ success: true });
+});
+
+// R6: Audit log endpoint — admin only
+app.get('/audit', requireAuth, requireRole('admin'), (req, res) => {
+  audit({ actor: req.user?.username, ip: req.ip, event: 'audit.read', result: 'ok', meta: { limit: req.query.limit } });
+  const limit = Math.min(parseInt(req.query.limit || '200', 10), 1000);
+  const events = getRecentAuditEvents(limit);
+  const chainStatus = verifyChain();
+  res.json({ chain: chainStatus, events });
 });
 
 // R3: MFA setup — generate TOTP secret + QR code
@@ -740,7 +778,7 @@ app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async
 // C-9: Health check — minimal for unauthed, full for authed
 app.get('/health', optionalAuth, async (req, res) => {
   if (!req.user) {
-    return res.json({ status: 'ok' });
+    return res.json({ status: 'ok', timestamp: new Date().toISOString(), version: process.env.APP_VERSION || '2.2.0' });
   }
   const connectionState = dockerManager.getConnectionState();
   const serviceStatus = dockerManager.getServiceStatus();
