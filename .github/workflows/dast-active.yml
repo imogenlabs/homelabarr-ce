@@ -7,105 +7,107 @@ on:
     branches:
       - 'security/**'
   schedule:
-    - cron: '30 4 * * *' # 04:30 UTC daily (after baseline completes)
+    - cron: '30 4 * * *'
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target URL'
+        required: false
 
 permissions:
   contents: read
   issues: write
 
 env:
-  TARGET_URL: https://ce-demo.homelabarr.com
+  ZAP_TARGET: ${{ inputs.target || 'https://ce-demo.homelabarr.com' }}
 
 jobs:
   zap-active:
     name: ZAP Authenticated Active Scan
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
-      - name: Mint auth token
-        id: auth
+      - name: Mint short-lived scanner JWT
+        id: jwt
         env:
-          DAST_USERNAME: ${{ secrets.DAST_USERNAME }}
-          DAST_PASSWORD: ${{ secrets.DAST_PASSWORD }}
+          MINT_KEY: ${{ secrets.DAST_MINT_KEY }}
         run: |
-          TOKEN=$(curl -sf -X POST "${TARGET_URL}/api/auth/login" \
+          set -e
+          test -n "$MINT_KEY" || { echo '::error::DAST_MINT_KEY secret not set'; exit 1; }
+          R=$(curl -fsS -X POST "$ZAP_TARGET/api/auth/cli-mint" \
+            -H "X-Mint-Key: $MINT_KEY" \
             -H 'Content-Type: application/json' \
-            -d "{\"username\":\"${DAST_USERNAME}\",\"password\":\"${DAST_PASSWORD}\"}" \
-            | jq -r '.token // empty')
+            -d '{"u":"dast-scanner","role":"scanner","ttl_s":1800}')
+          T=$(echo "$R" | jq -r .a)
+          test -n "$T" -a "$T" != 'null' || { echo '::error::Mint exchange failed'; echo "$R"; exit 1; }
+          echo "::add-mask::$T"
+          echo "jwt=$T" >> $GITHUB_OUTPUT
 
-          if [ -z "$TOKEN" ]; then
-            echo "::error::Failed to mint auth token for DAST scan"
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-          echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
-
-      - name: Write ZAP replacer config
-        run: |
-          mkdir -p /home/runner/.ZAP/
-          cat > /home/runner/.ZAP/replacer.json <<'REPLACER'
-          {
-            "replacer.full_list": [
-              {
-                "description": "Add Bearer token",
-                "enabled": true,
-                "matchtype": "REQ_HEADER",
-                "matchregex": false,
-                "matchstring": "Authorization",
-                "replacement": "Bearer ${{ steps.auth.outputs.token }}",
-                "initiators": []
-              }
-            ]
-          }
-          REPLACER
-
-      - name: ZAP Full Scan
+      - name: ZAP Full Scan (authenticated)
         uses: zaproxy/action-full-scan@d2a07475d467566c9a3e3c700f31f47724aa1060 # v0.10.0
         with:
-          target: ${{ env.TARGET_URL }}
+          target: ${{ env.ZAP_TARGET }}
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j -z "-configfile /home/runner/.ZAP/replacer.json"'
-          artifact_name: 'zap-active-report'
+          cmd_options: >-
+            -a -j -z "
+            -config replacer.full_list(0).description=auth
+            -config replacer.full_list(0).enabled=true
+            -config replacer.full_list(0).matchtype=REQ_HEADER
+            -config replacer.full_list(0).matchstr=Authorization
+            -config replacer.full_list(0).regex=false
+            -config replacer.full_list(0).replacement=Bearer ${{ steps.jwt.outputs.jwt }}
+            -config rules.cookie.ignorelist=__cf_bm,cf_clearance
+            -config api.disablekey=true
+            "
+          fail_action: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Post-scan audit chain verification
+      - name: Verify audit hash chain held
         if: always()
         run: |
-          echo "--- Audit chain verification ---"
-
-          # Verify the scan target logged DAST traffic in audit log
-          AUDIT_CHECK=$(curl -sf "${TARGET_URL}/api/health" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
-            | jq -r '.status // "unknown"')
-          echo "Target health after scan: ${AUDIT_CHECK}"
-
-          # Check that auth token is still valid (wasn't rotated mid-scan)
-          AUTH_CHECK=$(curl -sf -o /dev/null -w '%{http_code}' \
-            "${TARGET_URL}/api/auth/verify" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}")
-          echo "Auth token post-scan status: ${AUTH_CHECK}"
-
-          if [ "$AUTH_CHECK" = "401" ]; then
-            echo "::warning::Auth token was invalidated during scan — session may have been rotated"
+          STATE=$(curl -fsS -H 'Authorization: Bearer ${{ steps.jwt.outputs.jwt }}' \
+            "$ZAP_TARGET/api/audit?limit=1" | jq -r '.chain.ok')
+          if [ "$STATE" != 'true' ]; then
+            echo '::error::AUDIT CHAIN BROKEN POST-SCAN'
+            exit 2
           fi
+          echo 'Audit chain intact after scan'
 
-          # Verify audit entries exist for the scan window
-          SCAN_WINDOW=$(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-1H '+%Y-%m-%dT%H:%M:%SZ')
-          echo "Scan window start: ${SCAN_WINDOW}"
-          echo "Audit chain verification complete"
+      - name: Notify on HIGH/CRITICAL findings
+        if: failure()
+        env:
+          ALERT_HMAC_KEY: ${{ secrets.ALERT_HMAC_KEY }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          test -f report_json.json || exit 0
+          test -n "$ALERT_WEBHOOK_URL" || exit 0
+          BODY=$(jq -c '{
+            event: "dast.finding",
+            run_id: $ENV.GITHUB_RUN_ID,
+            repo: $ENV.GITHUB_REPOSITORY,
+            findings: [.site[].alerts[] | select((.riskcode|tonumber) >= 2) | {
+              id: .pluginid, name: .name, risk: .riskdesc, count: (.instances|length)
+            }]
+          }' report_json.json)
+          SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$ALERT_HMAC_KEY" -binary | base64)
+          curl -fsS -X POST "$ALERT_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -H "X-Sig: $SIG" \
+            --data-binary "$BODY" || true
 
-      - name: Upload ZAP Report
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: zap-active-report
+          name: zap-active-${{ github.run_id }}
           path: |
             report_html.html
-            report_json.json
             report_md.md
+            report_json.json
           retention-days: 90
