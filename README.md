@@ -252,6 +252,22 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 ---
 
+## Production Deployment Checklist
+
+1. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
+2. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
+3. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/smashingtags/homelabarr-backend:<tag>`
+4. **Start the stack:** `docker compose up -d`
+5. **Encrypt the database** (first install only): `make encrypt-db`
+6. **Verify health:** `curl -fsS https://<host>/api/health`
+7. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
+8. **fail2ban:** Copy `docs/fail2ban/*.conf` to `/etc/fail2ban/filter.d/` and `/etc/fail2ban/jail.d/`, restart fail2ban
+9. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
+10. **DR drill:** Run `bash scripts/restore-drill.sh` within the first week
+11. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
+
+---
+
 ## Links
 
 | | |

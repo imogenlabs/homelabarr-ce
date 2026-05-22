@@ -198,6 +198,58 @@ Run `scripts/backup.sh` daily. It produces:
 
 **WARNING:** Losing both the volume AND the secrets archive = unrecoverable data loss. This is the cost of at-rest encryption.
 
+## Reporting Security Issues
+
+Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/smashingtags/homelabarr-ce/security/advisories/new).
+
+### Disclosure Timeline
+
+- **Day 0:** Report received; acknowledged within 72 hours
+- **Day 7:** Triage complete, severity assigned
+- **Day 30:** Fix in development; reporter updated
+- **Day 90:** Coordinated public disclosure
+
+### Safe Harbor
+
+We will not pursue legal action against good-faith security research that limits testing to ce-demo.homelabarr.com or your own self-hosted instance, avoids data destruction, and reports promptly.
+
+## Deployment Topologies
+
+### Topology A — Single Host (default)
+Traefik, frontend, backend, and socket-proxy all on the same Docker host. The `homelabarr-internal` bridge network is the trust boundary. No mTLS required.
+
+### Topology B — Split Host (edge VPS + home lab via WireGuard)
+1. Traefik on the edge VPS terminates TLS
+2. Backend on the home lab, reachable only via WireGuard peer IP
+3. Host firewall: `ufw allow from <wg-peer-ip> to any port 8092 proto tcp`
+4. For additional security, enable mTLS between Traefik and backend
+
+## Disaster Recovery
+
+### Prerequisites
+1. Latest off-host DB backup (encrypted with SQLCipher — safe for standard backup tools)
+2. Latest secrets archive from a SEPARATE trust zone (password manager vault)
+3. Clean host with Docker and the host firewall script already run
+
+### Procedure
+```
+git clone https://github.com/smashingtags/homelabarr-ce && cd homelabarr-ce
+git checkout v2.3.0
+mkdir -p ./secrets && chmod 700 ./secrets
+tar -xf <path-to-secrets-archive>
+cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+  ghcr.io/smashingtags/homelabarr-backend:v2.3.0
+docker compose pull && docker compose up -d
+docker cp <backup.db> homelabarr-backend:/app/data/homelabarr.db
+docker compose restart backend
+curl -fsS https://<host>/api/health
+```
+
+### What does NOT work after DR
+- Pre-disaster session cookies (users must re-login)
+- Any data created after the backup timestamp
+
 ## Acknowledgments
 
 We appreciate responsible disclosure and will credit security researchers who report valid vulnerabilities.
