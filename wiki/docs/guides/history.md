@@ -14,19 +14,21 @@ When Amazon killed their unlimited cloud storage plans, PlexGuide pivoted to Goo
 
 PlexGuide was rebranded to **PGBlitz**. Same team, same Ansible architecture, new name. Google Drive replaced Amazon as the cloud backend. The project grew a significant community — thousands of users running media servers powered by PGBlitz's automation.
 
-Then it fell apart.
+PGBlitz ultimately stalled due to a combination of **maintainer burnout** and **bottlenecked dependencies**. The project's architecture concentrated critical knowledge in a small number of contributors. When the core maintainers stepped away — as happens in many volunteer-driven open-source projects — there was no succession plan, no handoff documentation, and no path for the community to continue development independently.
 
-Admin9705 and doob187 had a falling out. doob left the project. Shortly after, Admin9705 ghosted the community entirely — no communication, no handoff, no maintainer. PGBlitz was effectively dead.
+By late 2020, PGBlitz was effectively unmaintained.
 
-## The Fork Wars (2020–2021)
+## The Fork Era (2020–2021)
 
-With PGBlitz abandoned, the community scrambled:
+With PGBlitz inactive, the community diverged along **shifting architectural visions** — a natural and ultimately productive evolution:
 
-- **PTS / MHA-Team**: SamiKins, salty, and other community members forked PGBlitz as the [MHA-Team/PTS-Team](https://github.com/MHA-Team/PTS-Team). They tried to continue development, but the Ansible codebase was aging and the momentum was lost.
+- **PTS / MHA-Team**: SamiKins, salty, and other community members forked PGBlitz as the [MHA-Team/PTS-Team](https://github.com/MHA-Team/PTS-Team). They worked to continue the Ansible-based approach, but the aging codebase made forward progress difficult.
 
-- **Dockserver**: doob187 started fresh with [Dockserver](https://github.com/dockserver/dockserver) — a complete rewrite that dropped Ansible in favor of Docker Compose templates. It added Traefik v2 with Authelia for authentication and used a `local-persist` Docker volume plugin for storage management.
+- **Dockserver**: doob187 took a fundamentally different architectural direction with [Dockserver](https://github.com/dockserver/dockserver) — a ground-up rewrite that replaced Ansible with Docker Compose templates. It introduced Traefik v2 with Authelia for authentication and used a `local-persist` Docker volume plugin for storage management. This was the first major break from the Ansible paradigm.
 
-- **Cloudbox / Saltbox**: Meanwhile, a separate lineage existed. [Cloudbox](https://github.com/Cloudbox/Cloudbox) was another Ansible-based media server tool (not directly from the PGBlitz tree). When Cloudbox was archived in March 2025, [Saltbox](https://github.com/saltyorg/Saltbox) — maintained by salty (saltydk), who had also worked on the original PlexGuide — became its successor. Saltbox remains actively maintained today.
+- **Cloudbox / Saltbox**: A parallel lineage continued independently. [Cloudbox](https://github.com/Cloudbox/Cloudbox) was another Ansible-based media server tool (not directly from the PGBlitz tree). When Cloudbox was archived in March 2025, [Saltbox](https://github.com/saltyorg/Saltbox) — maintained by salty (saltydk), who had also contributed to the original PlexGuide — became its successor. Saltbox remains actively maintained today.
+
+Each fork represented a legitimate technical bet: Ansible automation vs. Docker Compose simplicity vs. hybrid approaches. The divergence wasn't a failure — it was the open-source ecosystem working as designed, with different teams optimizing for different priorities.
 
 ## Sudobox — The GUI That Never Shipped (2021–2023)
 
@@ -61,7 +63,7 @@ Every project in this lineage stores app data in `/opt/appdata/`. Every one uses
 
 The difference is how you interact with them. PlexGuide and PGBlitz used Ansible. Dockserver used Docker Compose with no GUI. Saltbox still uses Ansible. HomelabARR CE gives you a web browser or an interactive terminal menu.
 
-The community split because of people. The technology evolved because of need. HomelabARR exists because someone who was there from the beginning decided to build the tool that should have existed all along.
+The community diverged along architectural lines. The technology evolved because of need. HomelabARR exists because the accumulated lessons from a decade of homelab infrastructure projects — what worked, what didn't, what users actually wanted — converged into a single product built by someone who was there from the beginning.
 
 ---
 
