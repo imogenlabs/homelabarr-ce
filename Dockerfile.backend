@@ -26,14 +26,12 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repo
     bash \
     curl \
     jq \
-    shadow \
-    sudo && \
+    shadow && \
     sed -i '$ d' /etc/apk/repositories
 
-# Create homelabarr user with sudo access
+# Create homelabarr user
 RUN addgroup -g 1001 homelabarr && \
-    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr && \
-    echo 'homelabarr ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr
 
 # Copy package files and install dependencies
 COPY package*.json ./

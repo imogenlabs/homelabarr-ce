@@ -154,6 +154,17 @@ const globalRateLimit = rateLimit({
 });
 app.use(globalRateLimit);
 
+// C-8: Login-specific rate limiter — 5 attempts per 15 minutes per IP+username
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+  keyGenerator: (req) => `${req.ip}:${(req.body?.username || '').toLowerCase()}`,
+});
+
 // Enhanced preflight OPTIONS handler for development mode
 if (isDevelopment) {
   app.options('*', (req, res) => {
@@ -176,8 +187,8 @@ if (isDevelopment) {
   });
 }
 
-// Authentication routes
-app.post('/auth/login', async (req, res) => {
+// Authentication routes (C-8: login rate limited)
+app.post('/auth/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -223,7 +234,7 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-app.post('/auth/logout', requireAuth(), (req, res) => {
+app.post('/auth/logout', requireAuth, (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -255,7 +266,7 @@ app.post('/auth/logout', requireAuth(), (req, res) => {
   }
 });
 
-app.get('/auth/me', requireAuth(), (req, res) => {
+app.get('/auth/me', requireAuth, (req, res) => {
   const users = loadUsers();
   const user = users.find(u => u.id === req.user.id);
 
@@ -272,7 +283,7 @@ app.get('/auth/me', requireAuth(), (req, res) => {
   });
 });
 
-app.post('/auth/change-password', requireAuth(), async (req, res) => {
+app.post('/auth/change-password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -308,7 +319,7 @@ app.post('/auth/change-password', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/auth/sessions', requireAuth(), (req, res) => {
+app.get('/auth/sessions', requireAuth, (req, res) => {
   const sessions = getUserSessions(req.user.id);
   const sanitizedSessions = sessions.map(session => ({
     id: session.id,
@@ -321,7 +332,7 @@ app.get('/auth/sessions', requireAuth(), (req, res) => {
   res.json(sanitizedSessions);
 });
 
-app.delete('/auth/sessions/:sessionId', requireAuth(), (req, res) => {
+app.delete('/auth/sessions/:sessionId', requireAuth, (req, res) => {
   const { sessionId } = req.params;
   const sessions = getUserSessions(req.user.id);
   const session = sessions.find(s => s.id === sessionId);
@@ -337,7 +348,7 @@ app.delete('/auth/sessions/:sessionId', requireAuth(), (req, res) => {
 });
 
 // Admin-only user management routes
-app.post('/auth/users', requireAuth('admin'), async (req, res) => {
+app.post('/auth/users', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
@@ -366,7 +377,7 @@ app.post('/auth/users', requireAuth('admin'), async (req, res) => {
   }
 });
 
-app.get('/auth/users', requireAuth('admin'), (req, res) => {
+app.get('/auth/users', requireAuth, requireRole('admin'), (req, res) => {
   const users = loadUsers();
   const sanitizedUsers = users.map(user => ({
     id: user.id,
@@ -380,7 +391,7 @@ app.get('/auth/users', requireAuth('admin'), (req, res) => {
   res.json(sanitizedUsers);
 });
 
-app.delete('/auth/users/:userId', requireAuth('admin'), (req, res) => {
+app.delete('/auth/users/:userId', requireAuth, requireRole('admin'), (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -417,7 +428,7 @@ app.delete('/auth/users/:userId', requireAuth('admin'), (req, res) => {
   }
 });
 
-app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) => {
+app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { newPassword } = req.body;
@@ -455,8 +466,11 @@ app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) =
   }
 });
 
-// Enhanced health check endpoint with comprehensive platform and configuration information
-app.get('/health', async (req, res) => {
+// C-9: Health check — minimal for unauthed, full for authed
+app.get('/health', optionalAuth, async (req, res) => {
+  if (!req.user) {
+    return res.json({ status: 'ok' });
+  }
   const connectionState = dockerManager.getConnectionState();
   const serviceStatus = dockerManager.getServiceStatus();
 
@@ -846,7 +860,7 @@ app.get('/health', async (req, res) => {
 });
 
 // ─── API Key Routes ─────────────────────────────────────────────────────
-app.post('/auth/api-keys', requireAuth(), async (req, res) => {
+app.post('/auth/api-keys', requireAuth, async (req, res) => {
   try {
     const { label } = req.body;
     const entry = createApiKey(req.user.id, label);
@@ -862,18 +876,18 @@ app.post('/auth/api-keys', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/auth/api-keys', requireAuth(), (req, res) => {
+app.get('/auth/api-keys', requireAuth, (req, res) => {
   res.json({ apiKeys: listApiKeys(req.user.id) });
 });
 
-app.delete('/auth/api-keys/:keyId', requireAuth(), (req, res) => {
+app.delete('/auth/api-keys/:keyId', requireAuth, (req, res) => {
   const success = revokeApiKey(req.params.keyId, req.user.id);
   if (success) res.json({ message: 'API key revoked' });
   else res.status(404).json({ error: 'API key not found' });
 });
 
 // ─── Starred Apps Routes ────────────────────────────────────────────────
-app.get('/auth/me/stars', requireAuth(), (req, res) => {
+app.get('/auth/me/stars', requireAuth, (req, res) => {
   try {
     res.json({ stars: getUserStars(req.user.id) });
   } catch (err) {
@@ -881,7 +895,7 @@ app.get('/auth/me/stars', requireAuth(), (req, res) => {
   }
 });
 
-app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+app.post('/auth/me/stars/:appId', requireAuth, (req, res) => {
   try {
     const stars = addStar(req.user.id, req.params.appId);
     res.json({ stars });
@@ -890,7 +904,7 @@ app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
   }
 });
 
-app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+app.delete('/auth/me/stars/:appId', requireAuth, (req, res) => {
   try {
     const stars = removeStar(req.user.id, req.params.appId);
     res.json({ stars });
@@ -900,7 +914,7 @@ app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
 });
 
 // Activity log endpoint
-app.get('/auth/activity-log', requireAuth('admin'), (req, res) => {
+app.get('/auth/activity-log', requireAuth, requireRole('admin'), (req, res) => {
   try {
     const { userId, action, limit = '50', offset = '0' } = req.query;
 
@@ -918,47 +932,7 @@ app.get('/auth/activity-log', requireAuth('admin'), (req, res) => {
   }
 });
 
-// Authentication routes
-app.post('/auth/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({
-        error: 'Missing credentials',
-        details: 'Username and password are required'
-      });
-    }
-
-    const user = await validatePassword(username, password);
-    if (!user) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        details: 'Username or password is incorrect'
-      });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        lastLogin: user.lastLogin
-      }
-    });
-  } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({
-      error: 'Login failed',
-      details: error.message
-    });
-  }
-});
+// H-18: Duplicate /auth/login removed — using the one at L191 with session management
 
 app.post('/auth/register', requireAuth, requireRole('admin'), async (req, res) => {
   try {
@@ -991,80 +965,7 @@ app.post('/auth/register', requireAuth, requireRole('admin'), async (req, res) =
   }
 });
 
-app.get('/auth/me', requireAuth, (req, res) => {
-  const user = findUserById(req.user.id);
-  if (!user) {
-    return res.status(404).json({
-      error: 'User not found'
-    });
-  }
-
-  const { password, ...userWithoutPassword } = user;
-  res.json({
-    success: true,
-    user: userWithoutPassword
-  });
-});
-
-app.get('/auth/users', requireAuth, requireRole('admin'), (req, res) => {
-  const users = loadUsers();
-  const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-
-  res.json({
-    success: true,
-    users: usersWithoutPasswords
-  });
-});
-
-app.post('/auth/change-password', requireAuth, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        details: 'Current password and new password are required'
-      });
-    }
-
-    const user = findUserById(req.user.id);
-    if (!user) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
-
-    // Validate current password
-    const validUser = await validatePassword(user.username, currentPassword);
-    if (!validUser) {
-      return res.status(401).json({
-        error: 'Invalid current password'
-      });
-    }
-
-    // Update password
-    const bcrypt = await import('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    const users = loadUsers();
-    const userIndex = users.findIndex(u => u.id === user.id);
-    if (userIndex !== -1) {
-      users[userIndex].password = hashedPassword;
-      saveUsers(users);
-    }
-
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-  } catch (error) {
-    logger.error('Password change error:', error);
-    res.status(500).json({
-      error: 'Failed to change password',
-      details: error.message
-    });
-  }
-});
+// H-18: Duplicate /auth/me, /auth/users, /auth/change-password removed — using the ones at L269, L380, L286
 
 // Application catalog endpoint - replaces template validation
 app.get('/applications', async (req, res) => {
@@ -1241,8 +1142,8 @@ app.get('/deployment-modes', (req, res) => {
 
 // Progress Streaming Endpoints
 
-// Server-Sent Events endpoint for deployment progress
-app.get('/stream/progress', (req, res) => {
+// C-9: SSE progress stream requires auth
+app.get('/stream/progress', requireAuth, (req, res) => {
   const clientId = randomUUID();
   
   try {
@@ -1351,8 +1252,8 @@ app.get('/deployments/active', authEnabled ? requireAuth : optionalAuth, (req, r
   }
 });
 
-// Port availability check endpoint
-app.get('/ports/check', async (req, res) => {
+// C-9: Port check requires auth
+app.get('/ports/check', requireAuth, async (req, res) => {
   try {
     // Use cross-platform Docker CLI approach
     
@@ -1425,8 +1326,8 @@ app.get('/ports/check', async (req, res) => {
   }
 });
 
-// Find available port endpoint
-app.get('/ports/available', async (req, res) => {
+// C-9: Port availability requires auth
+app.get('/ports/available', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3147,7 +3048,7 @@ function parseBytes(bytesString) {
 // conditionalAuth removed — all container routes now require authentication
 
 // Routes (protected by authentication if enabled)
-app.get('/containers', requireAuth(), async (req, res) => {
+app.get('/containers', requireAuth, async (req, res) => {
   try {
     // Skip dockerode service status check — we use CLI-based Docker access
     // which works even when dockerode can't connect
@@ -3300,8 +3201,8 @@ app.get('/containers', requireAuth(), async (req, res) => {
   }
 });
 
-// Separate endpoint for container statistics
-app.get('/containers/:id/stats', async (req, res) => {
+// C-9: Container stats requires auth
+app.get('/containers/:id/stats', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3359,7 +3260,7 @@ app.get('/containers/:id/stats', async (req, res) => {
 });
 
 // Container control endpoints
-app.post('/containers/:id/start', requireAuth(), async (req, res) => {
+app.post('/containers/:id/start', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3399,7 +3300,7 @@ app.post('/containers/:id/start', requireAuth(), async (req, res) => {
   }
 });
 
-app.post('/containers/:id/stop', requireAuth(), async (req, res) => {
+app.post('/containers/:id/stop', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3439,7 +3340,7 @@ app.post('/containers/:id/stop', requireAuth(), async (req, res) => {
   }
 });
 
-app.post('/containers/:id/restart', requireAuth(), async (req, res) => {
+app.post('/containers/:id/restart', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3479,7 +3380,7 @@ app.post('/containers/:id/restart', requireAuth(), async (req, res) => {
   }
 });
 
-app.delete('/containers/:id', requireAuth(), async (req, res) => {
+app.delete('/containers/:id', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3532,7 +3433,8 @@ app.delete('/containers/:id', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/containers/:id/logs', async (req, res) => {
+// C-9: Container logs requires auth
+app.get('/containers/:id/logs', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -4250,7 +4152,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
 });
 
 // Enhanced Mount Container API endpoints - Proxy to container's web interface
-app.get('/enhanced-mount/:containerId/status', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/status', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4289,7 +4191,7 @@ app.get('/enhanced-mount/:containerId/status', requireAuth(), async (req, res) =
   }
 });
 
-app.get('/enhanced-mount/:containerId/providers', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/providers', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4327,7 +4229,7 @@ app.get('/enhanced-mount/:containerId/providers', requireAuth(), async (req, res
   }
 });
 
-app.get('/enhanced-mount/:containerId/costs', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/costs', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4365,7 +4267,7 @@ app.get('/enhanced-mount/:containerId/costs', requireAuth(), async (req, res) =>
   }
 });
 
-app.get('/enhanced-mount/:containerId/performance', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/performance', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4406,7 +4308,7 @@ app.get('/enhanced-mount/:containerId/performance', requireAuth(), async (req, r
 // Provider configuration endpoints
 const ALLOWED_PROVIDERS = ['local', 'google', 'dropbox', 'onedrive', 'sftp', 'webdav', 's3', 'b2', 'mega', 'box', 'ftp', 'smb', 'nfs'];
 
-app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth, async (req, res) => {
   try {
     const { containerId, provider } = req.params;
     const config = req.body;
@@ -4460,7 +4362,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth(
   }
 });
 
-app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth, async (req, res) => {
   try {
     const { containerId, provider } = req.params;
 
@@ -4510,7 +4412,7 @@ app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth
 });
 
 // Rclone Authentication endpoints
-app.post('/enhanced-mount/:containerId/auth/start', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/start', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
@@ -4556,7 +4458,7 @@ app.post('/enhanced-mount/:containerId/auth/start', requireAuth(), async (req, r
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/complete', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/complete', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, auth_code } = req.body;
@@ -4602,7 +4504,7 @@ app.post('/enhanced-mount/:containerId/auth/complete', requireAuth(), async (req
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, credentials } = req.body;
@@ -4649,7 +4551,7 @@ app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth(), async (req,
 });
 
 // Test rclone connection
-app.post('/enhanced-mount/:containerId/auth/test', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/test', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
