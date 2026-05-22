@@ -14,7 +14,7 @@
 services:
   # Docker socket proxy — allow-listed API access only, no EXEC/BUILD
   socket-proxy:
-    image: ghcr.io/tecnativa/docker-socket-proxy:0.3.0
+    image: lscr.io/linuxserver/socket-proxy:latest
     container_name: homelabarr-socket-proxy
     restart: unless-stopped
     environment:
@@ -49,7 +49,6 @@ services:
     read_only: true
     tmpfs:
       - /run
-    user: "65534:65534"
     cap_drop:
       - ALL
     security_opt:
