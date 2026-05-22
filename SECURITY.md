@@ -43,27 +43,67 @@ Instead, please report security issues privately:
 4. We publicly disclose the vulnerability after the fix is available
 5. We credit the reporter (unless they prefer anonymity)
 
-## Security Best Practices for Users
-
-### Docker Socket Access
-
-HomelabARR CE requires access to the Docker socket to manage containers. In production:
-
-- Mount the socket **read-only** where possible (`:ro`)
-- Run behind authentication (Authelia 2FA recommended)
-- Do not expose port 8084 or 8092 to the public internet without a reverse proxy
+## Security Architecture
 
 ### Authentication
 
-- **Change the default admin password immediately** after first login
-- Set a strong `JWT_SECRET` (use `openssl rand -base64 32`)
-- Keep `AUTH_ENABLED=true` in production
+- JWT-based authentication with HMAC-SHA256 signing
+- `JWT_SECRET` is **required** (minimum 32 characters) — the server refuses to start without it
+- Login is rate-limited to 5 attempts per 15 minutes per IP + username
+- Default admin account requires password change on first login
+- API keys are HMAC-SHA256 hashed before storage (never stored in plaintext)
+- User IDs generated with `crypto.randomBytes`, not `Math.random`
 
-### Network Security
+### Authorization
 
-- Use Traefik with SSL/TLS for any internet-facing deployment
+- Role hierarchy: `user` < `operator` < `admin`
+- All sensitive endpoints require authentication (container logs, stats, ports, deployment, SSE streams)
+- `/health` returns minimal `{status: "ok"}` to unauthenticated callers
+- `AUTH_ENABLED=false` is coupled to loopback-only binding — the server refuses to disable auth while bound to a network interface
+
+### Docker Socket
+
+HomelabARR CE requires read-write access to the Docker socket to manage containers. This grants the backend process **full Docker API access**, which is equivalent to root on the host. The authentication boundary is the only thing between an unauthenticated visitor and host-level access.
+
+Mitigations in place:
+- Backend container runs as non-root user (`homelabarr:1001`)
+- No sudo access in the container
+- All Linux capabilities dropped (`cap_drop: ALL`)
+- `no-new-privileges` security option enabled
+- Read-only root filesystem with explicit tmpfs mounts
+- Backend port is not exposed to the host — only reachable over the internal Docker network
+
+**Recommended:** For production deployments, use a [docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy) sidecar with a narrow API allowlist instead of direct socket mounting. See the deployment guide for setup instructions.
+
+### Network
+
+- Backend binds to the internal Docker network only (no host port exposure)
+- CORS is restricted to explicit origins (no wildcard in production)
+- nginx serves the SPA with a full security header set: CSP, HSTS (2 years + preload), COOP, CORP, Permissions-Policy, X-Frame-Options DENY
+- Error responses in production are stripped of internal details (file paths, stack traces, Docker status)
+
+### Environment Variables
+
+- Template variables passed to docker-compose are filtered through an explicit allowlist
+- Compose commands are pinned to a fixed set (`up -d`, `down`, `logs`)
+- `BACKEND_URL` is validated before nginx config injection (protocol + forbidden character checks)
+
+## Security Best Practices for Users
+
+### Required Configuration
+
+1. **Set `JWT_SECRET`** — minimum 32 characters. Generate with: `openssl rand -base64 32`
+2. **Change the default admin password** on first login (the UI will prompt you)
+3. **Never set `AUTH_ENABLED=false`** on any host reachable from the network
+
+### Recommended Configuration
+
+- Use Traefik with TLS for any internet-facing deployment
+- Add Authelia for 2FA on public-facing instances
+- Use a docker-socket-proxy sidecar for defense-in-depth
 - Keep the Docker `proxy` network isolated from host networking
 - Use firewall rules (UFW) to restrict access to management ports
+- Review the changelog before upgrading
 
 ### Updates
 
