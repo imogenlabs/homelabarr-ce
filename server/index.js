@@ -51,7 +51,7 @@ import crypto, { randomUUID } from 'crypto';
 import cookieParser from 'cookie-parser';
 import { initializeActivityLog, logActivity, getActivities } from './activity-logger.js';
 import { getUserStars, addStar, removeStar } from './stars.js';
-import { initAudit, audit, verifyChain, getRecentAuditEvents } from './audit.js';
+import { initAudit, audit, verifyChain, getRecentAuditEvents, eventAllowed } from './audit.js';
 import { maybeAlert } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
 import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
@@ -206,7 +206,7 @@ app.use(globalRateLimit);
 
 // M-R2-9: CSRF double-submit cookie validation for state-changing requests
 app.use((req, res, next) => {
-  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/cli-mint', '/csp-report'];
+  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/cli-mint', '/csp-report', '/internal/audit'];
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !csrfExempt.includes(req.path)) {
     const cookieTok = req.cookies?.hl_csrf;
     const hdrTok = req.headers['x-csrf-token'];
@@ -559,6 +559,22 @@ app.get('/audit', requireAuth, requireRole('admin'), (req, res) => {
   const events = getRecentAuditEvents(limit);
   const chainStatus = verifyChain();
   res.json({ chain: chainStatus, events });
+});
+
+// C-R9.5-2: Internal audit endpoint — token-authenticated, for cron/system events
+app.post('/internal/audit', express.json({ limit: '4kb' }), (req, res) => {
+  const tok = req.get('X-Internal-Token');
+  const want = process.env.INTERNAL_AUDIT_TOKEN;
+  if (!want || !tok) return res.status(403).json({ ok: false });
+  try {
+    if (tok.length !== want.length || !crypto.timingSafeEqual(Buffer.from(tok), Buffer.from(want))) {
+      return res.status(403).json({ ok: false });
+    }
+  } catch { return res.status(403).json({ ok: false }); }
+  const { event, target, meta } = req.body || {};
+  if (!event || typeof event !== 'string') return res.status(400).json({ ok: false });
+  audit({ actor: 'system:cron', ip: req.ip, event, target: target || null, result: 'ok', meta: meta || {} });
+  res.json({ ok: true });
 });
 
 // R3: MFA setup — generate TOTP secret + QR code

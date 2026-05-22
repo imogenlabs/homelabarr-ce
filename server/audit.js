@@ -85,3 +85,18 @@ export function getRecentAuditEvents(limit = 200) {
   if (!db) return [];
   return db.prepare('SELECT * FROM audit_events ORDER BY id DESC LIMIT ?').all(Math.min(limit, 1000));
 }
+
+const ALLOWED_EVENTS = new Set([
+  'login.success', 'login.fail', 'login.locked', 'login.ratelimited',
+  'session.revoke', 'session.revoke_all', 'session.refresh',
+  'auth.cli_mint', 'auth.cli_mint.deny',
+  'audit.read', 'audit.chain.verified', 'audit.chain.broken', 'audit.cipher.activated',
+  'backup.completed', 'backup.failed',
+  'restore.drill.completed', 'restore.drill.failed',
+  'key.rotation.completed', 'key.rotation.failed',
+  'ip.denied',
+]);
+
+export function eventAllowed(event) {
+  return typeof event === 'string' && ALLOWED_EVENTS.has(event);
+}
