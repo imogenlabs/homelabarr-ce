@@ -14,9 +14,13 @@ interface AppCardProps {
   onToggleStar?: (appId: string) => void;
 }
 
+const isDockerImageString = (text: string) =>
+  /^[\w.-]+\/[\w.-]+(:\S+)?\s*(container)?$/i.test(text.trim());
+
 export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCardProps) {
   const { theme } = useTheme();
   const cliApp = (app as any)._cliApp as CLIApplication | undefined;
+  const showDescription = app.description && !isDockerImageString(app.description);
 
   return (
     <Card className="group relative overflow-hidden transition-colors duration-200 flex flex-col h-full hover:border-muted-foreground/30">
@@ -79,9 +83,11 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
       </CardHeader>
 
       <CardContent className="flex-grow pb-3">
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
-          {app.description}
-        </p>
+        {showDescription && (
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+            {app.description}
+          </p>
+        )}
         <div className="flex flex-wrap gap-1.5">
           {cliApp?.requiresTraefik && (
             <Badge variant="outline">
