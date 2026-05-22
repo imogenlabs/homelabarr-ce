@@ -47,8 +47,19 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { isAdmin, token, user } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { success, error } = useNotifications();
+
+  const getCsrfToken = () =>
+    document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
+  const authHeaders = (extra: Record<string, string> = {}) => ({
+    'X-Requested-With': 'XMLHttpRequest',
+    ...extra,
+  });
+  const mutHeaders = (extra: Record<string, string> = {}) => ({
+    ...authHeaders(extra),
+    'X-CSRF-Token': getCsrfToken(),
+  });
 
   // User management state
   const [users, setUsers] = useState<ManagedUser[]>([]);
@@ -68,11 +79,12 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const ACTIVITY_PAGE_SIZE = 25;
 
   const fetchUsers = useCallback(async () => {
-    if (!isAdmin || !token) return;
+    if (!isAdmin) return;
     setUsersLoading(true);
     try {
       const res = await fetch('/api/auth/users', {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: authHeaders(),
+        credentials: 'same-origin',
       });
       if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
@@ -82,14 +94,15 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     } finally {
       setUsersLoading(false);
     }
-  }, [isAdmin, token, error]);
+  }, [isAdmin, error]);
 
   const fetchActivities = useCallback(async (offset = 0) => {
-    if (!isAdmin || !token) return;
+    if (!isAdmin) return;
     setActivityLoading(true);
     try {
       const res = await fetch(`/api/auth/activity-log?limit=${ACTIVITY_PAGE_SIZE}&offset=${offset}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: authHeaders(),
+        credentials: 'same-origin',
       });
       if (!res.ok) throw new Error('Failed to fetch activity log');
       const data = await res.json();
@@ -101,7 +114,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     } finally {
       setActivityLoading(false);
     }
-  }, [isAdmin, token, error]);
+  }, [isAdmin, error]);
 
   useEffect(() => {
     if (isOpen && activeTab === 'users' && isAdmin) {
@@ -135,10 +148,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     try {
       const response = await fetch('/api/auth/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: mutHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'same-origin',
         body: JSON.stringify({
           currentPassword,
           newPassword,
@@ -176,10 +187,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     try {
       const res = await fetch('/api/auth/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: mutHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'same-origin',
         body: JSON.stringify(createForm),
       });
       if (!res.ok) {
@@ -202,7 +211,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     try {
       const res = await fetch(`/api/auth/users/${targetUser.id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: mutHeaders(),
+        credentials: 'same-origin',
       });
       if (!res.ok) {
         const data = await res.json();
@@ -232,10 +242,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     try {
       const res = await fetch(`/api/auth/users/${resetPasswordUser.id}/password`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: mutHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'same-origin',
         body: JSON.stringify({ newPassword: resetForm.newPassword }),
       });
       if (!res.ok) {

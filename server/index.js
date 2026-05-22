@@ -21,6 +21,7 @@ import {
   loadUsers,
   saveUsers,
   findUserById,
+  findUserByUsername,
   authenticate,
   loadSessions,
   saveSessions,
@@ -29,16 +30,32 @@ import {
   changePassword,
   createApiKey,
   listApiKeys,
-  revokeApiKey
+  revokeApiKey,
+  createLoginTicket,
+  consumeLoginTicket,
+  saveResetToken,
+  getResetTokenForUser,
+  clearResetToken
 } from './auth.js';
+import { createSession, isJtiActive, rotateRefresh, revokeSession, revokeAllForUser, listForUser, getSessionByJti } from './sessions.js';
+import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
+import transporter from './email.js';
+import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
 import { EnvironmentManager } from './environment-manager.js';
 import { NetworkManager } from './network-manager.js';
 import { DeploymentLogger } from './deployment-logger.js';
 import { CLIBridge } from './cli-bridge.js';
 import { progressStream, StreamingCLIBridge } from './progress-stream.js';
-import { randomUUID } from 'crypto';
+import crypto, { randomUUID } from 'crypto';
+import cookieParser from 'cookie-parser';
 import { initializeActivityLog, logActivity, getActivities } from './activity-logger.js';
 import { getUserStars, addStar, removeStar } from './stars.js';
+import { initAudit, audit, verifyChain, getRecentAuditEvents, eventAllowed } from './audit.js';
+import { maybeAlert } from './alert.js';
+import { logger as structuredLogger, requestContext } from './log.js';
+import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import { readSecret } from './secrets.js';
 
 function getRequestMeta(req) {
   return {
@@ -134,6 +151,21 @@ const chmod = promisify(fs.chmod);
 const corsOptions = EnvironmentManager.getCorsOptions();
 
 const app = express();
+app.disable('x-powered-by');
+app.use((req, res, next) => { res.removeHeader('Server'); next(); });
+
+initAudit();
+
+const chain = verifyChain();
+if (!chain.ok) {
+  audit({ event: 'audit.chain.broken', actor: 'system', result: 'fail', meta: chain });
+  maybeAlert({ event: 'audit.chain.broken', actor: 'system', meta: chain });
+  if (process.env.AUDIT_STRICT === '1') { console.error('Audit chain broken — refusing to start'); process.exit(1); }
+} else {
+  audit({ event: 'audit.chain.verified', actor: 'system', result: 'ok', meta: { rows: chain.rows } });
+}
+
+const lockout = createLockoutGuard();
 
 // Middleware setup
 app.use(express.json());
@@ -142,7 +174,25 @@ app.use(express.json());
 app.use(DeploymentLogger.createCorsLoggingMiddleware());
 
 app.use(cors(corsOptions));
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-site' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
+  next();
+});
+app.use(cookieParser());
+app.use(requestContext);
+
+// CSP violation report endpoint (M-R2-6 / L-R2-12) — before auth routes, no auth required
+app.post('/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'] }), (req, res) => {
+  logger.warn('CSP violation', { ip: req.ip, report: req.body });
+  res.status(204).end();
+});
 
 // Global rate limiting — 100 requests per minute per IP
 const globalRateLimit = rateLimit({
@@ -153,6 +203,45 @@ const globalRateLimit = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use(globalRateLimit);
+
+// M-R2-9: CSRF double-submit cookie validation for state-changing requests
+app.use((req, res, next) => {
+  const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/cli-mint', '/csp-report', '/internal/audit'];
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !csrfExempt.includes(req.path)) {
+    const cookieTok = req.cookies?.hl_csrf;
+    const hdrTok = req.headers['x-csrf-token'];
+    if (cookieTok && hdrTok) {
+      try {
+        const a = Buffer.from(String(cookieTok));
+        const b = Buffer.from(String(hdrTok));
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          return res.status(403).json({ error: 'CSRF validation failed' });
+        }
+      } catch {
+        return res.status(403).json({ error: 'CSRF validation failed' });
+      }
+    }
+    if (req.headers['x-requested-with'] !== 'XMLHttpRequest' && !req.headers.authorization?.startsWith('hlr_')) {
+      return res.status(403).json({ error: 'XHR required' });
+    }
+  }
+  next();
+});
+
+// C-8: Login-specific rate limiter — SQLite-backed, 5 attempts per 15 minutes per IP+username
+const loginLimiter = createLoginLimiter();
+
+// M-27: Centralised error helper — strips internal details in production
+function sendError(res, status, message, internalError) {
+  if (internalError) {
+    logger.error(message, { error: internalError.message || internalError, stack: internalError.stack });
+  }
+  const body = { error: message };
+  if (isDevelopment && internalError) {
+    body.details = internalError.message || String(internalError);
+  }
+  res.status(status).json(body);
+}
 
 // Enhanced preflight OPTIONS handler for development mode
 if (isDevelopment) {
@@ -176,8 +265,8 @@ if (isDevelopment) {
   });
 }
 
-// Authentication routes
-app.post('/auth/login', async (req, res) => {
+// Authentication routes (C-8: login rate limited)
+app.post('/auth/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -185,28 +274,61 @@ app.post('/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
+    if (lockout.isLocked(username)) {
+      audit({ actor: username, ip: req.ip, event: 'login.locked', result: 'denied', meta: {} });
+      maybeAlert({ event: 'login.locked', actor: username, ip: req.ip });
+      return res.status(423).json({ error: 'Account temporarily locked. Try again in 30 minutes.' });
+    }
+
     const result = await authenticate(username, password);
 
     if (!result.success) {
+      lockout.onFail(username);
+      audit({ actor: username, ip: req.ip, event: 'login.fail', result: 'fail', meta: {} });
+      maybeAlert({ event: 'login.fail', actor: username, ip: req.ip });
       return res.status(401).json({ error: result.error });
     }
 
-    // Update session with request info
-    const sessions = loadSessions();
-    const session = sessions.find(s => s.id === result.sessionId);
-    if (session) {
-      session.userAgent = req.headers['user-agent'] || '';
-      session.ipAddress = req.ip || req.connection.remoteAddress || '';
-      saveSessions(sessions);
+    // R3: Check if user has MFA enabled — if so, return a ticket instead of cookies
+    const mfa = getMfaForUser(result.user.id);
+    if (mfa?.secret) {
+      const ticket = createLoginTicket(result.user.id);
+      return res.json({ success: true, mfa_required: true, ticket });
     }
 
+    // No MFA — issue session + refresh cookies
+    const { password: _, ...safeUser } = result.user;
     logger.info(`User ${result.user.username} logged in from ${req.ip}`);
 
-    res.json({
-      success: true,
-      user: result.user,
-      token: result.token
+    res.cookie('hl_session', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 15 * 60 * 1000,
     });
+    if (result.refresh && result.jti) {
+      res.cookie('hl_refresh', result.refresh + '.' + result.jti, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 14 * 24 * 60 * 60 * 1000,
+      });
+    }
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 14 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ success: true, user: safeUser });
+
+    lockout.onSuccess(username);
+    audit({ actor: username, ip: req.ip, event: 'login.success', result: 'ok', meta: {} });
 
     logActivity({
       userId: result.user.id,
@@ -223,19 +345,28 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-app.post('/auth/logout', requireAuth(), (req, res) => {
+app.post('/auth/logout', requireAuth, (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    // Invalidate session — check cookie first, then Authorization header
+    const token = req.cookies?.hl_session || (req.headers.authorization?.startsWith('Bearer ') && req.headers.authorization.substring(7));
 
     if (token) {
-      // Find and invalidate the session
       const sessions = loadSessions();
       const session = sessions.find(s => s.token === token);
       if (session) {
         invalidateSession(session.id);
       }
     }
+
+    // Clear auth cookies
+    res.clearCookie('hl_session', { path: '/' });
+    res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
+    res.clearCookie('hl_csrf', { path: '/' });
+
+    // R3: Revoke the session by jti
+    if (req.user?.jti) revokeSession(req.user.jti);
+
+    audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke', result: 'ok', target: req.user?.jti, meta: {} });
 
     logger.info(`User ${req.user.username} logged out`);
     res.json({ success: true });
@@ -255,7 +386,7 @@ app.post('/auth/logout', requireAuth(), (req, res) => {
   }
 });
 
-app.get('/auth/me', requireAuth(), (req, res) => {
+app.get('/auth/me', requireAuth, (req, res) => {
   const users = loadUsers();
   const user = users.find(u => u.id === req.user.id);
 
@@ -272,7 +403,7 @@ app.get('/auth/me', requireAuth(), (req, res) => {
   });
 });
 
-app.post('/auth/change-password', requireAuth(), async (req, res) => {
+app.post('/auth/change-password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -289,6 +420,9 @@ app.post('/auth/change-password', requireAuth(), async (req, res) => {
     if (!result.success) {
       return res.status(400).json({ error: result.error });
     }
+
+    // R3: Revoke all other sessions after password change
+    revokeAllForUser(req.user.sub || req.user.id, req.user.jti);
 
     logger.info(`User ${req.user.username} changed password`);
     res.json({ success: true });
@@ -308,36 +442,244 @@ app.post('/auth/change-password', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/auth/sessions', requireAuth(), (req, res) => {
-  const sessions = getUserSessions(req.user.id);
-  const sanitizedSessions = sessions.map(session => ({
-    id: session.id,
-    createdAt: session.createdAt,
-    lastActivity: session.lastActivity,
-    userAgent: session.userAgent,
-    ipAddress: session.ipAddress
-  }));
+// R3: MFA second-step login
+app.post('/auth/login/mfa', loginLimiter, async (req, res) => {
+  try {
+    const { ticket, code, backup_code } = req.body;
+    if (!ticket) return res.status(400).json({ error: 'Ticket required' });
+    const userId = consumeLoginTicket(ticket);
+    if (!userId) return res.status(401).json({ error: 'Invalid or expired ticket' });
+    const mfa = getMfaForUser(userId);
+    if (!mfa?.secret) return res.status(400).json({ error: 'MFA not enabled' });
 
-  res.json(sanitizedSessions);
+    let ok = false;
+    if (code) {
+      ok = verifyTotp(mfa.secret, code);
+    } else if (backup_code) {
+      const idx = await verifyBackupCode(backup_code, mfa.backupHashes);
+      if (idx >= 0) {
+        mfa.backupHashes[idx] = null;
+        saveMfaForUser(userId, mfa);
+        ok = true;
+      }
+    }
+    if (!ok) return res.status(401).json({ error: 'Invalid MFA code' });
+
+    const user = findUserById(userId);
+    if (!user) return res.status(401).json({ error: 'User not found' });
+    const { jti, refresh } = createSession({ userId, userAgent: req.headers['user-agent'], ip: req.ip });
+    const token = generateToken(user, jti);
+    const { password: pw, ...safeUser } = user;
+
+    res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+    res.cookie('hl_refresh', refresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    sendError(res, 500, 'MFA login failed', error);
+  }
 });
 
-app.delete('/auth/sessions/:sessionId', requireAuth(), (req, res) => {
-  const { sessionId } = req.params;
-  const sessions = getUserSessions(req.user.id);
-  const session = sessions.find(s => s.id === sessionId);
+// R3: Token refresh via rotate-on-use refresh cookie
+app.post('/auth/refresh', (req, res) => {
+  try {
+    const raw = req.cookies?.hl_refresh;
+    if (!raw) return res.status(401).json({ error: 'No refresh token' });
+    const dotIdx = raw.lastIndexOf('.');
+    if (dotIdx === -1) return res.status(400).json({ error: 'Bad refresh format' });
+    const presented = raw.substring(0, dotIdx);
+    const jti = raw.substring(dotIdx + 1);
 
-  if (!session) {
-    return res.status(404).json({ error: 'Session not found' });
+    const newRefresh = rotateRefresh(jti, presented, req.headers['user-agent'], req.ip);
+    if (!newRefresh) {
+      res.clearCookie('hl_session', { path: '/' });
+      res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
+      return res.status(401).json({ error: 'Refresh invalid or reused' });
+    }
+
+    const session = getSessionByJti(jti);
+    if (!session) return res.status(401).json({ error: 'Session not found' });
+    const user = findUserById(session.user_id);
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    const token = generateToken(user, jti);
+    res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+    res.cookie('hl_refresh', newRefresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ success: true });
+  } catch (error) {
+    sendError(res, 500, 'Token refresh failed', error);
   }
+});
 
-  invalidateSession(sessionId);
-  logger.info(`User ${req.user.username} invalidated session ${sessionId}`);
+// R3: List active sessions for current user
+app.get('/auth/sessions', requireAuth, (req, res) => {
+  const userId = req.user.sub || req.user.id;
+  const rows = listForUser(userId);
+  res.json({
+    current_jti: req.user.jti,
+    sessions: rows.map(r => ({
+      jti: r.jti, user_agent: r.user_agent, ip: r.ip,
+      created_at: r.created_at, last_seen_at: r.last_seen_at,
+      expires_at: r.expires_at, revoked: !!r.revoked_at,
+      is_current: r.jti === req.user.jti,
+    })),
+  });
+});
 
+// R3: Revoke a single session
+app.delete('/auth/sessions/:jti', requireAuth, (req, res) => {
+  if (!/^[a-f0-9]{32}$/.test(req.params.jti)) {
+    return res.status(400).json({ error: 'Invalid session ID format' });
+  }
+  const userId = req.user.sub || req.user.id;
+  const session = getSessionByJti(req.params.jti);
+  if (!session || session.user_id !== userId) return res.status(404).json({ error: 'Not found' });
+  if (req.params.jti === req.user.jti) {
+    res.clearCookie('hl_session', { path: '/' });
+    res.clearCookie('hl_refresh', { path: '/api/auth/refresh' });
+  }
+  revokeSession(req.params.jti);
+  audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke', result: 'ok', target: req.params.jti, meta: {} });
   res.json({ success: true });
 });
 
+// R3: Revoke all sessions except current
+app.post('/auth/sessions/revoke-all', requireAuth, (req, res) => {
+  const userId = req.user.sub || req.user.id;
+  revokeAllForUser(userId, req.user.jti);
+  audit({ actor: req.user?.username, ip: req.ip, event: 'session.revoke_all', result: 'ok', meta: {} });
+  res.json({ success: true });
+});
+
+// R6: Audit log endpoint — admin only
+app.get('/audit', requireAuth, requireRole('admin'), (req, res) => {
+  audit({ actor: req.user?.username, ip: req.ip, event: 'audit.read', result: 'ok', meta: { limit: req.query.limit } });
+  const limit = Math.min(parseInt(req.query.limit || '200', 10), 1000);
+  const events = getRecentAuditEvents(limit);
+  const chainStatus = verifyChain();
+  res.json({ chain: chainStatus, events });
+});
+
+// C-R9.5-2: Internal audit endpoint — token-authenticated, for cron/system events
+app.post('/internal/audit', express.json({ limit: '4kb' }), (req, res) => {
+  const tok = req.get('X-Internal-Token');
+  const want = process.env.INTERNAL_AUDIT_TOKEN;
+  if (!want || !tok) return res.status(403).json({ ok: false });
+  try {
+    if (tok.length !== want.length || !crypto.timingSafeEqual(Buffer.from(tok), Buffer.from(want))) {
+      return res.status(403).json({ ok: false });
+    }
+  } catch { return res.status(403).json({ ok: false }); }
+  const { event, target, meta } = req.body || {};
+  if (!event || typeof event !== 'string') return res.status(400).json({ ok: false });
+  audit({ actor: 'system:cron', ip: req.ip, event, target: target || null, result: 'ok', meta: meta || {} });
+  res.json({ ok: true });
+});
+
+// R3: MFA setup — generate TOTP secret + QR code
+app.post('/auth/mfa/setup', requireAuth, async (req, res) => {
+  try {
+    if (req.body && Object.keys(req.body).length > 0) {
+      return res.status(400).json({ error: 'This endpoint does not accept a request body' });
+    }
+    const totp = newTotp(req.user.username);
+    setPendingMfa(req.user.sub || req.user.id, { secret: totp.secret.base32, exp: Date.now() + 5 * 60 * 1000 });
+    const uri = totp.toString();
+    const qr = await QRCode.toDataURL(uri);
+    res.json({ uri, qr });
+  } catch (error) {
+    sendError(res, 500, 'MFA setup failed', error);
+  }
+});
+
+// R3: MFA verify — confirm TOTP code and enable MFA
+app.post('/auth/mfa/verify', requireAuth, async (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Code must be a 6-digit string' });
+    }
+    const userId = req.user.sub || req.user.id;
+    const pending = getPendingMfa(userId);
+    if (!pending) return res.status(400).json({ error: 'No pending MFA setup' });
+    if (!verifyTotp(pending.secret, code)) return res.status(400).json({ error: 'Invalid code' });
+    const backup = makeBackupCodes(10);
+    const backupHashes = await hashBackupCodes(backup);
+    saveMfaForUser(userId, { secret: pending.secret, backupHashes, enabledAt: Date.now() });
+    clearPendingMfa(userId);
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+    res.json({ enabled: true, backup_codes: backup });
+  } catch (error) {
+    sendError(res, 500, 'MFA verification failed', error);
+  }
+});
+
+// R3: MFA disable — requires password confirmation
+app.post('/auth/mfa/disable', requireAuth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.sub || req.user.id;
+    const user = findUserById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Invalid password' });
+    disableMfaForUser(userId);
+    res.json({ disabled: true });
+  } catch (error) {
+    sendError(res, 500, 'MFA disable failed', error);
+  }
+});
+
+// R3: Forgot password — send reset email
+app.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), async (req, res) => {
+  const { username } = req.body || {};
+  const user = username ? findUserByUsername(username) : null;
+  if (user?.email) {
+    const raw = crypto.randomBytes(32).toString('base64url');
+    const hash = crypto.createHash('sha256').update(raw).digest('hex');
+    saveResetToken(user.id, hash, Date.now() + 30 * 60 * 1000);
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
+    const url = `${baseUrl}/reset-password?u=${encodeURIComponent(user.id)}&t=${raw}`;
+    transporter.sendMail({
+      from: process.env.SMTP_FROM || 'homelabarr@localhost',
+      to: user.email,
+      subject: 'HomelabARR — password reset',
+      text: `Reset link (valid 30 minutes): ${url}\nIf you did not request this, ignore this email.`,
+    }).catch(err => logger.error('reset_email_failed', { err: err.message }));
+  }
+  res.status(204).end();
+});
+
+// R3: Reset password — consume reset token and update password
+app.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), async (req, res) => {
+  try {
+    const { user_id, token, new_password } = req.body || {};
+    if (!user_id || !token || !new_password) return res.status(400).json({ error: 'Missing fields' });
+    if (typeof new_password !== 'string' || new_password.length < 12) return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    const stored = getResetTokenForUser(user_id);
+    if (!stored || stored.exp < Date.now()) return res.status(400).json({ error: 'Invalid or expired token' });
+    const presentedHash = crypto.createHash('sha256').update(token).digest('hex');
+    const a = Buffer.from(stored.hash, 'hex');
+    const b = Buffer.from(presentedHash, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(400).json({ error: 'Invalid or expired token' });
+    const passwordHash = await bcrypt.hash(new_password, 12);
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === user_id);
+    if (idx === -1) return res.status(400).json({ error: 'User not found' });
+    users[idx].password = passwordHash;
+    saveUsers(users);
+    clearResetToken(user_id);
+    revokeAllForUser(user_id);
+    res.json({ success: true });
+  } catch (error) {
+    sendError(res, 500, 'Password reset failed', error);
+  }
+});
+
 // Admin-only user management routes
-app.post('/auth/users', requireAuth('admin'), async (req, res) => {
+app.post('/auth/users', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
@@ -366,7 +708,7 @@ app.post('/auth/users', requireAuth('admin'), async (req, res) => {
   }
 });
 
-app.get('/auth/users', requireAuth('admin'), (req, res) => {
+app.get('/auth/users', requireAuth, requireRole('admin'), (req, res) => {
   const users = loadUsers();
   const sanitizedUsers = users.map(user => ({
     id: user.id,
@@ -380,7 +722,7 @@ app.get('/auth/users', requireAuth('admin'), (req, res) => {
   res.json(sanitizedUsers);
 });
 
-app.delete('/auth/users/:userId', requireAuth('admin'), (req, res) => {
+app.delete('/auth/users/:userId', requireAuth, requireRole('admin'), (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -417,7 +759,7 @@ app.delete('/auth/users/:userId', requireAuth('admin'), (req, res) => {
   }
 });
 
-app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) => {
+app.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { newPassword } = req.body;
@@ -433,7 +775,6 @@ app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) =
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const bcrypt = await import('bcryptjs');
     users[userIndex].password = await bcrypt.hash(newPassword, 12);
     saveUsers(users);
 
@@ -455,8 +796,32 @@ app.put('/auth/users/:userId/password', requireAuth('admin'), async (req, res) =
   }
 });
 
-// Enhanced health check endpoint with comprehensive platform and configuration information
-app.get('/health', async (req, res) => {
+// H-R9-5: CLI mint endpoint — issue short-lived tokens for scanners/CLI tools
+app.post('/auth/cli-mint', express.json({ limit: '1kb' }), async (req, res) => {
+  const mintKey = req.get('X-Mint-Key');
+  const want = process.env.CLI_MINT_KEY || readSecret('CLI_MINT_KEY', { required: false });
+  if (!want || !mintKey) return res.status(403).json({ ok: false });
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(mintKey), Buffer.from(want))) {
+      return res.status(403).json({ ok: false });
+    }
+  } catch { return res.status(403).json({ ok: false }); }
+  const { u, role = 'viewer', ttl_s = 1800 } = req.body || {};
+  if (!u || typeof u !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(u)) return res.status(400).json({ ok: false });
+  if (!['viewer', 'scanner'].includes(role)) return res.status(400).json({ ok: false });
+  if (ttl_s < 60 || ttl_s > 3600) return res.status(400).json({ ok: false });
+  const token = generateToken({ id: u, username: u, role }, 'mint-' + crypto.randomBytes(8).toString('hex'));
+  audit({ actor: u, ip: req.ip, event: 'auth.cli_mint', result: 'ok', meta: { role, ttl_s } });
+  res.json({ a: token, exp: Math.floor(Date.now() / 1000) + ttl_s });
+});
+
+// CF-D: Health check — minimal, no server info leaked
+app.get('/health', (_req, res) => {
+  return res.json({ ok: true, ts: Math.floor(Date.now() / 1000), state: 'ready' });
+});
+
+// R6.5-drift-1: Full health detail — admin only
+app.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) => {
   const connectionState = dockerManager.getConnectionState();
   const serviceStatus = dockerManager.getServiceStatus();
 
@@ -465,12 +830,19 @@ app.get('/health', async (req, res) => {
     let dockerDetails = {};
     let dockerInfo = null;
 
-    // Test Docker CLI access directly
-    try {
-      execSync('docker info --format "{{.ServerVersion}}"', { encoding: 'utf8', timeout: 5000 });
-      dockerStatus = 'connected';
-    } catch (e) {
-      dockerStatus = 'disconnected';
+    // Test Docker access — prefer DOCKER_HOST tcp if set, fall back to CLI
+    const dockerHost = process.env.DOCKER_HOST;
+    if (dockerHost && dockerHost.startsWith('tcp://')) {
+      try {
+        const url = new URL(dockerHost.replace('tcp://', 'http://'));
+        const pingRes = await fetch(`http://${url.hostname}:${url.port}/_ping`, { signal: AbortSignal.timeout(2000) });
+        dockerStatus = pingRes.ok ? 'connected' : 'disconnected';
+      } catch { dockerStatus = 'disconnected'; }
+    } else {
+      try {
+        execSync('docker info --format "{{.ServerVersion}}"', { encoding: 'utf8', timeout: 5000 });
+        dockerStatus = 'connected';
+      } catch { dockerStatus = 'disconnected'; }
     }
 
     if (connectionState.isConnected) {
@@ -845,8 +1217,26 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// H-R9-6: Route manifest — scanner/admin only
+app.get('/_routes', requireAuth, (req, res) => {
+  if (req.user.role !== 'scanner' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'scanner or admin role required' });
+  }
+  const routes = [];
+  app._router.stack.forEach(layer => {
+    if (layer.route) {
+      routes.push({
+        path: layer.route.path,
+        methods: Object.keys(layer.route.methods).filter(m => layer.route.methods[m]).map(m => m.toUpperCase()),
+      });
+    }
+  });
+  routes.sort((a, b) => a.path.localeCompare(b.path));
+  res.json({ count: routes.length, routes });
+});
+
 // ─── API Key Routes ─────────────────────────────────────────────────────
-app.post('/auth/api-keys', requireAuth(), async (req, res) => {
+app.post('/auth/api-keys', requireAuth, async (req, res) => {
   try {
     const { label } = req.body;
     const entry = createApiKey(req.user.id, label);
@@ -862,18 +1252,18 @@ app.post('/auth/api-keys', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/auth/api-keys', requireAuth(), (req, res) => {
+app.get('/auth/api-keys', requireAuth, (req, res) => {
   res.json({ apiKeys: listApiKeys(req.user.id) });
 });
 
-app.delete('/auth/api-keys/:keyId', requireAuth(), (req, res) => {
+app.delete('/auth/api-keys/:keyId', requireAuth, (req, res) => {
   const success = revokeApiKey(req.params.keyId, req.user.id);
   if (success) res.json({ message: 'API key revoked' });
   else res.status(404).json({ error: 'API key not found' });
 });
 
 // ─── Starred Apps Routes ────────────────────────────────────────────────
-app.get('/auth/me/stars', requireAuth(), (req, res) => {
+app.get('/auth/me/stars', requireAuth, (req, res) => {
   try {
     res.json({ stars: getUserStars(req.user.id) });
   } catch (err) {
@@ -881,7 +1271,7 @@ app.get('/auth/me/stars', requireAuth(), (req, res) => {
   }
 });
 
-app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+app.post('/auth/me/stars/:appId', requireAuth, (req, res) => {
   try {
     const stars = addStar(req.user.id, req.params.appId);
     res.json({ stars });
@@ -890,7 +1280,7 @@ app.post('/auth/me/stars/:appId', requireAuth(), (req, res) => {
   }
 });
 
-app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
+app.delete('/auth/me/stars/:appId', requireAuth, (req, res) => {
   try {
     const stars = removeStar(req.user.id, req.params.appId);
     res.json({ stars });
@@ -900,7 +1290,7 @@ app.delete('/auth/me/stars/:appId', requireAuth(), (req, res) => {
 });
 
 // Activity log endpoint
-app.get('/auth/activity-log', requireAuth('admin'), (req, res) => {
+app.get('/auth/activity-log', requireAuth, requireRole('admin'), (req, res) => {
   try {
     const { userId, action, limit = '50', offset = '0' } = req.query;
 
@@ -918,47 +1308,7 @@ app.get('/auth/activity-log', requireAuth('admin'), (req, res) => {
   }
 });
 
-// Authentication routes
-app.post('/auth/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({
-        error: 'Missing credentials',
-        details: 'Username and password are required'
-      });
-    }
-
-    const user = await validatePassword(username, password);
-    if (!user) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        details: 'Username or password is incorrect'
-      });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        lastLogin: user.lastLogin
-      }
-    });
-  } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({
-      error: 'Login failed',
-      details: error.message
-    });
-  }
-});
+// H-18: Duplicate /auth/login removed — using the one at L191 with session management
 
 app.post('/auth/register', requireAuth, requireRole('admin'), async (req, res) => {
   try {
@@ -991,80 +1341,7 @@ app.post('/auth/register', requireAuth, requireRole('admin'), async (req, res) =
   }
 });
 
-app.get('/auth/me', requireAuth, (req, res) => {
-  const user = findUserById(req.user.id);
-  if (!user) {
-    return res.status(404).json({
-      error: 'User not found'
-    });
-  }
-
-  const { password, ...userWithoutPassword } = user;
-  res.json({
-    success: true,
-    user: userWithoutPassword
-  });
-});
-
-app.get('/auth/users', requireAuth, requireRole('admin'), (req, res) => {
-  const users = loadUsers();
-  const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-
-  res.json({
-    success: true,
-    users: usersWithoutPasswords
-  });
-});
-
-app.post('/auth/change-password', requireAuth, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        details: 'Current password and new password are required'
-      });
-    }
-
-    const user = findUserById(req.user.id);
-    if (!user) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
-
-    // Validate current password
-    const validUser = await validatePassword(user.username, currentPassword);
-    if (!validUser) {
-      return res.status(401).json({
-        error: 'Invalid current password'
-      });
-    }
-
-    // Update password
-    const bcrypt = await import('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    const users = loadUsers();
-    const userIndex = users.findIndex(u => u.id === user.id);
-    if (userIndex !== -1) {
-      users[userIndex].password = hashedPassword;
-      saveUsers(users);
-    }
-
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-  } catch (error) {
-    logger.error('Password change error:', error);
-    res.status(500).json({
-      error: 'Failed to change password',
-      details: error.message
-    });
-  }
-});
+// H-18: Duplicate /auth/me, /auth/users, /auth/change-password removed — using the ones at L269, L380, L286
 
 // Application catalog endpoint - replaces template validation
 app.get('/applications', async (req, res) => {
@@ -1115,11 +1392,7 @@ app.get('/applications', async (req, res) => {
       });
     }
   } catch (error) {
-    logger.error('Error loading applications:', error);
-    res.status(500).json({
-      error: 'Failed to load applications',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to load applications', error);
   }
 });
 
@@ -1145,11 +1418,7 @@ app.post('/applications/:appId/stop', authEnabled ? requireAuth : optionalAuth, 
       });
     }
   } catch (error) {
-    logger.error('Error stopping application:', error);
-    res.status(500).json({
-      error: 'Failed to stop application',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to stop application', error);
   }
 });
 
@@ -1174,11 +1443,7 @@ app.delete('/applications/:appId', authEnabled ? requireAuth : optionalAuth, asy
       });
     }
   } catch (error) {
-    logger.error('Error removing application:', error);
-    res.status(500).json({
-      error: 'Failed to remove application',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to remove application', error);
   }
 });
 
@@ -1203,11 +1468,7 @@ app.get('/applications/:appId/logs', authEnabled ? requireAuth : optionalAuth, a
       });
     }
   } catch (error) {
-    logger.error('Error getting application logs:', error);
-    res.status(500).json({
-      error: 'Failed to get application logs',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get application logs', error);
   }
 });
 
@@ -1241,8 +1502,8 @@ app.get('/deployment-modes', (req, res) => {
 
 // Progress Streaming Endpoints
 
-// Server-Sent Events endpoint for deployment progress
-app.get('/stream/progress', (req, res) => {
+// C-9: SSE progress stream requires auth
+app.get('/stream/progress', requireAuth, (req, res) => {
   const clientId = randomUUID();
   
   try {
@@ -1253,11 +1514,7 @@ app.get('/stream/progress', (req, res) => {
     progressStream.sendToClient(clientId, 'statistics', stats);
     
   } catch (error) {
-    logger.error('Error setting up progress stream:', error);
-    res.status(500).json({
-      error: 'Failed to setup progress stream',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to setup progress stream', error);
   }
 });
 
@@ -1283,11 +1540,7 @@ app.post('/stream/deployments/:deploymentId/subscribe', authEnabled ? requireAut
       clientId
     });
   } catch (error) {
-    logger.error('Error subscribing to deployment:', error);
-    res.status(500).json({
-      error: 'Failed to subscribe to deployment',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to subscribe to deployment', error);
   }
 });
 
@@ -1316,11 +1569,7 @@ app.get('/deployments/:deploymentId/status', authEnabled ? requireAuth : optiona
       });
     }
   } catch (error) {
-    logger.error('Error getting deployment status:', error);
-    res.status(500).json({
-      error: 'Failed to get deployment status',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get deployment status', error);
   }
 });
 
@@ -1343,16 +1592,12 @@ app.get('/deployments/active', authEnabled ? requireAuth : optionalAuth, (req, r
       });
     }
   } catch (error) {
-    logger.error('Error getting active deployments:', error);
-    res.status(500).json({
-      error: 'Failed to get active deployments',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to get active deployments', error);
   }
 });
 
-// Port availability check endpoint
-app.get('/ports/check', async (req, res) => {
+// C-9: Port check requires auth
+app.get('/ports/check', requireAuth, async (req, res) => {
   try {
     // Use cross-platform Docker CLI approach
     
@@ -1412,21 +1657,12 @@ app.get('/ports/check', async (req, res) => {
       });
     }
   } catch (error) {
-    logger.error('Error checking ports:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      usedPorts: [],
-      docker: {
-        status: 'error',
-        message: 'Failed to check ports'
-      }
-    });
+    sendError(res, 500, 'Failed to check ports', error);
   }
 });
 
-// Find available port endpoint
-app.get('/ports/available', async (req, res) => {
+// C-9: Port availability requires auth
+app.get('/ports/available', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -1641,20 +1877,29 @@ class DockerConnectionManager {
    * @returns {Object} Docker connection options
    */
   getPlatformSpecificDockerOptions() {
+    // C-R4-1: Support DOCKER_HOST=tcp://socket-proxy:2375 for socket proxy
+    const dockerHost = process.env.DOCKER_HOST;
+    if (dockerHost && dockerHost.startsWith('tcp://')) {
+      const url = new URL(dockerHost);
+      return {
+        host: url.hostname,
+        port: parseInt(url.port) || 2375,
+        protocol: 'http',
+        timeout: this.config.timeout,
+      };
+    }
+
     const baseOptions = {
       socketPath: this.config.socketPath,
       timeout: this.config.timeout
     };
 
     if (this.config.platform === 'windows') {
-      // Windows-specific Docker options
       baseOptions.protocol = 'npipe';
-      // On Windows, we might need to handle named pipes differently
       if (!this.config.socketPath.includes('pipe')) {
         baseOptions.socketPath = '\\\\.\\pipe\\docker_engine';
       }
     } else {
-      // Unix-specific Docker options
       baseOptions.protocol = 'unix';
     }
 
@@ -2976,7 +3221,10 @@ logger.info('🐳 Initializing Docker connection manager');
 logger.info('🔧 Enabling Docker functionality for container deployment');
   
   // Create CLI-based Docker manager for Windows compatibility
-  const cliDocker = new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
+  const dockerHost = process.env.DOCKER_HOST;
+  const cliDocker = dockerHost?.startsWith('tcp://')
+    ? new Docker({ host: new URL(dockerHost).hostname, port: parseInt(new URL(dockerHost).port) || 2375, protocol: 'http' })
+    : new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
   dockerManager = {
     docker: cliDocker,
     config: {
@@ -3147,7 +3395,7 @@ function parseBytes(bytesString) {
 // conditionalAuth removed — all container routes now require authentication
 
 // Routes (protected by authentication if enabled)
-app.get('/containers', requireAuth(), async (req, res) => {
+app.get('/containers', requireAuth, async (req, res) => {
   try {
     // Skip dockerode service status check — we use CLI-based Docker access
     // which works even when dockerode can't connect
@@ -3300,8 +3548,8 @@ app.get('/containers', requireAuth(), async (req, res) => {
   }
 });
 
-// Separate endpoint for container statistics
-app.get('/containers/:id/stats', async (req, res) => {
+// C-9: Container stats requires auth
+app.get('/containers/:id/stats', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3359,7 +3607,7 @@ app.get('/containers/:id/stats', async (req, res) => {
 });
 
 // Container control endpoints
-app.post('/containers/:id/start', requireAuth(), async (req, res) => {
+app.post('/containers/:id/start', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3399,7 +3647,7 @@ app.post('/containers/:id/start', requireAuth(), async (req, res) => {
   }
 });
 
-app.post('/containers/:id/stop', requireAuth(), async (req, res) => {
+app.post('/containers/:id/stop', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3439,7 +3687,7 @@ app.post('/containers/:id/stop', requireAuth(), async (req, res) => {
   }
 });
 
-app.post('/containers/:id/restart', requireAuth(), async (req, res) => {
+app.post('/containers/:id/restart', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3479,7 +3727,7 @@ app.post('/containers/:id/restart', requireAuth(), async (req, res) => {
   }
 });
 
-app.delete('/containers/:id', requireAuth(), async (req, res) => {
+app.delete('/containers/:id', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3532,7 +3780,8 @@ app.delete('/containers/:id', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/containers/:id/logs', async (req, res) => {
+// C-9: Container logs requires auth
+app.get('/containers/:id/logs', requireAuth, async (req, res) => {
   try {
     const serviceStatus = dockerManager.getServiceStatus();
 
@@ -3660,14 +3909,10 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
         setTimeout(() => {
           if (!res.headersSent) {
             dockerProcess.kill();
-            return res.status(500).json({
-              success: false,
-              error: 'Deployment timeout',
-              details: 'Docker deployment took too long'
-            });
+            return sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long'));
           }
         }, 30000);
-        
+
         // Return success immediately for MVP testing
         logActivity({
           userId: req.user?.id || 'anonymous',
@@ -3692,12 +3937,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
         });
 
       } catch (cliError) {
-        logger.error('Docker CLI deployment failed:', cliError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Docker CLI deployment failed',
-          details: cliError.message
-        });
+        return sendError(res, 500, 'Docker CLI deployment failed', cliError);
       }
     }
 
@@ -3800,36 +4040,22 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
                 port: parseInt(port)
               }));
             } else {
-              logger.error(`❌ Docker deployment failed with code ${code}: ${errorOutput}`);
-              resolve(res.status(500).json({
-                success: false,
-                error: 'Docker deployment failed',
-                details: errorOutput || `Process exited with code ${code}`,
-                dockerStatus: 'cli-error'
-              }));
+              logger.error(`Docker deployment failed with code ${code}: ${errorOutput}`);
+              resolve(sendError(res, 500, 'Docker deployment failed', new Error(errorOutput || `Process exited with code ${code}`)));
             }
           });
-          
+
           // Set timeout for the deployment
           setTimeout(() => {
             if (!res.headersSent) {
               dockerProcess.kill();
-              resolve(res.status(500).json({
-                success: false,
-                error: 'Deployment timeout',
-                details: 'Docker deployment took too long'
-              }));
+              resolve(sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long')));
             }
           }, 30000);
         });
-        
+
       } catch (cliError) {
-        logger.error('Docker CLI deployment failed:', cliError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Docker CLI deployment failed',
-          details: cliError.message
-        });
+        return sendError(res, 500, 'Docker CLI deployment failed', cliError);
       }
     }
 
@@ -3905,28 +4131,19 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
               port: parseInt(port)
             });
           } else {
-            logger.error(`❌ Docker deployment failed with code ${code}: ${errorOutput}`);
-            res.status(500).json({
-              success: false,
-              error: 'Docker deployment failed',
-              details: errorOutput || `Process exited with code ${code}`,
-              dockerStatus: 'cli-error'
-            });
+            logger.error(`Docker deployment failed with code ${code}: ${errorOutput}`);
+            sendError(res, 500, 'Docker deployment failed', new Error(errorOutput || `Process exited with code ${code}`));
           }
         });
-        
+
         // Set timeout for the deployment
         setTimeout(() => {
           if (!res.headersSent) {
             dockerProcess.kill();
-            res.status(500).json({
-              success: false,
-              error: 'Deployment timeout',
-              details: 'Docker deployment took too long'
-            });
+            sendError(res, 500, 'Deployment timeout', new Error('Docker deployment took too long'));
           }
         }, 30000);
-        
+
         return; // Don't continue to old template mode
       }
       
@@ -3939,12 +4156,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
       });
       
     } catch (cliError) {
-      logger.error('CLI deployment setup failed:', cliError.message);
-      return res.status(500).json({
-        success: false,
-        error: 'CLI deployment failed',
-        details: cliError.message
-      });
+      return sendError(res, 500, 'CLI deployment failed', cliError);
     }
 
     // Read template file
@@ -4250,7 +4462,7 @@ app.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) =
 });
 
 // Enhanced Mount Container API endpoints - Proxy to container's web interface
-app.get('/enhanced-mount/:containerId/status', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/status', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4280,16 +4492,11 @@ app.get('/enhanced-mount/:containerId/status', requireAuth(), async (req, res) =
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount status for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount status',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount status', error);
   }
 });
 
-app.get('/enhanced-mount/:containerId/providers', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/providers', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4318,16 +4525,11 @@ app.get('/enhanced-mount/:containerId/providers', requireAuth(), async (req, res
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount providers for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount providers',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount providers', error);
   }
 });
 
-app.get('/enhanced-mount/:containerId/costs', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/costs', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4356,16 +4558,11 @@ app.get('/enhanced-mount/:containerId/costs', requireAuth(), async (req, res) =>
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount costs for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount costs',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount costs', error);
   }
 });
 
-app.get('/enhanced-mount/:containerId/performance', requireAuth(), async (req, res) => {
+app.get('/enhanced-mount/:containerId/performance', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     
@@ -4394,19 +4591,14 @@ app.get('/enhanced-mount/:containerId/performance', requireAuth(), async (req, r
       data: data
     });
   } catch (error) {
-    logger.error(`Error fetching enhanced mount performance for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch enhanced mount performance',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to fetch enhanced mount performance', error);
   }
 });
 
 // Provider configuration endpoints
 const ALLOWED_PROVIDERS = ['local', 'google', 'dropbox', 'onedrive', 'sftp', 'webdav', 's3', 'b2', 'mega', 'box', 'ftp', 'smb', 'nfs'];
 
-app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth, async (req, res) => {
   try {
     const { containerId, provider } = req.params;
     const config = req.body;
@@ -4451,16 +4643,11 @@ app.post('/enhanced-mount/:containerId/providers/:provider/enable', requireAuth(
       data: data
     });
   } catch (error) {
-    logger.error(`Error enabling provider ${req.params.provider} for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: `Failed to enable provider ${req.params.provider}`,
-      details: error.message
-    });
+    sendError(res, 500, `Failed to enable provider ${req.params.provider}`, error);
   }
 });
 
-app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth, async (req, res) => {
   try {
     const { containerId, provider } = req.params;
 
@@ -4500,17 +4687,12 @@ app.post('/enhanced-mount/:containerId/providers/:provider/disable', requireAuth
       data: data
     });
   } catch (error) {
-    logger.error(`Error disabling provider ${req.params.provider} for ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: `Failed to disable provider ${req.params.provider}`,
-      details: error.message
-    });
+    sendError(res, 500, `Failed to disable provider ${req.params.provider}`, error);
   }
 });
 
 // Rclone Authentication endpoints
-app.post('/enhanced-mount/:containerId/auth/start', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/start', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
@@ -4547,16 +4729,11 @@ app.post('/enhanced-mount/:containerId/auth/start', requireAuth(), async (req, r
       data: data
     });
   } catch (error) {
-    logger.error(`Error starting auth for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to start authentication',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to start authentication', error);
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/complete', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/complete', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, auth_code } = req.body;
@@ -4593,16 +4770,11 @@ app.post('/enhanced-mount/:containerId/auth/complete', requireAuth(), async (req
       data: data
     });
   } catch (error) {
-    logger.error(`Error completing auth for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to complete authentication',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to complete authentication', error);
   }
 });
 
-app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider, credentials } = req.body;
@@ -4639,17 +4811,12 @@ app.post('/enhanced-mount/:containerId/auth/api-key', requireAuth(), async (req,
       data: data
     });
   } catch (error) {
-    logger.error(`Error configuring API key for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to configure API credentials',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to configure API credentials', error);
   }
 });
 
 // Test rclone connection
-app.post('/enhanced-mount/:containerId/auth/test', requireAuth(), async (req, res) => {
+app.post('/enhanced-mount/:containerId/auth/test', requireAuth, async (req, res) => {
   try {
     const { containerId } = req.params;
     const { provider } = req.body;
@@ -4686,22 +4853,13 @@ app.post('/enhanced-mount/:containerId/auth/test', requireAuth(), async (req, re
       data: data
     });
   } catch (error) {
-    logger.error(`Error testing connection for ${req.params.provider} on ${req.params.containerId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test connection',
-      details: error.message
-    });
+    sendError(res, 500, 'Failed to test connection', error);
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+  sendError(res, 500, 'Internal Server Error', err);
 });
 
 // Graceful shutdown handlers

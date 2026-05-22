@@ -69,9 +69,9 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
             ) : (
               <div className="space-y-1">
                 {logs.map((log, index) => (
-                  <div key={index} className="text-gray-300">
+                  <div key={index} className="whitespace-pre-wrap break-all font-mono text-xs text-gray-300">
                     <span className="text-gray-500">{log.timestamp}</span>{" "}
-                    {log.message}
+                    {log.message.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')}
                   </div>
                 ))}
               </div>

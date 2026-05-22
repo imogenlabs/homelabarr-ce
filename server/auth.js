@@ -3,12 +3,26 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { readSecret } from './secrets.js';
+import { createSession, isJtiActive, getSessionByJti, rotateRefresh, revokeSession, revokeAllForUser, listForUser } from './sessions.js';
+import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
+import transporter from './email.js';
+import QRCode from 'qrcode';
 
 // Configuration
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const BCRYPT_COST = 12;
+const ACCESS_TTL_SEC = 15 * 60;
+const JWT_SECRET = readSecret('JWT_SECRET', { required: false }) || readSecret('JWT_KEY_CURRENT', { required: false }) || process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
 const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
+const API_KEY_HMAC_KEY = readSecret('API_KEY_HMAC_KEY', { required: false }) || JWT_SECRET;
+
+const ROLE_HIERARCHY = { user: 1, operator: 2, admin: 3 };
+
+function hasRole(userRole, requiredRole) {
+  return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
+}
 
 // Ensure config directory exists
 const configDir = path.dirname(USERS_FILE);
@@ -78,7 +92,7 @@ export async function createUser(userData) {
   }
   
   // Hash password
-  const hashedPassword = await bcrypt.hash(userData.password, 12);
+  const hashedPassword = await bcrypt.hash(userData.password, BCRYPT_COST);
   
   const newUser = {
     id: generateUserId(),
@@ -86,6 +100,7 @@ export async function createUser(userData) {
     email: userData.email || '',
     role: userData.role || 'user',
     password: hashedPassword,
+    mustChangePassword: userData.mustChangePassword || false,
     createdAt: new Date().toISOString(),
     lastLogin: null
   };
@@ -108,7 +123,15 @@ export async function validatePassword(username, password) {
   if (!isValid) {
     return null;
   }
-  
+
+  const currentCost = Number(user.password.match(/^\$2[aby]\$(\d+)\$/)?.[1] || 0);
+  if (currentCost < BCRYPT_COST) {
+    const newHash = await bcrypt.hash(password, BCRYPT_COST);
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx !== -1) { users[idx].password = newHash; saveUsers(users); }
+  }
+
   // Update last login
   const users = loadUsers();
   const userIndex = users.findIndex(u => u.id === user.id);
@@ -122,28 +145,26 @@ export async function validatePassword(username, password) {
   return userWithoutPassword;
 }
 
-export function generateToken(user) {
+export function generateToken(user, jti) {
   return jwt.sign(
-    { 
-      id: user.id, 
-      username: user.username, 
-      role: user.role 
-    },
+    { sub: user.id, id: user.id, username: user.username, role: user.role, jti },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
   );
 }
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    if (decoded.jti && !isJtiActive(decoded.jti)) return null;
+    return decoded;
+  } catch {
     return null;
   }
 }
 
 export function generateUserId() {
-  return 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+  return 'user_' + crypto.randomBytes(12).toString('hex');
 }
 
 
@@ -168,44 +189,60 @@ export function saveApiKeys(keys) {
   }
 }
 
-export function generateApiKey() {
-  return 'hlr_' + crypto.randomBytes(32).toString('hex');
-}
-
 export function createApiKey(userId, label) {
   const keys = loadApiKeys();
-  const key = generateApiKey();
+  const key = 'hlr_' + crypto.randomBytes(32).toString('hex');
+  const lookup = key.slice(0, 12);
+  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
   const entry = {
     id: 'key_' + crypto.randomBytes(8).toString('hex'),
-    key: key,
-    userId: userId,
+    lookup,
+    hash,
+    userId,
     label: label || 'Mobile App',
     createdAt: new Date().toISOString(),
     lastUsed: null,
-    revoked: false
+    revoked: false,
   };
   keys.push(entry);
   saveApiKeys(keys);
-  return entry;
+  return { ...entry, key };
 }
 
 export function validateApiKey(key) {
   if (!key || !key.startsWith('hlr_')) return null;
+  const lookup = key.slice(0, 12);
+  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
   const keys = loadApiKeys();
-  const entry = keys.find(k => k.key === key && !k.revoked);
-  if (!entry) return null;
-  entry.lastUsed = new Date().toISOString();
-  saveApiKeys(keys);
-  const user = findUserById(entry.userId);
-  if (!user) return null;
-  return { id: user.id, username: user.username, role: user.role, apiKey: true };
+  for (const entry of keys.filter(k => !k.revoked && (k.lookup === lookup || k.key))) {
+    if (entry.hash && entry.hash.length === hash.length &&
+        crypto.timingSafeEqual(Buffer.from(entry.hash, 'hex'), Buffer.from(hash, 'hex'))) {
+      entry.lastUsed = new Date().toISOString();
+      saveApiKeys(keys);
+      const user = findUserById(entry.userId);
+      if (!user) return null;
+      return { id: user.id, username: user.username, role: user.role, apiKey: true };
+    }
+    // Legacy fallback: unhashed key stored as entry.key (migrate on next validate)
+    if (entry.key === key) {
+      entry.hash = hash;
+      entry.lookup = lookup;
+      delete entry.key;
+      entry.lastUsed = new Date().toISOString();
+      saveApiKeys(keys);
+      const user = findUserById(entry.userId);
+      if (!user) return null;
+      return { id: user.id, username: user.username, role: user.role, apiKey: true };
+    }
+  }
+  return null;
 }
 
 export function listApiKeys(userId) {
   const keys = loadApiKeys();
   return keys
     .filter(k => k.userId === userId && !k.revoked)
-    .map(({ key, ...rest }) => ({ ...rest, keyPreview: key.slice(0, 8) + '...' + key.slice(-4) }));
+    .map(({ key, hash, ...rest }) => ({ ...rest, keyPreview: rest.lookup || 'hlr_****' }));
 }
 
 export function revokeApiKey(keyId, userId) {
@@ -259,35 +296,12 @@ export function invalidateSession(sessionId) {
 export async function authenticate(username, password) {
   try {
     const user = await validatePassword(username, password);
-    if (!user) {
-      return { success: false, error: 'Invalid username or password' };
-    }
+    if (!user) return { success: false, error: 'Invalid username or password' };
 
-    const token = generateToken(user);
-    const sessionId = 'session_' + crypto.randomBytes(12).toString('hex') + Date.now().toString(36);
-    
-    // Create session
-    const sessions = loadSessions();
-    const session = {
-      id: sessionId,
-      userId: user.id,
-      token: token,
-      createdAt: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      userAgent: '',
-      ipAddress: '',
-      invalidated: false
-    };
-    
-    sessions.push(session);
-    saveSessions(sessions);
+    const { jti, refresh } = createSession({ userId: user.id, userAgent: '', ipAddress: '' });
+    const token = generateToken(user, jti);
 
-    return {
-      success: true,
-      user: user,
-      token: token,
-      sessionId: sessionId
-    };
+    return { success: true, user, token, jti, refresh };
   } catch (error) {
     console.error('Authentication error:', error);
     return { success: false, error: 'Authentication failed' };
@@ -309,7 +323,7 @@ export async function changePassword(userId, currentPassword, newPassword) {
     }
 
     // Hash new password
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, BCRYPT_COST);
     
     // Update user
     const users = loadUsers();
@@ -340,7 +354,8 @@ export async function initializeAuth() {
     try {
       await createUser({
         ...DEFAULT_ADMIN,
-        password: defaultPassword
+        password: defaultPassword,
+        mustChangePassword: true,
       });
       
       console.log('✅ Default admin user created:');
@@ -354,126 +369,114 @@ export async function initializeAuth() {
 }
 
 // Middleware functions
-export function requireAuth(role) {
-  // If called with parameters (req, res, next), it's being used as direct middleware
-  if (arguments.length === 3 || (arguments.length === 1 && typeof role === 'object')) {
-    const [req, res, next] = arguments.length === 3 ? arguments : [role, arguments[1], arguments[2]];
-    
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
-        details: 'Please provide a valid authentication token'
-      });
-    }
-    
-    const token = authHeader.substring(7);
-    
-    // Try API key first (hlr_ prefix)
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) { req.user = apiUser; next(); return; }
-      return res.status(401).json({ error: 'Invalid API key' });
-    }
-    
-    const decoded = verifyToken(token);
-    
-    if (!decoded) {
-      return res.status(401).json({ 
-        error: 'Invalid token',
-        details: 'Authentication token is invalid or expired'
-      });
-    }
-    
-    // Add user info to request
-    req.user = decoded;
-    next();
-    return;
+export function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  // API keys via Authorization header (mobile app / CLI)
+  if (authHeader?.startsWith('Bearer hlr_')) {
+    const apiUser = validateApiKey(authHeader.substring(7));
+    if (apiUser) { req.user = apiUser; return next(); }
+    return res.status(401).json({ error: 'Invalid API key' });
   }
-  
-  // If called with no arguments or a role, return a middleware function
-  return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
-        details: 'Please provide a valid authentication token'
-      });
-    }
-    
-    const token = authHeader.substring(7);
-    
-    // Try API key first
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) {
-        req.user = apiUser;
-        if (role && apiUser.role !== role && apiUser.role !== 'admin') {
-          return res.status(403).json({ error: 'Insufficient permissions' });
-        }
-        next(); return;
-      }
-      return res.status(401).json({ error: 'Invalid API key' });
-    }
-    
-    const decoded = verifyToken(token);
-    
-    if (!decoded) {
-      return res.status(401).json({ 
-        error: 'Invalid token',
-        details: 'Authentication token is invalid or expired'
-      });
-    }
-    
-    // Check role if specified
-    if (role && decoded.role !== role && decoded.role !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Insufficient permissions',
-        details: `Role '${role}' required`
-      });
-    }
-    
-    // Add user info to request
-    req.user = decoded;
-    next();
-  };
+
+  // Log legacy Bearer JWT attempts (H-R2.5-2 deprecation window)
+  if (authHeader?.startsWith('Bearer ') && !authHeader.startsWith('Bearer hlr_')) {
+    console.warn('legacy_bearer_seen', { ip: req.ip, path: req.path });
+  }
+
+  // Cookie-only JWT auth (C-R2.5-1)
+  const token = req.cookies?.hl_session;
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  req.user = decoded;
+  next();
 }
 
 export function requireRole(role) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ 
-        error: 'Authentication required' 
-      });
+      return res.status(401).json({ error: 'Authentication required' });
     }
-    
-    if (req.user.role !== role && req.user.role !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Insufficient permissions',
-        details: `This action requires ${role} role or higher`
-      });
+    if (!hasRole(req.user.role, role)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
     }
-    
     next();
   };
 }
 
 // Optional authentication middleware (allows both authenticated and unauthenticated access)
 export function optionalAuth(req, res, next) {
+  // API key via header
   const authHeader = req.headers.authorization;
-  
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    if (token.startsWith('hlr_')) {
-      const apiUser = validateApiKey(token);
-      if (apiUser) req.user = apiUser;
-    } else {
+  if (authHeader?.startsWith('Bearer hlr_')) {
+    const apiUser = validateApiKey(authHeader.substring(7));
+    if (apiUser) req.user = apiUser;
+  } else {
+    // Cookie-based JWT
+    const token = req.cookies?.hl_session;
+    if (token) {
       const decoded = verifyToken(token);
       if (decoded) req.user = decoded;
     }
   }
-  
+
   next();
 }
+
+// ─── Login Ticket System (MFA) ──────────────────────────────────────────
+const loginTickets = new Map();
+const LOGIN_TICKET_TTL = 5 * 60 * 1000;
+
+export function createLoginTicket(userId) {
+  const ticket = crypto.randomBytes(32).toString('hex');
+  loginTickets.set(ticket, { userId, exp: Date.now() + LOGIN_TICKET_TTL });
+  return ticket;
+}
+
+export function consumeLoginTicket(ticket) {
+  const entry = loginTickets.get(ticket);
+  if (!entry || entry.exp < Date.now()) { loginTickets.delete(ticket); return null; }
+  loginTickets.delete(ticket);
+  return entry.userId;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of loginTickets) { if (v.exp < now) loginTickets.delete(k); }
+}, 60 * 1000).unref();
+
+// ─── Password Reset Token Storage ───────────────────────────────────────
+const RESET_FILE = path.join(process.cwd(), 'server', 'config', 'resets.json');
+
+function loadResets() {
+  try { return JSON.parse(fs.readFileSync(RESET_FILE, 'utf8')); } catch { return {}; }
+}
+function saveResets(data) {
+  fs.writeFileSync(RESET_FILE, JSON.stringify(data, null, 2));
+}
+
+export function saveResetToken(userId, hash, exp) {
+  const all = loadResets();
+  all[userId] = { hash, exp };
+  saveResets(all);
+}
+
+export function getResetTokenForUser(userId) {
+  const all = loadResets();
+  return all[userId] || null;
+}
+
+export function clearResetToken(userId) {
+  const all = loadResets();
+  delete all[userId];
+  saveResets(all);
+}
+
+export { hasRole, ROLE_HIERARCHY };

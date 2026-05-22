@@ -231,7 +231,7 @@ We scan this project with four different tools, automatically, on every push:
 </p>
 <p align="center"><em>Frontend image — Scout Score A</em></p>
 
-Containers run as a non-root user. All the usual security headers are on. Rate limiting is on. Session tokens use `crypto.randomBytes`, not `Math.random`.
+Containers run as a non-root user with all Linux capabilities dropped. Full security headers (CSP, HSTS, COOP, CORP, Permissions-Policy). Login is throttled to 5 attempts per 15 minutes per IP+username. Global rate limit is 100 req/min per IP. All identifiers and tokens use `crypto.randomBytes`.
 
 ### How Credentials Are Stored
 
@@ -241,14 +241,30 @@ Your passwords never touch disk in plain text.
 |------|-------------------|
 | **Passwords** | Hashed with bcrypt (12 rounds). Even if someone gets the file, they get `$2a$12$xK9...`, not your password. |
 | **JWT tokens** | Signed with your `JWT_SECRET` env var. Expire after 24 hours. |
-| **API keys** | Generated with `crypto.randomBytes(32)` — 256 bits of entropy, prefixed `hlr_`. |
+| **API keys** | Generated with `crypto.randomBytes(32)`, HMAC-SHA256 hashed before storage. Only the key prefix is stored for lookup — the full key is shown once at creation. |
 | **Sessions** | Random IDs via `crypto.randomBytes(12)`. Stored server-side, invalidated on logout. |
 
 User accounts, API keys, and sessions are stored in `/app/server/config/` inside the backend container. The `homelabarr-config` Docker volume persists this data across container updates. If you're running behind Traefik + Authelia (which the templates include), you get an additional layer of authentication before anyone even reaches the login page.
 
-**Important:** Set a real `JWT_SECRET` when you deploy. The install instructions use `openssl rand -base64 32` to generate one. If you skip this, a random key is generated on each container start — which means all sessions invalidate on every restart.
+**Important:** `JWT_SECRET` is required (minimum 32 characters) — the server will not start without it. Generate one with `openssl rand -base64 32`.
 
 Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECURITY.md).
+
+---
+
+## Production Deployment Checklist
+
+1. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
+2. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
+3. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/smashingtags/homelabarr-backend:<tag>`
+4. **Start the stack:** `docker compose up -d`
+5. **Encrypt the database** (first install only): `make encrypt-db`
+6. **Verify health:** `curl -fsS https://<host>/api/health`
+7. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
+8. **fail2ban:** Copy `docs/fail2ban/*.conf` to `/etc/fail2ban/filter.d/` and `/etc/fail2ban/jail.d/`, restart fail2ban
+9. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
+10. **DR drill:** Run `bash scripts/restore-drill.sh` within the first week
+11. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
 
 ---
 
