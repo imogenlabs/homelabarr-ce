@@ -130,7 +130,7 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
         <span className="ml-3 text-gray-600 dark:text-gray-400">Loading applications...</span>
       </div>
     );
@@ -208,14 +208,14 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
             placeholder="Search apps..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-white/[0.08] rounded-lg bg-white dark:bg-[hsl(222,28%,10%)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
           />
         </div>
         
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-white/[0.08] rounded-lg bg-white dark:bg-[hsl(222,28%,10%)] text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-4 py-2 border border-border rounded-lg bg-card text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
         >
           <option value="all">All Categories</option>
           {categories.map(category => (
@@ -234,15 +234,15 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
           return (
             <div
               key={app.id}
-              className="bg-white dark:bg-[hsl(222,28%,10%)] rounded-lg border border-gray-200 dark:border-white/[0.08] p-4 hover:shadow-md dark:hover:shadow-black/30 hover:border-indigo-400/50 dark:hover:border-indigo-500/40 transition-all cursor-pointer"
+              className="bg-card rounded-lg border border-border p-4 hover:shadow-md dark:hover:shadow-black/30 hover:border-muted-foreground/30 transition-all cursor-pointer"
               onClick={() => {
                 setSelectedApp(app);
                 setShowDeployModal(true);
               }}
             >
               <div className="flex items-center mb-3">
-                <div className="p-2 bg-blue-50 dark:bg-indigo-900/30 rounded-lg">
-                  <IconComponent className="h-6 w-6 text-blue-600 dark:text-indigo-400" />
+                <div className="p-2 bg-secondary rounded-lg">
+                  <IconComponent className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white truncate">
@@ -262,12 +262,12 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
                 <span>{app.image.split(':')[0]}</span>
                 <div className="flex items-center space-x-2">
                   {app.requiresTraefik && (
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded">
+                    <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded">
                       Traefik
                     </span>
                   )}
                   {app.requiresAuthelia && (
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded">
+                    <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded">
                       Auth
                     </span>
                   )}

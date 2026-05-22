@@ -47,8 +47,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <Lock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-secondary rounded-full">
+              <Lock className="w-8 h-8 text-muted-foreground" />
             </div>
           </div>
           <DialogTitle className="text-center text-2xl">Sign In to HomelabARR</DialogTitle>
@@ -111,8 +111,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </DialogFooter>
         </form>
 
-        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/50 border border-yellow-200 dark:border-yellow-800 rounded-md">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+        <div className="p-4 bg-secondary border border-border rounded-md">
+          <p className="text-sm text-foreground">
             <strong>Default credentials:</strong><br />
             Username: admin<br />
             Password: admin<br />

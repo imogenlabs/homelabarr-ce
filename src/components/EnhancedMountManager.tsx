@@ -116,10 +116,10 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
   const renderOverview = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Mount Status */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+      <div className="bg-card p-4 rounded-lg border">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Mount Status</h4>
-          <HardDrive className="w-4 h-4 text-blue-500" />
+          <HardDrive className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="space-y-1">
           <div className="flex items-center justify-between">
@@ -140,7 +140,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
       </div>
 
       {/* Cost Tracking */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+      <div className="bg-card p-4 rounded-lg border">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Cost</h4>
           <DollarSign className="w-4 h-4 text-green-500" />
@@ -151,7 +151,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
         <div className="text-xs text-gray-500 dark:text-gray-400">
           of ${stats?.costs.budget} budget
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+        <div className="w-full bg-secondary rounded-full h-1.5 mt-2">
           <div 
             className="bg-green-500 h-1.5 rounded-full transition-all"
             style={{ width: `${((stats?.costs.monthly || 0) / (stats?.costs.budget || 1)) * 100}%` }}
@@ -160,10 +160,10 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
       </div>
 
       {/* Active Transfers */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+      <div className="bg-card p-4 rounded-lg border">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Transfers</h4>
-          <Activity className="w-4 h-4 text-purple-500" />
+          <Activity className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="text-2xl font-bold text-gray-900 dark:text-white">
           {stats?.performance.active_transfers || 0}
@@ -174,7 +174,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
       </div>
 
       {/* Cache Usage */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+      <div className="bg-card p-4 rounded-lg border">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Cache Usage</h4>
           <Gauge className="w-4 h-4 text-orange-500" />
@@ -182,7 +182,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
         <div className="text-sm font-medium text-gray-900 dark:text-white">
           {stats?.performance.cache_usage}
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+        <div className="w-full bg-secondary rounded-full h-1.5 mt-2">
           <div className="bg-orange-500 h-1.5 rounded-full w-4/5 transition-all" />
         </div>
       </div>
@@ -251,7 +251,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
   const renderProviders = () => (
     <div className="space-y-4">
       {Object.entries(stats?.providers || {}).map(([key, provider]) => (
-        <div key={key} className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+        <div key={key} className="bg-card p-4 rounded-lg border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="text-2xl">{getProviderIcon(key)}</div>
@@ -272,7 +272,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
               {provider.status === 'disabled' || provider.status === 'error' ? (
                 <button
                   onClick={() => handleSetupProvider(key)}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                 >
                   <Shield className="w-4 h-4" />
                   <span>Setup</span>
@@ -280,7 +280,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
               ) : (
                 <button
                   onClick={() => handleSetupProvider(key)}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-accent"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Configure</span>
@@ -296,7 +296,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
   const renderCosts = () => (
     <div className="space-y-6">
       {/* Cost Overview */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border">
+      <div className="bg-card p-6 rounded-lg border">
         <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Cost Analysis</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
@@ -304,11 +304,11 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
             <div className="text-sm text-gray-500">This Month</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">${stats?.costs.budget.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">${stats?.costs.budget.toFixed(2)}</div>
             <div className="text-sm text-gray-500">Monthly Budget</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-foreground">
               ${((stats?.costs.budget || 0) - (stats?.costs.monthly || 0)).toFixed(2)}
             </div>
             <div className="text-sm text-gray-500">Remaining</div>
@@ -317,7 +317,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
       </div>
 
       {/* Provider Costs */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border">
+      <div className="bg-card p-6 rounded-lg border">
         <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Provider Breakdown</h4>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
@@ -337,7 +337,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Transfer Speeds */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border">
+        <div className="bg-card p-6 rounded-lg border">
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Transfer Speeds</h4>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -349,7 +349,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Download className="w-4 h-4 text-blue-500" />
+                <Download className="w-4 h-4 text-muted-foreground" />
                 <span>Download</span>
               </div>
               <span className="font-medium">{stats?.performance.download_speed}</span>
@@ -358,7 +358,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
         </div>
 
         {/* Cache Performance */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border">
+        <div className="bg-card p-6 rounded-lg border">
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Cache Performance</h4>
           <div className="space-y-4">
             <div>
@@ -366,7 +366,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
                 <span>Usage</span>
                 <span className="font-medium">{stats?.performance.cache_usage}</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-secondary rounded-full h-2">
                 <div className="bg-orange-500 h-2 rounded-full w-4/5 transition-all" />
               </div>
             </div>
@@ -378,7 +378,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border">
+      <div className="bg-card p-6 rounded-lg border">
         <div className="flex items-center justify-center space-x-2">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Loading enhanced mount statistics...</span>
@@ -396,7 +396,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
         </h3>
         <button
           onClick={fetchEnhancedMountStats}
-          className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="flex items-center space-x-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Refresh</span>
@@ -419,7 +419,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    ? 'border-foreground text-foreground'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >

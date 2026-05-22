@@ -214,7 +214,7 @@ export function DeploymentProgressModal({
         return <XCircle className="h-5 w-5 text-red-500" />;
       case 'started':
       case 'progress':
-        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />;
       default:
         return <Clock className="h-5 w-5 text-gray-400" />;
     }
@@ -233,22 +233,22 @@ export function DeploymentProgressModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col">
+      <div className="bg-card rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-foreground">
                 Deploying {appId}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Deployment ID: {deploymentId}
               </p>
             </div>
             
             {/* Overall Status Indicator */}
             <div className="flex items-center space-x-2">
-              {status === 'in-progress' && <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />}
+              {status === 'in-progress' && <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />}
               {status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
               {status === 'failed' && <XCircle className="h-5 w-5 text-red-500" />}
               {status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
@@ -256,7 +256,7 @@ export function DeploymentProgressModal({
               <span className={`text-sm font-medium ${
                 status === 'success' ? 'text-green-700 dark:text-green-300' :
                 status === 'failed' || status === 'error' ? 'text-red-700 dark:text-red-300' :
-                'text-blue-700 dark:text-blue-300'
+                'text-muted-foreground'
               }`}>
                 {status === 'in-progress' ? 'Deploying...' :
                  status === 'success' ? 'Completed' :
@@ -280,8 +280,8 @@ export function DeploymentProgressModal({
                     <h3 className={`text-sm font-medium ${
                       step.status === 'completed' ? 'text-green-700 dark:text-green-300' :
                       step.status === 'failed' ? 'text-red-700 dark:text-red-300' :
-                      step.status === 'started' || step.status === 'progress' ? 'text-blue-700 dark:text-blue-300' :
-                      'text-gray-700 dark:text-gray-300'
+                      step.status === 'started' || step.status === 'progress' ? 'text-muted-foreground' :
+                      'text-muted-foreground'
                     }`}>
                       {step.message}
                     </h3>
@@ -292,7 +292,7 @@ export function DeploymentProgressModal({
                     )}
                   </div>
                   {step.details && (
-                    <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {JSON.stringify(step.details, null, 2)}
                     </div>
                   )}
@@ -302,7 +302,7 @@ export function DeploymentProgressModal({
             
             {/* Current Step Indicator */}
             {!isComplete && currentStep && (
-              <div className="flex items-center space-x-3 text-blue-600 dark:text-blue-400">
+              <div className="flex items-center space-x-3 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm">
                   Processing {currentStep}...
@@ -329,10 +329,10 @@ export function DeploymentProgressModal({
 
         {/* Logs Section */}
         {logs.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700">
+          <div className="border-t border-border">
             <button
               onClick={() => setShowLogs(!showLogs)}
-              className="w-full p-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between"
+              className="w-full p-3 text-left text-sm font-medium text-muted-foreground hover:bg-accent flex items-center justify-between"
             >
               <div className="flex items-center space-x-2">
                 <Terminal className="h-4 w-4" />
@@ -359,11 +359,11 @@ export function DeploymentProgressModal({
         )}
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+        <div className="p-6 border-t border-border flex justify-end space-x-3">
           {isComplete && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary hover:bg-accent rounded-lg"
             >
               Close
             </button>
@@ -372,7 +372,7 @@ export function DeploymentProgressModal({
           {!isComplete && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary hover:bg-accent rounded-lg"
             >
               Run in Background
             </button>

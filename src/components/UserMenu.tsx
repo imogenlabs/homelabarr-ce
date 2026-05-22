@@ -31,8 +31,8 @@ export function UserMenu({ onOpenSettings, onOpenApiKeys }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 px-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-primary-foreground" />
           </div>
           <div className="hidden md:block text-left">
             <div className="text-sm font-medium">{user.username}</div>
