@@ -100,6 +100,11 @@ server {
         add_header X-XSS-Protection "0" always;
     }
 
+    # Honey endpoints — return 404 for common scanner probes before SPA catch-all
+    location ~* ^/(wp-login\.php|wp-admin|xmlrpc\.php|phpmyadmin|phpMyAdmin|admin\.php|administrator|manager/html|shell\.php|cmd\.jsp|c99\.php) {
+        return 404;
+    }
+
     location ^~ /.well-known/ {
         root /usr/share/nginx/html;
         default_type text/plain;
