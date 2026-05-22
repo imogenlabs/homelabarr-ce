@@ -4,8 +4,24 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: ["dependencies", "ci"]
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      radix-ui:
+        patterns: ["@radix-ui/*"]
+      dev-tools:
+        dependency-type: "development"
+        patterns: ["*"]
+    labels: ["dependencies"]
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]

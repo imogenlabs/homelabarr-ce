@@ -31,7 +31,8 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-      
+      security-events: write
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -126,6 +127,22 @@ jobs:
         sbom: ${{ github.event_name != 'pull_request' }}
         build-args: |
           NODE_ENV=production
+
+    - name: Install cosign
+      if: github.event_name != 'pull_request'
+      uses: sigstore/cosign-installer@v3
+
+    - name: Sign frontend image
+      if: github.event_name != 'pull_request'
+      env:
+        COSIGN_EXPERIMENTAL: "1"
+      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+
+    - name: Sign backend image
+      if: github.event_name != 'pull_request'
+      env:
+        COSIGN_EXPERIMENTAL: "1"
+      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
 
     - name: Test image functionality
       if: github.event_name == 'pull_request'

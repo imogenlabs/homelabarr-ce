@@ -750,12 +750,19 @@ app.get('/health', optionalAuth, async (req, res) => {
     let dockerDetails = {};
     let dockerInfo = null;
 
-    // Test Docker CLI access directly
-    try {
-      execSync('docker info --format "{{.ServerVersion}}"', { encoding: 'utf8', timeout: 5000 });
-      dockerStatus = 'connected';
-    } catch (e) {
-      dockerStatus = 'disconnected';
+    // Test Docker access — prefer DOCKER_HOST tcp if set, fall back to CLI
+    const dockerHost = process.env.DOCKER_HOST;
+    if (dockerHost && dockerHost.startsWith('tcp://')) {
+      try {
+        const url = new URL(dockerHost.replace('tcp://', 'http://'));
+        const pingRes = await fetch(`http://${url.hostname}:${url.port}/_ping`, { signal: AbortSignal.timeout(2000) });
+        dockerStatus = pingRes.ok ? 'connected' : 'disconnected';
+      } catch { dockerStatus = 'disconnected'; }
+    } else {
+      try {
+        execSync('docker info --format "{{.ServerVersion}}"', { encoding: 'utf8', timeout: 5000 });
+        dockerStatus = 'connected';
+      } catch { dockerStatus = 'disconnected'; }
     }
 
     if (connectionState.isConnected) {
