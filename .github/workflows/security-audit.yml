@@ -45,11 +45,11 @@ jobs:
       compose: ${{ steps.changes.outputs.compose }}
       security: ${{ steps.changes.outputs.security }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
         id: changes
         with:
           filters: |
@@ -79,7 +79,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.scripts == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install security analysis tools
         run: |
@@ -139,7 +139,7 @@ jobs:
           fi
 
       - name: Upload shell analysis results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: shell-security-analysis-${{ github.sha }}
@@ -155,7 +155,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.compose == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install Docker Compose and validation tools
         run: |
@@ -220,7 +220,7 @@ jobs:
           }
 
       - name: Upload compose validation results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: compose-security-validation-${{ github.sha }}
@@ -236,7 +236,7 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install Trivy scanner
         run: |
@@ -356,7 +356,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload vulnerability reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: docker-vulnerability-scan-${{ github.sha }}
@@ -372,10 +372,10 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -383,7 +383,7 @@ jobs:
       - name: npm audit (HIGH+)
         run: npm audit --audit-level=high --omit=dev || true
       - name: OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2
+        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2  # v2.3.8
         continue-on-error: true
         with:
           scan-args: |-
@@ -397,11 +397,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc  # v2
         env:
           GITLEAKS_VERSION: latest
 
@@ -411,8 +411,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -462,7 +462,7 @@ jobs:
           cat security-summary.md
 
       - name: Upload security compliance summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: security-compliance-summary-${{ github.sha }}
           path: security-summary.md
