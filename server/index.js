@@ -497,6 +497,9 @@ app.get('/auth/sessions', requireAuth, (req, res) => {
 
 // R3: Revoke a single session
 app.delete('/auth/sessions/:jti', requireAuth, (req, res) => {
+  if (!/^[a-f0-9]{32}$/.test(req.params.jti)) {
+    return res.status(400).json({ error: 'Invalid session ID format' });
+  }
   const userId = req.user.sub || req.user.id;
   const session = getSessionByJti(req.params.jti);
   if (!session || session.user_id !== userId) return res.status(404).json({ error: 'Not found' });
@@ -518,6 +521,9 @@ app.post('/auth/sessions/revoke-all', requireAuth, (req, res) => {
 // R3: MFA setup — generate TOTP secret + QR code
 app.post('/auth/mfa/setup', requireAuth, async (req, res) => {
   try {
+    if (req.body && Object.keys(req.body).length > 0) {
+      return res.status(400).json({ error: 'This endpoint does not accept a request body' });
+    }
     const totp = newTotp(req.user.username);
     setPendingMfa(req.user.sub || req.user.id, { secret: totp.secret.base32, exp: Date.now() + 5 * 60 * 1000 });
     const uri = totp.toString();
@@ -531,7 +537,10 @@ app.post('/auth/mfa/setup', requireAuth, async (req, res) => {
 // R3: MFA verify — confirm TOTP code and enable MFA
 app.post('/auth/mfa/verify', requireAuth, async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code } = req.body || {};
+    if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Code must be a 6-digit string' });
+    }
     const userId = req.user.sub || req.user.id;
     const pending = getPendingMfa(userId);
     if (!pending) return res.status(400).json({ error: 'No pending MFA setup' });
@@ -1763,20 +1772,29 @@ class DockerConnectionManager {
    * @returns {Object} Docker connection options
    */
   getPlatformSpecificDockerOptions() {
+    // C-R4-1: Support DOCKER_HOST=tcp://socket-proxy:2375 for socket proxy
+    const dockerHost = process.env.DOCKER_HOST;
+    if (dockerHost && dockerHost.startsWith('tcp://')) {
+      const url = new URL(dockerHost);
+      return {
+        host: url.hostname,
+        port: parseInt(url.port) || 2375,
+        protocol: 'http',
+        timeout: this.config.timeout,
+      };
+    }
+
     const baseOptions = {
       socketPath: this.config.socketPath,
       timeout: this.config.timeout
     };
 
     if (this.config.platform === 'windows') {
-      // Windows-specific Docker options
       baseOptions.protocol = 'npipe';
-      // On Windows, we might need to handle named pipes differently
       if (!this.config.socketPath.includes('pipe')) {
         baseOptions.socketPath = '\\\\.\\pipe\\docker_engine';
       }
     } else {
-      // Unix-specific Docker options
       baseOptions.protocol = 'unix';
     }
 
@@ -3098,7 +3116,10 @@ logger.info('🐳 Initializing Docker connection manager');
 logger.info('🔧 Enabling Docker functionality for container deployment');
   
   // Create CLI-based Docker manager for Windows compatibility
-  const cliDocker = new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
+  const dockerHost = process.env.DOCKER_HOST;
+  const cliDocker = dockerHost?.startsWith('tcp://')
+    ? new Docker({ host: new URL(dockerHost).hostname, port: parseInt(new URL(dockerHost).port) || 2375, protocol: 'http' })
+    : new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
   dockerManager = {
     docker: cliDocker,
     config: {

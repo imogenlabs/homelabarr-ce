@@ -124,6 +124,28 @@ This policy covers the HomelabARR CE application code, Docker images, and offici
 - Your server's operating system or network configuration
 - Cloudflare, Traefik, or Authelia vulnerabilities (report to their respective projects)
 
+## Verifying Release Artifacts
+
+All HomelabARR CE container images are signed via Sigstore (cosign keyless) and published with SLSA build provenance and SBOMs.
+
+Before pulling, verify the signature:
+
+```
+cosign verify \
+  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+  ghcr.io/smashingtags/homelabarr-backend:<version>
+```
+
+## Production Deployment Checklist
+
+- `JWT_SECRET` set to `openssl rand -base64 48` output (NOT the default)
+- `DEFAULT_ADMIN_PASSWORD` set explicitly OR removed after first-boot bootstrap
+- `CORS_ORIGIN` pinned to the exact public origin (no wildcards)
+- Docker socket proxy (`socket-proxy` service) present with `EXEC=0, BUILD=0`
+- `docker inspect homelabarr-backend` shows `ReadonlyRootfs: true` and `CapDrop: [ALL]`
+- Images pinned to a tag AND sha256 digest in your compose file
+
 ## Acknowledgments
 
 We appreciate responsible disclosure and will credit security researchers who report valid vulnerabilities.
