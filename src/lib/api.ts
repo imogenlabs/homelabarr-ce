@@ -8,9 +8,16 @@ function getCsrfToken(): string {
   return document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
 }
 
+function requestId(): string {
+  return (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
 function apiHeaders(extra: Record<string, string> = {}): Record<string, string> {
   return {
     'X-Requested-With': 'XMLHttpRequest',
+    ...(!extra['X-Request-Id'] ? { 'X-Request-Id': requestId() } : {}),
     ...extra,
   };
 }
