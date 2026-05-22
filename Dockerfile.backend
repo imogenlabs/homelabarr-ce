@@ -33,9 +33,11 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repo
 RUN addgroup -g 1001 homelabarr && \
     adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr
 
-# Copy package files and install dependencies
+# Copy package files and install dependencies (with native build tools for better-sqlite3-multiple-ciphers)
 COPY package*.json ./
-RUN npm ci --only=production --no-audit --loglevel=error --no-fund
+RUN apk add --no-cache --virtual .build python3 make g++ && \
+    npm ci --only=production --no-audit --loglevel=error --no-fund && \
+    apk del .build
 
 # Copy server files and configurations
 COPY server/ ./server/
