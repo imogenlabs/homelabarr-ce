@@ -10,6 +10,7 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
+RUN apk add --no-cache gettext
 RUN apk upgrade --no-cache && \
     addgroup -g 1001 homelabarr && \
     adduser -u 1001 -G homelabarr -s /bin/sh -D homelabarr && \
