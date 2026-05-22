@@ -14,15 +14,17 @@ interface AppCardProps {
   onToggleStar?: (appId: string) => void;
 }
 
-const isDockerImageString = (text: string) => {
+const isJunkDescription = (text: string) => {
   const t = text.trim();
-  return t.includes('/') && (/:\S+/.test(t) || /container\s*$/i.test(t));
+  if (/\bcontainer\s*$/i.test(t)) return true;
+  if (/^[\w./-]+(:\S+)?$/.test(t)) return true;
+  return false;
 };
 
 export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCardProps) {
   const { theme } = useTheme();
   const cliApp = (app as any)._cliApp as CLIApplication | undefined;
-  const showDescription = app.description && !isDockerImageString(app.description);
+  const showDescription = app.description && !isJunkDescription(app.description);
 
   return (
     <Card className="group relative overflow-hidden transition-colors duration-200 flex flex-col h-full hover:border-muted-foreground/30">
