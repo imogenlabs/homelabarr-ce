@@ -134,8 +134,8 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full">
-              <Key className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-3 bg-secondary rounded-full">
+              <Key className="w-8 h-8 text-muted-foreground" />
             </div>
           </div>
           <DialogTitle className="text-center text-2xl">API Keys</DialogTitle>

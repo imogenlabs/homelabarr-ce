@@ -51,7 +51,7 @@ export function Leaderboard({ deployedApps }: LeaderboardProps) {
   return (
     <div className="space-y-6">
       {/* Main Leaderboard */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="bg-card rounded-lg border p-6">
         <div className="flex items-center mb-6">
           <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -60,8 +60,8 @@ export function Leaderboard({ deployedApps }: LeaderboardProps) {
         </div>
 
         {deployedApps.length === 0 && (
-          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-            <p className="text-sm text-blue-700 dark:text-blue-200">
+          <div className="mb-4 p-4 bg-secondary rounded-lg">
+            <p className="text-sm text-secondary-foreground">
               👋 This is a demo leaderboard! Deploy some applications to start earning real achievements.
             </p>
           </div>
@@ -128,7 +128,7 @@ export function Leaderboard({ deployedApps }: LeaderboardProps) {
       </div>
 
       {/* Achievement Levels */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="bg-card rounded-lg border p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Achievement Levels
         </h3>

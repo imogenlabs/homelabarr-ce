@@ -49,7 +49,7 @@ export function PortManager({ isOpen, onClose }: PortManagerProps) {
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center">
-            <Network className="w-5 h-5 mr-2 text-blue-600" />
+            <Network className="w-5 h-5 mr-2 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Port Manager</h2>
           </div>
           <button 
@@ -77,7 +77,7 @@ export function PortManager({ isOpen, onClose }: PortManagerProps) {
               <button
                 onClick={fetchUsedPorts}
                 disabled={loading}
-                className="flex items-center px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 disabled:opacity-50"
+                className="flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-accent disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
@@ -108,14 +108,14 @@ export function PortManager({ isOpen, onClose }: PortManagerProps) {
             <div className="flex items-center space-x-3">
               <button
                 onClick={findNextAvailablePort}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
               >
                 Find Next Available Port
               </button>
               {suggestedPort && (
                 <div className="flex items-center">
                   <span className="text-gray-600 dark:text-gray-400 mr-2">Suggested:</span>
-                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded font-mono">
+                  <span className="px-3 py-1 bg-secondary text-foreground rounded font-mono">
                     {suggestedPort}
                   </span>
                 </div>

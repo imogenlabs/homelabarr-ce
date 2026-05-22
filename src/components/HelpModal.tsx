@@ -12,8 +12,8 @@ interface HelpModalProps {
 
 const actions = [
   { icon: PlayCircle, label: "Start / Stop", desc: "Toggle containers on or off", color: "text-green-500" },
-  { icon: RefreshCw, label: "Restart", desc: "Restart a running container", color: "text-blue-500" },
-  { icon: Terminal, label: "Logs", desc: "View real-time container logs", color: "text-purple-500" },
+  { icon: RefreshCw, label: "Restart", desc: "Restart a running container", color: "text-muted-foreground" },
+  { icon: Terminal, label: "Logs", desc: "View real-time container logs", color: "text-muted-foreground" },
   { icon: BarChart3, label: "Stats", desc: "Monitor CPU, memory, and network", color: "text-orange-500" },
   { icon: Trash2, label: "Remove", desc: "Stop and remove a container", color: "text-red-500" },
 ];
@@ -24,7 +24,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <HelpCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <HelpCircle className="w-6 h-6 text-muted-foreground" />
             Help & Documentation
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
@@ -38,7 +38,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
             {/* Quick Start */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <Rocket className="w-5 h-5 text-indigo-500" />
+                <Rocket className="w-5 h-5 text-muted-foreground" />
                 <h3 className="font-semibold text-base">Quick Start</h3>
               </div>
               <div className="grid gap-2">
@@ -48,7 +48,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   "Hit Deploy — your container is live"
                 ].map((step, i) => (
                   <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03]">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold flex items-center justify-center">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-foreground text-xs font-bold flex items-center justify-center">
                       {i + 1}
                     </span>
                     <span className="text-sm text-foreground">{step}</span>
@@ -99,7 +99,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
             {/* Links */}
             <section className="pb-2">
               <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="w-5 h-5 text-blue-500" />
+                <BookOpen className="w-5 h-5 text-muted-foreground" />
                 <h3 className="font-semibold text-base">Resources</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -114,11 +114,11 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04] hover:border-indigo-400/50 dark:hover:border-indigo-500/30 transition-colors group"
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04] hover:border-muted-foreground/30 transition-colors group"
                   >
-                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-indigo-500 transition-colors flex-shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                     <div>
-                      <span className="text-sm font-medium group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">{link.label}</span>
+                      <span className="text-sm font-medium group-hover:text-foreground transition-colors">{link.label}</span>
                       <p className="text-xs text-muted-foreground">{link.desc}</p>
                     </div>
                   </a>
@@ -126,7 +126,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </div>
             </section>
 
-            {/* Credit */}            <div className="pt-4 mt-4 border-t border-border/40 dark:border-white/[0.06] text-center">              <p className="text-xs text-muted-foreground">                HomelabARR is built and maintained by{" "}                <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 dark:text-indigo-400 underline decoration-indigo-400/50 hover:decoration-indigo-500 transition-colors">Imogen Labs AI</a>                {" "}· © 2026              </p>            </div>
+            {/* Credit */}            <div className="pt-4 mt-4 border-t border-border/40 dark:border-white/[0.06] text-center">              <p className="text-xs text-muted-foreground">                HomelabARR is built and maintained by{" "}                <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground transition-colors">Imogen Labs AI</a>                {" "}· © 2026              </p>            </div>
           </div>
         </ScrollArea>
       </DialogContent>

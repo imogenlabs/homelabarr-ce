@@ -270,14 +270,14 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
       {/* Progress Indicator */}
       <div className="flex items-center justify-center space-x-4">
         <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-          step === 'generate' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
+          step === 'generate' ? 'bg-primary text-primary-foreground' : 'bg-primary text-primary-foreground'
         }`}>
           {step === 'generate' ? '1' : <CheckCircle className="w-4 h-4" />}
         </div>
         <div className={`h-0.5 w-12 ${step !== 'generate' ? 'bg-green-600' : 'bg-gray-300'}`} />
         <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-          step === 'authorize' ? 'bg-blue-600 text-white' : 
-          step === 'complete' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'
+          step === 'authorize' ? 'bg-primary text-primary-foreground' :
+          step === 'complete' ? 'bg-primary text-primary-foreground' : 'bg-gray-300 text-gray-600'
         }`}>
           {step === 'complete' ? <CheckCircle className="w-4 h-4" /> : '2'}
         </div>
@@ -300,7 +300,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
           <button
             onClick={generateAuthUrl}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Key className="w-4 h-4 mr-2" />}
             Generate Auth URL
@@ -333,7 +333,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
                 href={authUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-blue-500 hover:text-blue-700"
+                className="p-2 text-muted-foreground hover:text-foreground"
                 title="Open in new tab"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -357,7 +357,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
           <button
             onClick={completeAuth}
             disabled={loading || !authCode.trim()}
-            className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+            className="w-full flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
             Complete Authentication
@@ -701,7 +701,7 @@ const ApiKeySetup: React.FC<{ provider: Provider; containerId: string; onComplet
       <button
         onClick={handleSubmit}
         disabled={loading || !fields.every(f => credentials[f.field]?.trim())}
-        className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        className="w-full flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
       >
         {loading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
         Configure Provider
@@ -742,7 +742,7 @@ export const RcloneAuthWizard: React.FC<Props> = ({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <Shield className="w-6 h-6 text-blue-600" />
+              <Shield className="w-6 h-6 text-muted-foreground" />
               <div>
                 <h2 className="text-xl font-semibold">Setup {provider.name}</h2>
                 <p className="text-sm text-gray-500">{provider.description}</p>
