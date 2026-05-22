@@ -27,33 +27,30 @@ theme:
     - toc.integrate
   language: en
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: teal
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: teal
+      primary: black
+      accent: blue
       toggle:
-        icon: material/toggle-switch
+        icon: material/weather-sunny
         name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
   icon:
     admonition:
-      note: material/note
-      tip: material/bullhorn
-      warning: material/alert
-      info: material/information
+      note: material/note-text
+      tip: material/lightbulb-on
+      warning: material/alert-circle
+      info: material/information-outline
   font:
-    text: Roboto
-    code: Roboto Mono
+    text: Inter
+    code: JetBrains Mono
   logo: img/mascot-80.webp
-
-extra_css:
-  - stylesheets/extra.css
 
 # Plugins
 plugins:
