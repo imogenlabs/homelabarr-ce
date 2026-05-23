@@ -80,7 +80,7 @@ export function LoginScreen() {
         </div>
         <p className="text-muted-foreground mb-8">Your homelab, one dashboard.</p>
 
-        <div className="w-full max-w-sm bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="w-full max-w-sm bg-card border border-border rounded-xl p-6 shadow-xs">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-secondary rounded-full">
               {mfaRequired

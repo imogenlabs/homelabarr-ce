@@ -17,7 +17,7 @@ export function DeploymentProgress({ steps }: DeploymentProgressProps) {
     <div className="space-y-3">
       {steps.map((step) => (
         <div key={step.id} className="flex items-center space-x-3">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {step.status === 'completed' && (
               <CheckCircle className="w-5 h-5 text-green-500" />
             )}
