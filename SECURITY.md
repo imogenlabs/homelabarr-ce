@@ -1,5 +1,7 @@
 # Security Policy
 
+For the full threat model, see [docs/threat-model/](docs/threat-model/README.md). For audit round history, see [docs/audit/](docs/audit/README.md).
+
 ## Supported Versions
 
 Only the latest release is fully supported. The previous minor version receives security fixes only.
