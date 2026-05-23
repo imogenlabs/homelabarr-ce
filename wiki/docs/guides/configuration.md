@@ -21,7 +21,7 @@ Optional, but useful:
 
 | Variable | Default | What it does |
 |----------|---------|-------------|
-| `CORS_ORIGIN` | — | The URL you use to open the dashboard (e.g., `http://192.168.1.100:8084`). Set this if you get CORS errors after logging in. |
+| `CORS_ORIGIN` | — | The URL you use to open the dashboard (e.g., `http://192.0.2.100:8084`). Set this if you get CORS errors after logging in. |
 | `FRONTEND_PORT` | `8084` | Port for the web dashboard |
 | `BACKEND_PORT` | `8092` | Port for the API server |
 | `TZ` | `UTC` | Your timezone (e.g., `America/New_York`, `Europe/London`) |
@@ -67,7 +67,7 @@ JWT_SECRET=paste-a-long-random-string-here
 DOCKER_GID=999
 
 # Recommended
-CORS_ORIGIN=http://192.168.1.100:8084
+CORS_ORIGIN=http://192.0.2.100:8084
 TZ=America/New_York
 APPFOLDER=/opt/appdata
 ```

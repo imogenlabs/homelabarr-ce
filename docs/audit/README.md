@@ -31,5 +31,6 @@
 | R16 | Continuous-evidence binder rebuild | 9 | shipped |
 | R17 | Public-disclosure surface audit | 10 | shipped |
 | R17.5 | Redeploy correction | 0 (deploy gap) | shipped |
+| R18 | Wiki + public docs surface audit | 9 | shipped |
 
-**Total findings shipped to production: 201+**
+**Total findings shipped to production: 210+**
