@@ -90,7 +90,7 @@ Scope: web application security requirements applicable to a self-hosted Docker 
 
 | Req | Requirement | Status | Implementing Artifact |
 |-----|-------------|--------|----------------------|
-| V14.2.1 | All components up to date | [Partial] | Dependabot weekly; manual review for majors |
+| V14.2.1 | All components up to date | [Met] | Dependabot daily (npm) / weekly (actions, docker); governed by [dependency-update-policy](../docs/governance/dependency-update-policy.md) with SLA enforcement via staleness workflow |
 | V14.4.1 | Security headers set | [Met] | Full header set via helmet + nginx (R2/R9) |
 | V14.4.5 | HSTS set | [Met] | max-age=63072000; includeSubDomains; preload |
 | V14.5.3 | CSP set | [Met] | Strict CSP with report-to (R2/R9) |

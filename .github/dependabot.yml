@@ -4,24 +4,51 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
     groups:
       actions:
         patterns: ["*"]
-    labels: ["dependencies", "ci"]
+    labels: ["dependencies", "github-actions", "needs-triage"]
+    reviewers:
+      - "smashingtags"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
+
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "daily"
+    open-pull-requests-limit: 5
     groups:
       radix-ui:
         patterns: ["@radix-ui/*"]
       dev-tools:
         dependency-type: "development"
         patterns: ["*"]
-    labels: ["dependencies"]
+    labels: ["dependencies", "npm", "needs-triage"]
+    reviewers:
+      - "smashingtags"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
-    labels: ["dependencies", "docker"]
+    open-pull-requests-limit: 2
+    labels: ["dependencies", "docker", "needs-triage"]
+    reviewers:
+      - "smashingtags"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
