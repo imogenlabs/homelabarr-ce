@@ -1,0 +1,69 @@
+name: deploy-drift
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        with:
+          script: |
+            const LIVE_URL = 'https://ce-demo.homelabarr.com/';
+            const THRESHOLD_MIN = 30;
+
+            const mainCommit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'main',
+            });
+            const mainDate = new Date(mainCommit.data.commit.committer.date);
+
+            let liveDate = null;
+            try {
+              const resp = await fetch(LIVE_URL, { method: 'HEAD' });
+              const lm = resp.headers.get('last-modified');
+              if (lm) liveDate = new Date(lm);
+            } catch (e) {
+              core.warning(`Could not reach ${LIVE_URL}: ${e.message}`);
+              return;
+            }
+
+            if (!liveDate) {
+              core.warning('No last-modified header on live origin');
+              return;
+            }
+
+            const driftMin = Math.round((mainDate - liveDate) / 60000);
+
+            const summary = `| Metric | Value |\n|---|---|\n| main HEAD | ${mainDate.toISOString()} |\n| Live last-modified | ${liveDate.toISOString()} |\n| Drift | ${driftMin} min |\n| Threshold | ${THRESHOLD_MIN} min |\n| Status | ${driftMin > THRESHOLD_MIN ? 'BREACH' : 'OK'} |`;
+
+            await core.summary.addRaw(`## Deploy Drift Check\n\n${summary}`).write();
+
+            if (driftMin > THRESHOLD_MIN) {
+              core.setFailed(`Deploy drift: live origin is ${driftMin} min behind main`);
+
+              const existing = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'deploy-drift',
+                state: 'open',
+              });
+
+              if (existing.data.length === 0) {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `[DRIFT] Live origin is ${driftMin} min behind main`,
+                  body: `Deploy drift detected.\n\n${summary}\n\nRebuild and force-pull on ce-prod (192.168.1.231).`,
+                  labels: ['deploy-drift'],
+                });
+              }
+            }

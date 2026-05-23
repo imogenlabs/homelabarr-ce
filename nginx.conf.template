@@ -104,9 +104,12 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    # SPA fallback
+    # SPA fallback — static files served directly; unknown paths get 404 + index.html
+    # React Router handles client-side display; scanners see the correct status code
+    error_page 404 =404 /index.html;
+
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ =404;
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
