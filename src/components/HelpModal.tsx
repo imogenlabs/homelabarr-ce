@@ -47,8 +47,8 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   "Configure ports, volumes, and environment variables",
                   "Hit Deploy — your container is live"
                 ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03]">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-foreground text-xs font-bold flex items-center justify-center">
+                  <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-secondary text-foreground text-xs font-bold flex items-center justify-center">
                       {i + 1}
                     </span>
                     <span className="text-sm text-foreground">{step}</span>
@@ -65,8 +65,8 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {actions.map((a) => (
-                  <div key={a.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04]">
-                    <a.icon className={`w-4 h-4 flex-shrink-0 ${a.color}`} />
+                  <div key={a.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/3 border border-transparent dark:border-white/4">
+                    <a.icon className={`w-4 h-4 shrink-0 ${a.color}`} />
                     <div>
                       <span className="text-sm font-medium">{a.label}</span>
                       <p className="text-xs text-muted-foreground">{a.desc}</p>
@@ -88,7 +88,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   { q: "Can't access via domain", a: "Verify Traefik labels are correct and DNS points to your server. Check Traefik dashboard for routing errors." },
                   { q: "Permission denied errors", a: "Ensure PUID/PGID match your host user. Check volume mount permissions with ls -la." },
                 ].map((item) => (
-                  <div key={item.q} className="p-3 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04]">
+                  <div key={item.q} className="p-3 rounded-lg bg-muted/50 dark:bg-white/3 border border-transparent dark:border-white/4">
                     <p className="text-sm font-medium text-foreground">{item.q}</p>
                     <p className="text-xs text-muted-foreground mt-1">{item.a}</p>
                   </div>
@@ -114,9 +114,9 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/[0.03] border border-transparent dark:border-white/[0.04] hover:border-muted-foreground/30 transition-colors group"
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 dark:bg-white/3 border border-transparent dark:border-white/4 hover:border-muted-foreground/30 transition-colors group"
                   >
-                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                     <div>
                       <span className="text-sm font-medium group-hover:text-foreground transition-colors">{link.label}</span>
                       <p className="text-xs text-muted-foreground">{link.desc}</p>
@@ -126,7 +126,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </div>
             </section>
 
-            {/* Credit */}            <div className="pt-4 mt-4 border-t border-border/40 dark:border-white/[0.06] text-center">              <p className="text-xs text-muted-foreground">                HomelabARR is built and maintained by{" "}                <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground transition-colors">Imogen Labs AI</a>                {" "}· © 2026              </p>            </div>
+            {/* Credit */}            <div className="pt-4 mt-4 border-t border-border/40 dark:border-white/6 text-center">              <p className="text-xs text-muted-foreground">                HomelabARR is built and maintained by{" "}                <a href="https://imogenlabs.ai" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground transition-colors">Imogen Labs AI</a>                {" "}· © 2026              </p>            </div>
           </div>
         </ScrollArea>
       </DialogContent>
