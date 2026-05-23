@@ -34,7 +34,7 @@ export class SqliteStore {
 export function createLoginLimiter() {
   return rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 25,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => 'login:' + req.ip,
@@ -55,7 +55,7 @@ export function createLockoutGuard() {
       if (!username) return false;
       const row = db.prepare('SELECT fail_count FROM account_lockouts WHERE username=?').get(username);
       const fc = (row?.fail_count || 0) + 1;
-      const lockedUntil = fc >= 8 ? Date.now() + 30 * 60 * 1000 : null;
+      const lockedUntil = fc >= 15 ? Date.now() + 30 * 60 * 1000 : null;
       db.prepare('INSERT OR REPLACE INTO account_lockouts (username, fail_count, locked_until) VALUES (?,?,?)').run(username, fc, lockedUntil);
       return !!lockedUntil;
     },
