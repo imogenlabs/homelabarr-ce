@@ -92,5 +92,8 @@
     "vite": "^7.0.0",
     "vitest": "^3.2.4"
   },
-  "overrides": {}
+  "overrides": {
+    "path-to-regexp": "0.1.13",
+    "qs": "6.14.2"
+  }
 }
