@@ -3,20 +3,35 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { readSecret } from './secrets.js';
+import { readSecret, readSecretFresh } from './secrets.js';
 import { createSession, isJtiActive, getSessionByJti, rotateRefresh, revokeSession, revokeAllForUser, listForUser } from './sessions.js';
 import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
 import transporter from './email.js';
 import QRCode from 'qrcode';
+import { hkdfSync } from 'node:crypto';
+import { logger } from './log.js';
 
-// Configuration
 const BCRYPT_COST = 12;
 const ACCESS_TTL_SEC = 15 * 60;
-const JWT_SECRET = readSecret('JWT_SECRET', { required: false }) || readSecret('JWT_KEY_CURRENT', { required: false }) || process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
 const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
-const API_KEY_HMAC_KEY = readSecret('API_KEY_HMAC_KEY', { required: false }) || JWT_SECRET;
+const PREVIOUS_KEY_MAX_AGE_SEC = 24 * 60 * 60;
+
+function getActiveKeys() {
+  const current = readSecretFresh('JWT_SECRET')
+    || readSecretFresh('JWT_KEY_CURRENT')
+    || process.env.JWT_SECRET;
+  const previous = readSecretFresh('JWT_KEY_PREVIOUS') || null;
+  return { current, previous };
+}
+
+function getApiKeyHmacKey() {
+  const explicit = readSecretFresh('API_KEY_HMAC_KEY');
+  if (explicit) return explicit;
+  const { current } = getActiveKeys();
+  return Buffer.from(hkdfSync('sha256', current, Buffer.alloc(0), 'homelabarr-api-key-hmac/v1', 32)).toString('hex');
+}
 
 const ROLE_HIERARCHY = { user: 1, operator: 2, admin: 3 };
 
@@ -53,12 +68,12 @@ export function loadUsers() {
     // the default-admin seeder never runs because `users.length === 0` is false
     // for non-arrays.
     if (!Array.isArray(parsed)) {
-      console.warn(`users.json is not an array (got ${typeof parsed}) — ignoring and returning []. File will be rewritten on next save.`);
+      logger.warn(`users.json is not an array (got ${typeof parsed}) — ignoring and returning []`);
       return [];
     }
     return parsed;
   } catch (error) {
-    console.error('Error loading users:', error);
+    logger.error('Error loading users', { error: error.message });
     return [];
   }
 }
@@ -68,7 +83,7 @@ export function saveUsers(users) {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     return true;
   } catch (error) {
-    console.error('Error saving users:', error);
+    logger.error('Error saving users', { error: error.message });
     return false;
   }
 }
@@ -146,20 +161,30 @@ export async function validatePassword(username, password) {
 }
 
 export function generateToken(user, jti) {
+  const { current } = getActiveKeys();
   return jwt.sign(
     { sub: user.id, id: user.id, username: user.username, role: user.role, jti },
-    JWT_SECRET,
+    current,
     { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
   );
 }
 
 export function verifyToken(token) {
+  const { current, previous } = getActiveKeys();
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, current, { algorithms: ['HS256'] });
     if (decoded.jti && !isJtiActive(decoded.jti)) return null;
     return decoded;
-  } catch {
-    return null;
+  } catch (err) {
+    if (err.name !== 'JsonWebTokenError' || !previous) return null;
+    try {
+      const decoded = jwt.verify(token, previous, { algorithms: ['HS256'] });
+      if (decoded.iat && (Date.now() / 1000 - decoded.iat) > PREVIOUS_KEY_MAX_AGE_SEC) return null;
+      if (decoded.jti && !isJtiActive(decoded.jti)) return null;
+      return decoded;
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -174,7 +199,7 @@ export function loadApiKeys() {
     if (!fs.existsSync(API_KEYS_FILE)) return [];
     return JSON.parse(fs.readFileSync(API_KEYS_FILE, 'utf8'));
   } catch (error) {
-    console.error('Error loading API keys:', error);
+    logger.error('Error loading API keys', { error: error.message });
     return [];
   }
 }
@@ -185,7 +210,7 @@ export function saveApiKeys(keys) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(API_KEYS_FILE, JSON.stringify(keys, null, 2));
   } catch (error) {
-    console.error('Error saving API keys:', error);
+    logger.error('Error saving API keys', { error: error.message });
   }
 }
 
@@ -193,7 +218,7 @@ export function createApiKey(userId, label) {
   const keys = loadApiKeys();
   const key = 'hlr_' + crypto.randomBytes(32).toString('hex');
   const lookup = key.slice(0, 12);
-  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
+  const hash = crypto.createHmac('sha256', getApiKeyHmacKey()).update(key).digest('hex');
   const entry = {
     id: 'key_' + crypto.randomBytes(8).toString('hex'),
     lookup,
@@ -212,7 +237,7 @@ export function createApiKey(userId, label) {
 export function validateApiKey(key) {
   if (!key || !key.startsWith('hlr_')) return null;
   const lookup = key.slice(0, 12);
-  const hash = crypto.createHmac('sha256', API_KEY_HMAC_KEY).update(key).digest('hex');
+  const hash = crypto.createHmac('sha256', getApiKeyHmacKey()).update(key).digest('hex');
   const keys = loadApiKeys();
   for (const entry of keys.filter(k => !k.revoked && (k.lookup === lookup || k.key))) {
     if (entry.hash && entry.hash.length === hash.length &&
@@ -265,7 +290,7 @@ export function loadSessions() {
     const data = fs.readFileSync(SESSIONS_FILE, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error loading sessions:', error);
+    logger.error('Error loading sessions', { error: error.message });
     return [];
   }
 }
@@ -274,7 +299,7 @@ export function saveSessions(sessions) {
   try {
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
   } catch (error) {
-    console.error('Error saving sessions:', error);
+    logger.error('Error saving sessions', { error: error.message });
   }
 }
 
@@ -303,7 +328,7 @@ export async function authenticate(username, password) {
 
     return { success: true, user, token, jti, refresh };
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error('Authentication error', { error: error.message });
     return { success: false, error: 'Authentication failed' };
   }
 }
@@ -336,7 +361,7 @@ export async function changePassword(userId, currentPassword, newPassword) {
 
     return { success: false, error: 'Failed to update password' };
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error', { error: error.message });
     return { success: false, error: 'Failed to change password' };
   }
 }
@@ -346,7 +371,7 @@ export async function initializeAuth() {
   const users = loadUsers();
   
   if (users.length === 0) {
-    console.log('🔐 No users found, creating default admin user...');
+    logger.info('No users found, creating default admin user');
     
     // Create default admin with password 'admin' (should be changed immediately)
     const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin';
@@ -358,12 +383,9 @@ export async function initializeAuth() {
         mustChangePassword: true,
       });
       
-      console.log('✅ Default admin user created:');
-      console.log('   Username: admin');
-      console.log('   Password: admin');
-      console.log('   ⚠️  CHANGE THE DEFAULT PASSWORD IMMEDIATELY!');
+      logger.info('Default admin user created — change the password immediately');
     } catch (error) {
-      console.error('❌ Failed to create default admin user:', error);
+      logger.error('Failed to create default admin user', { error: error.message });
     }
   }
 }
@@ -381,7 +403,7 @@ export function requireAuth(req, res, next) {
 
   // Log legacy Bearer JWT attempts (H-R2.5-2 deprecation window)
   if (authHeader?.startsWith('Bearer ') && !authHeader.startsWith('Bearer hlr_')) {
-    console.warn('legacy_bearer_seen', { ip: req.ip, path: req.path });
+    logger.warn('legacy_bearer_seen', { ip: req.ip, path: req.path });
   }
 
   // Cookie-only JWT auth (C-R2.5-1)

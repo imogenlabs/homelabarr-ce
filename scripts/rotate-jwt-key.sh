@@ -9,5 +9,5 @@ KID="$(openssl rand -hex 4)"
 SECRET="$(openssl rand -base64 48)"
 printf '{"kid":"%s","secret":"%s"}\n' "$KID" "$SECRET" > jwt_key_current
 echo "Rotated JWT key. New kid=$KID"
-echo "Previous key preserved in jwt_key_previous (valid until REFRESH_TOKEN_TTL expires)."
-echo "Restart backend: docker compose restart backend"
+echo "Previous key preserved in jwt_key_previous (accepted for up to 24 hours)."
+echo "Backend picks up the new key on next request — no restart needed."
