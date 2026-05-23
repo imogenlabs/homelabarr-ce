@@ -10,7 +10,7 @@ Dockerfile.backend: `USER homelabarr` (uid 1001). Dockerfile frontend: `USER hom
 Evidence: `evidence/CIS-4.1-USER.txt`
 
 ### 4.2 Ensure containers use only trusted base images [Met]
-Base images: `node:24-alpine`, `nginx:1.27-alpine`, `lscr.io/linuxserver/socket-proxy`. All from official/verified publishers. cosign verify in CI (R5).
+Base images: `node:24-alpine`, `nginx:1.31-alpine`, `lscr.io/linuxserver/socket-proxy`. All from official/verified publishers. cosign verify in CI (R5). All pinned by `@sha256:` digest (R19).
 Evidence: `evidence/CIS-4.2-cosign.txt`
 
 ### 4.3 Ensure unnecessary packages are not installed [Met]
