@@ -49,8 +49,8 @@ server {
 
     location /health {
         access_log off;
+        default_type text/plain;
         return 200 "healthy\n";
-        add_header Content-Type text/plain always;
     }
 
     # Legacy /security.txt → redirect to well-known (RFC 9116 §3)
