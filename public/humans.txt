@@ -1,0 +1,15 @@
+/* TEAM */
+Maintainer: Michael Ashley -- smashingtags
+Site: https://homelabarr.com
+Location: United States
+
+/* THANKS */
+- Anthropic Claude (security audit loop, R1-R17+)
+- Dependabot (dependency hygiene)
+- The cosign / sigstore / SBOM / OWASP ASVS / CIS / NIST / MITRE ATT&CK communities
+
+/* SITE */
+Last update: 2026-05-23
+Standards: HTML5, CSS3
+Components: React, Vite, nginx, Node.js
+Software: GitHub Actions, GHCR

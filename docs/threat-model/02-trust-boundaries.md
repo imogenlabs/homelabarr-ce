@@ -17,3 +17,5 @@
 8. **CI runner → GHCR** — HTTPS + OIDC token. Auth: GitHub OIDC. Controls: R5 cosign signing, R5 SHA-pinned actions, R11 evidence collection.
 
 9. **Host → backup destination** — Protocol TBD (rclone/rsync/S3). Auth: rclone config or AWS credentials. Controls: R8 GPG encryption, R8 sha256 manifest signing.
+
+10. **Browser → analytics (first-party Umami)** — Pageview events sent to `/analytics.js` (nginx proxies to `analytics.mjashley.com/script.js`). No PII collected, no third-party cookies, no cross-origin data transmission. Website ID `7f290439-...` is embedded in HTML by design (not a secret). CSP `script-src 'self'` covers the proxied script. Controls: R17 PRIVACY.md documents the flow; nginx proxy strips Set-Cookie headers from analytics responses.
