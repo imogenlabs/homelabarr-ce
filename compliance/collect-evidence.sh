@@ -70,10 +70,34 @@ fi
   done
 } > "$OUT/R9.6-route-gating.txt"
 
-# --- R6 audit log chain integrity ---
+# --- R6 audit log chain integrity (actual validator, not just tail dump) ---
 if command -v docker >/dev/null 2>&1 && docker ps -q --filter "name=$BACKEND" | grep -q .; then
-  { hdr "R6 audit chain integrity (last 50 events)"
-    docker exec "$BACKEND" sh -c 'tail -n 50 /app/server/activity-data/audit-*.jsonl 2>/dev/null || echo "no audit JSONL"'
+  { hdr "R6 audit chain integrity"
+    docker exec "$BACKEND" sh -c 'node -e "
+      const fs = require(\"fs\"), path = require(\"path\");
+      const dir = \"/app/server/activity-data\";
+      try {
+        const files = fs.readdirSync(dir).filter(f => /^audit-.*\\.jsonl\$/.test(f)).sort();
+        let prev = null, ok = 0, bad = 0, total = 0, first_bad = null;
+        for (const f of files) {
+          const lines = fs.readFileSync(path.join(dir, f), \"utf8\").split(\"\\n\").filter(Boolean);
+          for (const line of lines) {
+            total++;
+            try {
+              const e = JSON.parse(line);
+              const hash = e.row_hash || e.hash || e.hash_curr;
+              const ph = e.prev_hash || e.hash_prev;
+              if (prev !== null && ph !== prev) {
+                bad++;
+                if (!first_bad) first_bad = { seq: total, expected: prev, got: ph };
+              } else { ok++; }
+              prev = hash;
+            } catch (err) { bad++; if (!first_bad) first_bad = { seq: total, err: String(err) }; }
+          }
+        }
+        console.log(JSON.stringify({ ok, bad, total, first_bad, files: files.length }));
+      } catch (e) { console.log(JSON.stringify({ error: e.message })); }
+    " 2>/dev/null || echo "{\"error\":\"audit-chain validator failed\"}"'
   } > "$OUT/R6-audit-chain.txt"
 fi
 
