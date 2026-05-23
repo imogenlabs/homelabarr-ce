@@ -6,9 +6,8 @@ on:
   push:
     branches:
       - 'security/**'
-  # schedule disabled — DAST_MINT_KEY secret not configured
-  # schedule:
-  #   - cron: '30 4 * * *'
+  schedule:
+    - cron: '30 4 * * *'
   workflow_dispatch:
     inputs:
       target:
