@@ -161,6 +161,7 @@ export function DeployModal({
                 </Label>
                 {field.type === "select" ? (
                   <select
+                    id={field.name}
                     name={field.name}
                     required={field.required}
                     onChange={(e) => handleInputChange(field, e.target.value)}
@@ -173,6 +174,7 @@ export function DeployModal({
                   </select>
                 ) : (
                   <Input
+                    id={field.name}
                     type={field.type}
                     name={field.name}
                     placeholder={field.placeholder}
@@ -209,6 +211,7 @@ export function DeployModal({
                       </Label>
                       {field.type === "select" ? (
                         <select
+                          id={field.name}
                           name={field.name}
                           required={field.required}
                           onChange={(e) => handleInputChange(field, e.target.value)}
@@ -221,6 +224,7 @@ export function DeployModal({
                         </select>
                       ) : (
                         <Input
+                          id={field.name}
                           type={field.type}
                           name={field.name}
                           placeholder={field.placeholder}
