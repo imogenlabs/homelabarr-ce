@@ -144,6 +144,34 @@ jobs:
         COSIGN_EXPERIMENTAL: "1"
       run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
 
+    - name: Cosign verify freshly-pushed frontend
+      if: github.event_name != 'pull_request'
+      run: |
+        cosign verify \
+          --certificate-identity-regexp 'https://github.com/smashingtags/homelabarr-ce/.github/workflows/' \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+
+    - name: Cosign verify freshly-pushed backend
+      if: github.event_name != 'pull_request'
+      run: |
+        cosign verify \
+          --certificate-identity-regexp 'https://github.com/smashingtags/homelabarr-ce/.github/workflows/' \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
+
+    - name: Comment on PR if cosign verify failed
+      if: failure() && github.event_name == 'pull_request'
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+      with:
+        script: |
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: '**cosign verify failed** on the freshly-pushed image. See [PB-03](docs/ir/playbooks/PB-03-cosign-verify-fail.md) for incident response.',
+          });
+
     - name: Trivy scan frontend
       if: github.event_name != 'pull_request'
       uses: aquasecurity/trivy-action@0.28.0

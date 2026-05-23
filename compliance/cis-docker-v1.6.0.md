@@ -38,7 +38,7 @@ Zero `ADD` instructions in either Dockerfile.
 gitleaks in CI (R5). Secrets via Docker secrets file mounts (R7), not build args or ENV.
 
 ### 4.11 Ensure only verified packages are installed [Met]
-`npm ci` with lockfile. `package-lock.json` committed. Dependabot + OSV-Scanner.
+`npm ci` with lockfile. `package-lock.json` committed. Dependabot + OSV-Scanner. Governed by [dependency-update-policy](../docs/governance/dependency-update-policy.md) with SLA enforcement and license deny-list via dependency-review workflow.
 
 ## Section 5 — Container Runtime
 
