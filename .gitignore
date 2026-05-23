@@ -74,6 +74,10 @@ server/data/
 /blob-report/
 /playwright/.cache/
 
+# Compliance binder output + collected evidence
+compliance/dist/
+compliance/evidence/
+
 # Secrets & backups
 /secrets/
 /backups/
