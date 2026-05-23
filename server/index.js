@@ -84,7 +84,19 @@ if (!chain.ok) {
 const lockout = createLockoutGuard();
 const corsOptions = EnvironmentManager.getCorsOptions();
 
-app.use(express.json());
+app.use(express.json({ limit: '64kb', strict: true }));
+
+// H-1: catch body-parser errors before they hit the catch-all 500 handler
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed' || (err instanceof SyntaxError && 'body' in err)) {
+    return res.status(400).json({ error: 'Invalid JSON in request body' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request body too large' });
+  }
+  next(err);
+});
+
 app.use(DeploymentLogger.createCorsLoggingMiddleware());
 app.use(cors(corsOptions));
 app.use(helmet({
@@ -133,6 +145,10 @@ app.use((req, res, next) => {
         return res.status(403).json({ error: 'CSRF validation failed' });
       }
     }
+    const hasAuth = req.cookies?.hl_session || req.headers.authorization?.startsWith('Bearer ');
+    if (!hasAuth) {
+      return next();
+    }
     if (req.headers['x-requested-with'] !== 'XMLHttpRequest' && !req.headers.authorization?.startsWith('hlr_')) {
       return res.status(403).json({ error: 'XHR required' });
     }
@@ -166,6 +182,9 @@ if (isDevelopment) {
   });
 }
 
+let unhandledRejectionCount = 0;
+let uncaughtExceptionCount = 0;
+
 const dockerManager = createDockerManager(networkConfig);
 
 const deps = {
@@ -174,6 +193,7 @@ const deps = {
   dockerManager, cliBridge, streamingCLIBridge, progressStream,
   audit, maybeAlert, logActivity, logger, yaml,
   envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger,
+  getProcessCounters: () => ({ unhandled_rejections_total: unhandledRejectionCount, uncaught_exceptions_total: uncaughtExceptionCount }),
 };
 
 app.use(authRoutes(deps));
@@ -203,8 +223,27 @@ app.get('/_routes', requireAuth, (req, res) => {
   res.json({ count: routes.length, routes });
 });
 
+// H-2: JSON 404 for unknown API paths (blocks Express default HTML 404)
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Catch-all error handler (last middleware)
 app.use((err, req, res, next) => {
   sendError(res, 500, 'Internal Server Error', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  unhandledRejectionCount++;
+  structuredLogger.error('unhandled_rejection', { reason: String(reason).slice(0, 500) });
+  audit({ event: 'process.unhandled_rejection', actor: 'system', reason: String(reason).slice(0, 200) });
+});
+
+process.on('uncaughtException', (err) => {
+  uncaughtExceptionCount++;
+  structuredLogger.error('uncaught_exception', { message: err.message?.slice(0, 500) });
+  audit({ event: 'process.uncaught_exception', actor: 'system', message: err.message?.slice(0, 200) });
+  setTimeout(() => process.exit(1), 100);
 });
 
 process.on('SIGTERM', () => { logger.info('SIGTERM received'); dockerManager.destroy(); process.exit(0); });

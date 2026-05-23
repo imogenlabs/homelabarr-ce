@@ -114,13 +114,13 @@ export default function containerRoutes({ dockerManager, requireAuth, getRequest
                 }, {}) : {}
               };
             } catch (e) {
-              console.error('Error parsing container:', e);
+              logger.error('Error parsing container:', e);
               return null;
             }
           }).filter(Boolean);
         }
       } catch (error) {
-        console.error('Error fetching containers via CLI:', error);
+        logger.error('Error fetching containers via CLI:', error);
         containers = [];
       }
 

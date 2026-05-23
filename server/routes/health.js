@@ -6,10 +6,19 @@ import { readSecretFresh } from '../secrets.js';
 
 const router = Router();
 
-export default function healthRoutes({ requireAuth, requireRole, sendError, dockerManager, envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger, logger, isDevelopment }) {
+export default function healthRoutes({ requireAuth, requireRole, sendError, dockerManager, envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger, logger, isDevelopment, getProcessCounters }) {
 
   router.get('/health', (_req, res) => {
-    return res.json({ ok: true, ts: Math.floor(Date.now() / 1000), state: 'ready' });
+    const counters = getProcessCounters ? getProcessCounters() : {};
+    return res.json({
+      ok: true,
+      ts: Math.floor(Date.now() / 1000),
+      state: 'ready',
+      process: {
+        uptime_seconds: Math.floor(process.uptime()),
+        ...counters,
+      },
+    });
   });
 
   router.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) => {
