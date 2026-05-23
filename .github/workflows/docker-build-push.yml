@@ -1,9 +1,8 @@
 name: Build and Push Docker Images
 
 on:
-  # Branch push trigger disabled — builds done manually on ce-prod (192.168.1.231).
-  # Re-enable when self-hosted runner has GHCR auth configured.
   push:
+    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
