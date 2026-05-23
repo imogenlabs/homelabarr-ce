@@ -15,7 +15,7 @@ server {
 
     # Security headers — must be repeated in any location block that uses add_header
     # (nginx location-level add_header overrides server-level)
-    set $csp "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self' data:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; upgrade-insecure-requests; report-to csp-endpoint; report-uri /api/csp-report";
+    set $csp "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: https://cdn.jsdelivr.net https://raw.githubusercontent.com; font-src 'self' data:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; upgrade-insecure-requests; report-to csp-endpoint; report-uri /api/csp-report";
 
     location /icons/ {
         expires 1h;
@@ -91,6 +91,15 @@ server {
         expires 1h;
         add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
         add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # Umami analytics event proxy (matches before /api/ catch-all)
+    location = /api/send {
+        proxy_pass https://analytics.mjashley.com/api/send;
+        proxy_set_header Host analytics.mjashley.com;
+        proxy_ssl_server_name on;
+        proxy_hide_header Set-Cookie;
+        proxy_ignore_headers Set-Cookie;
     }
 
     # API proxy to backend
