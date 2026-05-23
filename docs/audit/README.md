@@ -28,5 +28,6 @@
 | R13 | Threat-model formalization | 9 files | shipped |
 | R14 | Incident response runbook | 10 playbooks | shipped |
 | R15 | Dependency & supply-chain freshness governance | 7 | shipped |
+| R16 | Continuous-evidence binder rebuild | 9 | shipped |
 
-**Total findings shipped to production: 182+**
+**Total findings shipped to production: 191+**

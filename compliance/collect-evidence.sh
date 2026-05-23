@@ -120,4 +120,36 @@ fi
   fi
 } > "$OUT/R5-cosign.txt"
 
+# --- R12 SLO snapshot ---
+if command -v docker >/dev/null 2>&1 && docker ps -q --filter "name=$BACKEND" | grep -q .; then
+  { hdr "R12 SLO snapshot (last 24h)"
+    docker exec "$BACKEND" sh -c '
+      if [ -r /var/log/nginx/access.log ]; then
+        HEALTH_TOTAL=$(grep -c " /api/health " /var/log/nginx/access.log 2>/dev/null || echo 0)
+        HEALTH_200=$(grep " /api/health " /var/log/nginx/access.log 2>/dev/null | grep -c " 200 " || echo 0)
+        echo "{\"health_total\":${HEALTH_TOTAL},\"health_200\":${HEALTH_200},\"login_p95_seconds\":null}"
+      else
+        echo "{\"error\":\"nginx access log not readable from backend container\"}"
+      fi
+    ' 2>/dev/null || echo '{"error":"could not exec into backend"}'
+  } > "$OUT/R12-slo-snapshot.txt"
+else
+  { hdr "R12 SLO snapshot"; echo '{"error":"docker not available or backend not running"}'; } > "$OUT/R12-slo-snapshot.txt"
+fi
+
+# --- R15 dependency staleness snapshot ---
+{ hdr "R15 dependency staleness snapshot"
+  if command -v gh >/dev/null 2>&1; then
+    RUN_ID=$(gh run list --workflow=dependency-staleness.yml --limit=1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
+    if [ -n "${RUN_ID}" ]; then
+      gh run view "${RUN_ID}" --log 2>/dev/null | tail -100 || echo "(could not fetch staleness log)"
+    else
+      echo "(no staleness runs yet)"
+    fi
+    gh pr list --label dependencies --state open --json number,title,createdAt 2>/dev/null || echo "[]"
+  else
+    echo "(gh not available; skipping)"
+  fi
+} > "$OUT/R15-dep-staleness.txt"
+
 echo "Evidence collected to $OUT/ at $TS ($HEAD)"

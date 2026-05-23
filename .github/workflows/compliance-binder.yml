@@ -1,0 +1,59 @@
+name: compliance-binder
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why is this binder being built (audit / spot-check / release)?'
+        required: true
+  schedule:
+    - cron: '0 6 1 * *'
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: '20'
+
+      - name: Build binder (local evidence only — no live stack in CI)
+        run: bash compliance/build-binder.sh
+        env:
+          EVIDENCE_HOST: 'ce-demo.homelabarr.com'
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9  # v3
+
+      - name: Sign binder zip
+        run: |
+          BINDER=$(ls -t compliance/dist/*.zip | head -1)
+          if [ -n "${BINDER}" ]; then
+            cosign sign-blob --yes --bundle "${BINDER}.cosign.bundle" "${BINDER}"
+          fi
+
+      - name: Upload binder artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: compliance-binder-${{ github.sha }}
+          path: |
+            compliance/dist/*.zip
+            compliance/dist/*.cosign.bundle
+          retention-days: 90
+
+      - name: Summary
+        run: |
+          BINDER=$(ls -t compliance/dist/*.zip | head -1)
+          echo "## Compliance Binder Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** \`$(basename ${BINDER})\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ github.event.inputs.reason || 'scheduled monthly' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
