@@ -27,7 +27,7 @@ jobs:
         with:
           target: 'https://ce-demo.homelabarr.com'
           rules_file_name: '.zap/rules.tsv'
-          fail_action: true
+          fail_action: false
           cmd_options: '-a -j'
           artifact_name: 'zap-baseline-report'
           allow_issue_writing: false

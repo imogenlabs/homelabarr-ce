@@ -3,8 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('App Catalog', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for the app to hydrate and load data
-    await page.waitForSelector('text=Connected');
+    // Login if presented with the login screen
+    const signIn = page.locator('button:has-text("Sign In")');
+    if (await signIn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await page.fill('#login-username', 'admin');
+      await page.fill('#login-password', 'admin');
+      await signIn.click();
+    }
+    await page.waitForSelector('text=Connected', { timeout: 15000 });
   });
 
   test('loads and displays app count', async ({ page }) => {
