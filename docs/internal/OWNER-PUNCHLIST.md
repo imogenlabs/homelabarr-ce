@@ -1,11 +1,11 @@
 # Owner Punch-List — homelabarr-ce
 
-**Source:** `docs/audit/R22-owner-closeout.md` (§3, §4, §6)
-**Repo HEAD at handoff:** `a99d23c`
-**Date written:** 2026-05-23
-**Status of audit loop:** CLOSED — 22 rounds, 240+ findings shipped, 0 open code findings.
+> **This is an internal owner checklist, not an engineering backlog or open audit round.** Contributors should refer to GitHub Issues for code work. This file tracks operational decisions and scheduling commitments that only the repo owner can act on.
 
-Do **not** open R23. There are no code-side findings left. Everything below is owner-only or agent-delegable config work.
+**Source:** `docs/audit/R22-owner-closeout.md` (§3, §4, §6)
+**Snapshot baseline:** `a99d23c` (2026-05-23). Items added after that baseline are noted with their own commit SHA and date in the "Shipped after closeout" section below.
+**Status of audit loop:** CLOSED — 22 rounds + R22.5, 241+ findings shipped, 0 open code findings.
+**Maintenance:** Update this file as items are completed or new owner-only items surface. Delete completed sections once all items in them are checked. When every item on this page is done, archive it to `docs/internal/archive/` and remove the file.
 
 ---
 
