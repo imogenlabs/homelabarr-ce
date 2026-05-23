@@ -327,7 +327,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-hidden focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="current-password"
                 />
@@ -341,7 +341,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-hidden focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -355,7 +355,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-hidden focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
                   disabled={loading}
                   autoComplete="new-password"
                 />

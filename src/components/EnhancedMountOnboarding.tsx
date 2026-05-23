@@ -151,7 +151,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
           {/* Warning Notice */}
           <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <div className="flex items-start space-x-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
               <div>
                 <h3 className="font-medium text-amber-800 dark:text-amber-300 mb-1">
                   Important Infrastructure Requirements
@@ -215,7 +215,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
           {hasFailures && (
             <div className="mb-6 p-4 bg-secondary border border-border rounded-lg">
               <div className="flex items-start space-x-3">
-                <Info className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
                   <h3 className="font-medium text-muted-foreground mb-2">
                     Quick Installation Guide
@@ -295,7 +295,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
                 disabled={!allRequiredPassed && !userAcknowledged}
                 className={`px-4 py-2 text-sm font-medium rounded-md ${
                   allRequiredPassed || userAcknowledged
-                    ? 'text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring'
+                    ? 'text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-hidden focus:ring-2 focus:ring-ring'
                     : 'text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
                 }`}
               >
