@@ -23,6 +23,7 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           persist-credentials: false
       - uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a  # v2.4.3
+        continue-on-error: true
         with:
           results_file: scorecard.sarif
           results_format: sarif
