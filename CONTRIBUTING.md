@@ -2,6 +2,8 @@
 
 Thanks for your interest in making HomelabARR better! Here's how we work.
 
+> **Security note:** Before adding a new endpoint, asset, or trust boundary, update the corresponding [threat-model](docs/threat-model/README.md) document. See which files to update in the threat-model README.
+
 ## How Features Get Built
 
 1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues) or [Discussion](https://github.com/smashingtags/homelabarr-ce/discussions)
