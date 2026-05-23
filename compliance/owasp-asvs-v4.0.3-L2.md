@@ -94,3 +94,14 @@ Scope: web application security requirements applicable to a self-hosted Docker 
 | V14.4.1 | Security headers set | [Met] | Full header set via helmet + nginx (R2/R9) |
 | V14.4.5 | HSTS set | [Met] | max-age=63072000; includeSubDomains; preload |
 | V14.5.3 | CSP set | [Met] | Strict CSP with report-to (R2/R9) |
+
+## Coverage roadmap
+
+Traced this round: V2, V3, V4, V5, V6, V7, V8 (partial), V9, V13, V14 (43 requirements).
+
+Deferred to quarterly cadence reviews (per compliance/update-cadence.md):
+- **V1 Architecture** — adds architecture diagram + data-flow map. Next quarter.
+- **V8 Data Protection** — beyond V8.2.2; needs PII inventory. Next quarter.
+- **V10 Malicious Code** — needs threat model documentation. Q+2.
+- **V11 Business Logic** — needs threat model documentation. Q+2.
+- **V12 Files and Resources** — likely largely N/A (no file upload feature). Audit Q+2.
