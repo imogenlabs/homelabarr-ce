@@ -1,5 +1,8 @@
 # HomelabARR CE — Threat Model
 
+> For incident response procedures, see [docs/ir/](../ir/README.md).
+
+
 This directory contains the formal threat model for HomelabARR CE, synthesized from 175+ security findings across R1–R12.
 
 ## Documents
