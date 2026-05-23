@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   zap-baseline:
@@ -31,6 +30,7 @@ jobs:
           fail_action: true
           cmd_options: '-a -j'
           artifact_name: 'zap-baseline-report'
+          allow_issue_writing: false
 
       - name: Upload ZAP Report
         if: always()

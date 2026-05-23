@@ -62,6 +62,9 @@ server {
     location = /robots.txt {
         default_type text/plain;
         try_files /robots.txt =404;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
     }
 
     # RFC 8615 + RFC 8959 — password managers deep-link here
@@ -73,6 +76,9 @@ server {
     location = /humans.txt {
         default_type text/plain;
         try_files /humans.txt =404;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
     }
 
     # Analytics proxy
@@ -83,6 +89,8 @@ server {
         proxy_hide_header Set-Cookie;
         proxy_ignore_headers Set-Cookie;
         expires 1h;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
     }
 
     # API proxy to backend
@@ -138,6 +146,9 @@ server {
         root /usr/share/nginx/html;
         default_type text/plain;
         allow all;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
     }
 
     # Honey: dotfile probes — proxy to backend so honey.js emits audit events
