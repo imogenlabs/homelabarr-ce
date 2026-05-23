@@ -35,5 +35,7 @@
 | R19 | Runtime contract + build-time hardening | 8 | shipped |
 | R20 | In-app secret material handling | 12 | shipped |
 | R21 | Error surface hygiene | 10 | shipped |
+| R22 | Owner closeout & operating checklist | 0 (closeout) | shipped |
 
 **Total findings shipped to production: 240+**
+**Audit loop: CLOSED (22 rounds, 0 open code findings)**
