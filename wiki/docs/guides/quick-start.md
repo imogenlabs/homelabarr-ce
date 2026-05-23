@@ -33,6 +33,9 @@ If both commands print a version number, you're good. If not, check the [Docker 
 
 ---
 
+!!! tip "Before you expose this to the internet"
+    Read the [Security](security.md) guide to understand what ships by default and how to verify the security envelope on your deployment.
+
 ## Method 1: Docker Compose (Recommended)
 
 This is the fastest way to get up and running. Copy and paste these commands one at a time.
@@ -62,7 +65,7 @@ export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
 ```
 
 !!! warning "Replace YOUR-SERVER-IP — both times"
-    Change `YOUR-SERVER-IP` to your actual server's IP address in the `CORS_ORIGIN` line, and again when you open the dashboard in Step 5. For example: `http://192.168.1.100:8084`
+    Change `YOUR-SERVER-IP` to your actual server's IP address in the `CORS_ORIGIN` line, and again when you open the dashboard in Step 5. For example: `http://192.0.2.100:8084`
 
     Don't know your server's IP? Run `hostname -I` and use the first address shown.
 
@@ -166,8 +169,8 @@ Make sure you cloned the repo in Step 1. The app templates live in the `apps/` f
 The `CORS_ORIGIN` variable needs to match **exactly** how you access the dashboard in your browser.
 
 ```bash
-# If you access it at http://192.168.1.100:8084, set:
-export CORS_ORIGIN=http://192.168.1.100:8084
+# If you access it at http://192.0.2.100:8084, set:
+export CORS_ORIGIN=http://192.0.2.100:8084
 
 # Then restart:
 docker compose -f homelabarr.yml up -d

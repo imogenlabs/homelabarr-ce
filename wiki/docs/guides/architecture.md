@@ -8,6 +8,12 @@
 
 ---
 
+## Security envelope
+
+HomelabARR ships with authentication, rate limiting, CSRF protection, audit logging, container hardening, and a full set of security headers by default. See [Security](security.md) for the complete list of controls.
+
+---
+
 ## The Big Picture
 
 HomelabARR is two containers working together:

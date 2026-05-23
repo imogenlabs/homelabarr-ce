@@ -2,8 +2,13 @@
 
 HomelabARR has a REST API for scripting, automation, and building integrations. Everything the dashboard does, the API can do too.
 
-**Base URL:** `http://your-server:8092`
-(or via the frontend proxy: `http://your-server:8084/api/`)
+**Base URL:** `https://homelabarr.YOUR-DOMAIN/api/` (behind Traefik — recommended)
+or `http://YOUR-SERVER-IP:8092` (LAN-only, development)
+
+> **TLS required for any non-loopback use.** Examples below show LAN-only http for local
+> testing. For any deployment reachable from outside the host, put HomelabARR behind
+> Traefik (or another TLS-terminating proxy) and use https. Never transmit bearer tokens
+> over plaintext on a non-loopback network.
 
 ![API Request Lifecycle](../img/diagrams/request-lifecycle.png)
 
@@ -19,7 +24,7 @@ Most endpoints require a valid token or API key.
 ### Get a Token
 
 ```bash
-curl -X POST http://your-server:8092/auth/login \
+curl -X POST http://YOUR-SERVER-IP:8092/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin"}'
 ```
@@ -38,14 +43,14 @@ Response:
 Use the token in all subsequent requests:
 
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN_HERE" http://your-server:8092/applications
+curl -H "Authorization: Bearer YOUR_TOKEN_HERE" http://YOUR-SERVER-IP:8092/applications
 ```
 
 ### API Keys (Better for Scripts)
 
 ```bash
 # Create an API key
-curl -X POST http://your-server:8092/auth/api-keys \
+curl -X POST http://YOUR-SERVER-IP:8092/auth/api-keys \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name": "my-script"}'
@@ -66,17 +71,17 @@ Response:
 Use it exactly like a token:
 
 ```bash
-curl -H "Authorization: Bearer hlr_your_key_here" http://your-server:8092/applications
+curl -H "Authorization: Bearer hlr_your_key_here" http://YOUR-SERVER-IP:8092/applications
 ```
 
 **Manage your keys:**
 
 ```bash
 # List keys (names only — keys themselves are not re-displayed)
-curl -H "Authorization: Bearer YOUR_TOKEN" http://your-server:8092/auth/api-keys
+curl -H "Authorization: Bearer YOUR_TOKEN" http://YOUR-SERVER-IP:8092/auth/api-keys
 
 # Delete a key
-curl -X DELETE -H "Authorization: Bearer YOUR_TOKEN" http://your-server:8092/auth/api-keys/KEY_ID
+curl -X DELETE -H "Authorization: Bearer YOUR_TOKEN" http://YOUR-SERVER-IP:8092/auth/api-keys/KEY_ID
 ```
 
 ---
@@ -85,7 +90,7 @@ curl -X DELETE -H "Authorization: Bearer YOUR_TOKEN" http://your-server:8092/aut
 
 ```bash
 # Get all available apps
-curl http://your-server:8092/applications
+curl http://YOUR-SERVER-IP:8092/applications
 ```
 
 Sample response:
@@ -110,7 +115,7 @@ Sample response:
 ## Deploy an App
 
 ```bash
-curl -X POST http://your-server:8092/deploy \
+curl -X POST http://YOUR-SERVER-IP:8092/deploy \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +134,7 @@ curl -X POST http://your-server:8092/deploy \
 Returns a `deploymentId`. Watch progress via SSE:
 
 ```bash
-curl http://your-server:8092/stream/progress?deploymentId=YOUR_ID
+curl http://YOUR-SERVER-IP:8092/stream/progress?deploymentId=YOUR_ID
 ```
 
 ---
@@ -138,30 +143,30 @@ curl http://your-server:8092/stream/progress?deploymentId=YOUR_ID
 
 ```bash
 # List all containers
-curl -H "Authorization: Bearer YOUR_TOKEN" http://your-server:8092/containers
+curl -H "Authorization: Bearer YOUR_TOKEN" http://YOUR-SERVER-IP:8092/containers
 
 # With CPU/memory stats
-curl -H "Authorization: Bearer YOUR_TOKEN" "http://your-server:8092/containers?stats=true"
+curl -H "Authorization: Bearer YOUR_TOKEN" "http://YOUR-SERVER-IP:8092/containers?stats=true"
 
 # Start a container
 curl -X POST -H "Authorization: Bearer YOUR_TOKEN" \
-  http://your-server:8092/containers/CONTAINER_ID/start
+  http://YOUR-SERVER-IP:8092/containers/CONTAINER_ID/start
 
 # Stop a container
 curl -X POST -H "Authorization: Bearer YOUR_TOKEN" \
-  http://your-server:8092/containers/CONTAINER_ID/stop
+  http://YOUR-SERVER-IP:8092/containers/CONTAINER_ID/stop
 
 # Restart a container
 curl -X POST -H "Authorization: Bearer YOUR_TOKEN" \
-  http://your-server:8092/containers/CONTAINER_ID/restart
+  http://YOUR-SERVER-IP:8092/containers/CONTAINER_ID/restart
 
 # Remove a container
 curl -X DELETE -H "Authorization: Bearer YOUR_TOKEN" \
-  http://your-server:8092/containers/CONTAINER_ID
+  http://YOUR-SERVER-IP:8092/containers/CONTAINER_ID
 
 # View container logs
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://your-server:8092/containers/CONTAINER_ID/logs
+  http://YOUR-SERVER-IP:8092/containers/CONTAINER_ID/logs
 ```
 
 ---
@@ -170,10 +175,10 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ```bash
 # All ports currently in use
-curl http://your-server:8092/ports/check
+curl http://YOUR-SERVER-IP:8092/ports/check
 
 # Find next available port in a range
-curl "http://your-server:8092/ports/available?start=8000&end=9000"
+curl "http://YOUR-SERVER-IP:8092/ports/available?start=8000&end=9000"
 ```
 
 ---
@@ -181,7 +186,7 @@ curl "http://your-server:8092/ports/available?start=8000&end=9000"
 ## Health Check
 
 ```bash
-curl http://your-server:8092/health
+curl http://YOUR-SERVER-IP:8092/health
 ```
 
 Returns `200` with `{"status": "healthy"}` when everything is running. Returns `503` if Docker isn't accessible (catalog-only mode).
@@ -192,13 +197,13 @@ Returns `200` with `{"status": "healthy"}` when everything is running. Returns `
 
 ```bash
 # Create a new user
-curl -X POST http://your-server:8092/auth/users \
+curl -X POST http://YOUR-SERVER-IP:8092/auth/users \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"username": "viewer", "password": "a-strong-password", "role": "user"}'
 
 # List all users
-curl -H "Authorization: Bearer YOUR_TOKEN" http://your-server:8092/auth/users
+curl -H "Authorization: Bearer YOUR_TOKEN" http://YOUR-SERVER-IP:8092/auth/users
 ```
 
 ---

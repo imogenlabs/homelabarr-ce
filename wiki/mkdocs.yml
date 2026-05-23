@@ -126,6 +126,7 @@ nav:
       - Traefik & Domain Setup: guides/traefik-setup.md
       - CLI Installation: guides/cli-installation.md
       - API Reference: guides/api-reference.md
+      - Security: guides/security.md
   - Developer:
       - Architecture: guides/architecture.md
       - CLI Bridge: guides/cli-bridge.md
