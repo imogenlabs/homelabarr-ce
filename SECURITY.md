@@ -60,6 +60,8 @@ Instead, please report security issues privately:
 - **Account lockout:** 5 failures / 15min per IP+username; email notification to victim on threshold
 - **API keys:** HMAC-SHA256 hashed before storage (never stored in plaintext); `hlr_` prefix; validated via `Authorization: Bearer hlr_...` header (mobile/CLI)
 - `JWT_SECRET` is **required** (minimum 32 characters) — the server refuses to start without it
+- **JWT key rotation:** dual-key support — after rotation, tokens signed with the previous key are accepted for up to 24 hours (configurable via `PREVIOUS_KEY_MAX_AGE_SEC`). Keys are read fresh on each request; no restart needed after rotation.
+- **API key HMAC isolation:** API key HMACs use a dedicated key (`API_KEY_HMAC_KEY`) or an HKDF-derived subkey from JWT_SECRET, so a JWT key compromise does not expose API key verifiers.
 - User IDs generated with `crypto.randomBytes`, not `Math.random`
 
 ### Authorization
