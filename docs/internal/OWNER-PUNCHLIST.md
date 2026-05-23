@@ -58,6 +58,16 @@ Do **not** open R23. There are no code-side findings left. Everything below is o
 - [x] **OWN-08** — Argon2id ADR written. Decision: stay on bcrypt12. `docs/decisions/0001-password-hash.md`. (`ae78dea`, 2026-05-23)
 - [x] **R22.5** — Login screen gates unauthenticated visitors. React-side route guard, no mobile app changes. (`af9d6ce`, 2026-05-23)
 
+## ZAP hygiene (not an audit round — small-PR cleanup)
+
+Source: 11 duplicate ZAP issues (#186, #187, #190–#197, #200). Workflow misconfiguration, not a security backlog.
+
+- [ ] **Close duplicate issues (15 min).** Close #186, #187, #190–#197 as dupes of #200. Leave #200 open as the tracker.
+- [ ] **Check /api/applications for private IP (1 min).** Open it logged in, look at the JSON. If it's a template example IP, suppress in `.zap/rules.tsv`. If it's a real backend IP, scrub it.
+- [ ] **nginx headers on static paths (30 min).** Apply security header middleware to `/.well-known/`, `analytics.js`, `robots.txt`, `sitemap.xml`, `favicon.svg` paths — they currently skip the location blocks that add CSP/HSTS/etc.
+- [ ] **ZAP suppressions (15 min).** Add to `.zap/rules.tsv`: suppress 10109 (Modern Web App), 10050 (Retrieved from Cache), 10094 (Base64 Disclosure), 10044 (Big Redirect on `/.well-known/change-password`). One-line reason per suppression.
+- [ ] **Fix ZAP workflow (Sprint 2).** Reconfigure to write report to artifact only, stop opening a new GitHub issue per run. The issue-per-run pattern is broken by design.
+
 ---
 
 **Bottom line:** Six starred items get you to "top decile open-source security posture for a project this size." Five hygiene items are optional. The audit loop itself is done.
