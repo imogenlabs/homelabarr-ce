@@ -16,6 +16,7 @@ import { useNotifications } from './contexts/NotificationContext';
 import { useLoading } from './hooks/useLoading';
 import { useAuth } from './contexts/AuthContext';
 import { LoginModal } from './components/LoginModal';
+import { LoginScreen } from './components/LoginScreen';
 import { ApiKeysModal } from './components/ApiKeysModal';
 import { UserMenu } from './components/UserMenu';
 import { UserSettings } from './components/UserSettings';
@@ -104,9 +105,8 @@ export default function App() {
 
   const { success, error: showError, info } = useNotifications();
   const { loading: deploymentInProgress } = useLoading();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
-  // Fetch CLI application catalog on mount
   const loadCatalog = useCallback(async () => {
     try {
       setCatalogLoading(true);
@@ -135,8 +135,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    loadCatalog();
-  }, [loadCatalog]);
+    if (isAuthenticated) loadCatalog();
+  }, [isAuthenticated, loadCatalog]);
 
   // Fetch starred apps when authenticated
   useEffect(() => {
@@ -680,6 +680,18 @@ export default function App() {
       </div>
     );
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
