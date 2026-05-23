@@ -1,0 +1,115 @@
+name: dependency-staleness
+
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  staleness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        with:
+          script: |
+            const now = Date.now();
+            const DAY = 86400000;
+
+            const SLA = {
+              'security-critical': { review: 1, merge: 3 },
+              'patch':             { review: 7, merge: 14 },
+              'minor':             { review: 14, merge: 30 },
+              'major':             { review: 30, merge: 60 },
+              'github-actions':    { review: 7, merge: 14 },
+              'docker':            { review: 7, merge: 14 },
+            };
+
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 50,
+            });
+
+            const depPRs = pulls.filter(pr =>
+              pr.labels.some(l => l.name === 'dependencies')
+            );
+
+            let summary = '## Dependency Staleness Report\n\n';
+            summary += `| PR | Age (days) | Class | Review SLA | Merge SLA | Status |\n`;
+            summary += `|---|---|---|---|---|---|\n`;
+
+            let breaches = [];
+
+            for (const pr of depPRs) {
+              const ageDays = Math.floor((now - new Date(pr.created_at).getTime()) / DAY);
+              let cls = 'patch';
+
+              if (pr.labels.some(l => l.name === 'security')) {
+                cls = 'security-critical';
+              } else if (pr.labels.some(l => l.name === 'github-actions')) {
+                cls = 'github-actions';
+              } else if (pr.labels.some(l => l.name === 'docker')) {
+                cls = 'docker';
+              } else if (pr.title.match(/bump .+ from \d+\./i)) {
+                cls = 'major';
+              } else if (pr.title.match(/bump .+ from \d+\.\d+ to \d+\.\d+/i)) {
+                cls = 'minor';
+              }
+
+              const sla = SLA[cls];
+              let status = 'OK';
+
+              if (ageDays > sla.merge) {
+                status = 'MERGE SLA BREACH';
+              } else if (ageDays > sla.review) {
+                status = 'REVIEW SLA BREACH';
+              }
+
+              summary += `| #${pr.number} ${pr.title.substring(0, 50)} | ${ageDays} | ${cls} | ${sla.review}d | ${sla.merge}d | ${status} |\n`;
+
+              if (status.includes('BREACH')) {
+                breaches.push({ pr, cls, ageDays, sla, status });
+              }
+            }
+
+            summary += `\n**Total open:** ${depPRs.length} | **Breaches:** ${breaches.length}\n`;
+
+            for (const b of breaches) {
+              if (b.cls === 'security-critical' && b.ageDays > b.sla.merge) {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `[INCIDENT] Security update past SLA: #${b.pr.number}`,
+                  body: `Security-critical dependency PR #${b.pr.number} has been open for ${b.ageDays} days (merge SLA: ${b.sla.merge}d).\n\nFollow [PB-11](docs/ir/playbooks/PB-11-security-update-past-sla.md).`,
+                  labels: ['incident', 'security', 'dependencies'],
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: b.pr.number,
+                  body: `**Staleness alert:** This ${b.cls} dependency PR has been open ${b.ageDays} days. ${b.status} per [dependency update policy](docs/governance/dependency-update-policy.md). @smashingtags`,
+                });
+
+                if (b.ageDays > b.sla.merge) {
+                  try {
+                    await github.rest.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: b.pr.number,
+                      labels: ['policy-breach'],
+                    });
+                  } catch (e) {
+                    core.warning(`Could not add label to #${b.pr.number}: ${e.message}`);
+                  }
+                }
+              }
+            }
+
+            await core.summary.addRaw(summary).write();
+            console.log(summary);

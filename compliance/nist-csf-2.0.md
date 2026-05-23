@@ -31,7 +31,8 @@ Scope: code shipped in this repository. Operator-responsibility items (BCP, vend
 | PR.DS-02 Data in transit protected | [Met] | TLS 1.2+ via Cloudflare, HSTS preload |
 | PR.IR-01 Resources protected | [Met] | R4 container hardening (cap-drop, read-only, pids-limit) |
 | PR.PS-01 Configuration management | [Met] | Compose pinned, R5 SHA-pinned actions |
-| PR.PS-02 Software maintained | [Met] | Dependabot + weekly scans |
+| PR.PS-02 Software maintained | [Met] | Dependabot + weekly scans, governed by [dependency-update-policy](../docs/governance/dependency-update-policy.md) |
+| PR.IP-12 Vulnerability management plan | [Met] | [dependency-update-policy](../docs/governance/dependency-update-policy.md) with SLAs, escalation to [PB-11](../docs/ir/playbooks/PB-11-security-update-past-sla.md) |
 
 ## DE — DETECT
 
