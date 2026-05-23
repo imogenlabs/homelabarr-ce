@@ -31,6 +31,10 @@ function mutationHeaders(extra: Record<string, string> = {}): Record<string, str
 
 let refreshInFlight: Promise<Response> | null = null;
 
+export async function apiFetchRaw(path: string, init: RequestInit = {}): Promise<Response> {
+  return doFetch(path, init);
+}
+
 async function doFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((init.method || 'GET').toUpperCase());
   const headers = isMutation
