@@ -1,4 +1,6 @@
 User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /.well-known/change-password
 Allow: /
-
-Sitemap: https://ce-demo.homelabarr.com/sitemap.xml
+Allow: /.well-known/security.txt

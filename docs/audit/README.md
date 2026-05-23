@@ -29,5 +29,6 @@
 | R14 | Incident response runbook | 10 playbooks | shipped |
 | R15 | Dependency & supply-chain freshness governance | 7 | shipped |
 | R16 | Continuous-evidence binder rebuild | 9 | shipped |
+| R17 | Public-disclosure surface audit | 10 | shipped |
 
-**Total findings shipped to production: 191+**
+**Total findings shipped to production: 201+**
