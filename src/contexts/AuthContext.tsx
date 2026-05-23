@@ -39,18 +39,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        return true;
       } else {
         setUser(null);
+        return false;
       }
     } catch {
       setUser(null);
+      return false;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    checkAuth().then(ok => {
+      if (!ok) {
+        setTimeout(() => checkAuth(), 1500);
+      }
+    });
   }, [checkAuth]);
 
   useEffect(() => {
