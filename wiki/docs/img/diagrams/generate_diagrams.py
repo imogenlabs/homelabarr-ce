@@ -79,7 +79,7 @@ def gen_system():
 
     # ── Browser ──
     box(ax, 0.30, 0.83, 0.40, 0.06, 'BROWSER',
-        'http://your-server:8084', color=FLOW, fs=14, sub_fs=10, sub_gap=0.02)
+        'https://homelabarr.YOUR-DOMAIN', color=FLOW, fs=14, sub_fs=10, sub_gap=0.02)
 
     # ── Frontend ── card: y=0.60 h=0.18
     box(ax, 0.04, 0.60, 0.26, 0.18, '', color=PRIMARY)
@@ -87,7 +87,7 @@ def gen_system():
             color=TEXT, ha='center', fontfamily='monospace')
     ax.text(0.17, 0.73, ':8084 | nginx + React', fontsize=10,
             color=TEXT_DIM, ha='center', fontfamily='monospace')
-    techs = ['React 19', 'shadcn/ui', 'Vite', 'Dark / Light']
+    techs = ['React 19 + shadcn/ui', 'CSP + HSTS + COOP/CORP', 'Rate limiting', '/.well-known/security.txt']
     for i, t in enumerate(techs):
         ax.text(0.17, 0.69 - i*0.028, '> ' + t, fontsize=9,
                 color=TEXT_DIM, ha='center', fontfamily='monospace')
@@ -100,8 +100,8 @@ def gen_system():
             color=TEXT_DIM, ha='center', fontfamily='monospace')
     comps = [
         ('CLI Bridge', 'Reads app templates'),
-        ('Docker SDK', 'Container mgmt'),
-        ('JWT + API Keys', 'Authentication'),
+        ('JWT + MFA + CSRF', 'bcrypt auth + audit log'),
+        ('Honey endpoints', 'ATT&CK T1595 detection'),
         ('SSE Stream', 'Real-time deploy logs'),
     ]
     for i, (c, d) in enumerate(comps):
@@ -111,9 +111,9 @@ def gen_system():
         ax.text(0.51, yp - 0.022, d, fontsize=8,
                 color=TEXT_DIM, ha='center', fontfamily='monospace')
 
-    # ── Docker Socket ── card: y=0.29 h=0.06
-    box(ax, 0.38, 0.29, 0.26, 0.06, 'DOCKER SOCKET',
-        '/var/run/docker.sock', color=RED, alpha=0.12, fs=10, sub_fs=8, sub_gap=0.018)
+    # ── Socket Proxy ── card: y=0.29 h=0.06
+    box(ax, 0.38, 0.29, 0.26, 0.06, 'SOCKET PROXY',
+        'EXEC=0 BUILD=0 cap_drop:ALL', color=RED, alpha=0.12, fs=10, sub_fs=8, sub_gap=0.018)
 
     # ── App Templates ── card: y=0.29 h=0.22
     box(ax, 0.04, 0.29, 0.26, 0.22, '', color=PURPLE)
@@ -438,10 +438,10 @@ def gen_request():
             fontsize=11, fontweight='bold', color=GREEN, fontfamily='monospace')
 
     rsteps = [
-        ('Browser', 'GET /api/applications', FLOW, 0.77),
-        ('nginx', 'Strip /api -> proxy to :8092', PRIMARY, 0.64),
-        ('Express', 'Route -> auth (optional)', ACCENT, 0.51),
-        ('CLI Bridge', 'Return cached catalog', PURPLE, 0.38),
+        ('Browser', 'GET /api/applications (HTTPS)', FLOW, 0.77),
+        ('nginx', 'CSP + HSTS + rate-limit -> proxy to :8092', PRIMARY, 0.64),
+        ('Express', 'requireAuth -> CSRF check -> route', ACCENT, 0.51),
+        ('CLI Bridge', 'Return cached catalog + audit log emit', PURPLE, 0.38),
         ('Response', '200 OK + JSON (100+ apps)', GREEN, 0.25),
     ]
     for i, (l, d, c, y) in enumerate(rsteps):
@@ -458,10 +458,10 @@ def gen_request():
             fontsize=11, fontweight='bold', color=ORANGE, fontfamily='monospace')
 
     wsteps = [
-        ('Browser', 'POST /api/deploy {appId, mode}', FLOW, 0.77),
-        ('Express', 'Auth check -> validate', ACCENT, 0.64),
-        ('CLI Bridge', 'Load YAML -> transform', PURPLE, 0.51),
-        ('Docker SDK', 'docker compose up -d', RED, 0.38),
+        ('Browser', 'POST /api/deploy {appId, mode} (HTTPS)', FLOW, 0.77),
+        ('Express', 'requireAuth + CSRF + rate-limit', ACCENT, 0.64),
+        ('CLI Bridge', 'Load YAML -> transform + audit log', PURPLE, 0.51),
+        ('Socket Proxy', 'Allowlisted Docker API -> compose up', RED, 0.38),
         ('SSE Stream', 'Real-time events -> browser', ORANGE, 0.25),
     ]
     for i, (l, d, c, y) in enumerate(wsteps):
@@ -479,9 +479,9 @@ def gen_request():
             fontsize=11, fontweight='bold', color=TEXT, fontfamily='monospace')
 
     auths = [
-        ('JWT Token', 'POST /auth/login -> Bearer eyJ...', ACCENT, 0.04),
-        ('API Key', 'Bearer hlr_a1b2c3... (permanent)', PURPLE, 0.36),
-        ('No Auth', 'AUTH_ENABLED=false', TEXT_DIM, 0.68),
+        ('JWT + MFA', 'HttpOnly cookie + TOTP', ACCENT, 0.04),
+        ('API Key', 'Bearer hlr_... (HMAC-SHA256)', PURPLE, 0.36),
+        ('Audit Log', 'Hash-chained tamper-evident', ORANGE, 0.68),
     ]
     for l, d, c, x in auths:
         box(ax, x, 0.04, 0.28, 0.10, '', color=c, alpha=0.1, lw=1.5)
