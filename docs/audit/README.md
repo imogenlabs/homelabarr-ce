@@ -34,5 +34,6 @@
 | R18 | Wiki + public docs surface audit | 9 | shipped |
 | R19 | Runtime contract + build-time hardening | 8 | shipped |
 | R20 | In-app secret material handling | 12 | shipped |
+| R21 | Error surface hygiene | 10 | shipped |
 
-**Total findings shipped to production: 230+**
+**Total findings shipped to production: 240+**
