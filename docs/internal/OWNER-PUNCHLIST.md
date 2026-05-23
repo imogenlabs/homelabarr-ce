@@ -62,11 +62,11 @@ Do **not** open R23. There are no code-side findings left. Everything below is o
 
 Source: 11 duplicate ZAP issues (#186, #187, #190–#197, #200). Workflow misconfiguration, not a security backlog.
 
-- [ ] **Close duplicate issues (15 min).** Close #186, #187, #190–#197 as dupes of #200. Leave #200 open as the tracker.
-- [ ] **Check /api/applications for private IP (1 min).** Open it logged in, look at the JSON. If it's a template example IP, suppress in `.zap/rules.tsv`. If it's a real backend IP, scrub it.
-- [ ] **nginx headers on static paths (30 min).** Apply security header middleware to `/.well-known/`, `analytics.js`, `robots.txt`, `sitemap.xml`, `favicon.svg` paths — they currently skip the location blocks that add CSP/HSTS/etc.
-- [ ] **ZAP suppressions (15 min).** Add to `.zap/rules.tsv`: suppress 10109 (Modern Web App), 10050 (Retrieved from Cache), 10094 (Base64 Disclosure), 10044 (Big Redirect on `/.well-known/change-password`). One-line reason per suppression.
-- [ ] **Fix ZAP workflow (Sprint 2).** Reconfigure to write report to artifact only, stop opening a new GitHub issue per run. The issue-per-run pattern is broken by design.
+- [x] **Close duplicate issues.** #186, #187, #190–#197, #201 closed as dupes of #200. (`1a02b57`, 2026-05-23)
+- [x] **Check /api/applications for private IP.** `10.13.13.0` is WireGuard template default subnet — not a real backend IP. Suppressed in `.zap/rules.tsv`.
+- [x] **nginx headers on static paths.** HSTS + X-Content-Type-Options + X-Frame-Options added to robots.txt, humans.txt, analytics.js, .well-known/ paths.
+- [x] **ZAP suppressions.** Added 10109, 10050, 10094, 10044, 10024 to `.zap/rules.tsv` with reasons.
+- [x] **Fix ZAP workflow.** `allow_issue_writing: false` + removed `issues: write` permission. Reports go to artifacts only.
 
 ---
 
