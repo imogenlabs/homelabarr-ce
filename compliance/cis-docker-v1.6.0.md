@@ -18,7 +18,7 @@ Alpine-based images. Build tools (`python3`, `make`, `g++`) installed only in bu
 Evidence: `evidence/CIS-4.3-package-diff.txt`
 
 ### 4.4 Ensure images are scanned for vulnerabilities [Met]
-Trivy scan on pushed digest in CI. Semgrep + CodeQL on source. OSV-Scanner on lockfile. Dependabot weekly.
+Trivy scan on pushed digest in CI. Semgrep + CodeQL on source. OSV-Scanner on lockfile. Dependabot daily/weekly per [dependency-update-policy](../docs/governance/dependency-update-policy.md). SLA breach escalates to [PB-11](../docs/ir/playbooks/PB-11-security-update-past-sla.md); disclosed vulns handled per [PB-08](../docs/ir/playbooks/PB-08-disclosed-vuln.md).
 Evidence: `evidence/CIS-4.4-trivy.txt`
 
 ### 4.5 Ensure Content trust for Docker is enabled [Partial]
