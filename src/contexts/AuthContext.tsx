@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { apiFetch } from '../lib/api';
+import { apiFetch, apiFetchRaw } from '../lib/api';
 
 export interface User {
   id: string;
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await apiFetch('/auth/me');
+      const res = await apiFetchRaw('/auth/me');
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
