@@ -217,7 +217,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
 ## Security & Threat Model
 
-For the full threat model (STRIDE analysis, attack trees, trust boundaries, data flow diagram), see [docs/threat-model/](docs/threat-model/README.md).
+For incident response, see [docs/ir/](docs/ir/README.md). For the full threat model (STRIDE analysis, attack trees, trust boundaries, data flow diagram), see [docs/threat-model/](docs/threat-model/README.md).
 
 We scan this project with four different tools, automatically, on every push:
 

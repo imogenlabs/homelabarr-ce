@@ -255,3 +255,16 @@ curl -fsS https://<host>/api/health
 ## Acknowledgments
 
 We appreciate responsible disclosure and will credit security researchers who report valid vulnerabilities.
+
+## Reporting a Vulnerability
+
+Email: michael@mjashley.com
+Response SLO: acknowledge within 24 hours, status update within 7 days.
+
+## Disclosure Policy
+
+90-day coordinated disclosure window from acknowledgment. Earlier if patch ships sooner. Coordinated disclosure preferred. See [docs/ir/playbooks/PB-08-disclosed-vuln.md](docs/ir/playbooks/PB-08-disclosed-vuln.md).
+
+## Active Incident Response
+
+For active exploitation, see [docs/ir/00-first-60-seconds.md](docs/ir/00-first-60-seconds.md).

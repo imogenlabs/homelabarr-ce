@@ -1,5 +1,8 @@
 # Security Audit Rounds
 
+> For incident response, see [docs/ir/](../ir/README.md).
+
+
 | Round | Topic | Findings | Status |
 |-------|-------|----------|--------|
 | R1 | Server auth, defaults, headers | 32 | shipped |
@@ -23,5 +26,6 @@
 | R11.5 | Evidence script gaps | 2 | shipped |
 | R12 | Chaos engineering | 8 experiments | shipped |
 | R13 | Threat-model formalization | 9 files | shipped |
+| R14 | Incident response runbook | 10 playbooks | shipped |
 
 **Total findings shipped to production: 175+**
