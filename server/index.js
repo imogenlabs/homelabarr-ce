@@ -42,7 +42,7 @@ function getRequestMeta(req) {
 const envConfig = EnvironmentManager.getConfiguration();
 const isDevelopment = envConfig.environment === 'development';
 const authEnabled = envConfig.authEnabled;
-const networkConfig = NetworkManager.getNetworkConfiguration();
+const networkConfig = NetworkManager.getConfiguration();
 
 const logger = {
   info: (message, ...args) => console.log(`ℹ️  ${message}`, ...args),
