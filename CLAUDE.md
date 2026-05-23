@@ -28,8 +28,8 @@ All three tags currently point to the same digest.
 ## Stack
 
 - **Backend**: Node.js 24 + Express 4 + better-sqlite3-multiple-ciphers (SQLCipher)
-- **Frontend**: React 19 + Vite + Tailwind 3 + shadcn/ui
-- **Container**: nginx:1.27-alpine (frontend), node:24-alpine (backend), dumb-init as PID 1
+- **Frontend**: React 19 + Vite + Tailwind 4 + shadcn/ui
+- **Container**: nginx:1.31-alpine (frontend), node:24-alpine (backend), dumb-init as PID 1
 - **Auth**: JWT (HttpOnly cookies) + TOTP MFA + bcrypt cost 12 + CSRF double-submit
 - **Docker**: linuxserver/socket-proxy sidecar (EXEC=0, BUILD=0), cap_drop ALL, read_only rootfs
 
