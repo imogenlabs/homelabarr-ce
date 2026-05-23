@@ -70,4 +70,30 @@ fi
   done
 } > "$OUT/R9.6-route-gating.txt"
 
+# --- R6 audit log chain integrity ---
+if command -v docker >/dev/null 2>&1 && docker ps -q --filter "name=$BACKEND" | grep -q .; then
+  { hdr "R6 audit chain integrity (last 50 events)"
+    docker exec "$BACKEND" sh -c 'tail -n 50 /app/server/activity-data/audit-*.jsonl 2>/dev/null || echo "no audit JSONL"'
+  } > "$OUT/R6-audit-chain.txt"
+fi
+
+# --- R5 cosign verify on latest image ---
+{ hdr "R5 cosign verify"
+  if command -v docker >/dev/null 2>&1; then
+    IMG=$(docker inspect "$BACKEND" --format '{{.Config.Image}}' 2>/dev/null || echo "unknown")
+    echo "Image: $IMG"
+    echo
+    if command -v cosign >/dev/null 2>&1; then
+      cosign verify \
+        --certificate-identity-regexp 'smashingtags' \
+        --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+        "$IMG" 2>&1 | head -40
+    else
+      echo "cosign not installed on this runner"
+    fi
+  else
+    echo "Docker not available"
+  fi
+} > "$OUT/R5-cosign.txt"
+
 echo "Evidence collected to $OUT/ at $TS ($HEAD)"
