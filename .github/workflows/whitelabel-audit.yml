@@ -40,4 +40,4 @@ jobs:
             be superseded by a new one on the next main push.
           branch: chore/regenerate-whitelabel-audit
           delete-branch: true
-          add-paths: wiki/docs/guides/_white-label-audit.md
+          add-paths: docs/internal/_white-label-audit.md
