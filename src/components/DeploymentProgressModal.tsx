@@ -274,7 +274,7 @@ export function DeploymentProgressModal({
           <div className="space-y-4">
             {steps.map((step) => (
               <div key={step.step} className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-0.5">
+                <div className="shrink-0 mt-0.5">
                   {getStepIcon(step)}
                 </div>
                 <div className="flex-1 min-w-0">

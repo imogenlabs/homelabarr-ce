@@ -698,8 +698,8 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
-          <div className="flex items-center gap-2 md:gap-3 order-1 md:order-none">
-            <img src="/mascot.webp" srcSet="/mascot.webp 1x, /mascot-2x.webp 2x" alt="" className="h-8 w-8 md:h-10 md:w-10 object-contain flex-shrink-0" />
+          <div className="flex items-center gap-2 md:gap-3 order-1 md:order-0">
+            <img src="/mascot.webp" srcSet="/mascot.webp 1x, /mascot-2x.webp 2x" alt="" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
             <h1 className="text-xl md:text-2xl font-bold text-foreground">HomelabARR</h1>
             {/* Connection status indicator */}
             {!catalogLoading && (
@@ -711,7 +711,7 @@ export default function App() {
               </span>
             )}
           </div>
-          <div className="flex items-center space-x-2 md:space-x-4 order-2 md:order-none">
+          <div className="flex items-center space-x-2 md:space-x-4 order-2 md:order-0">
             <Button
               variant="ghost"
               size="icon"

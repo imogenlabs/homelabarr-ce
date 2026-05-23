@@ -86,7 +86,7 @@ export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCar
         </div>
       </CardHeader>
 
-      <CardContent className="flex-grow pb-3">
+      <CardContent className="grow pb-3">
         {showDescription && (
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
             {app.description}
