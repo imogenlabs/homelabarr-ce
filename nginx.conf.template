@@ -100,9 +100,13 @@ server {
         add_header X-XSS-Protection "0" always;
     }
 
-    # Honey endpoints — return 404 for common scanner probes, log for IOC detection
+    # Honey: CMS scanner probes — proxy to backend so honey.js emits audit events
     location ~* ^/(wp-login\.php|wp-admin|xmlrpc\.php|phpmyadmin|phpMyAdmin|admin\.php|administrator|manager/html|shell\.php|cmd\.jsp|c99\.php) {
-        return 404;
+        resolver 127.0.0.11 valid=10s ipv6=off;
+        set $backend ${BACKEND_URL};
+        proxy_pass $backend;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Honey-Edge "cms-scanner";
     }
 
     location ^~ /.well-known/ {
@@ -111,9 +115,12 @@ server {
         allow all;
     }
 
+    # Honey: dotfile probes — proxy to backend so honey.js emits audit events
     location ~ /\. {
-        deny all;
-        access_log off;
-        log_not_found off;
+        resolver 127.0.0.11 valid=10s ipv6=off;
+        set $backend ${BACKEND_URL};
+        proxy_pass $backend;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Honey-Edge "dotfile";
     }
 }
