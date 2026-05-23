@@ -36,13 +36,13 @@ This is whatever URL you use to access CE in a browser:
 
 | Your setup | Example URL |
 |---|---|
-| Local network | `http://192.168.1.100:8084` |
+| Local network | `http://192.0.2.100:8084` |
 | Tailscale | `http://100.x.x.x:8084` |
 | Traefik + domain | `https://homelabarr.yourdomain.com` |
 | Cloudflare Tunnel | `https://homelabarr.yourdomain.com` |
 
 !!! warning "Local IPs only work on the same network"
-    If you're away from home (on cellular or a different WiFi), a local IP like `192.168.1.100` won't work. You'll need Tailscale, a Cloudflare Tunnel, or a public domain pointed at your server for remote access.
+    If you're away from home (on cellular or a different WiFi), a local IP like `192.0.2.100` won't work. You'll need Tailscale, a Cloudflare Tunnel, or a public domain pointed at your server for remote access.
 
 ### 2. Your API Key
 

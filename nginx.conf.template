@@ -60,7 +60,7 @@ server {
 
     # robots.txt — explicit bot directives
     location = /robots.txt {
-        add_header Content-Type text/plain always;
+        default_type text/plain;
         try_files /robots.txt =404;
     }
 
@@ -71,7 +71,7 @@ server {
 
     # humans.txt — team credit
     location = /humans.txt {
-        add_header Content-Type text/plain always;
+        default_type text/plain;
         try_files /humans.txt =404;
     }
 

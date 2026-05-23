@@ -55,11 +55,11 @@ The 100+ app templates live in the `apps/` folder inside the repo. Without it, t
 `CORS_ORIGIN` must match **exactly** how you access the dashboard in your browser — same protocol, IP or hostname, and port.
 
 ```bash
-export CORS_ORIGIN=http://192.168.1.100:8084
+export CORS_ORIGIN=http://192.0.2.100:8084
 docker compose -f homelabarr.yml up -d
 ```
 
-Common mistake: `CORS_ORIGIN=http://server-hostname:8084` but you browse to `http://192.168.1.100:8084`. They must be identical.
+Common mistake: `CORS_ORIGIN=http://server-hostname:8084` but you browse to `http://192.0.2.100:8084`. They must be identical.
 
 ### "Port already in use"
 

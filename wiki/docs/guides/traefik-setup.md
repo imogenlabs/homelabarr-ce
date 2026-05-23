@@ -6,7 +6,7 @@ This guide is for when you're ready to go from `http://server-ip:PORT` to `https
     Traefik is completely optional. If you just want to deploy apps and access them by IP and port, skip this entirely and come back when you want custom domains.
 
 !!! warning "Exposing services to the internet"
-    If you make apps accessible outside your home network, use TLS (HTTPS) and enable authentication. Traefik + Authelia mode is the recommended setup for any internet-facing app. Don't expose an unauthenticated dashboard to the public internet.
+    If you make apps accessible outside your home network, use TLS (HTTPS) and enable authentication. Traefik + Authelia mode is the recommended setup for any internet-facing app. Don't expose an unauthenticated dashboard to the public internet. See [Security](security.md) for the headers nginx adds automatically.
 
 ---
 
