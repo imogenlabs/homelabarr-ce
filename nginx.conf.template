@@ -15,7 +15,7 @@ server {
 
     # Security headers — must be repeated in any location block that uses add_header
     # (nginx location-level add_header overrides server-level)
-    set $csp "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self' data:; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; upgrade-insecure-requests; report-to csp-endpoint; report-uri /api/csp-report";
+    set $csp "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; upgrade-insecure-requests; report-to csp-endpoint; report-uri /api/csp-report";
 
     location /icons/ {
         expires 1h;
