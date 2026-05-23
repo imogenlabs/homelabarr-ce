@@ -11,3 +11,4 @@
 | Docker Content Trust (DCT) not enabled | cosign provides equivalent attestation | ACCEPTED | R5 cosign keyless signing |
 | DR drill not yet exercised | R8 specced; no recorded execution | DEFERRED (14-day SLA) | R8 backup.sh + restore-drill.sh exist |
 | Cross-tenant isolation N/A | Single-tenant by design | N/A | — |
+| No public crawl surface / sitemap | Demo uses `noindex, nofollow`; no public pages to index | ACCEPTED | R17 robots.txt disallows /api/ and /admin/; meta robots blocks indexing |
