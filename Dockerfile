@@ -30,11 +30,14 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:8080/health || exit 1
 
-LABEL org.opencontainers.image.title="HomelabARR CE Frontend"
+LABEL org.opencontainers.image.title="homelabarr-ce-frontend"
 LABEL org.opencontainers.image.description="React frontend for HomelabARR CE container management"
-LABEL org.opencontainers.image.vendor="Imogen Labs"
-LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"
 LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"
+LABEL org.opencontainers.image.documentation="https://github.com/smashingtags/homelabarr-ce/blob/main/README.md"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Imogen Labs"
+LABEL io.homelabarr.security.contact="https://github.com/smashingtags/homelabarr-ce/security/policy"
 
 USER homelabarr
 

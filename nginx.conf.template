@@ -53,6 +53,28 @@ server {
         add_header Content-Type text/plain always;
     }
 
+    # Legacy /security.txt → redirect to well-known (RFC 9116 §3)
+    location = /security.txt {
+        return 301 /.well-known/security.txt;
+    }
+
+    # robots.txt — explicit bot directives
+    location = /robots.txt {
+        add_header Content-Type text/plain always;
+        try_files /robots.txt =404;
+    }
+
+    # RFC 8615 + RFC 8959 — password managers deep-link here
+    location = /.well-known/change-password {
+        return 302 /settings;
+    }
+
+    # humans.txt — team credit
+    location = /humans.txt {
+        add_header Content-Type text/plain always;
+        try_files /humans.txt =404;
+    }
+
     # Analytics proxy
     location = /analytics.js {
         proxy_pass https://analytics.mjashley.com/script.js;
