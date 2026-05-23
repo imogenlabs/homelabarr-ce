@@ -24,9 +24,16 @@ secrets:
     file: ${SQLCIPHER_KEY_FILE:-./secrets/sqlcipher_key}
 
 services:
+  # Auto-updates: this compose does not opt in to Watchtower by default.
+  # If you run Watchtower in opt-in (LABEL_ENABLE=true) mode and want
+  # auto-pulls on this stack, add to each service:
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=true
+  # We recommend opt-in mode plus signature verification (see SECURITY.md).
+
   # Docker socket proxy — allow-listed API access only, no EXEC/BUILD
   socket-proxy:
-    image: lscr.io/linuxserver/socket-proxy:latest
+    image: lscr.io/linuxserver/socket-proxy:latest@sha256:a1740f01925d07c4ed6e73ea21ec798cff28e0a811b3c1672617b95eee76d79c
     container_name: homelabarr-socket-proxy
     restart: unless-stopped
     environment:
@@ -129,6 +136,9 @@ services:
       - SECRET_ROOT=/run/secrets
       - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-15m}
       - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-14d}
+      # BIND_ADDRESS is intentionally 0.0.0.0 — binds inside the container's
+      # network namespace only. Reachable from host only via Docker bridge.
+      # Do NOT use network_mode: host with this binding.
       - BIND_ADDRESS=0.0.0.0
       - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
       - ALERT_EVENTS=${ALERT_EVENTS:-login.locked,audit.chain.broken,session.refresh.fail}
