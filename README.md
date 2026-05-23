@@ -27,11 +27,11 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql">
-        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL">
+    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml">
+        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Docker Build">
     </a>
-    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml">
-        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml/badge.svg" alt="Docker Build">
+    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml">
+        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Security Audit">
     </a>
 </p>
 
@@ -49,17 +49,11 @@
 
 ---
 
-## Project Status
-
-> **Community-maintained.** HomelabARR CE is stable and actively used. New features go through the `dev` branch → `staging` → `main`. PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
 ## What is HomelabARR?
 
 You know how setting up self-hosted apps usually means Googling Docker Compose files, copying YAML, editing ports, and hoping it works? HomelabARR skips all of that.
 
-It's a dashboard. You open it, you see a catalog of 100+ apps, you click **Deploy**, and the app is running. That's it.
+It's a dashboard. You open it, you see 116 apps, you click **Deploy**, and the app is running. That's it.
 
 Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're all in there, ready to go.
 
@@ -75,20 +69,20 @@ Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're 
 
 Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)
 
-Login: `admin` / `admin`. Browse apps, click around. Nothing you do in the demo touches a real server.
+Log in with `admin` / `admin`. Browse apps, click around. Nothing you do in the demo touches a real server.
 
 ---
 
 ## Install It (5 minutes)
 
-You need a Linux machine with Docker installed. You don't need to write Compose files, but you do need basic shell access to your server.
+You need a Linux machine with Docker installed.
 
 ```bash
-# 1. Grab the code (cloning to /opt/homelabarr is recommended — it matches the default template path)
+# 1. Clone
 git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
-# 2. Set three things (copy-paste these exactly)
+# 2. Set three things
 export JWT_SECRET=$(openssl rand -base64 32)
 export DOCKER_GID=$(getent group docker | cut -d: -f3)
 export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
@@ -97,158 +91,88 @@ export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
 docker compose -f homelabarr.yml up -d
 ```
 
-Open `http://your-server-ip:8084` in a browser. Log in with `admin` / `admin`. **Change the password right away** — or set `DEFAULT_ADMIN_PASSWORD` in your `.env` before first start if this won't be a throwaway local install.
+Open `http://your-server-ip:8084`. Log in with `admin` / `admin`. **Change the password immediately.**
 
-That's the whole install.
+> **For a permanent setup**, move those exports into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
 
-> 💾 **For a permanent setup**, move those exports into a `.env` file in the same directory as `homelabarr.yml` instead of re-running them on every reboot. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
+> **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first.
 
-> 📁 **Cloned somewhere other than `/opt/homelabarr`?** Set `CLI_BRIDGE_HOST_PATH` in your `.env` to match your clone path, or the app catalog won't load.
-
-> 💡 **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first. Takes about a minute.
-
-> ⚠️ **Running in a Proxmox LXC?** You might need to add `lxc.apparmor.profile: unconfined` to the container config. See the [FAQ](https://wiki.homelabarr.com/guides/faq/) for details.
-
-Want to build from source instead? Check the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).
+Want to build from source? See the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).
 
 ---
 
 ## What You Get
 
-- **100+ apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
-- **Three ways to deploy.** Just IP:port, or with Traefik reverse proxy for SSL, or Traefik + Authelia for 2FA on top.
-- **Manage running containers.** Start, stop, restart, remove, view logs — all from the dashboard.
-- **Port Manager.** See every port in use across all your containers. Catch conflicts before they happen.
-- **Add your own apps.** Drop a YAML file in `apps/myapps/` and it shows up in the catalog automatically.
-- **Secure by default.** Login required, API keys for automation, rate limiting, security headers.
+- **116 apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
+- **Three deployment modes.** Just IP:port, Traefik for SSL, or Traefik + Authelia for 2FA.
+- **Manage running containers.** Start, stop, restart, remove, view logs.
+- **Port Manager.** See every port in use across your stack.
+- **Add your own apps.** Drop a YAML file in `apps/myapps/`.
 - **Dark mode.** Obviously.
 - **Mobile app.** iOS and Android — manage your homelab from the couch.
-- **CLI tool.** If you'd rather type than click, there's a terminal interface too.
 
 ---
 
-## What Apps Are Included?
+## App Catalog
 
-| Category | # | Some highlights |
-|----------|---|-----------------|
-| 🤖 AI & Machine Learning | 14 | Ollama, Open WebUI, ComfyUI, Stable Diffusion, LocalAI |
-| 🎬 Media Servers | 5 | Plex, Jellyfin, Emby |
-| 📚 Media Management | 16 | Sonarr, Radarr, Lidarr, Bazarr, Prowlarr |
-| ⬇️ Downloads | 14 | qBittorrent, SABnzbd, NZBGet, Deluge, Transmission |
-| 📊 Monitoring | 9 | Grafana, Netdata, Uptime Kuma, Tautulli |
-| 🌐 Self-hosted | 37 | Nextcloud, Vaultwarden, Immich, Home Assistant, n8n |
-| ⚙️ System | 13 | Portainer, Dozzle, Watchtower, Traefik |
-| 🖥️ Virtual Desktops | 10 | Kasm Workspaces, Firefox, Chrome, Tor Browser |
-| 🎞️ Transcoding | 5 | Tdarr, Handbrake, MakeMKV |
-| 💾 Backup | 3 | Duplicati, Restic |
-| 📁 My Apps | — | Whatever you add |
+| Category | # | Highlights |
+|----------|---|------------|
+| AI & Machine Learning | 14 | Ollama, Open WebUI, ComfyUI, Stable Diffusion, LocalAI |
+| Media Servers | 5 | Plex, Jellyfin, Emby |
+| Media Management | 15 | Sonarr, Radarr, Lidarr, Bazarr, Prowlarr |
+| Downloads | 13 | qBittorrent, SABnzbd, NZBGet, Deluge, Transmission |
+| Monitoring | 6 | Grafana, Netdata, Uptime Kuma, Tautulli |
+| Self-hosted | 34 | Nextcloud, Vaultwarden, Immich, Home Assistant, n8n |
+| System | 12 | Portainer, Dozzle, Watchtower, Traefik |
+| Virtual Desktops | 10 | Kasm Workspaces, Firefox, Chrome, Tor Browser |
+| Transcoding | 4 | Tdarr, Handbrake, MakeMKV |
+| Backup | 3 | Duplicati, Restic |
+| My Apps | — | Whatever you add |
 
-Every template is just a Docker Compose YAML file in `apps/<category>/`. You can read them, edit them, or write your own.
+Every template is a Docker Compose YAML file in `apps/<category>/`. Read them, edit them, or write your own.
 
 ---
 
-## What Does It Look Like Inside?
+## Architecture
 
-Two containers. That's the whole thing.
+Three containers. That's the whole stack.
 
-| Piece | What it does | Port |
-|-------|-------------|------|
-| **Frontend** | The dashboard you see in your browser. React app served by nginx. | 8084 |
-| **Backend** | Reads app templates, talks to Docker, handles login. Node.js + Express. | 8092 |
-
-The frontend sends API requests to the backend. The backend talks to the Docker socket to start and stop containers. Simple.
+| Service | What it does | Port |
+|---------|-------------|------|
+| **Frontend** | React dashboard served by nginx. What you see in your browser. | 8084 |
+| **Backend** | Reads app templates, talks to Docker via socket proxy, handles auth. Node.js + Express. | 8092 |
+| **Socket Proxy** | Mediates Docker API access. `EXEC=0`, `BUILD=0`, `cap_drop: ALL`, read-only. | internal |
 
 <p align="center">
-    <img src="wiki/docs/img/diagrams/system-architecture.png" alt="How it works" width="700">
+    <img src="wiki/docs/img/diagrams/system-architecture.png" alt="System Architecture" width="700">
 </p>
 
 Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)
 
 ---
 
-## Settings You Might Want to Change
+## Security
 
-| Setting | Do you need it? | What it does |
-|---------|----------------|-------------|
-| `JWT_SECRET` | **Yes** | Keeps your login secure. The install command generates one for you. |
-| `DOCKER_GID` | **Yes** | Tells the backend which group can talk to Docker. The install command figures this out. |
-| `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. If login won't work, this is probably wrong. |
-| `DEFAULT_ADMIN_PASSWORD` | Optional | Change the default password (it's `admin` if you don't set this). |
-| `TZ` | Optional | Your timezone. Defaults to `America/New_York`. |
+22-round security audit. 241+ findings shipped. [Full audit trail →](docs/audit/README.md)
 
-All the config options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)
+| Layer | What ships |
+|-------|-----------|
+| **Auth** | JWT (HttpOnly cookies, 15-min TTL) + TOTP MFA + bcrypt cost 12 + CSRF double-submit |
+| **API keys** | HMAC-SHA256 hashed, `hlr_` prefix, HKDF-derived subkey isolation |
+| **Rate limiting** | 25 login attempts / 15 min per IP, account lockout at 15 failures, 100 req/min global |
+| **Container hardening** | `cap_drop: ALL`, `read_only: true`, `no-new-privileges`, dumb-init PID 1, AppArmor |
+| **Base images** | All pinned by `@sha256:` digest. cosign keyless signing + SBOM on every push. |
+| **Encryption at rest** | SQLCipher AES-256 on all databases. Key rotation scripts included. |
+| **Audit log** | Hash-chained tamper-evident log with daily rotation |
+| **Headers** | CSP, HSTS (2yr + preload), COOP, CORP, Permissions-Policy, X-Frame-Options DENY |
+| **Scanning** | Trivy on every image push, Dependabot daily, gitleaks on every commit |
+| **Disclosure** | [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) (RFC 9116) |
 
----
+For the threat model (STRIDE analysis, trust boundaries, attack trees): [docs/threat-model/](docs/threat-model/README.md)
+For incident response (11 playbooks): [docs/ir/](docs/ir/README.md)
+For compliance posture (CIS Docker, NIST CSF, OWASP ASVS L2): [compliance/](compliance/)
 
-## Repo Structure
-
-```
-homelabarr-ce/
-├── src/              # React frontend (Vite + shadcn/ui)
-├── server/           # Node.js + Express backend
-├── apps/             # App templates (one YAML per app, organized by category)
-│   ├── ai/           # AI & machine learning tools
-│   ├── downloads/    # Download clients
-│   ├── media-servers/
-│   ├── self-hosted/
-│   ├── myapps/       # ← your custom templates go here
-│   └── ...
-├── wiki/             # Source for wiki.homelabarr.com (MkDocs)
-├── .github/          # CI workflows, issue/PR templates, security policy
-├── traefik/          # Example Traefik config for reverse proxy setup
-├── homelabarr.yml    # The Docker Compose file you run
-└── nginx.conf        # nginx config baked into the frontend image
-```
-
----
-
-## Want to Hack on It?
-
-```bash
-npm install
-npm run dev       # Runs the dashboard on :5173 and the API on :8092
-npm run build     # Build for production
-npm test          # Run the test suite
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
-
----
-
-## Security & Threat Model
-
-For incident response, see [docs/ir/](docs/ir/README.md). For the full threat model (STRIDE analysis, attack trees, trust boundaries, data flow diagram), see [docs/threat-model/](docs/threat-model/README.md).
-
-We scan this project with four different tools, automatically, on every push:
-
-| Tool | What it checks |
-|------|---------------|
-| [CodeQL](https://github.com/smashingtags/homelabarr-ce/security/code-scanning) | The actual code — injection bugs, XSS, that kind of thing |
-| [Snyk](https://snyk.io/test/github/smashingtags/homelabarr-ce) | Every npm package and Docker base image for known vulnerabilities |
-| [Dependabot](https://github.com/smashingtags/homelabarr-ce/security/dependabot) | Outdated packages that have security patches available |
-| [Docker Scout](https://hub.docker.com/r/smashingtags/homelabarr-frontend) | The finished container images, plus supply chain attestations |
-
-<p align="center">
-    <img src="docs/images/scout-frontend-A.png" alt="Frontend Scout Score A" width="500">
-</p>
-<p align="center"><em>Frontend image — Scout Score A</em></p>
-
-Containers run as a non-root user with all Linux capabilities dropped. Full security headers (CSP, HSTS, COOP, CORP, Permissions-Policy). Login is throttled to 5 attempts per 15 minutes per IP+username. Global rate limit is 100 req/min per IP. All identifiers and tokens use `crypto.randomBytes`.
-
-### How Credentials Are Stored
-
-Your passwords never touch disk in plain text.
-
-| What | How it's protected |
-|------|-------------------|
-| **Passwords** | Hashed with bcrypt (12 rounds). Even if someone gets the file, they get `$2a$12$xK9...`, not your password. |
-| **JWT tokens** | Signed with your `JWT_SECRET` env var. Expire after 24 hours. |
-| **API keys** | Generated with `crypto.randomBytes(32)`, HMAC-SHA256 hashed before storage. Only the key prefix is stored for lookup — the full key is shown once at creation. |
-| **Sessions** | Random IDs via `crypto.randomBytes(12)`. Stored server-side, invalidated on logout. |
-
-User accounts, API keys, and sessions are stored in `/app/server/config/` inside the backend container. The `homelabarr-config` Docker volume persists this data across container updates. If you're running behind Traefik + Authelia (which the templates include), you get an additional layer of authentication before anyone even reaches the login page.
-
-**Important:** `JWT_SECRET` is required (minimum 32 characters) — the server will not start without it. Generate one with `openssl rand -base64 32`.
+**`JWT_SECRET` is required** (minimum 32 characters) — the server will not start without it. Generate one with `openssl rand -base64 32`.
 
 Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECURITY.md).
 
@@ -256,17 +180,69 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 ## Production Deployment Checklist
 
-1. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
-2. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
-3. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/smashingtags/homelabarr-backend:<tag>`
-4. **Start the stack:** `docker compose up -d`
-5. **Encrypt the database** (first install only): `make encrypt-db`
-6. **Verify health:** `curl -fsS https://<host>/api/health`
+1. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
+2. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/smashingtags/homelabarr-backend:<tag>`
+3. **Start the stack:** `docker compose -f homelabarr.yml up -d`
+4. **Encrypt the database** (first install only): `make encrypt-db`
+5. **Verify health:** `curl -fsS https://<host>/api/health`
+6. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
 7. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
-8. **fail2ban:** Copy `docs/fail2ban/*.conf` to `/etc/fail2ban/filter.d/` and `/etc/fail2ban/jail.d/`, restart fail2ban
-9. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
-10. **DR drill:** Run `bash scripts/restore-drill.sh` within the first week
-11. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
+8. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
+9. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
+
+---
+
+## Settings
+
+| Setting | Required | What it does |
+|---------|----------|-------------|
+| `JWT_SECRET` | **Yes** | Signs login sessions. Generate with `openssl rand -base64 32`. |
+| `DOCKER_GID` | **Yes** | Docker group ID on your host. |
+| `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. |
+| `DEFAULT_ADMIN_PASSWORD` | Optional | Default is `admin` — change it. |
+| `TZ` | Optional | Your timezone. Defaults to `America/New_York`. |
+
+All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)
+
+---
+
+## Repo Structure
+
+```
+homelabarr-ce/
+├── src/              # React frontend (Vite + Tailwind 4 + shadcn/ui)
+├── server/           # Node.js + Express backend (12 route modules)
+│   ├── index.js      # App setup + middleware (262 lines)
+│   ├── routes/       # auth, containers, deploy, health, ports, etc.
+│   ├── auth.js       # JWT dual-key + MFA + API keys
+│   └── audit.js      # Hash-chained tamper-evident log
+├── apps/             # App templates (one YAML per app)
+│   ├── ai/           # AI & machine learning
+│   ├── downloads/    # Download clients
+│   ├── media-servers/
+│   ├── self-hosted/
+│   ├── myapps/       # Your custom templates
+│   └── ...
+├── wiki/             # Source for wiki.homelabarr.com (MkDocs)
+├── docs/             # Audit trail, threat model, IR runbook, governance
+├── compliance/       # CIS Docker, NIST CSF, OWASP ASVS binders
+├── .github/          # CI workflows, security policy
+├── homelabarr.yml    # Production Docker Compose
+└── nginx.conf.template  # nginx config (envsubst-rendered at container start)
+```
+
+---
+
+## Development
+
+```bash
+npm install
+npm run dev       # Dashboard on :5173 + API on :8092
+npm run build     # Production build
+npm test          # Test suite
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
 ---
 
@@ -274,13 +250,14 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 | | |
 |---|---|
-| 🌐 **Website** | [homelabarr.com](https://homelabarr.com) |
-| 📖 **Docs** | [wiki.homelabarr.com](https://wiki.homelabarr.com) |
-| 🎮 **Demo** | [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin |
-| 💬 **Discord** | [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) |
-| 📣 **Reddit** | [r/homelabarr](https://www.reddit.com/r/homelabarr/) |
-| 🏢 **Company** | [imogenlabs.ai](https://imogenlabs.ai) |
-| 👤 **Developer** | [mjashley.com](https://mjashley.com) |
+| **Website** | [homelabarr.com](https://homelabarr.com) |
+| **Docs** | [wiki.homelabarr.com](https://wiki.homelabarr.com) |
+| **Demo** | [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin |
+| **Security** | [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) |
+| **Discord** | [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) |
+| **Reddit** | [r/homelabarr](https://www.reddit.com/r/homelabarr/) |
+| **Company** | [imogenlabs.ai](https://imogenlabs.ai) |
+| **Developer** | [mjashley.com](https://mjashley.com) |
 
 ---
 
