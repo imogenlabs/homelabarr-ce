@@ -3,7 +3,7 @@
 # generate-whitelabel-audit.sh
 #
 # Greps the repo for every HomelabARR brand reference and writes a
-# structured markdown audit to wiki/docs/guides/_white-label-audit.md.
+# structured markdown audit to docs/internal/_white-label-audit.md.
 # Run on every push to main by .github/workflows/whitelabel-audit.yml,
 # which auto-commits the result.
 #
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT_FILE="$REPO_ROOT/wiki/docs/guides/_white-label-audit.md"
+OUT_FILE="$REPO_ROOT/docs/internal/_white-label-audit.md"
 TMP_MATCHES=$(mktemp)
 trap 'rm -f "$TMP_MATCHES"' EXIT
 
@@ -29,7 +29,7 @@ EXCLUDES=(
   ':(exclude)package-lock.json'
   ':(exclude)wiki/docs/guides/history.md'
   ':(exclude)wiki/docs/guides/white-label.md'
-  ':(exclude)wiki/docs/guides/_white-label-audit.md'
+  ':(exclude)docs/internal/_white-label-audit.md'
   ':(exclude)LICENSE'
   ':(exclude)scripts/generate-whitelabel-audit.sh'
 )
