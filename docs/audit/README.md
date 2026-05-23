@@ -36,6 +36,7 @@
 | R20 | In-app secret material handling | 12 | shipped |
 | R21 | Error surface hygiene | 10 | shipped |
 | R22 | Owner closeout & operating checklist | 0 (closeout) | shipped |
+| R22.5 | Unauthenticated route gating + login screen | 1 | shipped |
 
-**Total findings shipped to production: 240+**
-**Audit loop: CLOSED (22 rounds, 0 open code findings)**
+**Total findings shipped to production: 241+**
+**Audit loop: CLOSED (22 rounds + R22.5 post-closeout sub-round, 0 open code findings)**
