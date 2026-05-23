@@ -334,7 +334,7 @@ export default function deployRoutes({
       // Read template file
       const templatePath = path.join(process.cwd(), 'server', 'templates', `${appId}.yml`);
       if (!fs.existsSync(templatePath)) {
-        console.error('Template not found:', templatePath);
+        logger.error('Template not found:', templatePath);
         return res.status(404).json({
           error: 'Template not found',
           details: `No template file found for app: ${appId}`
@@ -342,10 +342,10 @@ export default function deployRoutes({
       }
 
       const templateContent = fs.readFileSync(templatePath, 'utf8');
-      console.log('Template content:', templateContent);
+      logger.info('Template content:', templateContent);
 
       const template = yaml.parse(templateContent);
-      console.log('Parsed template:', template);
+      logger.info('Parsed template:', template);
 
       // Replace variables in template
       const composerConfig = JSON.stringify(template)
@@ -353,7 +353,7 @@ export default function deployRoutes({
 
       // Parse back to object
       const finalConfig = JSON.parse(composerConfig);
-      console.log('Final config:', finalConfig);
+      logger.info('Final config:', finalConfig);
 
       // Check for port conflicts before deployment
       const [serviceName, serviceConfig] = Object.entries(finalConfig.services)[0];
@@ -403,7 +403,7 @@ export default function deployRoutes({
             // Create homelabarr network if it doesn't exist
             const homelabarrExists = networks.some(n => n.Name === 'homelabarr');
             if (!homelabarrExists) {
-              console.log('Creating homelabarr network');
+              logger.info('Creating homelabarr network');
               await docker.createNetwork({
                 Name: 'homelabarr',
                 Driver: 'bridge'
@@ -413,7 +413,7 @@ export default function deployRoutes({
             // Create proxy network if it doesn't exist (for templates that use it)
             const proxyExists = networks.some(n => n.Name === 'proxy');
             if (!proxyExists) {
-              console.log('Creating proxy network');
+              logger.info('Creating proxy network');
               await docker.createNetwork({
                 Name: 'proxy',
                 Driver: 'bridge'
@@ -423,7 +423,7 @@ export default function deployRoutes({
           'Setup networks'
         );
       } catch (error) {
-        console.error('Error checking/creating networks:', error);
+        logger.error('Error checking/creating networks:', error);
         throw new Error('Failed to setup networks');
       }
 
@@ -431,7 +431,7 @@ export default function deployRoutes({
       // const [serviceName, serviceConfig] = Object.entries(finalConfig.services)[0]; // Already declared above
 
       // Pull the image first
-      console.log('Pulling image:', serviceConfig.image);
+      logger.info('Pulling image:', serviceConfig.image);
       try {
         await dockerManager.executeWithRetry(
           async (docker) => {
@@ -443,7 +443,7 @@ export default function deployRoutes({
           'Pull image'
         );
       } catch (error) {
-        console.error('Error pulling image:', error);
+        logger.error('Error pulling image:', error);
         throw new Error(`Failed to pull image: ${error.message}`);
       }
 
@@ -489,9 +489,9 @@ export default function deployRoutes({
             fs.chmodSync(hostPath, 0o755);
           }
         } catch (error) {
-          console.error(`Error creating volume path ${hostPath}:`, error);
+          logger.error(`Error creating volume path ${hostPath}:`, error);
           // Don't fail deployment for volume creation issues
-          console.warn(`Warning: Could not create volume path ${hostPath}, using default`);
+          logger.warn(`Warning: Could not create volume path ${hostPath}, using default`);
         }
 
         return options ? `${hostPath}:${container}:${options}` : `${hostPath}:${container}`;
@@ -529,7 +529,7 @@ export default function deployRoutes({
         });
       }
 
-      console.log('Container config:', containerConfig);
+      logger.info('Container config:', containerConfig);
 
       // Create and start the container
       let container;
@@ -543,7 +543,7 @@ export default function deployRoutes({
             );
 
             if (existing) {
-              console.log('Container already exists, removing...');
+              logger.info('Container already exists, removing...');
               const existingContainer = docker.getContainer(existing.Id);
               if (existing.State === 'running') {
                 await existingContainer.stop();
@@ -552,13 +552,13 @@ export default function deployRoutes({
             }
 
             const newContainer = await docker.createContainer(containerConfig);
-            console.log('Container created:', newContainer.id);
+            logger.info('Container created:', newContainer.id);
             return newContainer;
           },
           'Create container'
         );
       } catch (error) {
-        console.error('Error creating container:', error);
+        logger.error('Error creating container:', error);
         throw new Error(`Failed to create container: ${error.message}`);
       }
 
@@ -569,17 +569,17 @@ export default function deployRoutes({
             if (finalConfig.networks && finalConfig.networks.proxy) {
               const proxyNetwork = docker.getNetwork('proxy');
               await proxyNetwork.connect({ Container: container.id });
-              console.log('Connected to proxy network');
+              logger.info('Connected to proxy network');
             }
 
             const homelabarrNetwork = docker.getNetwork('homelabarr');
             await homelabarrNetwork.connect({ Container: container.id });
-            console.log('Connected to homelabarr network');
+            logger.info('Connected to homelabarr network');
           },
           'Connect to networks'
         );
       } catch (networkError) {
-        console.warn('Network connection warning:', networkError.message);
+        logger.warn('Network connection warning:', networkError.message);
         // Don't fail deployment for network issues
       }
 
@@ -587,18 +587,18 @@ export default function deployRoutes({
         await dockerManager.executeWithRetry(
           async (docker) => {
             await container.start();
-            console.log('Container started');
+            logger.info('Container started');
           },
           'Start container'
         );
       } catch (error) {
-        console.error('Error starting container:', error);
+        logger.error('Error starting container:', error);
         // Try to get container logs for better error reporting
         try {
           const logs = await container.logs({ tail: 50, stdout: true, stderr: true });
-          console.error('Container logs:', logs.toString());
+          logger.error('Container logs:', logs.toString());
         } catch (logError) {
-          console.error('Could not fetch container logs:', logError);
+          logger.error('Could not fetch container logs:', logError);
         }
         throw new Error(`Failed to start container: ${error.message}`);
       }
