@@ -27,5 +27,6 @@
 | R12 | Chaos engineering | 8 experiments | shipped |
 | R13 | Threat-model formalization | 9 files | shipped |
 | R14 | Incident response runbook | 10 playbooks | shipped |
+| R15 | Dependency & supply-chain freshness governance | 7 | shipped |
 
-**Total findings shipped to production: 175+**
+**Total findings shipped to production: 182+**
