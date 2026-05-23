@@ -1,7 +1,7 @@
 # HomelabARR Backend Docker Image
 # Optimized Node.js backend with CLI Bridge integration
 
-FROM node:24-alpine3.23
+FROM node:24-alpine3.23@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14
 
 # Update Alpine packages to pick up latest security patches
 RUN apk upgrade --no-cache
@@ -22,6 +22,7 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repo
     apk add --no-cache \
     'docker-cli>29.2' \
     'docker-cli-compose>2.40' \
+    dumb-init \
     git \
     bash \
     curl \
@@ -98,5 +99,6 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.vendor="Imogen Labs"
 LABEL io.homelabarr.security.contact="https://github.com/smashingtags/homelabarr-ce/security/policy"
 
-# Start the server with startup script
+# PID 1 init — proper signal handling + zombie reaping
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["bash", "server/start.sh"]

@@ -38,6 +38,11 @@ docs
 wiki
 *.pdf
 
+# Security audit artifacts (not needed at runtime)
+chaos
+compliance
+pentest
+
 # Backup files
 *.backup
 *.bak
