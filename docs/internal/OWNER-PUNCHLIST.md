@@ -49,4 +49,15 @@ Do **not** open R23. There are no code-side findings left. Everything below is o
 
 ---
 
+## Shipped after closeout
+
+- [x] **OWN-03** — Dependabot triage. All 25 alerts dismissed or patched. Security tab at 0. `path-to-regexp` and `qs` overridden to patched versions. (`50d46fc`, 2026-05-23)
+- [x] **OWN-04** — INFRASTRUCTURE.md corrected. Docker socket description updated to match shipped compose (socket-proxy, not direct mount). (Earlier in session, 2026-05-23)
+- [x] **OWN-05** — LICENSE SPDX confirmed `MIT` in both Dockerfiles since R17. No change needed.
+- [x] **OWN-06** — nginx Content-Type fixed. Single `text/plain` on `/health`. Verified live.
+- [x] **OWN-08** — Argon2id ADR written. Decision: stay on bcrypt12. `docs/decisions/0001-password-hash.md`. (`ae78dea`, 2026-05-23)
+- [x] **R22.5** — Login screen gates unauthenticated visitors. React-side route guard, no mobile app changes. (`af9d6ce`, 2026-05-23)
+
+---
+
 **Bottom line:** Six starred items get you to "top decile open-source security posture for a project this size." Five hygiene items are optional. The audit loop itself is done.
