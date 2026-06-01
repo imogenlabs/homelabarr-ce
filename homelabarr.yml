@@ -86,7 +86,7 @@ services:
       retries: 3
 
   frontend:
-    image: ghcr.io/smashingtags/homelabarr-frontend:latest
+    image: ghcr.io/imogenlabs/homelabarr-frontend:latest
     container_name: homelabarr-frontend
     restart: unless-stopped
     user: "101:101"
@@ -120,7 +120,7 @@ services:
       - backend
 
   backend:
-    image: ghcr.io/smashingtags/homelabarr-backend:latest
+    image: ghcr.io/imogenlabs/homelabarr-backend:latest
     container_name: homelabarr-backend
     restart: unless-stopped
     user: "1001:1001"

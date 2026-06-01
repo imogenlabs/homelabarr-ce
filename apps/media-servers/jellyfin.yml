@@ -8,7 +8,7 @@ services:
       - "PUID=${ID}"
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
-      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:jellyfin|ghcr.io/smashingtags/homelabarr-mod-healthcheck:v1.0.0"
+      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:jellyfin|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"
       - "TP_THEME=${JELLYFINTHEME}"
       - "JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}"
     image: "${JELLYFINIMAGE}"

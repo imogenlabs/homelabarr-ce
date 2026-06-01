@@ -16,7 +16,7 @@ You'll need:
 - A favicon (32×32 or 64×64 PNG at minimum)
 - Basic comfort with a terminal and `sed`
 
-Start by **forking** the [homelabarr-ce repo](https://github.com/smashingtags/homelabarr-ce) on GitHub. All the work below happens in your fork.
+Start by **forking** the [homelabarr-ce repo](https://github.com/imogenlabs/homelabarr-ce) on GitHub. All the work below happens in your fork.
 
 Clone your fork locally:
 
@@ -249,4 +249,4 @@ If your fork has diverged from upstream or you've added new files, run `bash scr
 
 ## Something missing?
 
-If you're rebranding HomelabARR and hit something this guide didn't cover, [open an issue](https://github.com/smashingtags/homelabarr-ce/issues/new) — we'll add it here so the next person doesn't have to figure it out.
+If you're rebranding HomelabARR and hit something this guide didn't cover, [open an issue](https://github.com/imogenlabs/homelabarr-ce/issues/new) — we'll add it here so the next person doesn't have to figure it out.

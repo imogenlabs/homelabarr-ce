@@ -8,7 +8,7 @@ Only the latest release is fully supported. The previous minor version receives 
 
 | Version | Supported |
 |---------|-----------|
-| Latest release | Yes — see [Releases](https://github.com/smashingtags/homelabarr-ce/releases/latest) |
+| Latest release | Yes — see [Releases](https://github.com/imogenlabs/homelabarr-ce/releases/latest) |
 | Previous minor | Security fixes only |
 | Older versions | No |
 
@@ -141,16 +141,16 @@ To verify before pulling:
 
 ```
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:<tag>
+  ghcr.io/imogenlabs/homelabarr-backend:<tag>
 ```
 
 To extract the SBOM:
 
 ```
 docker buildx imagetools inspect \
-  ghcr.io/smashingtags/homelabarr-backend:<tag> \
+  ghcr.io/imogenlabs/homelabarr-backend:<tag> \
   --format '{{ json .SBOM.SPDX }}' > backend.spdx.json
 ```
 
@@ -204,7 +204,7 @@ Run `scripts/backup.sh` daily. It produces:
 
 ## Reporting Security Issues
 
-Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/smashingtags/homelabarr-ce/security/advisories/new).
+Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/imogenlabs/homelabarr-ce/security/advisories/new).
 
 ### Disclosure Timeline
 
@@ -237,13 +237,13 @@ Traefik, frontend, backend, and socket-proxy all on the same Docker host. The `h
 
 ### Procedure
 ```
-git clone https://github.com/smashingtags/homelabarr-ce && cd homelabarr-ce
+git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce
 git checkout v2.3.0
 mkdir -p ./secrets && chmod 700 ./secrets
 tar -xf <path-to-secrets-archive>
-cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:v2.3.0
+  ghcr.io/imogenlabs/homelabarr-backend:v2.3.0
 docker compose pull && docker compose up -d
 docker cp <backup.db> homelabarr-backend:/app/data/homelabarr.db
 docker compose restart backend

@@ -51,26 +51,26 @@ Build on ce-prod (192.168.1.231) — native x86_64, fast. Do NOT build backend o
 # Clone, build, push, deploy (all on ce-prod)
 ssh michael@192.168.1.231
 cd /tmp && rm -rf homelabarr-ce-build
-git clone --depth 1 --branch main https://github.com/smashingtags/homelabarr-ce.git homelabarr-ce-build
+git clone --depth 1 --branch main https://github.com/imogenlabs/homelabarr-ce.git homelabarr-ce-build
 cd homelabarr-ce-build
 
 # Frontend
-docker build --no-cache -t ghcr.io/smashingtags/homelabarr-frontend:latest -f Dockerfile .
-docker push ghcr.io/smashingtags/homelabarr-frontend:latest
+docker build --no-cache -t ghcr.io/imogenlabs/homelabarr-frontend:latest -f Dockerfile .
+docker push ghcr.io/imogenlabs/homelabarr-frontend:latest
 
 # Backend
-docker build --no-cache -t ghcr.io/smashingtags/homelabarr-backend:latest -f Dockerfile.backend .
-docker push ghcr.io/smashingtags/homelabarr-backend:latest
+docker build --no-cache -t ghcr.io/imogenlabs/homelabarr-backend:latest -f Dockerfile.backend .
+docker push ghcr.io/imogenlabs/homelabarr-backend:latest
 
 # Deploy
 cd /opt/appdata/compose
 docker compose -f docker-compose.ce.yml up -d --force-recreate homelabarr-demo-frontend homelabarr-demo-backend
 
 # Tag for staging/dev too
-docker tag ghcr.io/smashingtags/homelabarr-frontend:latest ghcr.io/smashingtags/homelabarr-frontend:staging
-docker tag ghcr.io/smashingtags/homelabarr-frontend:latest ghcr.io/smashingtags/homelabarr-frontend:dev
-docker push ghcr.io/smashingtags/homelabarr-frontend:staging
-docker push ghcr.io/smashingtags/homelabarr-frontend:dev
+docker tag ghcr.io/imogenlabs/homelabarr-frontend:latest ghcr.io/imogenlabs/homelabarr-frontend:staging
+docker tag ghcr.io/imogenlabs/homelabarr-frontend:latest ghcr.io/imogenlabs/homelabarr-frontend:dev
+docker push ghcr.io/imogenlabs/homelabarr-frontend:staging
+docker push ghcr.io/imogenlabs/homelabarr-frontend:dev
 # (same for backend)
 
 rm -rf /tmp/homelabarr-ce-build

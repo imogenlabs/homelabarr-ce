@@ -21,7 +21,7 @@ HomelabARR Mobile is an optional companion app for iOS and Android. It connects 
 |---|---|---|
 | **iOS** (App Store) | TestFlight beta available | $4.99 one-time |
 | **Android** (Google Play) | APK available, Play Store submission pending | $4.99 one-time |
-| **Build from source** | Always free | [github.com/smashingtags/homelabarr-mobile](https://github.com/smashingtags/homelabarr-mobile) |
+| **Build from source** | Always free | [github.com/imogenlabs/homelabarr-mobile](https://github.com/imogenlabs/homelabarr-mobile) |
 
 !!! info "Why $4.99?"
     HomelabARR CE is free and always will be. The mobile app is a convenience — compiled, signed, auto-updated through the store. Power users can always build it from the open source repo.
@@ -77,7 +77,7 @@ The app validates the URL, checks the connection, and loads your dashboard.
 - **Built with:** React Native + Expo
 - **Storage:** Server URL and API key stored on-device via AsyncStorage — not sent anywhere
 - **Platforms:** iOS 15+ and Android 10+
-- **Source:** [github.com/smashingtags/homelabarr-mobile](https://github.com/smashingtags/homelabarr-mobile)
+- **Source:** [github.com/imogenlabs/homelabarr-mobile](https://github.com/imogenlabs/homelabarr-mobile)
 
 ## Try the Demo
 

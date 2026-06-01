@@ -6,7 +6,7 @@ Thanks for your interest in making HomelabARR better! Here's how we work.
 
 ## How Features Get Built
 
-1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues) or [Discussion](https://github.com/smashingtags/homelabarr-ce/discussions)
+1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitHub Issue](https://github.com/imogenlabs/homelabarr-ce/issues) or [Discussion](https://github.com/imogenlabs/homelabarr-ce/discussions)
 2. **We build on feature branches** — Each change gets its own `feature/` branch
 3. **Features merge to `dev`** — Bleeding edge, may break. Try it if you're adventurous
 4. **Dev promotes to `staging`** — Release candidate. Community gets **one week** to test against real stacks and find bugs
@@ -56,7 +56,7 @@ See `apps/legacy/README.md` for examples of what NOT to add (deprecated/abandone
 
 ## Reporting Bugs
 
-- Open a [GitHub Issue](https://github.com/smashingtags/homelabarr-ce/issues)
+- Open a [GitHub Issue](https://github.com/imogenlabs/homelabarr-ce/issues)
 - Or drop it in [#help](https://discord.gg/Pc7mXX786x) on Discord
 - Include your Docker version, OS, and steps to reproduce
 
@@ -65,6 +65,6 @@ See `apps/legacy/README.md` for examples of what NOT to add (deprecated/abandone
 - **Discord**: [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x)
 - **Reddit**: [r/homelabarr](https://reddit.com/r/homelabarr)
 - **Ko-fi**: [ko-fi.com/homelabarr](https://ko-fi.com/homelabarr)
-- **Discussions**: [GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)
 
 Built with love by [Imogen Labs AI](https://imogenlabs.ai)

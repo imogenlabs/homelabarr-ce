@@ -130,7 +130,7 @@ feature/* → dev branch → staging branch (1-week soak) → main branch
 
 When code merges to `main`, GitHub Actions:
 1. Builds multi-arch Docker images (amd64 + arm64)
-2. Pushes to GitHub Container Registry (`ghcr.io/smashingtags/`)
+2. Pushes to GitHub Container Registry (`ghcr.io/imogenlabs/`)
 3. Deploys the wiki to GitHub Pages
 
 If you run HomelabARR with Watchtower, it auto-pulls new images when they're published.

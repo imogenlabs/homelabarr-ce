@@ -19,5 +19,5 @@ services:
       - "com.homelabarr.name=CF Companion"
       - "com.homelabarr.description=Auto-create Cloudflare DNS records for containers with Traefik labels"
       - "com.homelabarr.category=addons"
-      - "com.homelabarr.url=https://github.com/smashingtags/cf-companion"
+      - "com.homelabarr.url=https://github.com/imogenlabs/cf-companion"
       - "com.homelabarr.icon=cloudflare"
