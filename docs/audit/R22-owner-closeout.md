@@ -66,7 +66,7 @@ R22 also explicitly flags items that are **eight.ly-funnel-credibility-blocking*
 
 ## §2 — Current state of the open-source posture (as of a99d23c)
 
-A prospect arriving today at `github.com/smashingtags/homelabarr-ce` will see:
+A prospect arriving today at `github.com/imogenlabs/homelabarr-ce` will see:
 
 - A README with no obvious dead links, a SECURITY.md, CODE_OF_CONDUCT, CONTRIBUTING, an MIT LICENSE, threat model in `docs/`, audit binder under `compliance/`, public disclosure policy, a clearly-scoped `ce-demo.homelabarr.com` reference deployment.
 - A backend that returns JSON (not framework HTML) for every API error path, gates secret material behind auth, hashes credentials with bcrypt cost-12 (with a documented Argon2id migration roadmap), runs as non-root in a dumb-init-wrapped container with a pinned digest, emits structured audit events with redaction, and exposes process counters on `/health` for monitoring.

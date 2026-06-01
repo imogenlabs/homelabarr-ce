@@ -5,7 +5,7 @@ We welcome contributions from the community! This guide will help you get starte
 ## Ways to Contribute
 
 ### 1. 🐛 Bug Reports
-- Report issues through [GitHub Issues](https://github.com/smashingtags/homelabarr-ce/issues)
+- Report issues through [GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)
 - Use the bug report template
 - Include system information and logs
 - Test with minimal reproduction steps
@@ -53,7 +53,7 @@ git clone https://github.com/YOUR_USERNAME/homelabarr-ce.git
 cd homelabarr-ce
 
 # Add upstream remote
-git remote add upstream https://github.com/smashingtags/homelabarr-ce.git
+git remote add upstream https://github.com/imogenlabs/homelabarr-ce.git
 ```
 
 ### Repository Structure Overview

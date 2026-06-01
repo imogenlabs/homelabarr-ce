@@ -69,7 +69,7 @@ The community diverged along architectural lines. The technology evolved because
 
 **Links:**
 
-- [HomelabARR CE on GitHub](https://github.com/smashingtags/homelabarr-ce)
+- [HomelabARR CE on GitHub](https://github.com/imogenlabs/homelabarr-ce)
 - [CE Demo](https://ce-demo.homelabarr.com)
 - [HomelabARR Website](https://homelabarr.com)
 - [Discord](https://discord.gg/Pc7mXX786x)

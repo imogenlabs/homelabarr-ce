@@ -45,7 +45,7 @@ CE (Community Edition) is 100% free and open source under the MIT license. There
 The app templates are missing. Make sure you ran the `git clone` step:
 
 ```bash
-git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 ```
 
 The 100+ app templates live in the `apps/` folder inside the repo. Without it, the catalog is empty. This is the most common setup mistake.
@@ -213,6 +213,6 @@ Yes, set `AUTH_ENABLED=false` in your `.env` file. **Only do this on an isolated
 ## Getting Help
 
 - **[Discord](https://discord.gg/Pc7mXX786x)** — fastest, someone's usually around — ask in #help
-- **[GitHub Issues](https://github.com/smashingtags/homelabarr-ce/issues)** — bug reports
-- **[GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)** — questions and feature requests
+- **[GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)** — bug reports
+- **[GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)** — questions and feature requests
 - **[homelabarr.com](https://homelabarr.com)** — product page

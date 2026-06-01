@@ -15,7 +15,7 @@ services:
       - "RUNNOW=yes"
       - "SKIPUPDATE=no"
       - "APP_BRANCH=master"
-    image: "ghcr.io/smashingtags/docker-traktarr:1.0.0"
+    image: "ghcr.io/imogenlabs/docker-traktarr:1.0.0"
     restart: "${RESTARTAPP}"
     labels:
       - "dockupdater.enable=true"

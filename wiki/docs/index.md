@@ -22,7 +22,7 @@ Whether you just bought your first server or you've been running a homelab for y
 
 ```bash
 # 1. Clone the repo (includes all app templates)
-git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
 # 2. Set required variables
@@ -85,7 +85,7 @@ The majority of our app catalog uses [LinuxServer.io](https://linuxserver.io) co
 ## Links
 
 - [HomelabARR](https://homelabarr.com) — Product home
-- [GitHub](https://github.com/smashingtags/homelabarr-ce)
+- [GitHub](https://github.com/imogenlabs/homelabarr-ce)
 - [Discord](https://discord.gg/Pc7mXX786x) — Get help, share your setup
 - [Demo](https://ce-demo.homelabarr.com) — Try it live (login: admin/admin)
 - [Imogen Labs](https://imogenlabs.ai) — Built by Imogen Labs

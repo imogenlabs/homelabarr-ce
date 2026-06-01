@@ -235,11 +235,11 @@ third-party cookies, no cross-origin transmission. The website ID
 LABEL org.opencontainers.image.title="homelabarr-ce-backend"
 LABEL org.opencontainers.image.description="HomelabARR CE backend"
 LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"
-LABEL org.opencontainers.image.source="https://github.com/smashingtags/homelabarr-ce"
-LABEL org.opencontainers.image.documentation="https://github.com/smashingtags/homelabarr-ce/blob/main/README.md"
+LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"
+LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"
 LABEL org.opencontainers.image.licenses="<actual license SPDX>"
 LABEL org.opencontainers.image.vendor="<owner>"
-LABEL io.homelabarr.security.contact="https://github.com/smashingtags/homelabarr-ce/security/policy"
+LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"
 ```
 
 **Why it matters:** GHCR shows these labels on the package page. Pulling tools (and humans) get the security contact and license info directly from `docker inspect` without having to find the repo. Cosign + SBOM (R5) becomes more useful when paired with these labels.
@@ -374,8 +374,8 @@ grep -q 'well-known/security.txt' SECURITY.md || echo "FAIL: SECURITY.md missing
 test -f PRIVACY.md || grep -q 'Analytics' SECURITY.md || echo "FAIL: analytics not documented"
 
 # 9. Dockerfile OCI labels (sample one image)
-docker pull ghcr.io/smashingtags/homelabarr-ce:latest 2>/dev/null
-docker inspect ghcr.io/smashingtags/homelabarr-ce:latest \
+docker pull ghcr.io/imogenlabs/homelabarr-ce:latest 2>/dev/null
+docker inspect ghcr.io/imogenlabs/homelabarr-ce:latest \
   --format '{{json .Config.Labels}}' | jq -e '."org.opencontainers.image.source"' \
   || echo "FAIL: OCI source label missing"
 
