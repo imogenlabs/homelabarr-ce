@@ -81,3 +81,6 @@ compliance/evidence/
 # Secrets & backups
 /secrets/
 /backups/
+# internal agent docs — never commit
+CLAUDE.md
+HANDOFF.md
