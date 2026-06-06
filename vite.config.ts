@@ -1,5 +1,5 @@
 import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig, configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -23,6 +23,10 @@ export default defineConfig({
         },
       },
     },
+  },
+  test: {
+    exclude: [...configDefaults.exclude, "tests/e2e/**"],
+    passWithNoTests: true,
   },
   server: {
     port: 8080,
