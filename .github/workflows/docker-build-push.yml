@@ -148,7 +148,7 @@ jobs:
       if: github.event_name != 'pull_request'
       run: |
         cosign verify \
-          --certificate-identity-regexp 'https://github.com/smashingtags/homelabarr-ce/.github/workflows/' \
+          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
           ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
 
@@ -156,7 +156,7 @@ jobs:
       if: github.event_name != 'pull_request'
       run: |
         cosign verify \
-          --certificate-identity-regexp 'https://github.com/smashingtags/homelabarr-ce/.github/workflows/' \
+          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
           ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
 
