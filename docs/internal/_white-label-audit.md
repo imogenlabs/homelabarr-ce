@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-05-23 20:13 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-06 06:45 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1363
+**Total brand references found:** 1334
 
 ---
 
@@ -239,7 +239,7 @@
 
 ## Root documentation
 
-**72 references**
+**67 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -268,39 +268,34 @@
 | `README.md` | 21 | `    <a href="https://wiki.homelabarr.com">` |
 | `README.md` | 24 | `    <a href="https://www.reddit.com/r/homelabarr/">` |
 | `README.md` | 25 | `        <img src="https://img.shields.io/badge/Reddit-r/homelabarr-FF4500?logo=reddit&logoColor=white" alt="Reddit">` |
-| `README.md` | 30 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql">` |
-| `README.md` | 31 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/github-code-scanning/codeql/badge.svg"` |
-| `README.md` | 33 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml">` |
-| `README.md` | 34 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build.yml/badge.svg" alt="Docke` |
+| `README.md` | 30 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml">` |
+| `README.md` | 31 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="` |
+| `README.md` | 33 | `    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml">` |
+| `README.md` | 34 | `        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Sec` |
 | `README.md` | 39 | `    <a href="https://ce-demo.homelabarr.com">` |
 | `README.md` | 42 | `    <a href="https://homelabarr.com">` |
 | `README.md` | 43 | `        <img src="https://img.shields.io/badge/Website-homelabarr.com-FF8C1A?logo=firefox&logoColor=white" alt="HomelabA` |
-| `README.md` | 76 | `Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)` |
-| `README.md` | 87 | `# 1. Grab the code (cloning to /opt/homelabarr is recommended — it matches the default template path)` |
-| `README.md` | 88 | `git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr` |
-| `README.md` | 89 | `cd /opt/homelabarr` |
-| `README.md` | 97 | `docker compose -f homelabarr.yml up -d` |
-| `README.md` | 104 | `> 💾 **For a permanent setup**, move those exports into a '.env' file in the same directory as 'homelabarr.yml' instea` |
-| `README.md` | 106 | `> 📁 **Cloned somewhere other than '/opt/homelabarr'?** Set 'CLI_BRIDGE_HOST_PATH' in your '.env' to match your clone ` |
-| `README.md` | 110 | `> ⚠️ **Running in a Proxmox LXC?** You might need to add 'lxc.apparmor.profile: unconfined' to the container config.` |
-| `README.md` | 112 | `Want to build from source instead? Check the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
-| `README.md` | 165 | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
-| `README.md` | 179 | `All the config options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
-| `README.md` | 186 | `homelabarr-ce/` |
-| `README.md` | 196 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
-| `README.md` | 199 | `├── homelabarr.yml    # The Docker Compose file you run` |
-| `README.md` | 226 | `\| [CodeQL](https://github.com/smashingtags/homelabarr-ce/security/code-scanning) \| The actual code — injection bugs,` |
-| `README.md` | 227 | `\| [Snyk](https://snyk.io/test/github/smashingtags/homelabarr-ce) \| Every npm package and Docker base image for known v` |
-| `README.md` | 228 | `\| [Dependabot](https://github.com/smashingtags/homelabarr-ce/security/dependabot) \| Outdated packages that have securi` |
-| `README.md` | 229 | `\| [Docker Scout](https://hub.docker.com/r/smashingtags/homelabarr-frontend) \| The finished container images, plus supp` |
-| `README.md` | 249 | `User accounts, API keys, and sessions are stored in '/app/server/config/' inside the backend container. The 'homelabarr-` |
-| `README.md` | 261 | `3. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabar` |
-| `README.md` | 277 | `\| 🌐 **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 278 | `\| 📖 **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 279 | `\| 🎮 **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 280 | `\| 💬 **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 281 | `\| 📣 **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 291 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
+| `README.md` | 70 | `Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)` |
+| `README.md` | 82 | `git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr` |
+| `README.md` | 83 | `cd /opt/homelabarr` |
+| `README.md` | 91 | `docker compose -f homelabarr.yml up -d` |
+| `README.md` | 96 | `> **For a permanent setup**, move those exports into a '.env' file. See the [configuration docs](https://wiki.homelabarr` |
+| `README.md` | 100 | `Want to build from source? See the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
+| `README.md` | 150 | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
+| `README.md` | 169 | `\| **Disclosure** \| [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known` |
+| `README.md` | 184 | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabar` |
+| `README.md` | 185 | `3. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
+| `README.md` | 205 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
+| `README.md` | 212 | `homelabarr-ce/` |
+| `README.md` | 226 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
+| `README.md` | 230 | `├── homelabarr.yml    # Production Docker Compose` |
+| `README.md` | 253 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
+| `README.md` | 254 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
+| `README.md` | 255 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
+| `README.md` | 256 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
+| `README.md` | 257 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
+| `README.md` | 258 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
+| `README.md` | 268 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 11 | `\| Latest release \| Yes — see [Releases](https://github.com/smashingtags/homelabarr-ce/releases/latest) \|` |
 | `SECURITY.md` | 79 | `- Backend container runs as non-root user ('homelabarr:1001')` |
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \` |
@@ -521,7 +516,7 @@
 
 ## Other
 
-**910 references**
+**886 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -565,30 +560,6 @@
 | `.zap/scan-config.yml` | 16 | `    - https://ce-demo.homelabarr.com/sitemap\.xml` |
 | `.zap/scan-config.yml` | 17 | `    - https://ce-demo.homelabarr.com/\.well-known/.*` |
 | `.zap/scan-config.yml` | 21 | `    loginUrl: https://ce-demo.homelabarr.com/api/auth/login` |
-| `CLAUDE.md` | 7 | `- Repo: 'smashingtags/homelabarr-ce' (private)` |
-| `CLAUDE.md` | 8 | `- Owner: Michael (smashingtags)` |
-| `CLAUDE.md` | 10 | `- Live demo: https://ce-demo.homelabarr.com` |
-| `CLAUDE.md` | 11 | `- Wiki: https://wiki.homelabarr.com (GitHub Pages, MkDocs Material)` |
-| `CLAUDE.md` | 22 | `- ':latest' — prod/demo (ce-demo.homelabarr.com)` |
-| `CLAUDE.md` | 23 | `- ':staging' — staging (ce-staging.homelabarr.com)` |
-| `CLAUDE.md` | 24 | `- ':dev' — dev (ce-dev.homelabarr.com)` |
-| `CLAUDE.md` | 40 | `\| Prod/Demo \| 121 (ce-prod) \| 192.168.1.231 \| ce-demo.homelabarr.com \| ':latest' \| docker-compose.ce.yml \|` |
-| `CLAUDE.md` | 41 | `\| Staging \| 122 (ce-staging) \| 192.168.1.232 \| ce-staging.homelabarr.com \| ':staging' \| docker-compose.ce.yml \|` |
-| `CLAUDE.md` | 42 | `\| Dev \| 123 (ce-dev) \| 192.168.1.233 \| ce-dev.homelabarr.com \| ':dev' \| docker-compose.ce-dev.yml \|` |
-| `CLAUDE.md` | 53 | `cd /tmp && rm -rf homelabarr-ce-build` |
-| `CLAUDE.md` | 54 | `git clone --depth 1 --branch main https://github.com/smashingtags/homelabarr-ce.git homelabarr-ce-build` |
-| `CLAUDE.md` | 55 | `cd homelabarr-ce-build` |
-| `CLAUDE.md` | 58 | `docker build --no-cache -t ghcr.io/smashingtags/homelabarr-frontend:latest -f Dockerfile .` |
-| `CLAUDE.md` | 59 | `docker push ghcr.io/smashingtags/homelabarr-frontend:latest` |
-| `CLAUDE.md` | 62 | `docker build --no-cache -t ghcr.io/smashingtags/homelabarr-backend:latest -f Dockerfile.backend .` |
-| `CLAUDE.md` | 63 | `docker push ghcr.io/smashingtags/homelabarr-backend:latest` |
-| `CLAUDE.md` | 67 | `docker compose -f docker-compose.ce.yml up -d --force-recreate homelabarr-demo-frontend homelabarr-demo-backend` |
-| `CLAUDE.md` | 70 | `docker tag ghcr.io/smashingtags/homelabarr-frontend:latest ghcr.io/smashingtags/homelabarr-frontend:staging` |
-| `CLAUDE.md` | 71 | `docker tag ghcr.io/smashingtags/homelabarr-frontend:latest ghcr.io/smashingtags/homelabarr-frontend:dev` |
-| `CLAUDE.md` | 72 | `docker push ghcr.io/smashingtags/homelabarr-frontend:staging` |
-| `CLAUDE.md` | 73 | `docker push ghcr.io/smashingtags/homelabarr-frontend:dev` |
-| `CLAUDE.md` | 76 | `rm -rf /tmp/homelabarr-ce-build` |
-| `CLAUDE.md` | 128 | `- Don't touch the mobile app ('homelabarr-mobile') — it's approved on the App Store. The WebView + fetch shim pattern ` |
 | `Makefile` | 9 | `encrypt-db:      ; docker compose exec backend bash scripts/encrypt-db.sh /app/data/homelabarr.db /run/secrets/sqlcipher` |
 | `apps/.installer/ubuntu.sh` | 6 | `# Docker owned homelabarr           #` |
 | `apps/.installer/ubuntu.sh` | 7 | `# Docker Maintainer homelabarr      #` |
