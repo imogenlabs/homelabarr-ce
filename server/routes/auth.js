@@ -171,12 +171,17 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Return the user wrapped in `user`, matching /auth/login. The frontend reads
+    // `data.user` for both; returning a flat object here logged users out on every
+    // page reload (data.user was undefined).
     res.json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt
+      }
     });
   });
 
