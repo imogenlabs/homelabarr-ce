@@ -45,4 +45,17 @@ export default defineConfig({
       },
     },
   },
+  // `vite preview` serves the production build, where the frontend uses the
+  // relative '/api' base (same-origin). Mirror the production nginx routing so
+  // a local backend can be driven through it (used by the Playwright E2E harness).
+  preview: {
+    port: 8080,
+    proxy: {
+      "/api": {
+        target: process.env.BACKEND_URL || "http://localhost:30002",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
 });

@@ -84,3 +84,8 @@ compliance/evidence/
 # internal agent docs — never commit
 CLAUDE.md
 HANDOFF.md
+
+# E2E harness artifacts
+.e2e-data/
+tests/e2e/.auth/
+server/activity-data/

@@ -1,7 +1,7 @@
 # HomelabARR CE
 
 <p align="center">
-    <a href="https://github.com/smashingtags/homelabarr-ce">
+    <a href="https://github.com/imogenlabs/homelabarr-ce">
       <img src="wiki/docs/img/mascot-600.webp" alt="HomelabARR CE" width="300">
     </a>
 </p>
@@ -9,10 +9,10 @@
 <p align="center"><strong>Your homelab, one dashboard.</strong></p>
 
 <p align="center">
-    <a href="https://github.com/smashingtags/homelabarr-ce/releases/latest">
+    <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest">
         <img src="https://img.shields.io/github/v/release/smashingtags/homelabarr-ce?label=Release&logo=github" alt="Release">
     </a>
-    <a href="https://github.com/smashingtags/homelabarr-ce/blob/main/LICENSE">
+    <a href="https://github.com/imogenlabs/homelabarr-ce/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
     </a>
     <a href="https://discord.gg/Pc7mXX786x">
@@ -27,11 +27,11 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml">
-        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Docker Build">
+    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml">
+        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Docker Build">
     </a>
-    <a href="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml">
-        <img src="https://github.com/smashingtags/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Security Audit">
+    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml">
+        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Security Audit">
     </a>
 </p>
 
@@ -79,7 +79,7 @@ You need a Linux machine with Docker installed.
 
 ```bash
 # 1. Clone
-git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
 # 2. Set three things
@@ -181,7 +181,7 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 ## Production Deployment Checklist
 
 1. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
-2. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/smashingtags/homelabarr-backend:<tag>`
+2. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/imogenlabs/homelabarr-backend:<tag>`
 3. **Start the stack:** `docker compose -f homelabarr.yml up -d`
 4. **Encrypt the database** (first install only): `make encrypt-db`
 5. **Verify health:** `curl -fsS https://<host>/api/health`

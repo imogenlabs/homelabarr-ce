@@ -1,6 +1,6 @@
 # Security
 
-HomelabARR CE ships with a production-grade security envelope by default. This page summarizes the controls that are active on every deployment. For the full disclosure policy, see [SECURITY.md](https://github.com/smashingtags/homelabarr-ce/blob/main/SECURITY.md).
+HomelabARR CE ships with a production-grade security envelope by default. This page summarizes the controls that are active on every deployment. For the full disclosure policy, see [SECURITY.md](https://github.com/imogenlabs/homelabarr-ce/blob/main/SECURITY.md).
 
 ---
 
@@ -37,15 +37,15 @@ Every response from the nginx frontend includes:
 Report security issues privately:
 
 - **Email:** michael@mjashley.com
-- **GitHub:** [Security Advisories](https://github.com/smashingtags/homelabarr-ce/security/advisories/new)
+- **GitHub:** [Security Advisories](https://github.com/imogenlabs/homelabarr-ce/security/advisories/new)
 - **Machine-readable:** [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) (RFC 9116)
 
 Response SLA: acknowledge within 48 hours, fix critical within 72 hours.
 
 ## For operators
 
-- **Threat model:** [docs/threat-model/](https://github.com/smashingtags/homelabarr-ce/tree/main/docs/threat-model) — asset inventory, trust boundaries, STRIDE analysis, attack trees, residual risk register.
-- **Incident response:** [docs/ir/](https://github.com/smashingtags/homelabarr-ce/tree/main/docs/ir) — 11 playbooks covering credential compromise, cosign failures, dependency SLA breaches, and more.
-- **Compliance posture:** [compliance/](https://github.com/smashingtags/homelabarr-ce/tree/main/compliance) — CIS Docker v1.6.0, NIST CSF 2.0, OWASP ASVS v4.0.3 L2 alignment.
-- **Audit trail:** [docs/audit/](https://github.com/smashingtags/homelabarr-ce/tree/main/docs/audit) — 18 rounds, 201+ findings shipped.
-- **Dependency policy:** [docs/governance/dependency-update-policy.md](https://github.com/smashingtags/homelabarr-ce/blob/main/docs/governance/dependency-update-policy.md) — SLA-governed update classes with automated staleness enforcement.
+- **Threat model:** [docs/threat-model/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/threat-model) — asset inventory, trust boundaries, STRIDE analysis, attack trees, residual risk register.
+- **Incident response:** [docs/ir/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/ir) — 11 playbooks covering credential compromise, cosign failures, dependency SLA breaches, and more.
+- **Compliance posture:** [compliance/](https://github.com/imogenlabs/homelabarr-ce/tree/main/compliance) — CIS Docker v1.6.0, NIST CSF 2.0, OWASP ASVS v4.0.3 L2 alignment.
+- **Audit trail:** [docs/audit/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/audit) — 18 rounds, 201+ findings shipped.
+- **Dependency policy:** [docs/governance/dependency-update-policy.md](https://github.com/imogenlabs/homelabarr-ce/blob/main/docs/governance/dependency-update-policy.md) — SLA-governed update classes with automated staleness enforcement.

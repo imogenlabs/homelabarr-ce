@@ -105,7 +105,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { label: "Wiki & Docs", href: "https://wiki.homelabarr.com", desc: "Full documentation" },
-                  { label: "GitHub", href: "https://github.com/smashingtags/homelabarr-ce", desc: "Source code & issues" },
+                  { label: "GitHub", href: "https://github.com/imogenlabs/homelabarr-ce", desc: "Source code & issues" },
                   { label: "Discord Community", href: "https://discord.gg/Pc7mXX786x", desc: "Get help & chat" },
                   { label: "Reddit", href: "https://reddit.com/r/homelabarr", desc: "r/homelabarr" },
                 ].map((link) => (

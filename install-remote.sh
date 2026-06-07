@@ -6,7 +6,7 @@
 
 set -e
 
-REPO="https://github.com/smashingtags/homelabarr-ce.git"
+REPO="https://github.com/imogenlabs/homelabarr-ce.git"
 INSTALL_DIR="/opt/homelabarr"
 BIN_NAME="homelabarr-cli"
 

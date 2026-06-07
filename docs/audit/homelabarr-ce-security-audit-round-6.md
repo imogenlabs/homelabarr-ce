@@ -52,11 +52,11 @@
 ```yaml
 # homelabarr.yml — image lines (replace BOTH services)
 # WRONG
-image: ghcr.io/smashingtags/homelabarr-frontend:latest
-image: ghcr.io/smashingtags/homelabarr-backend:latest
+image: ghcr.io/imogenlabs/homelabarr-frontend:latest
+image: ghcr.io/imogenlabs/homelabarr-backend:latest
 # RIGHT — after first tagged release, run scripts/bump-image-digests.sh <tag>
-image: ghcr.io/smashingtags/homelabarr-frontend:v2.2.0@sha256:<64hex>
-image: ghcr.io/smashingtags/homelabarr-backend:v2.2.0@sha256:<64hex>
+image: ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0@sha256:<64hex>
+image: ghcr.io/imogenlabs/homelabarr-backend:v2.2.0@sha256:<64hex>
 ```
 
 ```json

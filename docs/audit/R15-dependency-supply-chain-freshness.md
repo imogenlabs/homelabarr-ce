@@ -262,9 +262,9 @@ jobs:
   uses: sigstore/cosign-installer@<existing SHA pin from R11.5>
 - run: |
     cosign verify \
-      --certificate-identity-regexp 'https://github.com/smashingtags/homelabarr-ce/.github/workflows/' \
+      --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \
       --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-      ghcr.io/smashingtags/homelabarr-ce:${{ github.sha }}
+      ghcr.io/imogenlabs/homelabarr-ce:${{ github.sha }}
 - name: Comment on PR if verify failed
   if: failure()
   uses: actions/github-script@<40-char-SHA>

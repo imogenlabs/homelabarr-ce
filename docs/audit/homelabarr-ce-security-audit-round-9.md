@@ -243,11 +243,11 @@ And add /.well-known/security.txt as a static asset (public/.well-known/security
 
 ```text
 Contact: mailto:michael@mjashley.com
-Contact: https://github.com/smashingtags/homelabarr-ce/security/advisories/new
+Contact: https://github.com/imogenlabs/homelabarr-ce/security/advisories/new
 Expires: 2027-01-01T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://ce-demo.homelabarr.com/.well-known/security.txt
-Policy: https://github.com/smashingtags/homelabarr-ce/blob/main/SECURITY.md
+Policy: https://github.com/imogenlabs/homelabarr-ce/blob/main/SECURITY.md
 ```
 
 ---

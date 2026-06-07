@@ -40,6 +40,8 @@ export function createLoginLimiter() {
     keyGenerator: (req) => 'login:' + req.ip,
     store: new SqliteStore(15 * 60 * 1000),
     skipSuccessfulRequests: true,
+    // Disabled only when explicitly opted in (E2E harness). Never set in production.
+    skip: () => process.env.RATE_LIMIT_DISABLED === 'true',
     handler: (_req, res) => res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' }),
   });
 }

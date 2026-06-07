@@ -5,7 +5,7 @@
 | A-01 | Admin credentials (bcrypt hash + JWT signing key) | Credentials | Critical | Docker secrets (/run/secrets/) | Owner |
 | A-02 | Audit log JSONL files | Logs / evidence | High | Backend container volume | Agent |
 | A-03 | User database (SQLCipher encrypted) | App data | High | Backend container volume | Owner |
-| A-04 | Container images (GHCR) | Code artifact | High | ghcr.io/smashingtags/ | Agent |
+| A-04 | Container images (GHCR) | Code artifact | High | ghcr.io/imogenlabs/ | Agent |
 | A-05 | SBOM + cosign signatures | Supply-chain attestation | High | GHCR attestations | Agent |
 | A-06 | TLS certificates | Crypto material | Critical | Cloudflare edge / Traefik | Owner |
 | A-07 | Backup archives (GPG encrypted) | Recovery material | High | Off-host destination (TBD) | Owner |
