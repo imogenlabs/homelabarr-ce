@@ -36,4 +36,3 @@ networks:
 volumes:
   unionfs:
     driver: local
-    driver_opts:
