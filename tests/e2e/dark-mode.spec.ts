@@ -28,20 +28,25 @@ test.describe('Dark Mode', () => {
   test('dark mode has visible card separation', async ({ page }) => {
     // Force dark mode
     await page.evaluate(() => document.documentElement.classList.add('dark'));
-    await page.waitForTimeout(200);
 
-    // Cards should have some visual distinction from background
-    const card = page.locator('[class*="card"], [class*="Card"]').first();
-    if (await card.isVisible()) {
+    // Anchor on a real app card (the Card ancestor of a Deploy button) rather than
+    // the first element with "card" in its class — that can be a transparent layout
+    // wrapper, which made this comparison flaky. App cards use bg-card, distinct
+    // from the page background. Retry until the theme CSS settles.
+    const card = page
+      .getByRole('button', { name: /deploy/i })
+      .first()
+      .locator('xpath=ancestor::*[contains(@class,"card") or contains(@class,"Card")][1]');
+    await expect(card).toBeVisible();
+    await expect(async () => {
       const cardBg = await card.evaluate((el) =>
         window.getComputedStyle(el).backgroundColor
       );
       const pageBg = await page.evaluate(() =>
         window.getComputedStyle(document.body).backgroundColor
       );
-      // They shouldn't be identical (invisible cards)
       expect(cardBg).not.toEqual(pageBg);
-    }
+    }).toPass({ timeout: 5_000 });
   });
 
   test('category tags readable in dark mode', async ({ page }) => {
