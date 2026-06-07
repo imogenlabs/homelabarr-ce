@@ -1,9 +1,9 @@
-import { test, expect } from './fixtures';
-import { resetDashboard } from './helpers';
+import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test.describe('App Icons', () => {
   test.beforeEach(async ({ page }) => {
-    await resetDashboard(page);
+    await login(page);
   });
 
   test('no broken image elements visible', async ({ page }) => {
