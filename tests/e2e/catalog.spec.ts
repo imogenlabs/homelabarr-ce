@@ -1,9 +1,9 @@
 import { test, expect } from './fixtures';
-import { gotoDashboard } from './helpers';
+import { resetDashboard } from './helpers';
 
 test.describe('App Catalog', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoDashboard(page);
+    await resetDashboard(page);
   });
 
   test('loads and displays app catalog', async ({ page }) => {

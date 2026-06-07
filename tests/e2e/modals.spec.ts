@@ -1,11 +1,11 @@
 import { test, expect } from './fixtures';
-import { gotoDashboard } from './helpers';
+import { resetDashboard } from './helpers';
 
 // Login is an inline full-page screen now (LoginScreen), not a modal — the only
 // dialog left on the dashboard is the Help modal, opened from the header Help button.
 test.describe('Help modal', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoDashboard(page);
+    await resetDashboard(page);
   });
 
   test('opens from the header Help button', async ({ page }) => {

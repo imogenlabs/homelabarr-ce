@@ -43,24 +43,37 @@ export async function login(page: Page): Promise<void> {
   await waitForDashboard(page);
 }
 
-// Used by specs' beforeEach. The shared storage state (see auth.setup.ts) already
-// carries the session cookie, so navigating home lands on the dashboard once the SPA
-// resolves /auth/me — no form interaction, so no hydration-fill race per test. Only
-// if the login wall is genuinely up (no/expired session) do we authenticate.
-export async function gotoDashboard(page: Page): Promise<void> {
-  await page.goto('/');
+// Used by specs' beforeEach. The page is the shared, already-hydrated worker page
+// (see fixtures.ts) — we do NOT navigate here. A page reload re-hydrates the heavy
+// production bundle, which is ~60-90s on the slow CI runner; doing that per test
+// blows the job timeout. Instead we reset the dashboard to a known state in-place
+// (no reload) so the suite pays hydration exactly once.
+export async function resetDashboard(page: Page): Promise<void> {
+  // Make sure the dashboard is actually up (covers the very first call after login).
+  await page.waitForSelector('text=/Connected|Browse Mode/', { timeout: 120_000 });
 
-  // Actually WAIT for the dashboard status (waitFor blocks; isVisible() does not).
-  // With a restored session the app shows it after resolving /auth/me. Touch no
-  // inputs on this path, so there's no hydration-fill race.
-  const status = page.locator('text=/Connected|Browse Mode/').first();
-  try {
-    await status.waitFor({ state: 'visible', timeout: 120_000 });
-  } catch {
-    // Fallback: session didn't restore — log in the slow way.
-    await login(page);
-    return;
+  // Close any dialog a previous test left open (e.g. the Help modal).
+  if ((await page.getByRole('dialog').count()) > 0) {
+    await page.keyboard.press('Escape');
+    await page.getByRole('dialog').first().waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
   }
+
+  // Return to light theme. Click the toggle while the dark class is present — this
+  // converges to light whether a prior test flipped React's theme state (1 click) or
+  // just added the class directly (2 clicks).
+  const themeToggle = page.getByRole('button', { name: /toggle theme/i });
+  for (let i = 0; i < 2; i++) {
+    if (!(await page.evaluate(() => document.documentElement.classList.contains('dark')))) break;
+    await themeToggle.click();
+    await page.waitForTimeout(100);
+  }
+
+  // Clear search and return to the default All Apps tab.
+  const search = page.getByPlaceholder(/search/i);
+  if ((await search.count()) > 0) await search.fill('');
+  const allApps = page.getByRole('tab', { name: 'All Apps' });
+  if ((await allApps.count()) > 0) await allApps.click();
+
   await waitForDeployCard(page);
 }
 
