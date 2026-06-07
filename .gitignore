@@ -89,3 +89,6 @@ HANDOFF.md
 .e2e-data/
 tests/e2e/.auth/
 server/activity-data/
+
+# Playwright auth state
+playwright/.auth/
