@@ -24,7 +24,7 @@ env:
 jobs:
   zap-active:
     name: ZAP Authenticated Active Scan
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
