@@ -1,0 +1,15 @@
+# Pre-commit hooks for HomelabARR CE.
+#
+# Local secret-scanning gate: Betterleaks — the MIT-licensed, drop-in Gitleaks
+# successor by the original Gitleaks author. It reuses the existing .gitleaks.toml
+# rules and blocks secrets before they ever enter a commit. CI runs TruffleHog
+# (--only-verified) as the safety net that alerts on active/verified secrets;
+# see the secrets-scan job in .github/workflows/security-audit.yml.
+#
+# Setup:  pipx install pre-commit && pre-commit install
+# Manual: pre-commit run betterleaks --all-files
+repos:
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.4.1
+    hooks:
+      - id: betterleaks
