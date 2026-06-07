@@ -9,19 +9,25 @@ import { expect, type Page } from '@playwright/test';
 // actually sticks — for a controlled input that only holds once React is hydrated and
 // owns the field, which also means the submit handler is wired. Then a single click
 // submits; no resubmit storm.
+//
+// Timeouts are generous because the FIRST load is slow on a shared CI runner: the
+// production bundle has to download, parse and hydrate while the backend, the Vite
+// preview server and the browser all compete for 2 cores — observed ~60s to an
+// interactive login form. The `warmup` project pays this cost once; afterwards the
+// preview server and OS cache are warm and every spec logs in in a couple of seconds.
 export async function login(page: Page): Promise<void> {
   await page.goto('/');
 
   const username = page.locator('#login-username');
   const password = page.locator('#login-password');
 
-  if (await username.isVisible({ timeout: 60_000 }).catch(() => false)) {
+  if (await username.isVisible({ timeout: 120_000 }).catch(() => false)) {
     await expect(async () => {
       await username.fill('admin');
       await password.fill('admin');
       await expect(username).toHaveValue('admin');
       await expect(password).toHaveValue('admin');
-    }).toPass({ timeout: 20_000 });
+    }).toPass({ timeout: 30_000 });
 
     // Submit and confirm the login form goes away. Re-click if it's still present
     // (a click landing before React wires the handler is a no-op); clicking the
@@ -36,12 +42,12 @@ export async function login(page: Page): Promise<void> {
 
   // Dashboard header is ready when it reports CLI-connected ("Connected · N apps")
   // or "Browse Mode" (no Docker backend)...
-  await page.waitForSelector('text=/Connected|Browse Mode/', { timeout: 60_000 });
+  await page.waitForSelector('text=/Connected|Browse Mode/', { timeout: 120_000 });
 
   // ...but the status appears before the app-card grid finishes rendering. Wait for
   // a card (a Deploy button) so card-dependent specs don't race the catalog render.
   await page.getByRole('button', { name: /deploy/i }).first().waitFor({
     state: 'visible',
-    timeout: 30_000,
+    timeout: 60_000,
   });
 }

@@ -6,6 +6,8 @@ import { login } from './helpers';
 // transformed/served every chunk and the backend is warm — otherwise the first
 // real specs race a cold first render and flake on the dashboard-ready wait.
 warmup('warm up the stack', async ({ page }) => {
-  warmup.setTimeout(120_000);
+  // Extra headroom: this run pays the full cold-start cost (bundle download + parse
+  // + hydrate on a shared runner) so the actual specs don't.
+  warmup.setTimeout(300_000);
   await login(page);
 });
