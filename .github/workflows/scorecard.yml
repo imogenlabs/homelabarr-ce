@@ -1,5 +1,6 @@
 name: OpenSSF Scorecard
 on:
+  workflow_dispatch:
   branch_protection_rule:
   schedule:
     - cron: '17 4 * * 1'
@@ -11,7 +12,7 @@ permissions: read-all
 jobs:
   analysis:
     name: Scorecard analysis
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     permissions:
       security-events: write
       id-token: write
