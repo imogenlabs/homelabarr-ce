@@ -1,9 +1,9 @@
 import { test, expect } from './fixtures';
-import { gotoDashboard } from './helpers';
+import { resetDashboard } from './helpers';
 
 test.describe('Dark Mode', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoDashboard(page);
+    await resetDashboard(page);
   });
 
   test('theme toggle changes background color', async ({ page }) => {
