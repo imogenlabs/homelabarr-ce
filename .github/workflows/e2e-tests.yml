@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   e2e:
-    timeout-minutes: 15
+    timeout-minutes: 25
     runs-on: ubuntu-latest
 
     name: E2E (local)

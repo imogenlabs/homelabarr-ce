@@ -28,9 +28,11 @@ export default defineConfig({
   // times out). Serialized, the suite is both reliable and fast (~16s).
   workers: 1,
   reporter: process.env.CI ? 'github' : 'html',
-  // First tests pay a cold-start cost (preview server warming up + first dashboard
-  // render); the per-test default of 30s can clip the login + dashboard wait.
-  timeout: 60_000,
+  // The shared CI runner is slow to hydrate the production bundle on first load
+  // (~60s observed); the warmup project absorbs that (with its own longer per-test
+  // timeout) and the rest run warm. This ceiling just needs to clear the login +
+  // dashboard waits comfortably.
+  timeout: 180_000,
 
   use: {
     baseURL: REMOTE_URL || LOCAL_URL,
@@ -68,6 +70,10 @@ export default defineConfig({
         // The suite drives many requests from one IP; the per-IP limiter would
         // otherwise 429 and flake login. Gated off only here.
         RATE_LIMIT_DISABLED: 'true',
+        // Skip the synchronous `docker ps` in /containers — it blocks the event
+        // loop and hangs the dashboard when the runner's Docker is absent/stalled.
+        // The UI suite doesn't test container management.
+        E2E_DISABLE_DOCKER: 'true',
       },
     },
     {
