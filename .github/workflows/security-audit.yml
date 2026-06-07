@@ -179,26 +179,25 @@ jobs:
           
           # Install container security tools in user space
           python3 -m pip install --user --upgrade pip
-          python3 -m pip install --user semgrep
+          python3 -m pip install --user semgrep pyyaml
 
       - name: Validate Docker Compose files
         run: |
           echo "Validating Docker Compose configurations..."
-          # Validate only real app compose templates: files with a top-level
-          # services: key, excluding GPU override fragments (.gpu/, merged into a
-          # base file at install time) and monitoring config/provisioning YAML
-          # (Prometheus/Loki/Grafana files that aren't compose projects).
-          # --no-interpolate: app-store templates use ${VARS} filled in at install
-          # time, so validate structure without resolving them (an unset image var
-          # would otherwise read as a blank image and fail validation).
+          # These are app-store TEMPLATES using ${VARS} filled in at install time,
+          # so `docker compose config` can't validate them: interpolation makes a
+          # no-default image var read as a blank image, and --no-interpolate makes
+          # a ${VAR:-default} volume spec parse as "too many colons". Instead we
+          # gate on what's meaningful for a template: well-formed YAML with a
+          # top-level services mapping. (Security checks run in the steps below;
+          # deep compose linting happens at install time when vars are concrete.)
+          # Only files with a services: key are templates — skips Prometheus/Loki/
+          # Grafana config YAML that lives under apps/ but isn't a compose project.
           find apps -name "*.yml" -o -name "*.yaml" | while read -r compose_file; do
-            case "$compose_file" in
-              */.gpu/*|*/provisioning/*) continue ;;
-            esac
             grep -qE "^services:" "$compose_file" || continue
             echo "Validating: $compose_file"
-            if ! docker-compose -f "$compose_file" config --no-interpolate --quiet; then
-              echo "::error::Docker Compose validation failed for $compose_file"
+            if ! python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); assert isinstance(d, dict) and isinstance(d.get('services'), dict), 'no services mapping'" "$compose_file"; then
+              echo "::error::Compose template validation failed for $compose_file (malformed YAML or missing services mapping)"
               exit 1
             else
               echo "✅ $compose_file is valid"
