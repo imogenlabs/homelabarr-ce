@@ -2,7 +2,7 @@
 ## Frontend Auth Migration Drift — Client Still Uses localStorage + Bearer
 
 **Target (live):** https://ce-demo.homelabarr.com/
-**Target (repo):** https://github.com/smashingtags/homelabarr-ce
+**Target (repo):** https://github.com/imogenlabs/homelabarr-ce
 **Branch / HEAD audited:** main (after Round 2 ship)
 **Date:** 2026-05-22
 **Auditor:** Claude (Imogen Labs audit playbook, Round 2.5 correction)

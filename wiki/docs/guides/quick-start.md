@@ -43,7 +43,7 @@ This is the fastest way to get up and running. Copy and paste these commands one
 ### Step 1: Clone the repo
 
 ```bash
-git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 ```
 
 This downloads the entire repo — including all 100+ app templates — to `/opt/homelabarr`. The `apps/` folder inside is what makes the catalog work. **Don't skip this step.**
@@ -133,7 +133,7 @@ curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/ins
 ```
 
 !!! info "What this script does"
-    You can [review the script](https://github.com/smashingtags/homelabarr-ce/blob/main/install-remote.sh) before running it. It will ask you interactively for your timezone, user ID, and data paths — nothing happens without your input.
+    You can [review the script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before running it. It will ask you interactively for your timezone, user ID, and data paths — nothing happens without your input.
 
 The script will:
 

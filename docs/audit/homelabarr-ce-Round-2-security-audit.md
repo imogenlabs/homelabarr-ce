@@ -2,7 +2,7 @@
 ## Frontend XSS, Client-Side Injection & DOM Surface Hardening
 
 **Target (live):** https://ce-demo.homelabarr.com/
-**Target (repo):** https://github.com/smashingtags/homelabarr-ce
+**Target (repo):** https://github.com/imogenlabs/homelabarr-ce
 **Branch / HEAD audited:** main
 **Date:** 2026-05-22
 **Auditor:** Claude (Imogen Labs audit playbook, Round 2)
@@ -796,7 +796,7 @@ These items require human-only judgment, account ownership, or external services
 ### §6.1 — Audit-methodology notes (not findings)
 
 - Brute-force test in §0 returned 429 from request #1, suggesting the rate-limit window from Round 1 verification was still cooling down. This is **correct behavior** for the limiter; the audit run order needs to space tests further apart, or the limiter needs a documented reset endpoint for ops (not security). Logged.
-- All charcode-decoded source spot-checks were re-verified against `https://github.com/smashingtags/homelabarr-ce/blob/main/...` directly to defend against environment-side content filtering during this audit.
+- All charcode-decoded source spot-checks were re-verified against `https://github.com/imogenlabs/homelabarr-ce/blob/main/...` directly to defend against environment-side content filtering during this audit.
 
 ---
 

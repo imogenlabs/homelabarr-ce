@@ -268,7 +268,7 @@ jobs:
         SHORT_SHA="$(echo "${GITHUB_SHA}" | cut -c1-7)"
 
 
-        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\":5814783,\"fields\":[{\"name\":\"Version\",\"value\":\"$TAG ($SHORT_SHA)\"},{\"name\":\"Changelog\",\"value\":\"[View on GitHub](https://github.com/smashingtags/homelabarr-ce/releases/tag/$TAG)\"},{\"name\":\"Docker\",\"value\":\"\`docker pull ghcr.io/smashingtags/homelabarr-frontend:$TAG\`\"}],\"footer\":{\"text\":\"GitHub Actions\"}}]}"
+        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\":5814783,\"fields\":[{\"name\":\"Version\",\"value\":\"$TAG ($SHORT_SHA)\"},{\"name\":\"Changelog\",\"value\":\"[View on GitHub](https://github.com/imogenlabs/homelabarr-ce/releases/tag/$TAG)\"},{\"name\":\"Docker\",\"value\":\"\`docker pull ghcr.io/imogenlabs/homelabarr-frontend:$TAG\`\"}],\"footer\":{\"text\":\"GitHub Actions\"}}]}"
 
         curl -sS \
           -H "Content-Type: application/json" \

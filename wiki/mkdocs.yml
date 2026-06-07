@@ -7,8 +7,8 @@ site_description: Documentation for HomelabARR Community Edition — free, open-
 
 # Repository
 repo_name: HomelabARR CE
-repo_url: https://github.com/smashingtags/homelabarr-ce
-edit_uri: https://github.com/smashingtags/homelabarr-ce/edit/main/wiki/docs/
+repo_url: https://github.com/imogenlabs/homelabarr-ce
+edit_uri: https://github.com/imogenlabs/homelabarr-ce/edit/main/wiki/docs/
 copyright: Copyright &copy; 2026 Imogen Labs
 
 # Configuration
@@ -78,13 +78,13 @@ extra:
       link: https://homelabarr.com
       name: HomelabARR
     - icon: fontawesome/brands/github
-      link: https://github.com/smashingtags/homelabarr-ce
+      link: https://github.com/imogenlabs/homelabarr-ce
       name: GitHub
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Pc7mXX786x
       name: Discord
     - icon: fontawesome/solid/comments
-      link: https://github.com/smashingtags/homelabarr-ce/discussions
+      link: https://github.com/imogenlabs/homelabarr-ce/discussions
       name: GitHub Discussions
     - icon: fontawesome/solid/building
       link: https://imogenlabs.ai
