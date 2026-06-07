@@ -93,7 +93,7 @@
     "vitest": "^4.1.8"
   },
   "overrides": {
-    "path-to-regexp": "0.1.13",
+    "path-to-regexp": "^8.2.0",
     "qs": "6.14.2"
   }
 }
