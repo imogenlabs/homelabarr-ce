@@ -170,6 +170,7 @@ jobs:
             echo "Docker Compose not found, downloading..."
             # Download docker-compose binary
             COMPOSE_VERSION="2.36.2"
+            mkdir -p "$HOME/.local/bin"
             wget -q https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64 -O $HOME/.local/bin/docker-compose
             chmod +x $HOME/.local/bin/docker-compose
             export PATH="$HOME/.local/bin:$PATH"
@@ -178,15 +179,25 @@ jobs:
           
           # Install container security tools in user space
           python3 -m pip install --user --upgrade pip
-          python3 -m pip install --user semgrep
+          python3 -m pip install --user semgrep pyyaml
 
       - name: Validate Docker Compose files
         run: |
           echo "Validating Docker Compose configurations..."
+          # These are app-store TEMPLATES using ${VARS} filled in at install time,
+          # so `docker compose config` can't validate them: interpolation makes a
+          # no-default image var read as a blank image, and --no-interpolate makes
+          # a ${VAR:-default} volume spec parse as "too many colons". Instead we
+          # gate on what's meaningful for a template: well-formed YAML with a
+          # top-level services mapping. (Security checks run in the steps below;
+          # deep compose linting happens at install time when vars are concrete.)
+          # Only files with a services: key are templates — skips Prometheus/Loki/
+          # Grafana config YAML that lives under apps/ but isn't a compose project.
           find apps -name "*.yml" -o -name "*.yaml" | while read -r compose_file; do
+            grep -qE "^services:" "$compose_file" || continue
             echo "Validating: $compose_file"
-            if ! docker-compose -f "$compose_file" config --quiet; then
-              echo "::error::Docker Compose validation failed for $compose_file"
+            if ! python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); assert isinstance(d, dict) and isinstance(d.get('services'), dict), 'no services mapping'" "$compose_file"; then
+              echo "::error::Compose template validation failed for $compose_file (malformed YAML or missing services mapping)"
               exit 1
             else
               echo "✅ $compose_file is valid"
@@ -240,6 +251,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes]
     if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
@@ -262,21 +276,17 @@ jobs:
 
       - name: Extract Docker images from compose files
         run: |
-          echo "Extracting Docker images from compose files..."
-          find apps -name "*.yml" -exec grep -h "image:" {} \; | \
-            sed 's/.*image: *["'"'"']*\([^"'"'"']*\)["'"'"']*.*/\1/' | \
-            grep -E "^[a-zA-Z0-9._/-]+:[a-zA-Z0-9._-]+$" | \
-            sort -u > docker-images.txt || echo "" > docker-images.txt
-          
-          if [ -s docker-images.txt ]; then
-            echo "Found Docker images:"
-            cat docker-images.txt
-          else
-            echo "No Docker images found to scan"
-            echo "Creating empty results for artifact upload"
-            mkdir -p trivy-results
-            echo "{}" > trivy-results/no-images-found.json
-          fi
+          # Scan ONLY HomelabARR's own published images. Previously this grepped
+          # image: from all app-store templates and scanned 100+ third-party
+          # upstream images (Plex/Jellyfin/etc.), gating CI on CVEs owned by
+          # upstream vendors that we cannot patch.
+          echo "Targeting HomelabARR's own images only..."
+          cat > docker-images.txt <<'EOF'
+          ghcr.io/smashingtags/homelabarr-frontend:latest
+          ghcr.io/smashingtags/homelabarr-backend:latest
+          EOF
+          sed -i 's/^ *//' docker-images.txt
+          echo "Images to scan:"; cat docker-images.txt
 
       - name: Scan HomelabARR container images
         run: |
@@ -354,12 +364,19 @@ jobs:
             echo "::warning::Found $total_high high severity vulnerabilities (threshold: 10)"
           fi
 
-      - name: Upload vulnerability scan results to GitHub Security
+      - name: Upload frontend SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
-        if: always() && hashFiles('trivy-results/*.sarif') != ''
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif') != ''
         with:
-          sarif_file: 'trivy-results/'
-          category: 'trivy-container-scan'
+          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif'
+          category: 'trivy-homelabarr-frontend'
+        continue-on-error: true
+      - name: Upload backend SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif') != ''
+        with:
+          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif'
+          category: 'trivy-homelabarr-backend'
         continue-on-error: true
 
       - name: Upload vulnerability reports
@@ -410,10 +427,15 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_VERSION: latest
+      - name: TruffleHog (verified secrets only)
+        # Replaces gitleaks-action, which now requires a paid license for org
+        # repos. TruffleHog scans full git history and --only-verified fails the
+        # job only on active/verified secrets. Local pre-commit (Betterleaks)
+        # handles the rule-based .gitleaks.toml checks before commit.
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            ghcr.io/trufflesecurity/trufflehog:3.95.5 \
+            git file:///repo --only-verified --fail --no-update
 
   license-audit:
     name: License audit

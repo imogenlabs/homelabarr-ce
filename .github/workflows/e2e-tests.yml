@@ -11,18 +11,10 @@ permissions:
 
 jobs:
   e2e:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - name: dev
-            url: https://ce-dev.homelabarr.com
-          # Uncomment when staging is stable:
-          # - name: staging
-          #   url: https://ce-staging.homelabarr.com
 
-    name: E2E (${{ matrix.target.name }})
+    name: E2E (local)
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -38,16 +30,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # Playwright's webServer builds the frontend and runs it via `vite preview`
+      # alongside the Node API in browse mode, then drives the real inline-login UI
+      # on localhost. This exercises the actual product end users get rather than the
+      # public demo (which trips the login rate-limiter and is being retired).
       - name: Run E2E tests
         run: npx playwright test --project=chromium
-        env:
-          TEST_BASE_URL: ${{ matrix.target.url }}
 
       - name: Upload test results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.target.name }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 14
 
@@ -55,6 +49,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         if: failure()
         with:
-          name: test-screenshots-${{ matrix.target.name }}
+          name: test-screenshots
           path: test-results/
           retention-days: 14

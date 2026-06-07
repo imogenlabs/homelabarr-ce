@@ -126,6 +126,9 @@ const globalRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
+  // Disabled only when explicitly opted in (E2E harness drives many requests from
+  // a single IP). Never set in production.
+  skip: () => process.env.RATE_LIMIT_DISABLED === 'true',
 });
 app.use(globalRateLimit);
 
@@ -170,7 +173,7 @@ function sendError(res, status, message, internalError) {
 }
 
 if (isDevelopment) {
-  app.options('*', (req, res) => {
+  app.options('/{*splat}', (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
     res.header('Access-Control-Allow-Headers',

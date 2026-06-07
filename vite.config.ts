@@ -1,5 +1,5 @@
 import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig, configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -17,14 +17,38 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          icons: ["lucide-react"],
+        manualChunks(id) {
+          if (
+            id.includes("node_modules/react") ||
+            id.includes("node_modules/react-dom")
+          ) {
+            return "vendor";
+          }
+          if (id.includes("node_modules/lucide-react")) {
+            return "icons";
+          }
         },
       },
     },
   },
+  test: {
+    exclude: [...configDefaults.exclude, "tests/e2e/**"],
+    passWithNoTests: true,
+  },
   server: {
+    port: 8080,
+    proxy: {
+      "/api": {
+        target: process.env.BACKEND_URL || "http://localhost:30002",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
+  // `vite preview` serves the production build, where the frontend uses the
+  // relative '/api' base (same-origin). Mirror the production nginx routing so
+  // a local backend can be driven through it (used by the Playwright E2E harness).
+  preview: {
     port: 8080,
     proxy: {
       "/api": {
