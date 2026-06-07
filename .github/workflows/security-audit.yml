@@ -251,6 +251,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes]
     if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
@@ -273,21 +276,17 @@ jobs:
 
       - name: Extract Docker images from compose files
         run: |
-          echo "Extracting Docker images from compose files..."
-          find apps -name "*.yml" -exec grep -h "image:" {} \; | \
-            sed 's/.*image: *["'"'"']*\([^"'"'"']*\)["'"'"']*.*/\1/' | \
-            grep -E "^[a-zA-Z0-9._/-]+:[a-zA-Z0-9._-]+$" | \
-            sort -u > docker-images.txt || echo "" > docker-images.txt
-          
-          if [ -s docker-images.txt ]; then
-            echo "Found Docker images:"
-            cat docker-images.txt
-          else
-            echo "No Docker images found to scan"
-            echo "Creating empty results for artifact upload"
-            mkdir -p trivy-results
-            echo "{}" > trivy-results/no-images-found.json
-          fi
+          # Scan ONLY HomelabARR's own published images. Previously this grepped
+          # image: from all app-store templates and scanned 100+ third-party
+          # upstream images (Plex/Jellyfin/etc.), gating CI on CVEs owned by
+          # upstream vendors that we cannot patch.
+          echo "Targeting HomelabARR's own images only..."
+          cat > docker-images.txt <<'EOF'
+          ghcr.io/smashingtags/homelabarr-frontend:latest
+          ghcr.io/smashingtags/homelabarr-backend:latest
+          EOF
+          sed -i 's/^ *//' docker-images.txt
+          echo "Images to scan:"; cat docker-images.txt
 
       - name: Scan HomelabARR container images
         run: |
@@ -365,12 +364,19 @@ jobs:
             echo "::warning::Found $total_high high severity vulnerabilities (threshold: 10)"
           fi
 
-      - name: Upload vulnerability scan results to GitHub Security
+      - name: Upload frontend SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
-        if: always() && hashFiles('trivy-results/*.sarif') != ''
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif') != ''
         with:
-          sarif_file: 'trivy-results/'
-          category: 'trivy-container-scan'
+          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif'
+          category: 'trivy-homelabarr-frontend'
+        continue-on-error: true
+      - name: Upload backend SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif') != ''
+        with:
+          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif'
+          category: 'trivy-homelabarr-backend'
         continue-on-error: true
 
       - name: Upload vulnerability reports
