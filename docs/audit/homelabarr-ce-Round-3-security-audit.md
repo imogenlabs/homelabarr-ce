@@ -2,7 +2,7 @@
 ## Auth Flow Hardening — Refresh Rotation, Session Revocation, MFA, Password Reset
 
 **Target (live):** https://ce-demo.homelabarr.com/
-**Target (repo):** https://github.com/smashingtags/homelabarr-ce
+**Target (repo):** https://github.com/imogenlabs/homelabarr-ce
 **Branch / HEAD audited:** main @ 7a0bdd40 (Merge dev: handoff docs update, 2026-05-22)
 **Date:** 2026-05-22
 **Auditor:** Claude (Imogen Labs audit playbook, Round 3)

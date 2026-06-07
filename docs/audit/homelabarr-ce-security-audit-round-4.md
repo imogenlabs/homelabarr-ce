@@ -63,7 +63,7 @@ Backend service runtime profile (verbatim excerpt):
 
 ```yaml
 backend:
-  image: ghcr.io/smashingtags/homelabarr-backend:latest
+  image: ghcr.io/imogenlabs/homelabarr-backend:latest
   container_name: homelabarr-backend
   restart: unless-stopped
   environment:
@@ -124,7 +124,7 @@ Nginx as root inside a container is the conventional default but is unnecessary 
 | `docker/build-push-action` w/ `provenance: true` | YES | SLSA build provenance attached |
 | `sbom: true` | YES | Syft-style SBOM attached |
 | Multi-platform (`linux/amd64,linux/arm64`) | YES | Good |
-| Cosign keyless signature | **NO** | No `cosign sign` step; consumers cannot `cosign verify --certificate-identity=... ghcr.io/smashingtags/homelabarr-backend:latest` |
+| Cosign keyless signature | **NO** | No `cosign sign` step; consumers cannot `cosign verify --certificate-identity=... ghcr.io/imogenlabs/homelabarr-backend:latest` |
 | Trivy image scan + SARIF | **NO** | `security-audit.yml` runs Trivy on **source**, not on the **published image** |
 | Pinned action SHAs | (mostly NO) | Uses tags like `@v5`; supply-chain risk if action repo is hijacked |
 | `permissions:` block minimized | PARTIAL | `id-token: write` present (good for OIDC) but workflow-level not job-level scoped |
@@ -222,7 +222,7 @@ services:
       retries: 3
 
   backend:
-    image: ghcr.io/smashingtags/homelabarr-backend:latest
+    image: ghcr.io/imogenlabs/homelabarr-backend:latest
     environment:
       # POINT THE BACKEND AT THE PROXY, NOT THE HOST SOCKET
       - DOCKER_HOST=tcp://socket-proxy:2375
@@ -299,14 +299,14 @@ docker exec homelabarr-backend ls -la /var/run/docker.sock 2>&1
 **WRONG**
 ```yaml
 backend:
-  image: ghcr.io/smashingtags/homelabarr-backend:latest
+  image: ghcr.io/imogenlabs/homelabarr-backend:latest
   # (no cap_drop, no security_opt, no read_only)
 ```
 
 **RIGHT**
 ```yaml
 backend:
-  image: ghcr.io/smashingtags/homelabarr-backend:latest
+  image: ghcr.io/imogenlabs/homelabarr-backend:latest
   user: "1001:1001"                                  # pin uid:gid from the image
   cap_drop:
     - ALL
@@ -567,27 +567,27 @@ And — separately — sign the pushed image with cosign keyless (uses the workf
 Then document the verify recipe in `SECURITY.md`:
 ```sh
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:latest
+  ghcr.io/imogenlabs/homelabarr-backend:latest
 ```
 
 ---
 
 ### M-R4-9 — Compose pins images by `:latest`, not by digest
 
-**Where:** `homelabarr.yml` — `image: ghcr.io/smashingtags/homelabarr-frontend:latest` and similarly for backend
+**Where:** `homelabarr.yml` — `image: ghcr.io/imogenlabs/homelabarr-frontend:latest` and similarly for backend
 
 **What:** `:latest` is a mutable tag. A successful supply-chain attack against the publishing pipeline silently updates every deployment on its next `docker compose pull`. SBOM and provenance attestations only matter if the consumer references an immutable digest.
 
 **WRONG**
 ```yaml
-image: ghcr.io/smashingtags/homelabarr-frontend:latest
+image: ghcr.io/imogenlabs/homelabarr-frontend:latest
 ```
 
 **RIGHT** — ship both the human-readable version and the immutable digest, document both:
 ```yaml
-image: ghcr.io/smashingtags/homelabarr-frontend:v1.2.3@sha256:<64hex>
+image: ghcr.io/imogenlabs/homelabarr-frontend:v1.2.3@sha256:<64hex>
 ```
 
 Provide a release script that bumps the digest pins in `homelabarr.yml` whenever a new tagged release is published, and have the cosign verify step (M-R4-8) gate it.
@@ -707,9 +707,9 @@ All HomelabARR-CE container images are signed via Sigstore (cosign keyless) and 
 Before pulling, verify the signature:
 
     cosign verify \
-      --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+      --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
       --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-      ghcr.io/smashingtags/homelabarr-backend:<version>
+      ghcr.io/imogenlabs/homelabarr-backend:<version>
 
 ## Production deployment checklist
 
@@ -795,9 +795,9 @@ grep -E 'image:.*@sha256:' homelabarr.yml | wc -l
 # Expect: >= 3   (frontend, backend, socket-proxy all pinned)
 
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:<tag>
+  ghcr.io/imogenlabs/homelabarr-backend:<tag>
 # Expect: 'Verified OK' with the rekor entry shown
 ```
 

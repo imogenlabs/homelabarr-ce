@@ -162,7 +162,7 @@ Add a Renovate or Dependabot config to bump these digests on a cadence so they d
 
 The harder version (digest in compose): every `image:` becomes `image: ghcr.io/.../homelabarr-backend:latest@sha256:<digest>`. This means CI must update the compose on every release (auto-PR).
 
-The pragmatic version (signature verification at pull time): keep `:latest` for the homelabarr-* images, but add a `# verify with: cosign verify ghcr.io/smashingtags/homelabarr-backend ...` comment block and document signature verification in SECURITY.md. This requires cosign-signing the GHCR push in the CI workflow.
+The pragmatic version (signature verification at pull time): keep `:latest` for the homelabarr-* images, but add a `# verify with: cosign verify ghcr.io/imogenlabs/homelabarr-backend ...` comment block and document signature verification in SECURITY.md. This requires cosign-signing the GHCR push in the CI workflow.
 
 Recommend the pragmatic version (cosign) over hard-pinning in compose, because:
 - Hard-pinning in a public compose file means every release changes the compose, which is noise self-hosters don't want.
@@ -247,7 +247,7 @@ Go with A.
 
 **Severity:** Medium (audit completeness)
 **Surface:** homelabarr.yml — frontend service
-**Why it matters:** The backend service was deeply inspected. The frontend (`ghcr.io/smashingtags/homelabarr-frontend:latest`, user 101:101) was confirmed to have a user directive but the full hardening directive set was not inventoried in this round. Likely-clean but unverified.
+**Why it matters:** The backend service was deeply inspected. The frontend (`ghcr.io/imogenlabs/homelabarr-frontend:latest`, user 101:101) was confirmed to have a user directive but the full hardening directive set was not inventoried in this round. Likely-clean but unverified.
 
 **FIX:** Agent reads homelabarr.yml frontend block and confirms the same set as backend: cap_drop ALL, security_opt no-new-privileges (apparmor optional since nginx has its own profile), read_only true with explicit tmpfs for /var/cache/nginx and /var/run, pids_limit, mem_limit, cpus, healthcheck. If any are missing, add them in the same PR as the H-class fixes.
 

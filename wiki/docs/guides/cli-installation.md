@@ -11,7 +11,7 @@ curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/ins
 ```
 
 !!! info "What this script does"
-    You can [review the full script](https://github.com/smashingtags/homelabarr-ce/blob/main/install-remote.sh) before running it — it's on GitHub and open source. It will ask you interactively for your timezone, user ID, and data paths before making any changes.
+    You can [review the full script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before running it — it's on GitHub and open source. It will ask you interactively for your timezone, user ID, and data paths before making any changes.
 
 The installer will:
 

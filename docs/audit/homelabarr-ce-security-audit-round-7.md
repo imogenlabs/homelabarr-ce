@@ -884,7 +884,7 @@ grep -E 'DEFAULT_ADMIN_PASSWORD=\$\{DEFAULT_ADMIN_PASSWORD:\?' homelabarr.yml | 
 # Expect: 1   (or 0 if migrated entirely to Docker secrets — which is the C-R7-1 outcome)
 
 # R5.5-drift-6: digest pinning
-grep -cE 'ghcr.io/smashingtags/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
+grep -cE 'ghcr.io/imogenlabs/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
 # Expect: 2
 
 # R5.5-drift-7: every uses: SHA-pinned

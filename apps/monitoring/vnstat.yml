@@ -7,7 +7,7 @@ services:
       - "PGID=${ID}"
       - "PUID=${ID}"
       - "TZ=${TZ}"
-    image: "ghcr.io/smashingtags/docker-vnstat:latest"
+    image: "ghcr.io/imogenlabs/docker-vnstat:latest"
     networks:
       - ${DOCKERNETWORK}
     restart: "${RESTARTAPP}"

@@ -312,9 +312,9 @@ gh workflow view security-audit.yml | grep -E 'osv-scanner|npm audit'
 
 # 2. Published image must be cosign-verifiable
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend@sha256:<digest-from-latest-build>
+  ghcr.io/imogenlabs/homelabarr-backend@sha256:<digest-from-latest-build>
 # Expect: 'Verified OK' with rekor entry
 
 # 3. Trivy SARIF must appear in the Security tab
@@ -388,25 +388,25 @@ npm -v
 
 ### H-R5-3 — Compose still on `:latest` for the HomelabARR-published images (R4.5-drift-2 promoted)
 
-**Where:** `homelabarr.yml` lines `image: ghcr.io/smashingtags/homelabarr-frontend:latest` and `image: ghcr.io/smashingtags/homelabarr-backend:latest`.
+**Where:** `homelabarr.yml` lines `image: ghcr.io/imogenlabs/homelabarr-frontend:latest` and `image: ghcr.io/imogenlabs/homelabarr-backend:latest`.
 
 **What:** R4 added cosign and Trivy gates to the supply chain (per C-R5-1), but until the **consumer-side compose file** pins by digest, the trust anchor is meaningless — every `docker compose pull` resolves `:latest` to whatever digest is current, including a digest published five minutes after an attacker steals an OIDC token. Round 5 is when the digest pin lands, because Round 5 is when the signature exists to verify it against.
 
 **WRONG**
 ```yaml
 frontend:
-  image: ghcr.io/smashingtags/homelabarr-frontend:latest
+  image: ghcr.io/imogenlabs/homelabarr-frontend:latest
 backend:
-  image: ghcr.io/smashingtags/homelabarr-backend:latest
+  image: ghcr.io/imogenlabs/homelabarr-backend:latest
 ```
 
 **RIGHT — pin by tag AND digest (tag for humans, digest for trust)**
 ```yaml
 frontend:
-  # docker buildx imagetools inspect ghcr.io/smashingtags/homelabarr-frontend:v2.2.0 --format '{{json .Manifest.Digest}}'
-  image: ghcr.io/smashingtags/homelabarr-frontend:v2.2.0@sha256:<64hex>
+  # docker buildx imagetools inspect ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0 --format '{{json .Manifest.Digest}}'
+  image: ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0@sha256:<64hex>
 backend:
-  image: ghcr.io/smashingtags/homelabarr-backend:v2.2.0@sha256:<64hex>
+  image: ghcr.io/imogenlabs/homelabarr-backend:v2.2.0@sha256:<64hex>
 ```
 
 And ship a release-time bumper script `scripts/bump-image-digests.sh`:
@@ -416,18 +416,18 @@ And ship a release-time bumper script `scripts/bump-image-digests.sh`:
 set -eu
 TAG="${1:?usage: $0 <tag e.g. v2.2.0>}"
 for img in homelabarr-frontend homelabarr-backend; do
-  digest=$(docker buildx imagetools inspect "ghcr.io/smashingtags/$img:$TAG" --format '{{.Manifest.Digest}}')
+  digest=$(docker buildx imagetools inspect "ghcr.io/imogenlabs/$img:$TAG" --format '{{.Manifest.Digest}}')
   # in-place rewrite of homelabarr.yml
   sed -i.bak -E \
-    "s|ghcr.io/smashingtags/$img:[^@\"'[:space:]]+(@sha256:[a-f0-9]+)?|ghcr.io/smashingtags/$img:$TAG@$digest|g" \
+    "s|ghcr.io/imogenlabs/$img:[^@\"'[:space:]]+(@sha256:[a-f0-9]+)?|ghcr.io/imogenlabs/$img:$TAG@$digest|g" \
     homelabarr.yml
 done
 rm -f homelabarr.yml.bak
 echo "Pinned to $TAG with current digests."
 echo "Now verify and commit:"
-echo "  cosign verify --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \\"
+echo "  cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \\"
 echo "    --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \\"
-echo "    ghcr.io/smashingtags/homelabarr-backend:$TAG"
+echo "    ghcr.io/imogenlabs/homelabarr-backend:$TAG"
 ```
 
 Mark this script executable and reference it in `SECURITY.md` as the release-time ritual.
@@ -435,7 +435,7 @@ Mark this script executable and reference it in `SECURITY.md` as the release-tim
 **Verification:**
 
 ```sh
-grep -E 'ghcr.io/smashingtags/homelabarr-(frontend|backend):[^@]+@sha256:' homelabarr.yml | wc -l
+grep -E 'ghcr.io/imogenlabs/homelabarr-(frontend|backend):[^@]+@sha256:' homelabarr.yml | wc -l
 # Expect: >= 2
 
 # No bare :latest anywhere
@@ -674,13 +674,13 @@ jobs:
 
 After it lands, add the badge to `README.md`:
 ```md
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/smashingtags/homelabarr-ce/badge)](https://securityscorecards.dev/viewer/?uri=github.com/smashingtags/homelabarr-ce)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce/badge)](https://securityscorecards.dev/viewer/?uri=github.com/imogenlabs/homelabarr-ce)
 ```
 
 **Verification:**
 ```sh
 gh workflow view scorecard.yml
-curl -fsS 'https://api.securityscorecards.dev/projects/github.com/smashingtags/homelabarr-ce' | jq '.score'
+curl -fsS 'https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce' | jq '.score'
 # Expect: a numeric score in [0, 10]; aim for >=7 after R1-R5
 ```
 
@@ -815,14 +815,14 @@ All HomelabARR-CE container images published to GHCR are:
 To verify before pulling:
 
     cosign verify \\
-      --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \\
+      --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \\
       --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \\
-      ghcr.io/smashingtags/homelabarr-backend:<tag>
+      ghcr.io/imogenlabs/homelabarr-backend:<tag>
 
 To extract the SBOM:
 
     docker buildx imagetools inspect \\
-      ghcr.io/smashingtags/homelabarr-backend:<tag> --format '{{ json .SBOM.SPDX }}' \\
+      ghcr.io/imogenlabs/homelabarr-backend:<tag> --format '{{ json .SBOM.SPDX }}' \\
       > backend.spdx.json
 ```
 
@@ -851,16 +851,16 @@ git checkout - && git branch -D test/intentional-cve
 LATEST=$(gh api repos/smashingtags/homelabarr-ce/packages/container/homelabarr-backend/versions \
          --jq '.[0].metadata.container.tags[0]')
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  ghcr.io/smashingtags/homelabarr-backend:$LATEST
+  ghcr.io/imogenlabs/homelabarr-backend:$LATEST
 # Expect: 'Verified OK' + rekor entry
 ```
 
 ### 4.3 — Image digest pin honored in `homelabarr.yml`
 
 ```sh
-grep -cE 'ghcr.io/smashingtags/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
+grep -cE 'ghcr.io/imogenlabs/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
 # Expect: 2
 
 grep -cE 'image:.*homelabarr-(frontend|backend):latest($|[[:space:]])' homelabarr.yml
@@ -901,7 +901,7 @@ corepack prepare --activate && npm -v
 ### 4.7 — Scorecard published and scoring
 
 ```sh
-curl -fsS 'https://api.securityscorecards.dev/projects/github.com/smashingtags/homelabarr-ce' | jq '{score, checks:[.checks[]|{name,score}]}'
+curl -fsS 'https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce' | jq '{score, checks:[.checks[]|{name,score}]}'
 # Expect: numeric overall score, per-check breakdown; aim >= 7
 ```
 
