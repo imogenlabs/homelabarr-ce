@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test.describe('Modals & Dialogs', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('text=Connected');
+    await login(page);
   });
 
   test('login modal opens centered', async ({ page }) => {

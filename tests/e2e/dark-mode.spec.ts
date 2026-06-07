@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test.describe('Dark Mode', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('text=Connected');
+    await login(page);
   });
 
   test('theme toggle changes background color', async ({ page }) => {

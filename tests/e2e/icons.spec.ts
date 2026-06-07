@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test.describe('App Icons', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('text=Connected');
+    await login(page);
   });
 
   test('no broken image elements visible', async ({ page }) => {
