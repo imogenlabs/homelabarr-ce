@@ -85,8 +85,8 @@ app.get('/api/health/detail', requireAdmin, requireXhr, healthDetail);
 
 ```yaml
 # R5.5-drift-6 — homelabarr.yml after tagging v2.3.0 and running scripts/bump-image-digests.sh v2.3.0
-image: ghcr.io/smashingtags/homelabarr-frontend:v2.3.0@sha256:<64hex>
-image: ghcr.io/smashingtags/homelabarr-backend:v2.3.0@sha256:<64hex>
+image: ghcr.io/imogenlabs/homelabarr-frontend:v2.3.0@sha256:<64hex>
+image: ghcr.io/imogenlabs/homelabarr-backend:v2.3.0@sha256:<64hex>
 ```
 
 ```bash
@@ -532,7 +532,7 @@ You will need:
 
 Procedure:
 
-    cd /opt && git clone https://github.com/smashingtags/homelabarr-ce && cd homelabarr-ce
+    cd /opt && git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce
     git checkout v2.3.0                                                  # match the lost host
     mkdir -p ./secrets && chmod 700 ./secrets
 
@@ -541,9 +541,9 @@ Procedure:
 
     # Verify image signatures BEFORE pulling
     cosign verify \
-      --certificate-identity-regexp '^https://github.com/smashingtags/homelabarr-ce/' \
+      --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
       --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-      ghcr.io/smashingtags/homelabarr-backend:v2.3.0
+      ghcr.io/imogenlabs/homelabarr-backend:v2.3.0
     cosign verify <same recipe for frontend>
 
     docker compose pull
@@ -648,7 +648,7 @@ curl -sI https://ce-demo.homelabarr.com/ | tr -d '\r' | grep -i '^server:'
 ## Reporting security issues
 
 Email <reporting@homelabarr.com> (preferred) or open a GitHub Security
-Advisory: https://github.com/smashingtags/homelabarr-ce/security/advisories/new
+Advisory: https://github.com/imogenlabs/homelabarr-ce/security/advisories/new
 
 PGP key fingerprint: <ADD-AFTER-OWNER-PASTES-FINGERPRINT>
 PGP key:             https://homelabarr.com/.well-known/pgp-key.asc
@@ -712,7 +712,7 @@ In order:
 2. Bootstrap secrets:  `scripts/init-secrets.sh` (writes `./secrets/`)
 3. Edit `./secrets/default_admin_password` if you want to set a known passcode, or use the generated one printed on first boot.
 4. Verify image signatures:
-   `cosign verify --certificate-identity-regexp ... ghcr.io/smashingtags/homelabarr-backend:v2.3.0`
+   `cosign verify --certificate-identity-regexp ... ghcr.io/imogenlabs/homelabarr-backend:v2.3.0`
 5. Bring the stack up:  `docker compose up -d`
 6. Encrypt the database on the FIRST upgrade to v2.3.0:  `docker compose exec backend bash scripts/encrypt-db.sh /app/data/homelabarr.db /run/secrets/sqlcipher_key`
 7. Verify health:  `curl -fsS https://<host>/api/health`  (status: OK)
@@ -847,7 +847,7 @@ curl -sI https://ce-demo.homelabarr.com/ | tr -d '\r' | grep -i ^server:
 
 ```sh
 # On a clean Docker host:
-git clone https://github.com/smashingtags/homelabarr-ce && cd homelabarr-ce && git checkout v2.3.0
+git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce && git checkout v2.3.0
 bash docs/dr-drill.sh
 # Expect: ends with 'DR DRILL OK'
 ```
@@ -884,7 +884,7 @@ jq -r .packageManager package.json
 # Expect: 'npm@10.x.x+sha256.…'
 
 # R5.5-drift-6: digest pins after tagging v2.3.0
-grep -cE 'ghcr.io/smashingtags/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
+grep -cE 'ghcr.io/imogenlabs/homelabarr-(frontend|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml
 # Expect: 2
 
 # R5.5-drift-7: all uses: SHA-pinned

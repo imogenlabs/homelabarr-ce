@@ -10,7 +10,7 @@ services:
       - "PLEX_CLAIM=PLEX_CLAIM_ID"
       - "VERSION=${PLEXVERSION}"
       - "ADVERTISE_IP=https://plex.${DOMAIN}:443"
-      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:plex|ghcr.io/smashingtags/homelabarr-mod-healthcheck:v1.0.0"
+      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:plex|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"
       - "TP_THEME=${PLEXTHEME}"
       - "TP_ADDON=${PLEXADDON}"
     image: "${PLEXIMAGE}"

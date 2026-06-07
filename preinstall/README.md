@@ -23,7 +23,7 @@ The preinstall process sets up the core infrastructure required for HomelabARR C
 #### Local-Persist Container Details:
 ```bash
 Container Name: local-persist
-Image: ghcr.io/smashingtags/homelabarr-cli/docker-local-persist:latest
+Image: ghcr.io/imogenlabs/homelabarr-cli/docker-local-persist:latest
 Restart Policy: unless-stopped
 Privileges: Required for volume plugin functionality
 Source: Official HomelabARR CLI custom container with enhanced features

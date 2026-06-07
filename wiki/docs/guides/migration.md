@@ -46,7 +46,7 @@ Don't stop your old containers yet. Install CE alongside them first so you can v
 
 ```bash
 # Get the code
-git clone https://github.com/smashingtags/homelabarr-ce.git /opt/homelabarr
+git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
 # Set required environment variables
@@ -312,5 +312,5 @@ If your existing setup already matches these, migration is basically just "insta
 ## Need Help?
 
 - **[Discord](https://discord.gg/Pc7mXX786x)** — Ask in #help, someone's usually around
-- **[GitHub Discussions](https://github.com/smashingtags/homelabarr-ce/discussions)** — For longer questions
+- **[GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)** — For longer questions
 - **[FAQ](faq.md)** — Common issues and fixes
