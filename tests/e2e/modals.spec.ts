@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { gotoDashboard } from './helpers';
 
 // Login is an inline full-page screen now (LoginScreen), not a modal — the only

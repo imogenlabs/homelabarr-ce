@@ -42,18 +42,8 @@ export default defineConfig({
 
   projects: [
     {
-      // Logs in once and saves the session, so specs reuse it and skip the
-      // per-test login (and its hydration race). Also warms the stack.
-      name: 'setup',
-      testMatch: /auth\.setup\.ts/,
-    },
-    {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/state.json',
-      },
-      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 
