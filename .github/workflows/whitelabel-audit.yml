@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   regenerate:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     # Skip if the last commit was itself an audit regeneration,
     # so we don't loop forever.
     if: "!contains(github.event.head_commit.message, 'regenerate white-label audit')"
