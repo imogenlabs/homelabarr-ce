@@ -1,9 +1,9 @@
-import { test, expect } from './fixtures';
-import { resetDashboard } from './helpers';
+import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test.describe('App Catalog', () => {
   test.beforeEach(async ({ page }) => {
-    await resetDashboard(page);
+    await login(page);
   });
 
   test('loads and displays app catalog', async ({ page }) => {

@@ -83,19 +83,6 @@ export default function containerRoutes({ dockerManager, requireAuth, getRequest
 
   router.get('/containers', requireAuth, async (req, res) => {
     try {
-      // E2E harness opt-in: skip the synchronous `docker ps` shell-out. It blocks
-      // the Node event loop, and when the runner has no/stalled Docker daemon it
-      // hangs the whole backend (the dashboard then never finishes loading). The
-      // UI suite doesn't exercise container management. Off by default; never set
-      // in production.
-      if (process.env.E2E_DISABLE_DOCKER === 'true') {
-        return res.json({
-          success: true,
-          containers: [],
-          docker: { status: 'disabled', message: 'Docker disabled for E2E' },
-        });
-      }
-
       const serviceStatus = { status: 'connected', message: 'CLI-based Docker access' };
 
       let containers = [];
