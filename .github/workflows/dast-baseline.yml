@@ -33,14 +33,6 @@ jobs:
           cmd_options: '-a -j'
           artifact_name: 'zap-baseline-report'
           allow_issue_writing: false
-
-      - name: Upload ZAP Report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: zap-baseline-report
-          path: |
-            report_html.html
-            report_json.json
-            report_md.md
-          retention-days: 30
+          # The ZAP action uploads the report as the 'zap-baseline-report'
+          # artifact (artifact_name above); a second upload-artifact step with the
+          # same name 409s on upload-artifact v4+, so it's intentionally omitted.
