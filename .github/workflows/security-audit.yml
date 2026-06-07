@@ -184,9 +184,20 @@ jobs:
       - name: Validate Docker Compose files
         run: |
           echo "Validating Docker Compose configurations..."
+          # Validate only real app compose templates: files with a top-level
+          # services: key, excluding GPU override fragments (.gpu/, merged into a
+          # base file at install time) and monitoring config/provisioning YAML
+          # (Prometheus/Loki/Grafana files that aren't compose projects).
+          # --no-interpolate: app-store templates use ${VARS} filled in at install
+          # time, so validate structure without resolving them (an unset image var
+          # would otherwise read as a blank image and fail validation).
           find apps -name "*.yml" -o -name "*.yaml" | while read -r compose_file; do
+            case "$compose_file" in
+              */.gpu/*|*/provisioning/*) continue ;;
+            esac
+            grep -qE "^services:" "$compose_file" || continue
             echo "Validating: $compose_file"
-            if ! docker-compose -f "$compose_file" config --quiet; then
+            if ! docker-compose -f "$compose_file" config --no-interpolate --quiet; then
               echo "::error::Docker Compose validation failed for $compose_file"
               exit 1
             else
