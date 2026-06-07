@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { gotoDashboard } from './helpers';
 
 test.describe('Footer & Branding', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await gotoDashboard(page);
   });
 
   test('footer is visible with Imogen Labs branding', async ({ page }) => {

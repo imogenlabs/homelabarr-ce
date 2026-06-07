@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { gotoDashboard } from './helpers';
 
 test.describe('App Icons', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await gotoDashboard(page);
   });
 
   test('no broken image elements visible', async ({ page }) => {

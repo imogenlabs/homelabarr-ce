@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
+import { gotoDashboard } from './helpers';
 
 test.describe('App Catalog', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await gotoDashboard(page);
   });
 
   test('loads and displays app catalog', async ({ page }) => {
