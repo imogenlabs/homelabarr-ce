@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-05-23 20:13 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-14 09:28 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1363
+**Total brand references found:** 1327
 
 ---
 
@@ -21,12 +21,12 @@
 | `src/App.tsx` | 522 | `              const isEnhancedMount = app.name.includes('homelabarr-mount-enhanced') \|\|` |
 | `src/App.tsx` | 888 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
 | `src/App.tsx` | 889 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
-| `src/App.tsx` | 890 | `            <a href="https://github.com/imogenlabs/homelabarr-ce" target="_blank" rel="noopener noreferrer" className=` |
+| `src/App.tsx` | 890 | `            <a href="https://github.com/imogenlabs/homelabarr-ce" target="_blank" rel="noopener noreferrer" className="h` |
 | `src/components/EnhancedMountOnboarding.tsx` | 36 | `      helpUrl: 'https://docs.homelabarr.com/installation/traefik'` |
 | `src/components/EnhancedMountOnboarding.tsx` | 44 | `      helpUrl: 'https://docs.homelabarr.com/installation/authelia'` |
 | `src/components/EnhancedMountOnboarding.tsx` | 52 | `      helpUrl: 'https://docs.homelabarr.com/setup/domain'` |
 | `src/components/HelpModal.tsx` | 107 | `                  { label: "Wiki & Docs", href: "https://wiki.homelabarr.com", desc: "Full documentation" },` |
-| `src/components/HelpModal.tsx` | 108 | `                  { label: "GitHub", href: "https://github.com/imogenlabs/homelabarr-ce", desc: "Source code & issues"` |
+| `src/components/HelpModal.tsx` | 108 | `                  { label: "GitHub", href: "https://github.com/imogenlabs/homelabarr-ce", desc: "Source code & issues" }` |
 | `src/components/HelpModal.tsx` | 109 | `                  { label: "Discord Community", href: "https://discord.gg/Pc7mXX786x", desc: "Get help & chat" },` |
 | `src/components/HelpModal.tsx` | 110 | `                  { label: "Reddit", href: "https://reddit.com/r/homelabarr", desc: "r/homelabarr" },` |
 | `src/data/app-metadata.ts` | 198 | `  'homelabarr-uploader': Zap,` |
@@ -131,14 +131,14 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**22 references**
+**29 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
 | `.github/workflows/compliance-binder.yml` | 33 | `          EVIDENCE_HOST: 'ce-demo.homelabarr.com'` |
 | `.github/workflows/compliance-evidence.yml` | 25 | `          EVIDENCE_HOST: ce-demo.homelabarr.com` |
 | `.github/workflows/dast-active.yml` | 22 | `  ZAP_TARGET: ${{ inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
-| `.github/workflows/dast-baseline.yml` | 30 | `          target: 'https://ce-demo.homelabarr.com'` |
+| `.github/workflows/dast-baseline.yml` | 28 | `          target: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/dependency-staleness.yml` | 96 | `                  body: '**Staleness alert:** This ${b.cls} dependency PR has been open ${b.ageDays} days. ${b.status} p` |
 | `.github/workflows/deploy-drift.yml` | 19 | `            const LIVE_URL = 'https://ce-demo.homelabarr.com/';` |
 | `.github/workflows/docker-build-push.yml` | 17 | `  NAMESPACE: smashingtags` |
@@ -153,10 +153,17 @@
 | `.github/workflows/docker-build-push.yml` | 247 | `        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 254 | `        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 271 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
-| `.github/workflows/e2e-tests.yml` | 20 | `            url: https://ce-dev.homelabarr.com` |
-| `.github/workflows/e2e-tests.yml` | 23 | `          #   url: https://ce-staging.homelabarr.com` |
+| `.github/workflows/e2e-tests.yml` | 39 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
-| `.github/workflows/pentest.yml` | 34 | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
+| `.github/workflows/pentest.yml` | 32 | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
+| `.github/workflows/security-audit.yml` | 278 | `          ghcr.io/smashingtags/homelabarr-frontend:latest` |
+| `.github/workflows/security-audit.yml` | 279 | `          ghcr.io/smashingtags/homelabarr-backend:latest` |
+| `.github/workflows/security-audit.yml` | 362 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif') != ''` |
+| `.github/workflows/security-audit.yml` | 364 | `          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif'` |
+| `.github/workflows/security-audit.yml` | 365 | `          category: 'trivy-homelabarr-frontend'` |
+| `.github/workflows/security-audit.yml` | 369 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif') != ''` |
+| `.github/workflows/security-audit.yml` | 371 | `          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif'` |
+| `.github/workflows/security-audit.yml` | 372 | `          category: 'trivy-homelabarr-backend'` |
 
 ## Config files (`package.json`, `CNAME`, `.env.example`, `nginx.conf.template`)
 
@@ -171,7 +178,7 @@
 
 ## Install & utility scripts
 
-**61 references**
+**59 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -203,11 +210,9 @@
 | `scripts/backup.sh` | 38 | `  BACKUP_FILE="${LOCAL_DIR}/homelabarr.${TS}.db"` |
 | `scripts/backup.sh` | 49 | `find "$LOCAL_DIR" -name 'homelabarr-*' -mtime +14 -delete 2>/dev/null \|\| true` |
 | `scripts/bump-image-digests.sh` | 4 | `for img in homelabarr-frontend homelabarr-backend; do` |
-| `scripts/bump-image-digests.sh` | 5 | `  digest=$(docker buildx imagetools inspect "ghcr.io/imogenlabs/$img:$TAG" --format '{{.Manifest.Digest}}')` |
-| `scripts/bump-image-digests.sh` | 7 | `    "s\|ghcr.io/imogenlabs/$img:[^@\"'[:space:]]+(@sha256:[a-f0-9]+)?\|ghcr.io/imogenlabs/$img:$TAG@$digest\|g" \` |
 | `scripts/bump-image-digests.sh` | 8 | `    homelabarr.yml` |
 | `scripts/bump-image-digests.sh` | 10 | `rm -f homelabarr.yml.bak` |
-| `scripts/bump-image-digests.sh` | 12 | `echo "Verify with: cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' --certi` |
+| `scripts/bump-image-digests.sh` | 12 | `echo "Verify with: cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' --certifi` |
 | `scripts/detect-lxc-storage.sh` | 214 | `        echo "   • Edit: /opt/homelabarr/config/storage-override.json"` |
 | `scripts/detect-lxc-storage.sh` | 234 | `    local CONFIG_DIR="/opt/homelabarr/config"` |
 | `scripts/encrypt-db.sh` | 3 | `DB_PATH="${1:?usage: $0 <path/to/homelabarr.db>}"` |
@@ -239,7 +244,7 @@
 
 ## Root documentation
 
-**72 references**
+**67 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -268,46 +273,41 @@
 | `README.md` | 21 | `    <a href="https://wiki.homelabarr.com">` |
 | `README.md` | 24 | `    <a href="https://www.reddit.com/r/homelabarr/">` |
 | `README.md` | 25 | `        <img src="https://img.shields.io/badge/Reddit-r/homelabarr-FF4500?logo=reddit&logoColor=white" alt="Reddit">` |
-| `README.md` | 30 | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/github-code-scanning/codeql">` |
-| `README.md` | 31 | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/github-code-scanning/codeql/badge.svg"` |
-| `README.md` | 33 | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build.yml">` |
-| `README.md` | 34 | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build.yml/badge.svg" alt="Docke` |
+| `README.md` | 30 | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml">` |
+| `README.md` | 31 | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Do` |
+| `README.md` | 33 | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml">` |
+| `README.md` | 34 | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Secur` |
 | `README.md` | 39 | `    <a href="https://ce-demo.homelabarr.com">` |
 | `README.md` | 42 | `    <a href="https://homelabarr.com">` |
 | `README.md` | 43 | `        <img src="https://img.shields.io/badge/Website-homelabarr.com-FF8C1A?logo=firefox&logoColor=white" alt="HomelabA` |
-| `README.md` | 76 | `Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)` |
-| `README.md` | 87 | `# 1. Grab the code (cloning to /opt/homelabarr is recommended — it matches the default template path)` |
-| `README.md` | 88 | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
-| `README.md` | 89 | `cd /opt/homelabarr` |
-| `README.md` | 97 | `docker compose -f homelabarr.yml up -d` |
-| `README.md` | 104 | `> 💾 **For a permanent setup**, move those exports into a '.env' file in the same directory as 'homelabarr.yml' instea` |
-| `README.md` | 106 | `> 📁 **Cloned somewhere other than '/opt/homelabarr'?** Set 'CLI_BRIDGE_HOST_PATH' in your '.env' to match your clone ` |
-| `README.md` | 110 | `> ⚠️ **Running in a Proxmox LXC?** You might need to add 'lxc.apparmor.profile: unconfined' to the container config.` |
-| `README.md` | 112 | `Want to build from source instead? Check the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
-| `README.md` | 165 | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
-| `README.md` | 179 | `All the config options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
-| `README.md` | 186 | `homelabarr-ce/` |
-| `README.md` | 196 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
-| `README.md` | 199 | `├── homelabarr.yml    # The Docker Compose file you run` |
-| `README.md` | 226 | `\| [CodeQL](https://github.com/imogenlabs/homelabarr-ce/security/code-scanning) \| The actual code — injection bugs,` |
-| `README.md` | 227 | `\| [Snyk](https://snyk.io/test/github/smashingtags/homelabarr-ce) \| Every npm package and Docker base image for known v` |
-| `README.md` | 228 | `\| [Dependabot](https://github.com/imogenlabs/homelabarr-ce/security/dependabot) \| Outdated packages that have securi` |
-| `README.md` | 229 | `\| [Docker Scout](https://hub.docker.com/r/smashingtags/homelabarr-frontend) \| The finished container images, plus supp` |
-| `README.md` | 249 | `User accounts, API keys, and sessions are stored in '/app/server/config/' inside the backend container. The 'homelabarr-` |
-| `README.md` | 261 | `3. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabar` |
-| `README.md` | 277 | `\| 🌐 **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 278 | `\| 📖 **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 279 | `\| 🎮 **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 280 | `\| 💬 **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 281 | `\| 📣 **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 291 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
+| `README.md` | 70 | `Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)` |
+| `README.md` | 82 | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
+| `README.md` | 83 | `cd /opt/homelabarr` |
+| `README.md` | 91 | `docker compose -f homelabarr.yml up -d` |
+| `README.md` | 96 | `> **For a permanent setup**, move those exports into a '.env' file. See the [configuration docs](https://wiki.homelabarr` |
+| `README.md` | 100 | `Want to build from source? See the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
+| `README.md` | 150 | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
+| `README.md` | 169 | `\| **Disclosure** \| [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known` |
+| `README.md` | 184 | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-` |
+| `README.md` | 185 | `3. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
+| `README.md` | 205 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
+| `README.md` | 212 | `homelabarr-ce/` |
+| `README.md` | 226 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
+| `README.md` | 230 | `├── homelabarr.yml    # Production Docker Compose` |
+| `README.md` | 253 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
+| `README.md` | 254 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
+| `README.md` | 255 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
+| `README.md` | 256 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
+| `README.md` | 257 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
+| `README.md` | 258 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
+| `README.md` | 268 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 11 | `\| Latest release \| Yes — see [Releases](https://github.com/imogenlabs/homelabarr-ce/releases/latest) \|` |
 | `SECURITY.md` | 79 | `- Backend container runs as non-root user ('homelabarr:1001')` |
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
 | `SECURITY.md` | 146 | `  ghcr.io/imogenlabs/homelabarr-backend:<tag>` |
 | `SECURITY.md` | 153 | `  ghcr.io/imogenlabs/homelabarr-backend:<tag> \` |
 | `SECURITY.md` | 163 | `- 'docker inspect homelabarr-backend' shows 'ReadonlyRootfs: true' and 'CapDrop: [ALL]'` |
-| `SECURITY.md` | 207 | `Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/imogenlabs/homelabarr-ce/securi` |
+| `SECURITY.md` | 207 | `Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/imogenlabs/homelabarr-ce/security` |
 | `SECURITY.md` | 218 | `We will not pursue legal action against good-faith security research that limits testing to ce-demo.homelabarr.com or yo` |
 | `SECURITY.md` | 223 | `Traefik, frontend, backend, and socket-proxy all on the same Docker host. The 'homelabarr-internal' bridge network is th` |
 | `SECURITY.md` | 240 | `git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce` |
@@ -318,16 +318,15 @@
 
 ## Wiki content
 
-**196 references**
+**195 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
 | `wiki/docs/CNAME` | 1 | `wiki.homelabarr.com` |
 | `wiki/docs/guides/api-reference.md` | 5 | `**Base URL:** 'https://homelabarr.YOUR-DOMAIN/api/' (behind Traefik — recommended)` |
 | `wiki/docs/guides/architecture.md` | 104 | `homelabarr-data/        # Docker volume — HomelabARR settings (users, sessions)` |
-| `wiki/docs/guides/architecture.md` | 133 | `2. Pushes to GitHub Container Registry ('ghcr.io/imogenlabs/')` |
 | `wiki/docs/guides/cli-installation.md` | 10 | `curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh \| sudo bash` |
-| `wiki/docs/guides/cli-installation.md` | 14 | `    You can [review the full script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before r` |
+| `wiki/docs/guides/cli-installation.md` | 14 | `    You can [review the full script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before run` |
 | `wiki/docs/guides/cli-installation.md` | 19 | `2. Download the HomelabARR repo to '/opt/homelabarr'` |
 | `wiki/docs/guides/cli-installation.md` | 46 | `cd /opt/homelabarr` |
 | `wiki/docs/guides/cli-installation.md` | 52 | `docker compose -f homelabarr.yml up -d` |
@@ -362,7 +361,7 @@
 | `wiki/docs/guides/migration.md` | 58 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/migration.md` | 314 | `- **[Discord](https://discord.gg/Pc7mXX786x)** — Ask in #help, someone's usually around` |
 | `wiki/docs/guides/migration.md` | 315 | `- **[GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)** — For longer questions` |
-| `wiki/docs/guides/mobile-app.md` | 24 | `\| **Build from source** \| Always free \| [github.com/imogenlabs/homelabarr-mobile](https://github.com/imogenlabs/h` |
+| `wiki/docs/guides/mobile-app.md` | 24 | `\| **Build from source** \| Always free \| [github.com/imogenlabs/homelabarr-mobile](https://github.com/imogenlabs/homel` |
 | `wiki/docs/guides/mobile-app.md` | 41 | `\| Traefik + domain \| 'https://homelabarr.yourdomain.com' \|` |
 | `wiki/docs/guides/mobile-app.md` | 42 | `\| Cloudflare Tunnel \| 'https://homelabarr.yourdomain.com' \|` |
 | `wiki/docs/guides/mobile-app.md` | 64 | `- Is your CE server running? Check: 'docker ps \| grep homelabarr'` |
@@ -373,18 +372,18 @@
 | `wiki/docs/guides/quick-start.md` | 54 | `cd /opt/homelabarr` |
 | `wiki/docs/guides/quick-start.md` | 84 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/quick-start.md` | 132 | `curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh \| sudo bash` |
-| `wiki/docs/guides/quick-start.md` | 136 | `    You can [review the script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before runnin` |
+| `wiki/docs/guides/quick-start.md` | 136 | `    You can [review the script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before running ` |
 | `wiki/docs/guides/quick-start.md` | 141 | `2. Clone the repo to '/opt/homelabarr'` |
 | `wiki/docs/guides/quick-start.md` | 176 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/quick-start.md` | 189 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/security.md` | 3 | `HomelabARR CE ships with a production-grade security envelope by default. This page summarizes the controls that are act` |
 | `wiki/docs/guides/security.md` | 40 | `- **GitHub:** [Security Advisories](https://github.com/imogenlabs/homelabarr-ce/security/advisories/new)` |
 | `wiki/docs/guides/security.md` | 41 | `- **Machine-readable:** [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) (RFC 9116)` |
-| `wiki/docs/guides/security.md` | 47 | `- **Threat model:** [docs/threat-model/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/threat-model) — ` |
-| `wiki/docs/guides/security.md` | 48 | `- **Incident response:** [docs/ir/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/ir) — 11 playbooks co` |
-| `wiki/docs/guides/security.md` | 49 | `- **Compliance posture:** [compliance/](https://github.com/imogenlabs/homelabarr-ce/tree/main/compliance) — CIS Dock` |
-| `wiki/docs/guides/security.md` | 50 | `- **Audit trail:** [docs/audit/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/audit) — 18 rounds, 201+` |
-| `wiki/docs/guides/security.md` | 51 | `- **Dependency policy:** [docs/governance/dependency-update-policy.md](https://github.com/imogenlabs/homelabarr-ce/blo` |
+| `wiki/docs/guides/security.md` | 47 | `- **Threat model:** [docs/threat-model/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/threat-model) — as` |
+| `wiki/docs/guides/security.md` | 48 | `- **Incident response:** [docs/ir/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/ir) — 11 playbooks cove` |
+| `wiki/docs/guides/security.md` | 49 | `- **Compliance posture:** [compliance/](https://github.com/imogenlabs/homelabarr-ce/tree/main/compliance) — CIS Docker` |
+| `wiki/docs/guides/security.md` | 50 | `- **Audit trail:** [docs/audit/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/audit) — 18 rounds, 201+ f` |
+| `wiki/docs/guides/security.md` | 51 | `- **Dependency policy:** [docs/governance/dependency-update-policy.md](https://github.com/imogenlabs/homelabarr-ce/blob/` |
 | `wiki/docs/img/diagrams/generate_diagrams.py` | 49 | `    ax.text(0.99, 0.015, 'homelabarr.com  \|  Imogen Labs',` |
 | `wiki/docs/img/diagrams/generate_diagrams.py` | 67 | `    ax.text(0.5, 0.97, 'HOMELABARR CE  --  SYSTEM ARCHITECTURE',` |
 | `wiki/docs/img/diagrams/generate_diagrams.py` | 82 | `        'https://homelabarr.YOUR-DOMAIN', color=FLOW, fs=14, sub_fs=10, sub_gap=0.02)` |
@@ -455,7 +454,7 @@
 | `wiki/site/guides/migration/index.html` | 415 | `sudo<span class=w> </span>tar<span class=w> </span>czf<span class=w> </span>/opt/homelabarr-backup-<span class=k>$(</spa` |
 | `wiki/site/guides/migration/index.html` | 422 | `</code></pre></div> <p>Verify the backup completed before continuing: </p><div class=highlight><pre><span></span><code>l` |
 | `wiki/site/guides/migration/index.html` | 423 | `</code></pre></div><p></p> </div> <hr> <h2 id=step-1-install-homelabarr-ce>Step 1: Install HomelabARR CE<a class=headerl` |
-| `wiki/site/guides/migration/index.html` | 424 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/imogenlabs/homelabarr-ce.git<span class=w> </sp` |
+| `wiki/site/guides/migration/index.html` | 424 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/imogenlabs/homelabarr-ce.git<span class=w> </span` |
 | `wiki/site/guides/migration/index.html` | 425 | `<span class=nb>cd</span><span class=w> </span>/opt/homelabarr` |
 | `wiki/site/guides/migration/index.html` | 433 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
 | `wiki/site/guides/migration/index.html` | 479 | `</code></pre></div> <div class="admonition tip"> <p class=admonition-title>Keep your rclone config</p> <p>Even if you mo` |
@@ -494,7 +493,7 @@
 | `wiki/site/img/diagrams/generate_diagrams.py` | 153 | `    ax.text(0.17, 0.115, 'homelabarr-data', fontsize=8,` |
 | `wiki/site/index.html` | 1 | `<!DOCTYPE html><html lang=en class=no-js><head><meta charset=utf-8><meta name=viewport content="width=device-width,initi` |
 | `wiki/site/index.html` | 414 | `        </style></head> <body dir=ltr data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=blue> ` |
-| `wiki/site/index.html` | 415 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/imogenlabs/homelabarr-ce.git<span class=w> </sp` |
+| `wiki/site/index.html` | 415 | `git<span class=w> </span>clone<span class=w> </span>https://github.com/imogenlabs/homelabarr-ce.git<span class=w> </span` |
 | `wiki/site/index.html` | 416 | `<span class=nb>cd</span><span class=w> </span>/opt/homelabarr` |
 | `wiki/site/index.html` | 424 | `docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>homelabarr.yml<span class=w> </span>up<` |
 | `wiki/site/index.html` | 425 | `</code></pre></div> <p>Open <strong>http://YOUR-SERVER-IP:8084</strong> and log in with <code>admin</code> / <code>admin` |
@@ -521,7 +520,7 @@
 
 ## Other
 
-**910 references**
+**875 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -565,30 +564,6 @@
 | `.zap/scan-config.yml` | 16 | `    - https://ce-demo.homelabarr.com/sitemap\.xml` |
 | `.zap/scan-config.yml` | 17 | `    - https://ce-demo.homelabarr.com/\.well-known/.*` |
 | `.zap/scan-config.yml` | 21 | `    loginUrl: https://ce-demo.homelabarr.com/api/auth/login` |
-| `CLAUDE.md` | 7 | `- Repo: 'smashingtags/homelabarr-ce' (private)` |
-| `CLAUDE.md` | 8 | `- Owner: Michael (smashingtags)` |
-| `CLAUDE.md` | 10 | `- Live demo: https://ce-demo.homelabarr.com` |
-| `CLAUDE.md` | 11 | `- Wiki: https://wiki.homelabarr.com (GitHub Pages, MkDocs Material)` |
-| `CLAUDE.md` | 22 | `- ':latest' — prod/demo (ce-demo.homelabarr.com)` |
-| `CLAUDE.md` | 23 | `- ':staging' — staging (ce-staging.homelabarr.com)` |
-| `CLAUDE.md` | 24 | `- ':dev' — dev (ce-dev.homelabarr.com)` |
-| `CLAUDE.md` | 40 | `\| Prod/Demo \| 121 (ce-prod) \| 192.168.1.231 \| ce-demo.homelabarr.com \| ':latest' \| docker-compose.ce.yml \|` |
-| `CLAUDE.md` | 41 | `\| Staging \| 122 (ce-staging) \| 192.168.1.232 \| ce-staging.homelabarr.com \| ':staging' \| docker-compose.ce.yml \|` |
-| `CLAUDE.md` | 42 | `\| Dev \| 123 (ce-dev) \| 192.168.1.233 \| ce-dev.homelabarr.com \| ':dev' \| docker-compose.ce-dev.yml \|` |
-| `CLAUDE.md` | 53 | `cd /tmp && rm -rf homelabarr-ce-build` |
-| `CLAUDE.md` | 54 | `git clone --depth 1 --branch main https://github.com/imogenlabs/homelabarr-ce.git homelabarr-ce-build` |
-| `CLAUDE.md` | 55 | `cd homelabarr-ce-build` |
-| `CLAUDE.md` | 58 | `docker build --no-cache -t ghcr.io/imogenlabs/homelabarr-frontend:latest -f Dockerfile .` |
-| `CLAUDE.md` | 59 | `docker push ghcr.io/imogenlabs/homelabarr-frontend:latest` |
-| `CLAUDE.md` | 62 | `docker build --no-cache -t ghcr.io/imogenlabs/homelabarr-backend:latest -f Dockerfile.backend .` |
-| `CLAUDE.md` | 63 | `docker push ghcr.io/imogenlabs/homelabarr-backend:latest` |
-| `CLAUDE.md` | 67 | `docker compose -f docker-compose.ce.yml up -d --force-recreate homelabarr-demo-frontend homelabarr-demo-backend` |
-| `CLAUDE.md` | 70 | `docker tag ghcr.io/imogenlabs/homelabarr-frontend:latest ghcr.io/imogenlabs/homelabarr-frontend:staging` |
-| `CLAUDE.md` | 71 | `docker tag ghcr.io/imogenlabs/homelabarr-frontend:latest ghcr.io/imogenlabs/homelabarr-frontend:dev` |
-| `CLAUDE.md` | 72 | `docker push ghcr.io/imogenlabs/homelabarr-frontend:staging` |
-| `CLAUDE.md` | 73 | `docker push ghcr.io/imogenlabs/homelabarr-frontend:dev` |
-| `CLAUDE.md` | 76 | `rm -rf /tmp/homelabarr-ce-build` |
-| `CLAUDE.md` | 128 | `- Don't touch the mobile app ('homelabarr-mobile') — it's approved on the App Store. The WebView + fetch shim pattern ` |
 | `Makefile` | 9 | `encrypt-db:      ; docker compose exec backend bash scripts/encrypt-db.sh /app/data/homelabarr.db /run/secrets/sqlcipher` |
 | `apps/.installer/ubuntu.sh` | 6 | `# Docker owned homelabarr           #` |
 | `apps/.installer/ubuntu.sh` | 7 | `# Docker Maintainer homelabarr      #` |
@@ -603,9 +578,8 @@
 | `apps/.installer/ubuntu.sh` | 386 | `   appfolder=/opt/homelabarr/apps/` |
 | `apps/.installer/ubuntu.sh` | 408 | `  appfolder="/opt/homelabarr/apps"` |
 | `apps/.installer/ubuntu.sh` | 724 | `appfolder="/opt/homelabarr/apps"` |
-| `apps/backup/restic.yml` | 11 | `    image: "ghcr.io/imogenlabs/docker-restic:1.0.0"` |
 | `apps/downloads/nzbget.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:nzbget\|ghcr.io/imogenlabs/homelabarr-mod-nzbget:v1.0.0"` |
-| `apps/downloads/qbittorrent.yml` | 12 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:qbittorrent\|ghcr.io/imogenlabs/homelabarr-mod-qbittorrent:v1.0.` |
+| `apps/downloads/qbittorrent.yml` | 12 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:qbittorrent\|ghcr.io/imogenlabs/homelabarr-mod-qbittorrent:v1.0.0"` |
 | `apps/downloads/sabnzbd.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:sabnzbd\|ghcr.io/imogenlabs/homelabarr-mod-sabnzbd:v1.0.0"` |
 | `apps/media-management/bazarr.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:bazarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/lidarr.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:lidarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
@@ -613,7 +587,6 @@
 | `apps/media-management/readarr.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:readarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/sonarr.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:sonarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/tautulli.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:tautulli\|ghcr.io/imogenlabs/homelabarr-mod-tautulli:v1.0.0"` |
-| `apps/media-management/traktarr.yml` | 18 | `    image: "ghcr.io/imogenlabs/docker-traktarr:1.0.0"` |
 | `apps/media-servers/emby.yml` | 17 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:emby\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-servers/jellyfin.yml` | 11 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:jellyfin\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-servers/plex-gluetun.yml` | 13 | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:plex\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
@@ -644,7 +617,6 @@
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 428 | `        homelabarr_containers = [` |
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 434 | `        print(f"📊 Found {len(homelabarr_containers)} HomelabARR CLI applications")` |
 | `apps/monitoring/scripts/auto-dashboard-generator.py` | 437 | `        for container in homelabarr_containers:` |
-| `apps/monitoring/vnstat.yml` | 10 | `    image: "ghcr.io/imogenlabs/docker-vnstat:latest"` |
 | `apps/system/cf-companion.yml` | 4 | `    image: "smashingtags/cf-companion:latest"` |
 | `apps/system/cf-companion.yml` | 19 | `      - "com.homelabarr.name=CF Companion"` |
 | `apps/system/cf-companion.yml` | 20 | `      - "com.homelabarr.description=Auto-create Cloudflare DNS records for containers with Traefik labels"` |
@@ -802,7 +774,7 @@
 | `docs/audit/R19-runtime-contract-build-time.md` | 225 | `**Why it matters:** Per the deploy-pipeline doc (read with permission), the production fleet runs Watchtower in LABEL_EN` |
 | `docs/audit/R19-runtime-contract-build-time.md` | 229 | `**Option A (recommended for self-hosters):** ship the compose WITHOUT watchtower labels. Add a comment block in homelaba` |
 | `docs/audit/R19-runtime-contract-build-time.md` | 249 | `**Surface:** homelabarr.yml — frontend service` |
-| `docs/audit/R19-runtime-contract-build-time.md` | 250 | `**Why it matters:** The backend service was deeply inspected. The frontend ('ghcr.io/imogenlabs/homelabarr-frontend:la` |
+| `docs/audit/R19-runtime-contract-build-time.md` | 250 | `**Why it matters:** The backend service was deeply inspected. The frontend ('ghcr.io/imogenlabs/homelabarr-frontend:late` |
 | `docs/audit/R19-runtime-contract-build-time.md` | 252 | `**FIX:** Agent reads homelabarr.yml frontend block and confirms the same set as backend: cap_drop ALL, security_opt no-n` |
 | `docs/audit/R19-runtime-contract-build-time.md` | 288 | `  curl -s https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/$f \| grep -E '^FROM ' \|\| echo "no FROM li` |
 | `docs/audit/R19-runtime-contract-build-time.md` | 295 | `  curl -s https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/$f \| grep -E '(ENTRYPOINT\|dumb-init\|tini)` |
@@ -954,7 +926,7 @@
 | `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 651 | `curl -sI https://ce-demo.homelabarr.com/ \| grep -i strict-transport-security` |
 | `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 708 | `// Paste into DevTools console on https://ce-demo.homelabarr.com/?_v=r2verify` |
 | `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 789 | `1. **HSTS preload submission** — submit 'homelabarr.com' (root) to https://hstspreload.org/ once HSTS header satisfies` |
-| `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 799 | `- All charcode-decoded source spot-checks were re-verified against 'https://github.com/imogenlabs/homelabarr-ce/blob/m` |
+| `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 799 | `- All charcode-decoded source spot-checks were re-verified against 'https://github.com/imogenlabs/homelabarr-ce/blob/mai` |
 | `docs/audit/homelabarr-ce-Round-2-security-audit.md` | 839 | `Verification: §4 of round-2 audit MD must pass all assertions on ce-demo.homelabarr.com.` |
 | `docs/audit/homelabarr-ce-Round-3-security-audit.md` | 4 | `**Target (live):** https://ce-demo.homelabarr.com/` |
 | `docs/audit/homelabarr-ce-Round-3-security-audit.md` | 5 | `**Target (repo):** https://github.com/imogenlabs/homelabarr-ce` |
@@ -1069,16 +1041,14 @@
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 321 | `gh api repos/smashingtags/homelabarr-ce/code-scanning/alerts?tool_name=trivy-image-backend \| jq 'length'` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 343 | `  "name": "homelabarr",` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 355 | `  "name": "homelabarr",` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 391 | `**Where:** 'homelabarr.yml' lines 'image: ghcr.io/imogenlabs/homelabarr-frontend:latest' and 'image: ghcr.io/smashingt` |
+| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 391 | `**Where:** 'homelabarr.yml' lines 'image: ghcr.io/imogenlabs/homelabarr-frontend:latest' and 'image: ghcr.io/imogenlabs/` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 398 | `  image: ghcr.io/imogenlabs/homelabarr-frontend:latest` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 400 | `  image: ghcr.io/imogenlabs/homelabarr-backend:latest` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 406 | `  # docker buildx imagetools inspect ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0 --format '{{json .Manifest.Digest}}` |
+| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 406 | `  # docker buildx imagetools inspect ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0 --format '{{json .Manifest.Digest}}'` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 407 | `  image: ghcr.io/imogenlabs/homelabarr-frontend:v2.2.0@sha256:<64hex>` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 409 | `  image: ghcr.io/imogenlabs/homelabarr-backend:v2.2.0@sha256:<64hex>` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 418 | `for img in homelabarr-frontend homelabarr-backend; do` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 419 | `  digest=$(docker buildx imagetools inspect "ghcr.io/imogenlabs/$img:$TAG" --format '{{.Manifest.Digest}}')` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 420 | `  # in-place rewrite of homelabarr.yml` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 422 | `    "s\|ghcr.io/imogenlabs/$img:[^@\"'[:space:]]+(@sha256:[a-f0-9]+)?\|ghcr.io/imogenlabs/$img:$TAG@$digest\|g" \` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 423 | `    homelabarr.yml` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 425 | `rm -f homelabarr.yml.bak` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 428 | `echo "  cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \\"` |
@@ -1089,7 +1059,7 @@
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 540 | `id = "homelabarr-jwt-secret"` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 546 | `id = "homelabarr-admin-password"` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 618 | `          image: ghcr.io/${{ github.repository_owner }}/homelabarr-backend@${{ steps.build.outputs.digest }}` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 677 | `[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce/badge)](https://` |
+| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 677 | `[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce/badge)](https://se` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 683 | `curl -fsS 'https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce' \| jq '.score'` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 770 | `            --excludePackages 'homelabarr@2.2.0' \` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 818 | `      --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \\` |
@@ -1101,7 +1071,7 @@
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 860 | `### 4.3 — Image digest pin honored in 'homelabarr.yml'` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 863 | `grep -cE 'ghcr.io/imogenlabs/homelabarr-(frontend\|backend):[^@]+@sha256:[a-f0-9]{64}' homelabarr.yml` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 866 | `grep -cE 'image:.*homelabarr-(frontend\|backend):latest($\|[[:space:]])' homelabarr.yml` |
-| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 904 | `curl -fsS 'https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce' \| jq '{score, checks:[.ch` |
+| `docs/audit/homelabarr-ce-security-audit-round-5.md` | 904 | `curl -fsS 'https://api.securityscorecards.dev/projects/github.com/imogenlabs/homelabarr-ce' \| jq '{score, checks:[.chec` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 911 | `grep -E 'DEFAULT_ADMIN_PASSWORD=\$\{DEFAULT_ADMIN_PASSWORD:\?' homelabarr.yml` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 915 | `curl -fsS https://ce-demo.homelabarr.com/api/health \| jq '.status, .environment.validation.warnings'` |
 | `docs/audit/homelabarr-ce-security-audit-round-5.md` | 928 | `\| **R9** \| Application-layer DAST — automated OWASP ZAP baseline run against ce-demo.homelabarr.com on every merge t` |
@@ -1401,11 +1371,6 @@
 | `docs/governance/github-security-settings.md` | 3 | `These settings must be enabled at 'Settings → Code security and analysis' for the 'smashingtags/homelabarr-ce' reposit` |
 | `docs/governance/github-security-settings.md` | 27 | `gh api repos/smashingtags/homelabarr-ce --jq '.security_and_analysis'` |
 | `docs/governance/github-security-settings.md` | 28 | `gh api repos/smashingtags/homelabarr-ce/private-vulnerability-reporting` |
-| `docs/internal/HANDOFF-APP-REBUILD.md` | 5 | `All four phases shipped and deployed to ce-demo.homelabarr.com. Commit '81d5760'.` |
-| `docs/internal/HANDOFF-APP-REBUILD.md` | 44 | `- Deployed to ce-demo.homelabarr.com and visually confirmed with live app catalog (116 apps)` |
-| `docs/internal/HANDOFF-APP-REBUILD.md` | 54 | `Built on iMac (192.168.1.208), pushed to 'ghcr.io/imogenlabs/homelabarr-frontend:latest'.` |
-| `docs/internal/HANDOFF-APP-REBUILD.md` | 59 | `- **iPhone simulator screenshots** — needed for homelabarr.com mobile carousel (deferred until after mobile app change` |
-| `docs/internal/HANDOFF-APP-REBUILD.md` | 61 | `- **homelabarr.com screenshots** — the marketing site's CE screenshots should be refreshed from the rebranded demo` |
 | `docs/internal/OWNER-PUNCHLIST.md` | 1 | `# Owner Punch-List — homelabarr-ce` |
 | `docs/ir/02-on-call-and-contacts.md` | 5 | `Single operator: @smashingtags. No formal rotation.` |
 | `docs/ir/02-on-call-and-contacts.md` | 14 | `\| GitHub \| @smashingtags \| Image / repo intervention \|` |
@@ -1413,7 +1378,6 @@
 | `docs/ir/playbooks/PB-11-security-update-past-sla.md` | 34 | `1. Confirm new image is running on ce-demo: 'docker inspect homelabarr-demo-backend --format '{{.Config.Image}}''` |
 | `docs/observability-log-shipping.md` | 21 | `      - homelabarr-activity:/audit:ro` |
 | `docs/observability-log-shipping.md` | 23 | `      - homelabarr-internal` |
-| `docs/threat-model/01-asset-inventory.md` | 8 | `\| A-04 \| Container images (GHCR) \| Code artifact \| High \| ghcr.io/imogenlabs/ \| Agent \|` |
 | `docs/threat-model/02-trust-boundaries.md` | 7 | `3. **nginx → backend container** — HTTP over Docker bridge network. Auth: none (network isolation is the boundary). ` |
 | `docs/topology.md` | 5 | `All containers on one Docker host behind Traefik. The 'homelabarr-internal' bridge network is the trust boundary.` |
 | `docs/topology.md` | 32 | `1. Generate a CA: 'step ca init --name homelabarr-ca'` |
@@ -1422,7 +1386,7 @@
 | `pentest/atomics/audit-continuity/09-audit-log-continuity.sh` | 4 | `BASE="${ART_TARGET:-https://ce-demo.homelabarr.com}"` |
 | `pentest/harness/env.example` | 1 | `ART_TARGET=https://ce-demo.homelabarr.com` |
 | `pentest/harness/run.sh` | 3 | `# Usage: ART_TARGET=https://ce-demo.homelabarr.com ./run.sh [--class A1\|A2\|A3\|A4\|A5]` |
-| `playwright.config.ts` | 3 | `const BASE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
+| `playwright.config.ts` | 6 | `const BASE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
 | `public/.well-known/security.txt` | 2 | `Contact: https://github.com/imogenlabs/homelabarr-ce/security/advisories/new` |
 | `public/.well-known/security.txt` | 5 | `Canonical: https://ce-demo.homelabarr.com/.well-known/security.txt` |
 | `public/.well-known/security.txt` | 6 | `Policy: https://github.com/imogenlabs/homelabarr-ce/blob/main/SECURITY.md` |
