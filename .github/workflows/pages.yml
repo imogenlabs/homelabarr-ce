@@ -19,7 +19,9 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Wiki
-    runs-on: self-hosted
+    # Temporarily on hosted runners: the self-hosted gitrunners aren't picking up
+    # this repo's self-hosted jobs (under investigation). Hosted jobs are landing.
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
