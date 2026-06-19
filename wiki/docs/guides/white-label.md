@@ -80,7 +80,7 @@ find . -name "*.bak" -not -path "./node_modules/*" -delete
 - `.github/workflows/docker-build-push.yml` — env vars `FRONTEND_IMAGE_NAME` and `BACKEND_IMAGE_NAME`, OCI labels, Discord webhook
 - The historical narrative in `wiki/docs/guides/history.md` (leave this alone — see [Legal](#legal-what-you-must-keep) below)
 
-For the full file-by-file list with line numbers, see the [auto-generated audit](_white-label-audit.md). It's regenerated from the code on every push, so it never goes stale.
+For the full file-by-file list with line numbers, see the auto-generated audit at `docs/internal/_white-label-audit.md` in the repo. It's regenerated from the code on every push, so it never goes stale.
 
 ---
 
@@ -241,7 +241,7 @@ See [Contributing](contributing.md) for the usual pull request guide.
 
 ## The complete file audit
 
-The companion [auto-generated audit](_white-label-audit.md) lists every file and line number where a brand reference currently lives. It's regenerated automatically from the code on every push to `main`, so it's always current with what's actually in the repo — no stale documentation, no surprises.
+The companion auto-generated audit (`docs/internal/_white-label-audit.md` in the repo) lists every file and line number where a brand reference currently lives. It's regenerated automatically from the code on every push to `main`, so it's always current with what's actually in the repo — no stale documentation, no surprises.
 
 If your fork has diverged from upstream or you've added new files, run `bash scripts/generate-whitelabel-audit.sh` in your own repo to get a fresh audit.
 
