@@ -381,7 +381,7 @@ git rebase upstream/master
 - Share knowledge freely
 
 ### Code of Conduct
-We follow the [Contributor Covenant Code of Conduct](../CONTRIBUTING.md).
+We follow the [Contributor Covenant Code of Conduct](https://github.com/imogenlabs/homelabarr-ce/blob/main/.github/CODE_OF_CONDUCT.md).
 
 ### Getting Help
 - **Discord**: [HomelabARR Community](https://discord.gg/Pc7mXX786x)
@@ -420,8 +420,8 @@ Active contributors may be invited to join the maintainer team with:
 
 ### Documentation
 - [Architecture Overview](architecture.md)
-- [Deployment Guide](deployment-guide.md)
-- [Local Mode Guide](../install/local-mode.md)
+- [Quick Start](quick-start.md)
+- [Configuration](configuration.md)
 
 ### External Tools
 - [Docker Documentation](https://docs.docker.com/)
