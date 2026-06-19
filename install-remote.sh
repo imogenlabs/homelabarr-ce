@@ -1,7 +1,7 @@
 #!/bin/bash
 #####################################
 # HomelabARR CE — One-Line Installer
-# Usage: sudo wget -qO- https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
+# Usage: sudo wget -qO- https://raw.githubusercontent.com/imogenlabs/homelabarr-ce/main/install-remote.sh | sudo bash
 #####################################
 
 set -e
@@ -69,7 +69,7 @@ echo ""
 echo "    Run the installer:  sudo homelabarr-cli -i"
 echo "    Or start directly:  cd $INSTALL_DIR && sudo ./install.sh"
 echo ""
-echo "    Wiki: https://smashingtags.github.io/homelabarr-ce/"
+echo "    Wiki: https://wiki.homelabarr.com/"
 echo "    Discord: https://discord.gg/Pc7mXX786x"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

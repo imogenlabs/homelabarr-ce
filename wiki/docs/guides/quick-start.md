@@ -129,7 +129,7 @@ Your app is running. You can find it at `http://YOUR-SERVER-IP:PORT` — the por
 Prefer an interactive guided setup? The install script handles everything:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/imogenlabs/homelabarr-ce/main/install-remote.sh | sudo bash
 ```
 
 !!! info "What this script does"
