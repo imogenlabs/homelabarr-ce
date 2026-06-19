@@ -1,9 +1,11 @@
 name: Build and Push Docker Images
 
 on:
-  push:
-    branches: [ main, dev ]
-    tags: [ 'v*' ]
+  # Manual-only. GitHub Actions minutes are exhausted and are NOT being restored,
+  # so an auto-trigger on push just fails at setup and spams red checks. Deploys
+  # are done by hand on ce-prod (see CLAUDE.md "Build & Deploy — MANUAL ONLY").
+  # Kept dispatchable for if/when a self-hosted runner exists.
+  # (Was: push to [main, dev] + v* tags.)
   workflow_dispatch:
     inputs:
       push_images:
