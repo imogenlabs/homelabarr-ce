@@ -1,5 +1,19 @@
 # HomelabARR CE Changelog
 
+## [Unreleased]
+
+### ⬆️ Dependencies & Framework
+- **React 18 → 19**: upgraded `react`, `react-dom`, `@types/react`, `@types/react-dom` to 19.2.7 (matched majors). Resolves the recurring mismatched-major hazard where Dependabot tried to bump `react-dom` to 19 alone. ([#273](https://github.com/imogenlabs/homelabarr-ce/pull/273), HLCE-200)
+- **shadcn/ui modernization**: converted all 83 `React.forwardRef` wrappers across 16 `src/components/ui/*` components to React 19 ref-as-prop. No behavioral change. ([#273](https://github.com/imogenlabs/homelabarr-ce/pull/273), HLCE-201)
+- **lucide-react 0.344 → 1.21**: required for React 19 peer support (the old range hard-blocked installs). Brand icons were removed in lucide 1.x — swapped the `Github` icon on the login screen for `GitFork`. ([#276](https://github.com/imogenlabs/homelabarr-ce/pull/276)/[#277](https://github.com/imogenlabs/homelabarr-ce/pull/277), HLCE-202)
+- **radix-ui group**: all `@radix-ui/*` (direct + transitive) bumped to latest.
+- **Other deps**: `dockerode` 4 → 5, `better-sqlite3` 12.11.1, `nodemailer` 8 → 9, `@types/node` 26, dev-tools group. ([#276](https://github.com/imogenlabs/homelabarr-ce/pull/276)/[#277](https://github.com/imogenlabs/homelabarr-ce/pull/277), HLCE-202)
+
+### ✅ Tests
+- Added `server/email.test.js` (the repo's first unit test) covering the email transporter — stub fallback, real SMTP path, and an offline nodemailer 9 end-to-end send — to lock in the nodemailer 9 upgrade.
+
+---
+
 ## [v2.2.0] - April 14, 2026
 
 ### 🐛 Bug Fixes (Backported from Eight.ly fork)
