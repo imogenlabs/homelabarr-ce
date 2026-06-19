@@ -7,7 +7,7 @@ Prefer the terminal over a web browser? The CLI installer sets everything up int
 ## One-Line Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/imogenlabs/homelabarr-ce/main/install-remote.sh | sudo bash
 ```
 
 !!! info "What this script does"
