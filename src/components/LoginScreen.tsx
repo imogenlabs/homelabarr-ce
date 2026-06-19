@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, Eye, EyeOff, Loader2, ShieldCheck, Rocket, Globe, Layout, Smartphone, Github, Terminal } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Loader2, ShieldCheck, Rocket, Globe, Layout, Smartphone, GitFork, Terminal } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { apiFetch } from '../lib/api';
@@ -162,7 +162,7 @@ export function LoginScreen() {
             <Tile icon={Smartphone} title="Mobile app">
               iOS today, Android soon. Same dashboard, on your phone. Logs in with an API key.
             </Tile>
-            <Tile icon={Github} title="Open source, MIT">
+            <Tile icon={GitFork} title="Open source, MIT">
               22 rounds of security audit, threat model, incident response runbook, compliance binders. All in the repo.
             </Tile>
           </div>
