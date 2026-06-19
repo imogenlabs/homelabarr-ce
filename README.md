@@ -211,8 +211,8 @@ All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.
 ```
 homelabarr-ce/
 ├── src/              # React frontend (Vite + Tailwind 4 + shadcn/ui)
-├── server/           # Node.js + Express backend (12 route modules)
-│   ├── index.js      # App setup + middleware (262 lines)
+├── server/           # Node.js + Express backend (10 route modules)
+│   ├── index.js      # App setup + middleware
 │   ├── routes/       # auth, containers, deploy, health, ports, etc.
 │   ├── auth.js       # JWT dual-key + MFA + API keys
 │   └── audit.js      # Hash-chained tamper-evident log

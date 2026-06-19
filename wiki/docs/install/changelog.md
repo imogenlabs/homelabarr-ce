@@ -3,6 +3,18 @@
 Latest releases and what changed in each.
 
 
+## [Unreleased]
+
+### ⬆️ Dependencies & Framework
+- **React 18 → 19**: upgraded `react`, `react-dom`, and their `@types` to 19.2.7. Resolves the recurring mismatched-major hazard where Dependabot tried to bump `react-dom` to 19 alone.
+- **shadcn/ui modernization**: all `React.forwardRef` wrappers across the 16 `ui/` components converted to React 19 ref-as-prop. No behavioral change.
+- **lucide-react 0.344 → 1.21** (React 19 peer support), **radix-ui** group to latest, **dockerode** 4 → 5, **better-sqlite3** 12.11.1, **nodemailer** 8 → 9, **@types/node** 26.
+
+### ✅ Tests
+- Added the project's first unit test (`server/email.test.js`) covering the email transporter and nodemailer 9.
+
+---
+
 ## [v2.2.0] - April 14, 2026
 
 ### 🐛 Bug Fixes (Backported from Eight.ly fork)
