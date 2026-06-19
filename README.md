@@ -10,7 +10,7 @@
 
 <p align="center">
     <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest">
-        <img src="https://img.shields.io/github/v/release/smashingtags/homelabarr-ce?label=Release&logo=github" alt="Release">
+        <img src="https://img.shields.io/github/v/release/imogenlabs/homelabarr-ce?label=Release&logo=github" alt="Release">
     </a>
     <a href="https://github.com/imogenlabs/homelabarr-ce/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">

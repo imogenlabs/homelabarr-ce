@@ -275,8 +275,8 @@ jobs:
           # upstream vendors that we cannot patch.
           echo "Targeting HomelabARR's own images only..."
           cat > docker-images.txt <<'EOF'
-          ghcr.io/smashingtags/homelabarr-frontend:latest
-          ghcr.io/smashingtags/homelabarr-backend:latest
+          ghcr.io/imogenlabs/homelabarr-frontend:latest
+          ghcr.io/imogenlabs/homelabarr-backend:latest
           EOF
           sed -i 's/^ *//' docker-images.txt
           echo "Images to scan:"; cat docker-images.txt
@@ -359,16 +359,16 @@ jobs:
 
       - name: Upload frontend SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
-        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif') != ''
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif') != ''
         with:
-          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-frontend_latest.sarif'
+          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif'
           category: 'trivy-homelabarr-frontend'
         continue-on-error: true
       - name: Upload backend SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v4
-        if: always() && hashFiles('trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif') != ''
+        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif') != ''
         with:
-          sarif_file: 'trivy-results/trivy-ghcr.io_smashingtags_homelabarr-backend_latest.sarif'
+          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif'
           category: 'trivy-homelabarr-backend'
         continue-on-error: true
 
