@@ -19,7 +19,12 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Wiki
-    runs-on: self-hosted
+    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public
+    # repos from the org's self-hosted runners (allows_public_repositories=false,
+    # a security default — fork PRs could compromise the host). So self-hosted
+    # jobs here queue forever regardless of runner capacity. Public repos get
+    # free unlimited hosted minutes, so ubuntu-latest is the correct home. See HLCE-204.
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
