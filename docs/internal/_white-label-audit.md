@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-06-19 13:01 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-19 13:21 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1327
+**Total brand references found:** 1332
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**22 references**
+**23 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -45,6 +45,7 @@
 | `server/auth.js` | 52 | `  email: 'admin@homelabarr.local',` |
 | `server/cli-bridge.js` | 737 | `      ARIA_RPC_SECRET: 'homelabarr',` |
 | `server/db.js` | 5 | `const DB_PATH = process.env.DB_PATH \|\| path.join(process.env.DATA_DIR \|\| path.join(process.cwd(), 'data'), 'homelaba` |
+| `server/email.test.js` | 33 | `      from: 'noreply@homelabarr.com',` |
 | `server/log.js` | 26 | `  defaultMeta: { service: 'homelabarr-backend' },` |
 | `server/network-manager.js` | 139 | `                'sqlite://./data/homelabarr.db',` |
 | `server/network-manager.js` | 161 | `      serviceUrls.database = process.env.DATABASE_URL \|\| 'sqlite:///app/data/homelabarr.db';` |
@@ -244,17 +245,21 @@
 
 ## Root documentation
 
-**67 references**
+**71 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
-| `CHANGELOG.md` | 6 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
-| `CHANGELOG.md` | 7 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
-| `CHANGELOG.md` | 8 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
-| `CHANGELOG.md` | 9 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
-| `CHANGELOG.md` | 12 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
-| `CHANGELOG.md` | 13 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
-| `CHANGELOG.md` | 16 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
+| `CHANGELOG.md` | 6 | `- **React 18 → 19**: upgraded 'react', 'react-dom', '@types/react', '@types/react-dom' to 19.2.7 (matched majors). Res` |
+| `CHANGELOG.md` | 7 | `- **shadcn/ui modernization**: converted all 83 'React.forwardRef' wrappers across 16 'src/components/ui/*' components t` |
+| `CHANGELOG.md` | 8 | `- **lucide-react 0.344 → 1.21**: required for React 19 peer support (the old range hard-blocked installs). Brand icons` |
+| `CHANGELOG.md` | 10 | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
+| `CHANGELOG.md` | 20 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
+| `CHANGELOG.md` | 21 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
+| `CHANGELOG.md` | 22 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
+| `CHANGELOG.md` | 23 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
+| `CHANGELOG.md` | 26 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
+| `CHANGELOG.md` | 27 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
+| `CHANGELOG.md` | 30 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `CONTRIBUTING.md` | 9 | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitH` |
 | `CONTRIBUTING.md` | 19 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run ` |
 | `CONTRIBUTING.md` | 20 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
