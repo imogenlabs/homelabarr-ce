@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-06-19 14:26 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-19 15:27 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1332
+**Total brand references found:** 1333
 
 ---
 
@@ -323,7 +323,7 @@
 
 ## Wiki content
 
-**195 references**
+**196 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -345,6 +345,7 @@
 | `wiki/docs/guides/contributing.md` | 52 | `git clone https://github.com/YOUR_USERNAME/homelabarr-ce.git` |
 | `wiki/docs/guides/contributing.md` | 53 | `cd homelabarr-ce` |
 | `wiki/docs/guides/contributing.md` | 56 | `git remote add upstream https://github.com/imogenlabs/homelabarr-ce.git` |
+| `wiki/docs/guides/contributing.md` | 384 | `We follow the [Contributor Covenant Code of Conduct](https://github.com/imogenlabs/homelabarr-ce/blob/main/.github/CODE_` |
 | `wiki/docs/guides/contributing.md` | 387 | `- **Discord**: [HomelabARR Community](https://discord.gg/Pc7mXX786x)` |
 | `wiki/docs/guides/contributing.md` | 436 | `**☕ [Support on Ko-fi](https://ko-fi.com/homelabarr)** - Help fund development time, infrastructure costs, and project` |
 | `wiki/docs/guides/faq.md` | 37 | `CE (Community Edition) is 100% free and open source under the MIT license. There's also a paid [HomelabARR Mobile](https` |
