@@ -7,7 +7,10 @@ const DB_PATH = process.env.DB_PATH || path.join(process.env.DATA_DIR || path.jo
 function open() {
   const key = readSecret('SQLCIPHER_KEY', { required: false });
   const db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
+  // The SQLCipher key MUST be applied before any other statement touches the
+  // file. journal_mode=WAL writes the database header, so running it first would
+  // initialise a fresh file as plaintext and the subsequent key application then
+  // fails with "file is not a database" (HLCE-256). Key first, then WAL.
   if (key && key.length >= 32) {
     db.pragma(`cipher='sqlcipher'`);
     db.pragma(`key='${key.replace(/'/g, "''")}'`);
@@ -20,6 +23,7 @@ function open() {
       throw new Error(`SQLCipher key invalid or DB not encrypted: ${e.message}`);
     }
   }
+  db.pragma('journal_mode = WAL');
   return db;
 }
 
