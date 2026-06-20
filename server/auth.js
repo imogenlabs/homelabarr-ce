@@ -15,8 +15,12 @@ import { logger } from './log.js';
 const BCRYPT_COST = Number(process.env.BCRYPT_COST) || 12;
 const ACCESS_TTL_SEC = 15 * 60;
 const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
-const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');
-const API_KEYS_FILE = path.join(process.cwd(), 'server', 'config', 'api-keys.json');
+// Path seams: align with stars.js (CONFIG_DIR) and db.js (DATA_DIR) so tests can
+// redirect file storage to a tmp dir instead of clobbering real server/config.
+const CONFIG_DIR = process.env.CONFIG_DIR || path.join(process.cwd(), 'server', 'config');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server', 'data');
+const USERS_FILE = path.join(CONFIG_DIR, 'users.json');
+const API_KEYS_FILE = path.join(CONFIG_DIR, 'api-keys.json');
 const PREVIOUS_KEY_MAX_AGE_SEC = 24 * 60 * 60;
 
 function getActiveKeys() {
@@ -281,7 +285,7 @@ export function revokeApiKey(keyId, userId) {
 }
 
 // Session management
-const SESSIONS_FILE = path.join(process.cwd(), 'server', 'data', 'sessions.json');
+const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 
 export function loadSessions() {
   try {
@@ -476,7 +480,7 @@ setInterval(() => {
 }, 60 * 1000).unref();
 
 // ─── Password Reset Token Storage ───────────────────────────────────────
-const RESET_FILE = path.join(process.cwd(), 'server', 'config', 'resets.json');
+const RESET_FILE = path.join(CONFIG_DIR, 'resets.json');
 
 function loadResets() {
   try { return JSON.parse(fs.readFileSync(RESET_FILE, 'utf8')); } catch { return {}; }
