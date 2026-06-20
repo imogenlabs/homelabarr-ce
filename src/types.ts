@@ -103,7 +103,13 @@ export interface CLIApplication {
   networks: string[];
   labels: string[];
   filePath: string;
-  healthcheck?: any;
+  healthcheck?: {
+    test?: string | string[];
+    interval?: string;
+    timeout?: string;
+    retries?: number;
+    start_period?: string;
+  };
   restart: string;
   requiresTraefik: boolean;
   requiresAuthelia: boolean;

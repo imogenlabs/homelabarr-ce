@@ -307,7 +307,7 @@ export async function getEnhancedMountPerformance(containerId: string) {
 export async function enableEnhancedMountProvider(
   containerId: string,
   provider: string,
-  config: Record<string, any>
+  config: Record<string, unknown>
 ) {
   const response = await apiFetch(`/enhanced-mount/${containerId}/providers/${provider}/enable`, {
     method: 'POST',

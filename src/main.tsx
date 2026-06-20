@@ -11,7 +11,9 @@ import { Toaster } from "@/components/ui/sonner";
 
 try {
   ['homelabarr_token', 'homelabarr_user', 'homelabarr_jwt'].forEach(k => localStorage.removeItem(k));
-} catch {}
+} catch {
+  /* no-op: clearing legacy localStorage keys is best-effort */
+}
 
 setTheme(getTheme());
 

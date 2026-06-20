@@ -1,0 +1,59 @@
+name: Unit Tests
+
+# Isolated unit/integration signal: lint + type-check + the vitest suite with
+# coverage. Separate from e2e-tests.yml (which runs Playwright against live
+# ce-dev). Public repo -> free ubuntu-latest hosted minutes; self-hosted org
+# runners are blocked here, so never use runs-on: self-hosted (HLCE-203/204).
+# Advisory until made a required status on main (out of scope, HLCE-211).
+
+on:
+  pull_request:
+    branches: [dev, staging, main]
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+# Newer pushes to the same ref supersede in-flight runs.
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Lint, type-check, vitest + coverage
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+
+    steps:
+      # No token: the repo is public, so checkout needs none — and requiring a
+      # secret here breaks Dependabot PRs (they run with no access to secrets).
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --project tsconfig.app.json --noEmit
+
+      # vitest reads the ratcheting coverage thresholds from vite.config.ts and
+      # fails if coverage drops below the floor.
+      - name: Unit tests + coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14

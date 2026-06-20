@@ -34,7 +34,7 @@ interface Props {
   onClose: () => void;
   containerId: string;
   provider: string;
-  onComplete: (credentials: any) => void;
+  onComplete: (credentials: unknown) => void;
 }
 
 const providers: Record<string, Provider> = {
@@ -192,7 +192,7 @@ const providers: Record<string, Provider> = {
 };
 
 // OAuth Setup Component
-const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete: (creds: any) => void }> = ({ 
+const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete: (creds: unknown) => void }> = ({
   provider, 
   containerId, 
   onComplete 
@@ -221,7 +221,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
       } else {
         setError(result.error || 'Failed to generate auth URL');
       }
-    } catch (err) {
+    } catch {
       setError('Network error - ensure the container is running');
     } finally {
       setLoading(false);
@@ -254,7 +254,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
       } else {
         setError(result.error || 'Authentication failed');
       }
-    } catch (err) {
+    } catch {
       setError('Network error during authentication');
     } finally {
       setLoading(false);
@@ -389,7 +389,7 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
 };
 
 // API Key Setup Component
-const ApiKeySetup: React.FC<{ provider: Provider; containerId: string; onComplete: (creds: any) => void }> = ({ 
+const ApiKeySetup: React.FC<{ provider: Provider; containerId: string; onComplete: (creds: unknown) => void }> = ({
   provider, 
   containerId, 
   onComplete 
@@ -647,7 +647,7 @@ const ApiKeySetup: React.FC<{ provider: Provider; containerId: string; onComplet
       } else {
         setError(result.error || 'Failed to configure credentials');
       }
-    } catch (err) {
+    } catch {
       setError('Network error during configuration');
     } finally {
       setLoading(false);
@@ -730,7 +730,7 @@ export const RcloneAuthWizard: React.FC<Props> = ({
 
   if (!isOpen || !provider) return null;
 
-  const handleComplete = (credentials: any) => {
+  const handleComplete = (credentials: unknown) => {
     onComplete(credentials);
     onClose();
   };

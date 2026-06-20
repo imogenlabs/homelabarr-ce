@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppTemplate, CLIApplication, DeployedApp, DeploymentMode } from './types';
+import { AppTemplate, AppCategory, CLIApplication, ConfigField, ContainerStats, DeployedApp, DeploymentMode } from './types';
 import { DISPLAY_CATEGORIES, getDisplayCategoryId, getAppIcon, getDisplayCategory } from './data/app-metadata';
 import { AppCard } from './components/AppCard';
 import { Search, ArrowUpDown } from 'lucide-react';
@@ -63,7 +63,7 @@ function cliAppToTemplate(app: CLIApplication): AppTemplate {
     id: app.id, // "category-name" format from CLI
     name: app.displayName,
     description: app.description,
-    category: displayCatId as any,
+    category: displayCatId as AppCategory,
     logo: icon,
     deploymentModes: modes,
     defaultPorts: app.ports,
@@ -71,6 +71,16 @@ function cliAppToTemplate(app: CLIApplication): AppTemplate {
     // Store CLI data for deploy modal enrichment
     _cliApp: app,
   } as AppTemplate & { _cliApp: CLIApplication };
+}
+
+// Raw container shape returned by the Docker API via getContainers()
+interface RawContainer {
+  Id: string;
+  Names?: string[] | string;
+  State?: string;
+  Created?: number | string;
+  Ports?: string;
+  stats?: ContainerStats;
 }
 
 export default function App() {
@@ -148,7 +158,7 @@ export default function App() {
     setStarredApps(prev => {
       const wasStarred = prev.has(appId);
       const next = new Set(prev);
-      wasStarred ? next.delete(appId) : next.add(appId);
+      if (wasStarred) next.delete(appId); else next.add(appId);
 
       // Fire API call (don't await — optimistic)
       const apiCall = wasStarred ? unstarApp(appId) : starApp(appId);
@@ -158,7 +168,7 @@ export default function App() {
           // Rollback on failure
           setStarredApps(rollback => {
             const rb = new Set(rollback);
-            wasStarred ? rb.add(appId) : rb.delete(appId);
+            if (wasStarred) rb.add(appId); else rb.delete(appId);
             return rb;
           });
         });
@@ -179,14 +189,14 @@ export default function App() {
     // Category filter
     if (activeCategory === 'starred') {
       apps = apps.filter(app => {
-        const cliApp = (app as any)._cliApp as CLIApplication;
+        const cliApp = (app as AppTemplate & { _cliApp?: CLIApplication })._cliApp;
         return starredApps.has(cliApp?.id || app.name);
       });
     } else if (activeCategory !== 'all-apps' && activeCategory !== 'deployed') {
       const displayCat = getDisplayCategory(activeCategory);
       if (displayCat) {
         apps = apps.filter(app => {
-          const cliApp = (app as any)._cliApp as CLIApplication;
+          const cliApp = (app as AppTemplate & { _cliApp: CLIApplication })._cliApp;
           return displayCat.cliCategories.includes(cliApp.category);
         });
       }
@@ -196,7 +206,7 @@ export default function App() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       apps = apps.filter(app => {
-        const cliApp = (app as any)._cliApp as CLIApplication;
+        const cliApp = (app as AppTemplate & { _cliApp: CLIApplication })._cliApp;
         return (
           app.name.toLowerCase().includes(q) ||
           app.description.toLowerCase().includes(q) ||
@@ -243,23 +253,24 @@ export default function App() {
   const fetchContainers = async (includeStats = false) => {
     try {
       const response = await getContainers(includeStats);
-      const containers = response.containers;
-      const apps = containers.map((container: any) => {
+      const containers: RawContainer[] = response.containers;
+      const apps: DeployedApp[] = containers.map((container: RawContainer) => {
         let deployedAt;
         try {
           const created = container.Created;
           deployedAt = typeof created === 'number'
             ? new Date(created * 1000).toISOString()
-            : new Date(created).toISOString();
+            : new Date(created as string).toISOString();
         } catch {
           deployedAt = new Date().toISOString();
         }
         const portStr = typeof container.Ports === 'string' ? container.Ports : '';
         const portMatch = portStr.match(/:(\d+)->/);
+        const rawName = container.Names?.[0] || (typeof container.Names === 'string' ? container.Names : '') || '';
         return {
           id: container.Id,
-          name: (container.Names?.[0] || container.Names || '').replace('/', ''),
-          status: container.State,
+          name: rawName.replace('/', ''),
+          status: container.State as DeployedApp['status'],
           deployedAt,
           url: portMatch ? `http://localhost:${portMatch[1]}` : '',
           stats: container.stats
@@ -294,24 +305,23 @@ export default function App() {
         setActiveCategory('deployed');
         return result;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       let errorTitle = 'Deployment Failed';
-      let errorMessage = 'Failed to deploy application';
+      let errorMessage = message;
 
-      if (err.message.includes('CLI Bridge not available')) {
+      if (message.includes('CLI Bridge not available')) {
         errorTitle = 'CLI Integration Unavailable';
         errorMessage = 'HomelabARR CLI integration is not available. Please ensure the CLI is properly installed.';
-      } else if (err.message.includes('Port conflict')) {
+      } else if (message.includes('Port conflict')) {
         errorTitle = 'Port Conflict';
         errorMessage = 'The required ports are already in use. Please stop conflicting containers or choose different ports.';
-      } else if (err.message.includes('Application not found')) {
+      } else if (message.includes('Application not found')) {
         errorTitle = 'Application Not Found';
         errorMessage = 'This application is not available in the CLI. Please try a different application.';
-      } else if (err.message.includes('Docker not available') || err.message.includes('Docker daemon')) {
+      } else if (message.includes('Docker not available') || message.includes('Docker daemon')) {
         errorTitle = 'Docker Unavailable';
         errorMessage = 'Docker is not running or accessible. Please ensure Docker is started and try again.';
-      } else {
-        errorMessage = err.message;
       }
 
       showError(errorTitle, errorMessage);
@@ -321,7 +331,7 @@ export default function App() {
 
   const handleAppCardDeploy = (app: AppTemplate) => {
     // Enhanced mount onboarding check
-    const cliApp = (app as any)._cliApp as CLIApplication | undefined;
+    const cliApp = (app as AppTemplate & { _cliApp?: CLIApplication })._cliApp;
     if (cliApp && cliApp.name === 'mount-enhanced') {
       setSelectedApp(app);
       return;
@@ -357,7 +367,7 @@ export default function App() {
     setPendingDeployment(null);
   };
 
-  const handleDeploymentComplete = async (completionSuccess: boolean, _summary?: any) => {
+  const handleDeploymentComplete = async (completionSuccess: boolean) => {
     setDeploymentProgress(null);
     if (completionSuccess) {
       await fetchContainers();
@@ -381,10 +391,11 @@ export default function App() {
         return direction * a.status.localeCompare(b.status);
       case 'deployedAt':
         return direction * (new Date(a.deployedAt).getTime() - new Date(b.deployedAt).getTime());
-      case 'uptime':
+      case 'uptime': {
         const aUptime = a.stats?.uptime || 0;
         const bUptime = b.stats?.uptime || 0;
         return direction * (aUptime - bUptime);
+      }
       default:
         return 0;
     }
@@ -392,8 +403,8 @@ export default function App() {
 
   // Build config fields for the deploy modal from CLI app data
   const buildConfigFields = (app: AppTemplate) => {
-    const cliApp = (app as any)._cliApp as CLIApplication | undefined;
-    const fields: any[] = [
+    const cliApp = (app as AppTemplate & { _cliApp?: CLIApplication })._cliApp;
+    const fields: ConfigField[] = [
       {
         name: 'containerName',
         label: 'Container Name',
@@ -658,7 +669,7 @@ export default function App() {
                 key={app.id}
                 app={app}
                 onDeploy={() => handleAppCardDeploy(app)}
-                starred={starredApps.has((app as any)._cliApp?.id || app.name)}
+                starred={starredApps.has((app as AppTemplate & { _cliApp?: CLIApplication })._cliApp?.id || app.name)}
                 onToggleStar={handleToggleStar}
               />
             ))}

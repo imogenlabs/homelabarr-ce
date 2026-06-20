@@ -15,7 +15,7 @@ export function ContainerControls({ containerId, status, onAction }: ContainerCo
   const { success, error } = useNotifications();
 
   const handleAction = async (
-    action: () => Promise<any>, 
+    action: () => Promise<unknown>,
     actionName: string,
     successMessage: string
   ) => {

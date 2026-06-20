@@ -20,7 +20,7 @@ export function PortManager({ isOpen, onClose }: PortManagerProps) {
     try {
       const { usedPorts: ports } = await checkUsedPorts();
       setUsedPorts(ports);
-    } catch (err) {
+    } catch {
       setError('Failed to fetch port information');
     } finally {
       setLoading(false);
@@ -31,7 +31,7 @@ export function PortManager({ isOpen, onClose }: PortManagerProps) {
     try {
       const { availablePort } = await findAvailablePort(8000, 9000);
       setSuggestedPort(availablePort);
-    } catch (err) {
+    } catch {
       setError('No available ports found in range 8000-9000');
     }
   };
