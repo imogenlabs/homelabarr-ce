@@ -45,16 +45,17 @@ export default defineConfig({
         "**/*.d.ts",
         "src/test/**",
       ],
-      // Ratcheting coverage floor. Seeded just under the 2026-06-20 baseline
-      // (lines 22.05 / statements 21.70 / functions 30.24 / branches 19.31)
-      // so CI is green on day one. RATCHET RULE: only ever RAISE these, and
+      // Ratcheting coverage floor. RATCHET RULE: only ever RAISE these, and
       // only in the same PR that adds the tests backing the increase — never
       // lower them to make a red build pass. See HLCE-211.
+      // 2026-06-20 HLCE-211 seed: lines 20 / statements 20 / functions 28 / branches 17.
+      // 2026-06-20 HLCE-212 (auth core tests): raised to just under the new
+      // baseline (lines 28.05 / statements 28.21 / functions 37.62 / branches 24.77).
       thresholds: {
-        lines: 20,
-        statements: 20,
-        functions: 28,
-        branches: 17,
+        lines: 27,
+        statements: 27,
+        functions: 35,
+        branches: 23,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
