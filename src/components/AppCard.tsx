@@ -23,7 +23,7 @@ const isJunkDescription = (text: string) => {
 
 export function AppCard({ app, onDeploy, starred = false, onToggleStar }: AppCardProps) {
   const { theme } = useTheme();
-  const cliApp = (app as any)._cliApp as CLIApplication | undefined;
+  const cliApp = (app as AppTemplate & { _cliApp?: CLIApplication })._cliApp;
   const showDescription = app.description && !isJunkDescription(app.description);
 
   return (

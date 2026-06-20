@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Package, Layers, Server, Database, Monitor, Cog, Users, MessageSquare, Terminal, BookOpen } from 'lucide-react';
 import { getApplicationCatalog, getDeploymentModes } from '../lib/api';
-import { CLIApplication, ApplicationCatalog, DeploymentMode } from '../types';
+import { LucideIcon } from 'lucide-react';
+import { CLIApplication, ApplicationCatalog, DeploymentMode, AppCategory } from '../types';
 import { DeployModal } from './DeployModal';
 import { DeploymentProgressModal } from './DeploymentProgressModal';
 
 interface CLIApplicationBrowserProps {
-  onDeploy?: (appId: string, config: Record<string, string>, mode: DeploymentMode) => Promise<any>;
+  onDeploy?: (appId: string, config: Record<string, string>, mode: DeploymentMode) => Promise<unknown>;
 }
 
 const categoryIcons: Record<string, React.ElementType> = {
@@ -109,7 +110,7 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
         if (result && typeof result === 'object' && 'source' in result && result.source === 'cli-streaming' && 'deploymentId' in result) {
           setDeploymentProgress({
             deploymentId: result.deploymentId as string,
-            appId: result.appId as string
+            appId: (result as { appId?: string }).appId as string
           });
         }
       } catch (error) {
@@ -118,7 +119,7 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
     }
   };
 
-  const handleDeploymentComplete = (success: boolean, summary?: any) => {
+  const handleDeploymentComplete = (success: boolean, summary?: unknown) => {
     console.log('Deployment completed:', { success, summary });
     // Optionally refresh data or show notification
   };
@@ -303,8 +304,8 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
             id: selectedApp.id,
             name: selectedApp.name,
             description: selectedApp.description,
-            category: selectedApp.category as any,
-            logo: (categoryIcons[selectedApp.category] || Package) as any,
+            category: selectedApp.category as AppCategory,
+            logo: (categoryIcons[selectedApp.category] || Package) as LucideIcon,
             deploymentModes: ['local'],
             configFields: [
               {
