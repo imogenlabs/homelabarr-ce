@@ -236,6 +236,11 @@ app.use((err, req, res, next) => {
   sendError(res, 500, 'Internal Server Error', err);
 });
 
+// Server bootstrap: process-level handlers, config validation, and listen().
+// Guarded out under NODE_ENV=test so supertest can import the built `app`
+// in-process without binding a port, registering exit-on-exception handlers,
+// or calling process.exit() during config validation.
+if (process.env.NODE_ENV !== 'test') {
 process.on('unhandledRejection', (reason) => {
   unhandledRejectionCount++;
   structuredLogger.error('unhandled_rejection', { reason: String(reason).slice(0, 500) });
@@ -302,3 +307,6 @@ try {
     process.exit(1);
   }
 })();
+}
+
+export { app };

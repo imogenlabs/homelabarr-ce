@@ -32,8 +32,41 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [...configDefaults.exclude, "tests/e2e/**"],
     passWithNoTests: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      exclude: [
+        "tests/e2e/**",
+        "**/*.config.*",
+        "dist/**",
+        "wiki/**",
+        "**/*.d.ts",
+        "src/test/**",
+      ],
+    },
+    // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "server",
+          environment: "node",
+          include: ["server/**/*.test.{js,ts}"],
+          exclude: [...configDefaults.exclude, "tests/e2e/**"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "web",
+          environment: "jsdom",
+          include: ["src/**/*.test.{ts,tsx}"],
+          setupFiles: ["./src/test/setup.ts"],
+          exclude: [...configDefaults.exclude, "tests/e2e/**"],
+        },
+      },
+    ],
   },
   server: {
     port: 8080,
