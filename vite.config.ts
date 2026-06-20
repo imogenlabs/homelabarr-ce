@@ -32,7 +32,8 @@ export default defineConfig({
     },
   },
   test: {
-    passWithNoTests: true,
+    // passWithNoTests intentionally OFF: real suites now exist, so an empty
+    // run (e.g. a glob that matches nothing) must fail loudly rather than pass.
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
@@ -44,6 +45,17 @@ export default defineConfig({
         "**/*.d.ts",
         "src/test/**",
       ],
+      // Ratcheting coverage floor. Seeded just under the 2026-06-20 baseline
+      // (lines 22.05 / statements 21.70 / functions 30.24 / branches 19.31)
+      // so CI is green on day one. RATCHET RULE: only ever RAISE these, and
+      // only in the same PR that adds the tests backing the increase — never
+      // lower them to make a red build pass. See HLCE-211.
+      thresholds: {
+        lines: 20,
+        statements: 20,
+        functions: 28,
+        branches: 17,
+      },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
     projects: [

@@ -70,7 +70,7 @@ export function Leaderboard({ deployedApps }: LeaderboardProps) {
         <div className="space-y-4">
           {rankedApps.map((app, index) => {
             const score = getAchievementScore(app.stats?.uptime || 0);
-            let medalColor = '';
+            let medalColor: string;
             let medalSize = 'w-8 h-8';
             
             switch (index) {

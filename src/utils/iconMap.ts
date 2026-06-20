@@ -24,7 +24,10 @@ function normalizeAppName(name: string): string {
  * 2. Local light icon (if dark requested but unavailable)
  * 3. selfh.st CDN URL
  */
-export function getAppIconPath(appName: string, _theme: 'light' | 'dark'): string {
+export function getAppIconPath(appName: string, theme: 'light' | 'dark'): string {
+  // theme is part of the public signature but intentionally unused: we always
+  // serve light icons (see below) since they read well on both backgrounds.
+  void theme;
   const normalized = normalizeAppName(appName);
 
   if (!availableIcons.has(normalized)) {

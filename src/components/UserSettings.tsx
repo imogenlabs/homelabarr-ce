@@ -21,7 +21,7 @@ interface Activity {
   targetType: string | null;
   targetId: string | null;
   targetName: string | null;
-  details: Record<string, any> | null;
+  details: Record<string, unknown> | null;
   ipAddress: string | null;
   userAgent: string | null;
 }
@@ -109,7 +109,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       setActivities(data.activities);
       setActivityTotal(data.total);
       setActivityOffset(offset);
-    } catch (err) {
+    } catch {
       error('Error', 'Failed to load activity log');
     } finally {
       setActivityLoading(false);

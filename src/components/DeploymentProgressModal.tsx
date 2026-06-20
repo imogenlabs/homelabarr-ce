@@ -5,14 +5,44 @@ interface DeploymentStep {
   step: string;
   status: 'started' | 'progress' | 'completed' | 'failed';
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp?: string;
+}
+
+interface DeploymentStepEvent {
+  deploymentId?: string;
+  step: string;
+  status: DeploymentStep['status'];
+  message: string;
+  details?: unknown;
+  timestamp?: string;
+}
+
+interface CommandOutputEvent {
+  deploymentId?: string;
+  type?: 'stdout' | 'stderr';
+  output?: string;
+}
+
+interface DeploymentCompleteEvent {
+  deploymentId?: string;
+  success: boolean;
+  summary?: unknown;
+}
+
+interface DeploymentErrorEvent {
+  deploymentId?: string;
+  error: string;
+}
+
+interface ConnectedEvent {
+  clientId?: string;
 }
 
 interface DeploymentProgressModalProps {
   deploymentId: string;
   appId: string;
-  onComplete?: (success: boolean, summary?: any) => void;
+  onComplete?: (success: boolean, summary?: unknown) => void;
   onClose?: () => void;
   isOpen: boolean;
 }
@@ -49,7 +79,7 @@ export function DeploymentProgressModal({
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse((event as any).data);
+        const data = JSON.parse(event.data);
         console.log('📨 Received SSE event:', event.type, data);
       } catch (error) {
         console.error('❌ Failed to parse SSE message:', error);
@@ -58,41 +88,41 @@ export function DeploymentProgressModal({
 
     // Handle specific events
     eventSource.addEventListener('connected', (event) => {
-      const data = JSON.parse((event as any).data);
+      const data = JSON.parse((event as MessageEvent).data) as ConnectedEvent;
       console.log('✅ SSE Connected:', data);
-      
+
       // Subscribe to this specific deployment
       subscribeToDeployment(data.clientId || generateClientId());
     });
 
     eventSource.addEventListener('deployment-step', (event) => {
-      const data = JSON.parse((event as any).data);
+      const data = JSON.parse((event as MessageEvent).data) as DeploymentStepEvent;
       console.log('🚀 Deployment step:', data);
-      
+
       if (data.deploymentId === deploymentId) {
         handleDeploymentStep(data);
       }
     });
 
     eventSource.addEventListener('command-output', (event) => {
-      const data = JSON.parse((event as any).data);
-      
+      const data = JSON.parse((event as MessageEvent).data) as CommandOutputEvent;
+
       if (data.deploymentId === deploymentId) {
         handleCommandOutput(data);
       }
     });
 
     eventSource.addEventListener('deployment-complete', (event) => {
-      const data = JSON.parse((event as any).data);
-      
+      const data = JSON.parse((event as MessageEvent).data) as DeploymentCompleteEvent;
+
       if (data.deploymentId === deploymentId) {
         handleDeploymentComplete(data);
       }
     });
 
     eventSource.addEventListener('error', (event) => {
-      const data = JSON.parse((event as any).data);
-      
+      const data = JSON.parse((event as MessageEvent).data) as DeploymentErrorEvent;
+
       if (data.deploymentId === deploymentId) {
         handleError(data);
       }
@@ -154,7 +184,7 @@ export function DeploymentProgressModal({
     }
   };
 
-  const handleDeploymentStep = (data: any) => {
+  const handleDeploymentStep = (data: DeploymentStepEvent) => {
     const step: DeploymentStep = {
       step: data.step,
       status: data.status,
@@ -181,13 +211,14 @@ export function DeploymentProgressModal({
     }
   };
 
-  const handleCommandOutput = (data: any) => {
-    if (data.output && data.output.trim()) {
-      setLogs(prev => [...prev, `${data.type === 'stderr' ? '[ERROR]' : '[INFO]'} ${data.output.trim()}`]);
+  const handleCommandOutput = (data: CommandOutputEvent) => {
+    const out = data.output;
+    if (out && out.trim()) {
+      setLogs(prev => [...prev, `${data.type === 'stderr' ? '[ERROR]' : '[INFO]'} ${out.trim()}`]);
     }
   };
 
-  const handleDeploymentComplete = (data: any) => {
+  const handleDeploymentComplete = (data: DeploymentCompleteEvent) => {
     setIsComplete(true);
     setIsSuccess(data.success);
     setCurrentStep('');
@@ -197,7 +228,7 @@ export function DeploymentProgressModal({
     }
   };
 
-  const handleError = (data: any) => {
+  const handleError = (data: DeploymentErrorEvent) => {
     setError(data.error);
     setIsComplete(true);
     setIsSuccess(false);
@@ -293,7 +324,7 @@ export function DeploymentProgressModal({
                       </span>
                     )}
                   </div>
-                  {step.details && (
+                  {!!step.details && (
                     <div className="mt-1 text-xs text-muted-foreground">
                       {JSON.stringify(step.details, null, 2)}
                     </div>
