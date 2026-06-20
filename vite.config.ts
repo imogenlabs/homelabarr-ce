@@ -49,13 +49,14 @@ export default defineConfig({
       // only in the same PR that adds the tests backing the increase — never
       // lower them to make a red build pass. See HLCE-211.
       // 2026-06-20 HLCE-211 seed: lines 20 / statements 20 / functions 28 / branches 17.
-      // 2026-06-20 HLCE-212 (auth core tests): raised to just under the new
-      // baseline (lines 28.05 / statements 28.21 / functions 37.62 / branches 24.77).
+      // 2026-06-20 HLCE-212 (auth core tests): lines 27 / statements 27 / functions 35 / branches 23.
+      // 2026-06-20 HLCE-214 (MFA tests): raised to just under the new baseline
+      // (lines 28.95 / statements 29.32 / functions 40.54 / branches 25.34).
       thresholds: {
-        lines: 27,
-        statements: 27,
-        functions: 35,
-        branches: 23,
+        lines: 28,
+        statements: 28,
+        functions: 39,
+        branches: 24,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
