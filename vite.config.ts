@@ -59,11 +59,14 @@ export default defineConfig({
       // the whole app, lifting auth.js/auth-admin.js routes to ~88-90% and the
       // overall baseline to lines 39.76 / statements 40.4 / functions 50.51 /
       // branches 36.73. Floor raised to just under it.
+      // 2026-06-20 HLCE-221 (persistence tests): db.js 100% / stars.js 88% /
+      // activity+deployment loggers ~80%; overall baseline lines 44.7 /
+      // statements 45.18 / functions 51.54 / branches 42.77. Floor raised.
       thresholds: {
-        lines: 39,
-        statements: 40,
-        functions: 50,
-        branches: 36,
+        lines: 44,
+        statements: 45,
+        functions: 51,
+        branches: 42,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
