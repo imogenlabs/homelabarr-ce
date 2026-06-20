@@ -62,11 +62,14 @@ export default defineConfig({
       // 2026-06-20 HLCE-221 (persistence tests): db.js 100% / stars.js 88% /
       // activity+deployment loggers ~80%; overall baseline lines 44.7 /
       // statements 45.18 / functions 51.54 / branches 42.77. Floor raised.
+      // 2026-06-20 HLCE-217 (audit/log/alert tests): audit.js 100% / log.js 95% /
+      // alert.js 83%; overall baseline lines 45.25 / statements 45.9 /
+      // functions 51.89 / branches 43.91. Floor raised.
       thresholds: {
-        lines: 44,
+        lines: 45,
         statements: 45,
         functions: 51,
-        branches: 42,
+        branches: 43,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
