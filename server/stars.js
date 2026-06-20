@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-const STARS_FILE = path.join(process.cwd(), 'server', 'config', 'stars.json');
+const STARS_FILE = process.env.STARS_FILE
+  || path.join(process.env.CONFIG_DIR || path.join(process.cwd(), 'server', 'config'), 'stars.json');
 
 // Ensure config directory exists
 const configDir = path.dirname(STARS_FILE);

@@ -237,10 +237,16 @@ homelabarr-ce/
 
 ```bash
 npm install
-npm run dev       # Dashboard on :5173 + API on :8092
-npm run build     # Production build
-npm test          # Test suite
+npm run dev          # Dashboard on :5173 + API on :8092
+npm run build        # Production build
+npm test             # Watch-mode test runner (vitest)
+npm run test:run     # Run the suite once
+npm run test:coverage # Run with a v8 coverage report
 ```
+
+### Testing
+
+[Vitest](https://vitest.dev) runs two projects: **`server`** (backend, node environment) and **`web`** (frontend, jsdom + Testing Library). Backend HTTP tests drive the Express app in-process via `supertest` (the app is exported from `server/index.js` and only calls `listen()` outside `NODE_ENV=test`). Backend DB tests run against an in-memory SQLite database (`DB_PATH=:memory:`); set `BCRYPT_COST` low in tests to keep bcrypt fast. Unit/integration tests live next to the code (`server/**.test.js`, `src/**.test.ts(x)`); end-to-end Playwright specs live in `tests/e2e/` and are out of scope for vitest.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 

@@ -15,8 +15,9 @@ function open() {
     try {
       db.prepare('SELECT count(*) FROM sqlite_master').get();
     } catch (e) {
-      console.error('[fatal] SQLCipher key invalid or DB not encrypted:', e.message);
-      process.exit(1);
+      // Throw (not process.exit) so the failure is catchable in tests and by
+      // callers; in production an uncaught throw at import still aborts startup.
+      throw new Error(`SQLCipher key invalid or DB not encrypted: ${e.message}`);
     }
   }
   return db;
