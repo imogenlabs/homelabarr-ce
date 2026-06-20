@@ -11,6 +11,7 @@
 
 ### ✅ Tests
 - Added `server/email.test.js` (the repo's first unit test) covering the email transporter — stub fallback, real SMTP path, and an offline nodemailer 9 end-to-end send — to lock in the nodemailer 9 upgrade.
+- **Automated test foundation + Wave 1** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), [#294](https://github.com/imogenlabs/homelabarr-ce/pull/294)): stood up the vitest harness — jsdom + Testing Library, `@vitest/coverage-v8`, two-project config (server/node + web/jsdom), and a `supertest`-drivable Express app (`export { app }`, `NODE_ENV=test` guard). Added **166 passing tests** across session rotation/reuse-revocation (HLCE-213), Docker injection gates + error classification (HLCE-218), frontend security logic — safeUrl / api refresh interceptor / validation (HLCE-222), and pure frontend logic (HLCE-224). Coverage ~13% → ~22% overall; high-risk modules 81–100%. Three latent source bugs (safeUrl `/[ -]/` regex, deployment.ts literal `${template.id}`, cli-bridge `appId.split('-')`) are pinned as regression tests pending their fix in HLCE-228.
 
 ---
 
