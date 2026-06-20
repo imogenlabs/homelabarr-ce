@@ -7,8 +7,11 @@ import path from 'path';
 // Cost 12 in production; tests may lower it via BCRYPT_COST for speed.
 const BCRYPT_COST = Number(process.env.BCRYPT_COST) || 12;
 
-const MFA_FILE = path.join(process.cwd(), 'server', 'config', 'mfa.json');
-const PENDING_FILE = path.join(process.cwd(), 'server', 'config', 'mfa-pending.json');
+// Path seam: align with auth.js/stars.js (CONFIG_DIR) so tests redirect MFA
+// storage to a tmp dir instead of clobbering real server/config.
+const CONFIG_DIR = process.env.CONFIG_DIR || path.join(process.cwd(), 'server', 'config');
+const MFA_FILE = path.join(CONFIG_DIR, 'mfa.json');
+const PENDING_FILE = path.join(CONFIG_DIR, 'mfa-pending.json');
 
 function loadMfa() {
   try { return JSON.parse(fs.readFileSync(MFA_FILE, 'utf8')); } catch { return {}; }
