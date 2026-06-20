@@ -52,11 +52,14 @@ export default defineConfig({
       // 2026-06-20 HLCE-212 (auth core tests): lines 27 / statements 27 / functions 35 / branches 23.
       // 2026-06-20 HLCE-214 (MFA tests): raised to just under the new baseline
       // (lines 28.95 / statements 29.32 / functions 40.54 / branches 25.34).
+      // 2026-06-20 HLCE-215 (rate-limit tests): ratelimit.js 96.55% lines;
+      // overall baseline lines 29.6 / statements 30.01 / functions 42.09 /
+      // branches 25.89. Floor raised to just under it.
       thresholds: {
-        lines: 28,
-        statements: 28,
-        functions: 39,
-        branches: 24,
+        lines: 29,
+        statements: 29,
+        functions: 41,
+        branches: 25,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
