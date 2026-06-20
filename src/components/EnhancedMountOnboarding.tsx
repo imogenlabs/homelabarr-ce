@@ -25,6 +25,10 @@ interface Props {
   onProceed: () => void;
 }
 
+interface DockerContainerSummary {
+  Names: string[];
+}
+
 export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onProceed }) => {
   const [prerequisites, setPrerequisites] = useState<PrerequisiteCheck[]>([
     {
@@ -72,7 +76,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
         const updatedPrereqs = [...prerequisites];
         
         // Check for Traefik
-        const traefikFound = data.containers.some((container: any) => 
+        const traefikFound = data.containers.some((container: DockerContainerSummary) =>
           container.Names.some((name: string) => name.toLowerCase().includes('traefik'))
         );
         
@@ -82,7 +86,7 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
         }
         
         // Check for Authelia
-        const autheliaFound = data.containers.some((container: any) => 
+        const autheliaFound = data.containers.some((container: DockerContainerSummary) =>
           container.Names.some((name: string) => name.toLowerCase().includes('authelia'))
         );
         

@@ -248,6 +248,12 @@ npm run test:coverage # Run with a v8 coverage report
 
 [Vitest](https://vitest.dev) runs two projects: **`server`** (backend, node environment) and **`web`** (frontend, jsdom + Testing Library). Backend HTTP tests drive the Express app in-process via `supertest` (the app is exported from `server/index.js` and only calls `listen()` outside `NODE_ENV=test`). Backend DB tests run against an in-memory SQLite database (`DB_PATH=:memory:`); set `BCRYPT_COST` low in tests to keep bcrypt fast. Unit/integration tests live next to the code (`server/**.test.js`, `src/**.test.ts(x)`); end-to-end Playwright specs live in `tests/e2e/` and are out of scope for vitest.
 
+#### CI gate & coverage ratchet
+
+The `Unit Tests` workflow (`.github/workflows/unit-tests.yml`) runs on every PR and on pushes to `main`/`dev`, on free hosted `ubuntu-latest`: `npm run lint`, `tsc --noEmit`, and `npm run test:coverage`, then uploads the coverage report as a build artifact. Coverage **thresholds live in `vite.config.ts`** (`test.coverage.thresholds`) and act as a floor — vitest fails the run if coverage drops below them.
+
+**Ratchet rule:** the floor only ever moves **up**, and only in the **same PR that adds the tests** backing the increase. Never lower a threshold to make a red build pass. This way coverage is a one-way ratchet as the test suite grows toward the Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209) targets (high-risk 80%+, medium 60%, overall 60%).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
 ---

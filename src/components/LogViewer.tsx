@@ -20,7 +20,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
       const logData = await getContainerLogs(containerId);
       setLogs(logData);
       setError(null);
-    } catch (_err) {
+    } catch {
       setError("Failed to fetch logs");
     } finally {
       setLoading(false);
@@ -71,6 +71,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
                 {logs.map((log, index) => (
                   <div key={index} className="whitespace-pre-wrap break-all font-mono text-xs text-gray-300">
                     <span className="text-gray-500">{log.timestamp}</span>{" "}
+                    {/* eslint-disable-next-line no-control-regex -- strips ANSI terminal color escape codes (\x1b) from log output */}
                     {log.message.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')}
                   </div>
                 ))}

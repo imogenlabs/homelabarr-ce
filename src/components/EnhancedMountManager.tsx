@@ -194,7 +194,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
     setAuthWizardOpen(true);
   };
 
-  const handleAuthComplete = (credentials: any) => {
+  const handleAuthComplete = (credentials: unknown) => {
     console.log('Auth completed:', credentials);
     // Refresh stats to show updated provider status
     fetchEnhancedMountStats();
@@ -416,7 +416,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-foreground text-foreground'

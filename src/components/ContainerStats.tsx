@@ -58,8 +58,9 @@ function getUptimeLabel(seconds: number): string {
 }
 
 function useStatsHistory() {
-  const updateHistory = (_stats: ContainerStatsProps['stats']) => {
+  const updateHistory = (stats: ContainerStatsProps['stats']) => {
     // History tracking — will be implemented with charts in a future update
+    void stats;
   };
   return { updateHistory };
 }

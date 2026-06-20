@@ -46,7 +46,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     fn(notification.title, { description: notification.message });
   }, []);
 
-  const removeNotification = useCallback((_id: string) => {}, []);
+  const removeNotification = useCallback(() => {}, []);
 
   return (
     <NotificationContext.Provider value={{
