@@ -11,7 +11,8 @@ import QRCode from 'qrcode';
 import { hkdfSync } from 'node:crypto';
 import { logger } from './log.js';
 
-const BCRYPT_COST = 12;
+// Cost 12 in production; tests may lower it via BCRYPT_COST for speed.
+const BCRYPT_COST = Number(process.env.BCRYPT_COST) || 12;
 const ACCESS_TTL_SEC = 15 * 60;
 const JWT_EXPIRES_IN = ACCESS_TTL_SEC;
 const USERS_FILE = path.join(process.cwd(), 'server', 'config', 'users.json');

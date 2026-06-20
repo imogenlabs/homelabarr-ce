@@ -4,6 +4,9 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 
+// Cost 12 in production; tests may lower it via BCRYPT_COST for speed.
+const BCRYPT_COST = Number(process.env.BCRYPT_COST) || 12;
+
 const MFA_FILE = path.join(process.cwd(), 'server', 'config', 'mfa.json');
 const PENDING_FILE = path.join(process.cwd(), 'server', 'config', 'mfa-pending.json');
 
@@ -48,7 +51,7 @@ export function makeBackupCodes(n = 10) {
 }
 
 export async function hashBackupCodes(codes) {
-  return Promise.all(codes.map(c => bcrypt.hash(c, 12)));
+  return Promise.all(codes.map(c => bcrypt.hash(c, BCRYPT_COST)));
 }
 
 export async function verifyBackupCode(code, hashes) {

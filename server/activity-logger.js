@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 
-const ACTIVITY_DIR = path.join(process.cwd(), 'server', 'activity-data');
+const ACTIVITY_DIR = process.env.ACTIVITY_DIR || path.join(process.cwd(), 'server', 'activity-data');
 const ACTIVITY_FILE = path.join(ACTIVITY_DIR, 'activity-log.json');
 const MAX_ENTRIES = 10000;
 
