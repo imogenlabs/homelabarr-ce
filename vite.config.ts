@@ -55,11 +55,15 @@ export default defineConfig({
       // 2026-06-20 HLCE-215 (rate-limit tests): ratelimit.js 96.55% lines;
       // overall baseline lines 29.6 / statements 30.01 / functions 42.09 /
       // branches 25.89. Floor raised to just under it.
+      // 2026-06-20 HLCE-216 (auth HTTP route integration tests): supertest drives
+      // the whole app, lifting auth.js/auth-admin.js routes to ~88-90% and the
+      // overall baseline to lines 39.76 / statements 40.4 / functions 50.51 /
+      // branches 36.73. Floor raised to just under it.
       thresholds: {
-        lines: 29,
-        statements: 29,
-        functions: 41,
-        branches: 25,
+        lines: 39,
+        statements: 40,
+        functions: 50,
+        branches: 36,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
