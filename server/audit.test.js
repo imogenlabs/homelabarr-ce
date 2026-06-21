@@ -109,20 +109,22 @@ describe('meta redaction & event allowlist (AC2)', () => {
     expect(audit.eventAllowed(undefined)).toBe(false);
   });
 
-  // PINNED BUG (regression marker, AC2): row_hash joins fields with `.join('')`
-  // (no delimiter), so adjacent fields have ambiguous boundaries. Moving a
-  // character across the actor/ip/event boundary keeps the concatenation — and
-  // therefore the hash — identical, so verifyChain still PASSES on a tampered
-  // row. A delimiter-based join would make these distinct; flip this assertion
-  // (expect ok:false) once that fix lands.
-  it('does NOT detect a boundary-ambiguous tamper (delimiter-less join bug)', async () => {
+  // REGRESSION (HLCE-257, AC2): row_hash previously joined fields with `.join('')`
+  // (no delimiter), so adjacent fields had ambiguous boundaries — shifting a
+  // character across the actor/event boundary kept the concatenation, and the
+  // hash, identical, so verifyChain PASSED on a tampered row. The fix frames the
+  // fields with JSON.stringify (each field quoted/escaped), so the same tamper
+  // now changes the recomputed hash and is detected.
+  it('detects a boundary-ambiguous tamper (JSON-framed row hash)', async () => {
     const { audit, db } = await loadAudit();
     audit.initAudit();
-    // ip omitted (hashes as ''), so actor + '' + event = 'ab' + '' + 'cd' = 'abcd'.
+    // ip omitted, so under the OLD join actor+''+event = 'ab'+''+'cd' = 'abcd'.
     audit.audit({ actor: 'ab', event: 'cd', result: 'ok' });
-    // Shift one char from event into actor: 'abc' + '' + 'd' = 'abcd' — same concat.
+    // Shift one char from event into actor: under the old join this was the same
+    // concat ('abc'+''+'d' = 'abcd'); under JSON framing the arrays differ.
     db.prepare("UPDATE audit_events SET actor = 'abc', event = 'd' WHERE id = 1").run();
-    // The chain still verifies even though actor/event were changed.
-    expect(audit.verifyChain().ok).toBe(true);
+    const result = audit.verifyChain();
+    expect(result.ok).toBe(false);
+    expect(result.kind).toBe('row_hash_mismatch');
   });
 });
