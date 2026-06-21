@@ -144,8 +144,11 @@ export class ProgressStreamManager extends EventEmitter {
       ...data
     };
 
+    // Iterate a snapshot: a failing sendToClient → removeClient splices the live
+    // `clients` array, and splicing mid for-of shifts indices so the next client
+    // would be skipped (HLCE-259). The copy keeps every subscriber reached.
     let successCount = 0;
-    for (const clientId of clients) {
+    for (const clientId of [...clients]) {
       if (this.sendToClient(clientId, event, payload)) {
         successCount++;
       }
