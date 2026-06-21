@@ -49,15 +49,28 @@ function redact(obj) {
   return out;
 }
 
+// Frame the chained fields unambiguously before hashing. A delimiter-less
+// `.join('')` left adjacent fields with no boundary, so shifting a character
+// across e.g. the actor/event boundary produced the same concatenation and
+// therefore the same hash — a tamper that verifyChain could not detect
+// (HLCE-257). JSON.stringify quotes and escapes each field, so every field
+// boundary is unambiguous. audit() and verifyChain() MUST use this identically.
+function hashAuditRow({ ts, actor, ip, event, target, result, meta_json, prev_hash }) {
+  return crypto.createHash('sha256').update(
+    JSON.stringify([ts, actor || '', ip || '', event, target || '', result, meta_json, prev_hash])
+  ).digest('hex');
+}
+
 export function audit(evt) {
   if (!db) return null;
   const ts = new Date().toISOString();
   const meta_json = JSON.stringify(redact(evt.meta) || {});
   const prev = db.prepare('SELECT row_hash FROM audit_events ORDER BY id DESC LIMIT 1').get();
   const prev_hash = prev ? prev.row_hash : '0'.repeat(64);
-  const row_hash = crypto.createHash('sha256').update(
-    [ts, evt.actor || '', evt.ip || '', evt.event, evt.target || '', evt.result, meta_json, prev_hash].join('')
-  ).digest('hex');
+  const row_hash = hashAuditRow({
+    ts, actor: evt.actor, ip: evt.ip, event: evt.event,
+    target: evt.target, result: evt.result, meta_json, prev_hash,
+  });
   const row = { ts, actor: evt.actor || null, ip: evt.ip || null, event: evt.event,
                 target: evt.target || null, result: evt.result, meta_json, prev_hash, row_hash };
   db.prepare(`INSERT INTO audit_events (ts, actor, ip, event, target, result, meta_json, prev_hash, row_hash)
@@ -72,9 +85,7 @@ export function verifyChain() {
   const rows = db.prepare('SELECT * FROM audit_events ORDER BY id ASC').all();
   for (const r of rows) {
     if (r.prev_hash !== expected) return { ok: false, brokenAt: r.id, kind: 'prev_hash_mismatch' };
-    const recomputed = crypto.createHash('sha256').update(
-      [r.ts, r.actor || '', r.ip || '', r.event, r.target || '', r.result, r.meta_json, r.prev_hash].join('')
-    ).digest('hex');
+    const recomputed = hashAuditRow(r);
     if (recomputed !== r.row_hash) return { ok: false, brokenAt: r.id, kind: 'row_hash_mismatch' };
     expected = r.row_hash;
   }
