@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { execSync } from 'child_process';
 
-const router = Router();
-
 export default function portRoutes({ sendError, requireAuth, dockerManager, logger }) {
+  const router = Router();
 
   router.get('/ports/check', requireAuth, async (req, res) => {
     try {

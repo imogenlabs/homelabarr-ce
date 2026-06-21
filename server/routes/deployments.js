@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 
-const router = Router();
-
 export default function deploymentRoutes({ sendError, cliBridge, streamingCLIBridge, progressStream, authEnabled, requireAuth, optionalAuth }) {
+  const router = Router();
 
   router.get('/deployment-modes', (req, res) => {
     res.json({
