@@ -5,7 +5,10 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  // `.stryker-tmp` holds StrykerJS's transient mutated-source sandboxes; linting
+  // them trips the TS parser's "multiple candidate tsconfigRootDirs" error during a
+  // mutation run (HLCE-277). `reports/` and `coverage/` are likewise generated output.
+  { ignores: ['dist', '.stryker-tmp', 'reports', 'coverage'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

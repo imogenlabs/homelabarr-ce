@@ -26,6 +26,14 @@ const MODULES = [
   { name: "mfa", src: "server/mfa.js", test: "server/mfa.test.js", floor: 85 },
   { name: "audit", src: "server/audit.js", test: "server/audit.test.js", floor: 78 },
   { name: "auth", src: "server/auth.js", test: "server/auth.test.js", floor: 78 },
+  // Dangerous-op route files (HLCE-277). All three share one integration test file
+  // (dangerous-ops.routes.test.js). Many residual survivors are equivalent at the
+  // supertest/mock layer (log-message strings, defensive outer-catch + setTimeout
+  // branches with no integration trigger) — see docs/mutation-testing.md. Floors
+  // are set just below the achieved score (ratchet-from-here; raise only).
+  { name: "containers", src: "server/routes/containers.js", test: "server/routes/dangerous-ops.routes.test.js", floor: 64 },
+  { name: "deploy", src: "server/routes/deploy.js", test: "server/routes/dangerous-ops.routes.test.js", floor: 66 },
+  { name: "applications", src: "server/routes/applications.js", test: "server/routes/dangerous-ops.routes.test.js", floor: 92 },
 ];
 
 const REPORT_DIR = "reports/mutation";

@@ -131,11 +131,19 @@ export default defineConfig({
       // lifted the overall coverage to lines 80.25 / statements 79.65 /
       // functions 80.53 / branches 72.49 (831 tests). Floor raised to the integer
       // just under each (functions kept ~1 under for CI under-instrumentation).
+      // 2026-06-21 HLCE-276/277/278 (parallel batch): client port-conflict
+      // validation for text-typed catalog fields (276), the dangerous-op route
+      // mutation pass strengthening dangerous-ops.routes.test.js (277 —
+      // applications 54→96% / containers 32→68% / deploy 26→70% mutation score,
+      // floors wired into scripts/mutation-ci.mjs), and the remaining enhanced-mount
+      // handlers (278, enhanced-mount.js 45→79%). Overall coverage lines 82.05 /
+      // statements 81.37 / functions 81.07 / branches 73.76 (865 tests). Floor
+      // raised with conservative headroom (lines/functions ~1 under for CI safety).
       thresholds: {
-        lines: 80,
-        statements: 79,
-        functions: 79,
-        branches: 72,
+        lines: 81,
+        statements: 81,
+        functions: 80,
+        branches: 73,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
