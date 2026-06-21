@@ -146,6 +146,77 @@ npm run test:mutation
 npx stryker run --mutate "server/auth.js"
 ```
 
+## Dangerous-op routes (HLCE-277)
+
+HLCE-277 finishes the AC1 the `HLCE-263` pass deferred: the three highest-blast-radius
+route files (`containers.js` container delete/lifecycle, `deploy.js` the `docker run`
+spawn, `applications.js` the `compose down -v` removal). All three share one integration
+test file, `server/routes/dangerous-ops.routes.test.js` (supertest + real `requireAuth`,
+with `child_process` and the dockerManager/cliBridge collaborators mocked), so the
+mutation pass uses that single test for all three modules:
+
+```bash
+MUTATION_TEST_FILE=server/routes/dangerous-ops.routes.test.js \
+  npx stryker run --mutate server/routes/<file>.js
+```
+
+| Module | Before | After | Recorded floor | Notes |
+|--------|--------|-------|----------------|-------|
+| `server/routes/applications.js` | 53.54% | **95.96%** | 92% | 4 equivalent survivors (the `sendError(res, 500, …)` catch-block message strings — `sendError` is a mock, so the message text is unobservable at this layer). |
+| `server/routes/containers.js`   | 32.39% | **68.42%** | 64% | Big lift from asserting the *exact* cpu/mem/net/uptime maths + the CLI-string parsers (`parseBytes`/`parseMemoryUsage`/`parseNetworkUsage`). Residual survivors are deep helper edge-guards, log-message strings, and the defensive outer list-catch. |
+| `server/routes/deploy.js`       | 25.51% | **70.41%** (86.79% covered) | 66% | Hardened the it-tools spawn argv, the streaming/CLI response bodies + mode defaulting, the `close` handler logging, and the validation 400s. The gap between *total* and *covered* is the unreachable outer catch + 30 s `setTimeout` (no integration trigger). |
+
+These floors are the ratchet's source of truth in `scripts/mutation-ci.mjs` — set a few
+points under the achieved score for run-to-run variance, **raise only**.
+
+### Tests added (all in `dangerous-ops.routes.test.js`)
+
+- **containers**: exact cpu (`20%`)/memory (`50%`)/network/uptime assertions on
+  `GET /containers/:id/stats`; a CPU-clamp (`Math.min`) case; a `systemDelta<=0`
+  guard case; a `cpu_stats`-missing guard case; realistic + malformed + zero-limit
+  `docker stats` CLI strings on the `?stats=true` list path (driving the byte
+  parsers); full no-stats list mapping (Names prefix, Labels reduce incl. empty
+  value, Ports public-port regex); the 8-byte log-header strip with an exactly-8
+  boundary line; `userId: 'u-admin'` on the lifecycle/delete activity logs; and
+  500-catch coverage for stats/logs plus the delete inner stop-error path.
+- **deploy**: full it-tools argv (`run`/`-d`/`--name`/`--restart`/`unless-stopped`/
+  `-p`/image) + opts (`shell` undefined, `stdio`) + body + port-default + the
+  startup/argv logs + `userId`; a non-object (`string`) config → 400; the streaming
+  response (streamEndpoint/statusEndpoint/mode) with mode **omitted** (default) vs
+  **explicit** (pass-through); the standard-CLI response (deployment/mode default);
+  the `close(0)`→info / `close(1)`→error logging incl. accumulated stderr; and the
+  two fallback warnings (streaming→standard, CLI→template) + the no-path 501 log.
+- **applications**: flattened `totalApps`/`categories` on the CLI list; the
+  template-mode display-name title-casing on a real template (`arr-tools-recyclarr`
+  → `Arr Tools Recyclarr`) + fields; stop/remove success messages; the 503 error
+  bodies (error+details) on stop/remove/logs; the logs `result.stdout || result`
+  fallback + explicit `lines` query; and 500 paths for list/logs.
+
+### Documented equivalent / unreachable mutants
+
+- **`applications.js`** — the 4 survivors are the `sendError(res, 500, '<message>', error)`
+  string arguments in the catch blocks; `sendError` is injected as a mock that ignores
+  the message, so no test at this layer can observe the text.
+- **`containers.js`** — residual survivors are (a) **log-message strings** (`logger.info/
+  warn/error('…')` — no branch depends on the text); (b) the `maxBuffer: 10 * 1024 * 1024`
+  arithmetic and the `process.platform === 'win32'` shell ternary's *win32* arm (the test
+  host is darwin; the `/bin/sh` arm is asserted); (c) a few deep parser edge-guards that
+  only differ on inputs Docker's own CLI never emits; and (d) the **outer list-catch**
+  (`GET /containers`) whose inner try already swallows every CLI error, leaving the outer
+  `catch` defensive/unreachable from the HTTP layer.
+- **`deploy.js`** — the `total`/`covered` gap is two **structurally unreachable** blocks at
+  the integration layer: the **30 s deployment `setTimeout`** (never fires inside a test)
+  and the **outer `catch` status-code mapping** (`required`→400 / `Port conflict`→409 /
+  `Template not found`→404 / degraded→503 / else→500). Every reachable throw is caught by
+  an *inner* try first; the only way to reach the outer catch is to make the very first
+  `logger.info` throw, but Express 4 surfaces that synchronous rejection through its own
+  default error handler (bare 500) rather than the route's `catch`, so the mapping cannot
+  be exercised here — it's covered by the unit-level error-shape tests instead. Remaining
+  survivors are log-message strings, the `output += …` accumulator (read nowhere; only
+  `errorOutput` is logged), and the `if (streamingCLIBridge)` / `if (cliBridge)` →`true`
+  flips (entering with a null bridge throws synchronously and is caught, yielding the same
+  501 fall-through).
+
 ## Nightly mutation CI (HLCE-264)
 
 Mutation is too slow to gate every PR, so it runs on a schedule instead.
@@ -166,6 +237,9 @@ the job if any module is below its recorded floor**:
 | `mfa.js` | 85% |
 | `audit.js` | 78% |
 | `auth.js` | 78% |
+| `routes/containers.js` | 64% |
+| `routes/deploy.js` | 66% |
+| `routes/applications.js` | 92% |
 
 These floors live in `scripts/mutation-ci.mjs` (the source of truth the ratchet
 enforces) — **only ever raise them**, in the same PR that raises the achieved
@@ -176,8 +250,9 @@ triaged.
 Run it locally the same way CI does (all modules, or a subset by name):
 
 ```bash
-node scripts/mutation-ci.mjs            # all five modules
+node scripts/mutation-ci.mjs            # all eight modules
 node scripts/mutation-ci.mjs ratelimit  # just one (faster, for iterating)
+node scripts/mutation-ci.mjs containers deploy applications  # the HLCE-277 routes
 ```
 
 **Runtime:** each module is a separate Stryker run at `concurrency: 2`; on hosted
