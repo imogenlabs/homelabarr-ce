@@ -68,11 +68,15 @@ export default defineConfig({
       // 2026-06-20 HLCE-219 (docker-manager tests, mocked dockerode): docker-manager.js
       // ~62%; overall baseline lines 51.26 / statements 51.6 / functions 57.9 /
       // branches 49.08. Floor raised.
+      // 2026-06-20 HLCE-220 (deploy/SSE + env guard + network tests):
+      // progress-stream.js ~82% / environment-manager.js ~76% / network-manager.js
+      // ~74%; overall baseline lines 57.18 / statements 57.24 / functions 61.51 /
+      // branches 53.56. Floor raised.
       thresholds: {
-        lines: 51,
-        statements: 51,
-        functions: 57,
-        branches: 49,
+        lines: 57,
+        statements: 57,
+        functions: 61,
+        branches: 53,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
