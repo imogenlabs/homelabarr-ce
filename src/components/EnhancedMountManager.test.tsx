@@ -153,4 +153,76 @@ describe("EnhancedMountManager", () => {
     act(() => fireEvent.click(screen.getByRole("button", { name: /^refresh$/i })));
     expect((fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(before);
   });
+
+  it("computes the correct cost figures on the Costs tab", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(successPayload)));
+
+    render(<EnhancedMountManager containerId="c1" containerName="Plex" />);
+    await vi.waitFor(() =>
+      expect(screen.getByText("Enhanced Cloud Mount - Plex")).toBeInTheDocument(),
+    );
+
+    act(() => fireEvent.click(screen.getByRole("button", { name: /costs/i })));
+
+    // monthly=20, budget=100 from successPayload
+    expect(screen.getByText("Cost Analysis")).toBeInTheDocument();
+    // This Month — also rendered on the overview card, so expect >=1 match here
+    expect(screen.getAllByText("$20.00").length).toBeGreaterThanOrEqual(1);
+    // Monthly Budget = budget.toFixed(2)
+    expect(screen.getByText("$100.00")).toBeInTheDocument();
+    // Remaining = budget - monthly = 100 - 20 = 80
+    expect(screen.getByText("$80.00")).toBeInTheDocument();
+
+    // Provider breakdown is computed from monthly: gdrive 80%, backblaze 20%
+    expect(screen.getByText("$16.00")).toBeInTheDocument(); // 20 * 0.8
+    expect(screen.getByText("$4.00")).toBeInTheDocument(); // 20 * 0.2
+  });
+
+  it("renders the overview Monthly Cost card with the computed budget figure", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(successPayload)));
+
+    render(<EnhancedMountManager containerId="c1" containerName="Plex" />);
+    await vi.waitFor(() =>
+      expect(screen.getByText("Enhanced Cloud Mount - Plex")).toBeInTheDocument(),
+    );
+
+    // overview card: ${monthly.toFixed(2)} and "of ${budget} budget"
+    expect(screen.getByText("$20.00")).toBeInTheDocument();
+    expect(screen.getByText("of $100 budget")).toBeInTheDocument();
+  });
+
+  it("opens the RcloneAuthWizard when a provider's Setup button is clicked", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(successPayload)));
+
+    render(<EnhancedMountManager containerId="c1" containerName="Plex" />);
+    await vi.waitFor(() =>
+      expect(screen.getByText("Enhanced Cloud Mount - Plex")).toBeInTheDocument(),
+    );
+
+    act(() => fireEvent.click(screen.getByRole("button", { name: /providers/i })));
+
+    // wizard is closed until a provider button is clicked
+    expect(screen.queryByTestId("auth-wizard")).not.toBeInTheDocument();
+
+    // backblaze is "disabled" -> renders a "Setup" button
+    act(() => fireEvent.click(screen.getByRole("button", { name: /^setup$/i })));
+
+    expect(screen.getByTestId("auth-wizard")).toBeInTheDocument();
+  });
+
+  it("opens the RcloneAuthWizard from a connected provider's Configure button", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(successPayload)));
+
+    render(<EnhancedMountManager containerId="c1" containerName="Plex" />);
+    await vi.waitFor(() =>
+      expect(screen.getByText("Enhanced Cloud Mount - Plex")).toBeInTheDocument(),
+    );
+
+    act(() => fireEvent.click(screen.getByRole("button", { name: /providers/i })));
+
+    // gdrive is "connected" -> renders a "Configure" button
+    act(() => fireEvent.click(screen.getByRole("button", { name: /^configure$/i })));
+
+    expect(screen.getByTestId("auth-wizard")).toBeInTheDocument();
+  });
 });
