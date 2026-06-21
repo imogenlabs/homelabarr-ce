@@ -1,0 +1,114 @@
+# HomelabARR CE — seeded, deterministic E2E target (HLCE-226).
+#
+# A self-contained stack the Playwright `seeded` project runs against: a fresh
+# admin (admin/admin), a real but allow-listed Docker socket (so deploy +
+# container lifecycle journeys are exercised for real), and images built from
+# the working tree so the suite tests THIS branch — not a shared live deploy.
+#
+# Everything is namespaced (project `hlce-e2e`, `hlce-e2e-*` containers/networks)
+# and uses its own host port (8099) so it never collides with the prod/dev
+# stacks on the same host. Bring it up, run the suite, tear it down with -v:
+#
+#   docker compose -p hlce-e2e -f docker-compose.e2e.yml up -d --build
+#   E2E_BASE_URL=http://localhost:8099 npx playwright test --project=seeded
+#   docker compose -p hlce-e2e -f docker-compose.e2e.yml down -v
+#
+# Secrets here are throwaway test values supplied via env (the backend's
+# secrets.js falls back to env when no secret files / SECRET_ROOT exist).
+
+services:
+  # Docker socket proxy — allow-listed API only (no EXEC/BUILD), same posture as
+  # production, but with START/STOP/RESTART enabled so the lifecycle journey works.
+  socket-proxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: hlce-e2e-socket-proxy
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=warning
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - INFO=1
+      - VERSION=1
+      - PING=1
+      - EVENTS=1
+      - POST=1
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - ALLOW_RESTARTS=1
+      - BUILD=0
+      - COMMIT=0
+      - EXEC=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - hlce-e2e-internal
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2375/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: hlce-e2e-backend:local
+    container_name: hlce-e2e-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=8092
+      - LOG_LEVEL=warn
+      - CORS_ORIGIN=http://localhost:8099
+      - DOCKER_HOST=tcp://socket-proxy:2375
+      - CLI_INTEGRATION_ENABLED=true
+      - AUTH_ENABLED=true
+      - BIND_ADDRESS=0.0.0.0
+      # Throwaway test secrets via env (no secret files mounted → env fallback).
+      - SECRET_ROOT=/nonexistent-secrets
+      - JWT_SECRET=e2e-test-jwt-secret-0123456789abcdef
+      - DEFAULT_ADMIN_PASSWORD=admin
+      - RATE_LIMIT_DISABLED=true
+      - ACCESS_TOKEN_TTL=15m
+      - REFRESH_TOKEN_TTL=14d
+    networks:
+      - hlce-e2e
+      - hlce-e2e-internal
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8092/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      socket-proxy:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hlce-e2e-frontend:local
+    container_name: hlce-e2e-frontend
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:8092
+    ports:
+      - "8099:8080"
+    networks:
+      - hlce-e2e
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  hlce-e2e:
+    name: hlce-e2e
+    driver: bridge
+  hlce-e2e-internal:
+    name: hlce-e2e-internal
+    driver: bridge
+    internal: true
