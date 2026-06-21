@@ -7,34 +7,9 @@ import { fileURLToPath } from 'node:url';
 // can import it without re-registering the setup test.
 export const MFA_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '.seeded-mfa.json');
 
-// The backend serves GET /api/containers?stats=true by running a SYNCHRONOUS
-// `docker stats <id> --no-stream` per container on the event loop (server/routes/
-// containers.js). On the seeded target the socket-proxy exposes every container
-// on the shared host (~17), so one stats sweep blocks the single-threaded backend
-// for ~30s, during which it is fully unresponsive (health → 000). The frontend
-// polls stats on an interval, which repeatedly wedges the backend mid-test.
-//
-// This is a real backend bug, tracked as HLCE-275 (the `Promise.all(map(async =>
-// execSync))` is fake concurrency — execSync blocks the loop). It's amplified
-// here because the seeded target's shared socket exposes the whole host's ~17
-// containers, which no real CE deploy does. Until HLCE-275 lands, we neutralize
-// it at the harness level WITHOUT touching app code: strip `stats=true` from the
-// container-list polling so the backend serves its fast basic-info path instead.
-// That path still returns full container objects (State/Status/Names/Ports) —
-// everything the specs assert on — only the CPU/mem gauges read 0 (unchecked).
-// Remove this accommodation when HLCE-275 is fixed.
-export async function relaxStatsPolling(page: Page): Promise<void> {
-  await page.route('**/api/containers?*stats=true*', async (route) => {
-    const url = new URL(route.request().url());
-    url.searchParams.delete('stats');
-    await route.continue({ url: url.toString() });
-  });
-}
-
 // Fill the inline Sign In form and submit. Retries the fill until the values
 // stick (survives any hydration race), mirroring the live-suite helper.
 export async function fillLogin(page: Page, username: string, password: string): Promise<void> {
-  await relaxStatsPolling(page);
   await page.goto('/');
   const u = page.locator('#login-username');
   const p = page.locator('#login-password');

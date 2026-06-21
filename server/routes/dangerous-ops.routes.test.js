@@ -29,14 +29,18 @@ process.env.BCRYPT_COST = '4';
 process.env.RATE_LIMIT_DISABLED = 'true';
 delete process.env.SMTP_HOST;
 
-// child_process is mocked at the module level so both containers.js (execSync)
-// and deploy.js (spawn) receive the fakes. vi.mock is hoisted above imports.
+// child_process is mocked at the module level so containers.js (execSync for
+// `docker ps`, async `exec` for the per-container stats/inspect sweep — HLCE-275)
+// and deploy.js (spawn) all receive the fakes. vi.mock is hoisted above imports.
+// `exec` is promisified in containers.js at module load, so the mock must invoke
+// its callback: `(cmd, opts, cb) => cb(null, { stdout, stderr })`.
 vi.mock('child_process', () => ({
   execSync: vi.fn(),
+  exec: vi.fn(),
   spawn: vi.fn(),
 }));
 
-let request, express, cookieParser, execSync, spawn;
+let request, express, cookieParser, execSync, exec, spawn;
 let requireAuth, optionalAuth, generateToken;
 let containerRoutes, deployRoutes, applicationRoutes;
 
@@ -44,7 +48,7 @@ beforeAll(async () => {
   request = (await import('supertest')).default;
   express = (await import('express')).default;
   cookieParser = (await import('cookie-parser')).default;
-  ({ execSync, spawn } = await import('child_process'));
+  ({ execSync, exec, spawn } = await import('child_process'));
   const auth = await import('../auth.js');
   requireAuth = auth.requireAuth;
   optionalAuth = auth.optionalAuth;
@@ -56,8 +60,25 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.mocked(execSync).mockReset();
+  vi.mocked(exec).mockReset();
   vi.mocked(spawn).mockReset();
 });
+
+// promisify(exec) in containers.js resolves `{ stdout, stderr }`; this drives the
+// mock's callback so the per-container stats/inspect sweep behaves like the real
+// async exec. Pass a map from a command substring to its stdout (or an Error).
+function mockExecAsync(router) {
+  vi.mocked(exec).mockImplementation((command, _opts, cb) => {
+    const callback = typeof _opts === 'function' ? _opts : cb;
+    try {
+      const out = router(command);
+      if (out instanceof Error) callback(out);
+      else callback(null, { stdout: out, stderr: '' });
+    } catch (err) {
+      callback(err);
+    }
+  });
+}
 
 const silentLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
@@ -409,13 +430,13 @@ describe('AC4 — execSync stats/inspect path cannot be injected via container i
     expect(execSync).not.toHaveBeenCalled();
   });
 
-  it('the list-stats execSync path only ever interpolates ids from `docker ps` output (regression guard)', async () => {
-    // docker ps -a returns one container whose Id is a benign hex string;
-    // the per-container stats/inspect commands must use THAT id, proving no
-    // request-controlled value reaches the shelled-out execSync.
+  it('the list-stats path only ever interpolates ids from `docker ps` output (regression guard)', async () => {
+    // docker ps -a (execSync) returns one container whose Id is a benign hex
+    // string; the per-container stats/inspect commands (now async exec — HLCE-275)
+    // must use THAT id, proving no request-controlled value reaches the shell.
     const psJson = JSON.stringify({ ID: 'abc123hex', Names: 'plex', Image: 'plex:latest', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
-    vi.mocked(execSync).mockImplementation((command) => {
-      if (command.includes('docker ps')) return psJson + '\n';
+    vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? psJson + '\n' : '');
+    mockExecAsync((command) => {
       if (command.includes('docker stats')) return 'HEADER\n0%,0B / 0B,0B / 0B,0\n';
       if (command.includes('docker inspect')) return JSON.stringify([{ Config: {}, Mounts: [], State: { StartedAt: new Date(0).toISOString() } }]);
       return '';
@@ -428,10 +449,10 @@ describe('AC4 — execSync stats/inspect path cannot be injected via container i
       .set('Cookie', adminCookie());
 
     expect(res.status).toBe(200);
-    const commands = vi.mocked(execSync).mock.calls.map((c) => c[0]);
-    expect(commands.some((c) => c.includes('docker ps'))).toBe(true);
-    // every stats/inspect command references only the ps-derived id
-    const statsCmds = commands.filter((c) => c.includes('docker stats') || c.includes('docker inspect'));
+    // ps via execSync; the stats/inspect sweep via async exec — both shell-out
+    // only the ps-derived id, never a request value.
+    expect(vi.mocked(execSync).mock.calls.some((c) => c[0].includes('docker ps'))).toBe(true);
+    const statsCmds = vi.mocked(exec).mock.calls.map((c) => c[0]).filter((c) => c.includes('docker stats') || c.includes('docker inspect'));
     expect(statsCmds.length).toBeGreaterThan(0);
     for (const c of statsCmds) {
       expect(c).toContain('abc123hex');
@@ -564,10 +585,10 @@ describe('AC5 — supporting container lifecycle handlers (auth + 503 + happy pa
 
   it('GET /containers?stats=true degrades a single container gracefully when its stats exec throws', async () => {
     const ps = JSON.stringify({ ID: 'id1', Names: 'a', Image: 'i', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
-    vi.mocked(execSync).mockImplementation((command) => {
-      if (command.includes('docker ps')) return ps + '\n';
-      throw new Error('stats unavailable');
-    });
+    vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? ps + '\n' : '');
+    // The per-container stats sweep (async exec) rejects → the route degrades that
+    // one container instead of crashing the whole list.
+    mockExecAsync(() => new Error('stats unavailable'));
     const dockerManager = dockerManagerStub();
     const { app } = buildApp({ dockerManager });
     const res = await request(app).get('/containers?stats=true').set('Cookie', adminCookie());
