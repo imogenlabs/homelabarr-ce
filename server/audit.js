@@ -25,6 +25,15 @@ export function initAudit() {
     );
     CREATE INDEX IF NOT EXISTS idx_audit_event_ts ON audit_events (event, ts);
     CREATE INDEX IF NOT EXISTS idx_audit_actor_ts ON audit_events (actor, ts);
+    -- Single-row chain tip (HLCE-269): an anchor so deleting the most recent
+    -- rows (tail truncation) is detectable — the prev_hash walk alone leaves a
+    -- truncated tail looking valid.
+    CREATE TABLE IF NOT EXISTS audit_chain_tip (
+      id            INTEGER PRIMARY KEY CHECK (id = 1),
+      last_row_id   INTEGER NOT NULL,
+      last_row_hash TEXT    NOT NULL,
+      count         INTEGER NOT NULL
+    );
   `);
 
   fs.mkdirSync(AUDIT_DIR, { recursive: true });
@@ -73,8 +82,13 @@ export function audit(evt) {
   });
   const row = { ts, actor: evt.actor || null, ip: evt.ip || null, event: evt.event,
                 target: evt.target || null, result: evt.result, meta_json, prev_hash, row_hash };
-  db.prepare(`INSERT INTO audit_events (ts, actor, ip, event, target, result, meta_json, prev_hash, row_hash)
+  const info = db.prepare(`INSERT INTO audit_events (ts, actor, ip, event, target, result, meta_json, prev_hash, row_hash)
              VALUES (@ts, @actor, @ip, @event, @target, @result, @meta_json, @prev_hash, @row_hash)`).run(row);
+  // Advance the chain tip so a later tail-truncation is detectable (HLCE-269).
+  db.prepare(`INSERT INTO audit_chain_tip (id, last_row_id, last_row_hash, count)
+              VALUES (1, @id, @hash, 1)
+              ON CONFLICT(id) DO UPDATE SET last_row_id = @id, last_row_hash = @hash, count = count + 1`)
+    .run({ id: info.lastInsertRowid, hash: row_hash });
   if (auditLogger) auditLogger.info(row);
   return row_hash;
 }
@@ -83,12 +97,34 @@ export function verifyChain() {
   if (!db) return { ok: true, rows: 0 };
   let expected = '0'.repeat(64);
   const rows = db.prepare('SELECT * FROM audit_events ORDER BY id ASC').all();
-  for (const r of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
     if (r.prev_hash !== expected) return { ok: false, brokenAt: r.id, kind: 'prev_hash_mismatch' };
     const recomputed = hashAuditRow(r);
     if (recomputed !== r.row_hash) return { ok: false, brokenAt: r.id, kind: 'row_hash_mismatch' };
+    // Append-only ids are contiguous; a gap means a middle row was removed
+    // (also caught by prev_hash above, but assert it explicitly).
+    if (i > 0 && r.id !== rows[i - 1].id + 1) return { ok: false, brokenAt: r.id, kind: 'id_gap' };
     expected = r.row_hash;
   }
+
+  // Tail-truncation check against the persisted chain tip (HLCE-269). Only
+  // present once a row has been appended under this version; absent on a
+  // legacy DB, in which case we skip (can't anchor what predates the tip).
+  // NOTE: a fully DB-privileged attacker who also rewrites audit_chain_tip can
+  // still defeat this — full protection needs an out-of-band/signed anchor.
+  const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+  if (tip) {
+    const last = rows.length ? rows[rows.length - 1] : null;
+    const truncated =
+      rows.length < tip.count ||
+      (rows.length === tip.count && last && (last.id !== tip.last_row_id || last.row_hash !== tip.last_row_hash)) ||
+      (tip.count > 0 && rows.length === 0);
+    if (truncated) {
+      return { ok: false, kind: 'tail_truncated', expectedCount: tip.count, actualCount: rows.length };
+    }
+  }
+
   return { ok: true, rows: rows.length };
 }
 

@@ -128,3 +128,41 @@ describe('meta redaction & event allowlist (AC2)', () => {
     expect(result.kind).toBe('row_hash_mismatch');
   });
 });
+
+describe('tail-truncation detection (HLCE-269)', () => {
+  it('detects deletion of the last row via the chain tip', async () => {
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'login.success', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'audit.read', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'login.fail', result: 'fail' });
+    expect(audit.verifyChain().ok).toBe(true);
+
+    // Truncate the tail (the prev_hash walk alone would still pass).
+    db.prepare('DELETE FROM audit_events WHERE id = (SELECT MAX(id) FROM audit_events)').run();
+    const result = audit.verifyChain();
+    expect(result.ok).toBe(false);
+    expect(result.kind).toBe('tail_truncated');
+    expect(result.expectedCount).toBe(3);
+    expect(result.actualCount).toBe(2);
+  });
+
+  it('detects deletion of a middle row', async () => {
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'login.success', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'audit.read', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'login.fail', result: 'fail' });
+
+    db.prepare('DELETE FROM audit_events WHERE id = 2').run();
+    expect(audit.verifyChain().ok).toBe(false); // prev_hash_mismatch or id_gap
+  });
+
+  it('a clean chain still verifies (tip matches)', async () => {
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'login.success', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'login.fail', result: 'fail' });
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 2 });
+  });
+});
