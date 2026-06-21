@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async session bootstrap: checkAuth sets user/loading on resolve, with a 1500ms cold-load retry. This is the documented "subscribe to an external system" effect shape; no cleaner idiom without a data-fetching library.
     checkAuth().then(ok => {
       if (!ok) {
         setTimeout(() => checkAuth(), 1500);

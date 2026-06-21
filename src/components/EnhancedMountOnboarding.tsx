@@ -60,12 +60,6 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [userAcknowledged, setUserAcknowledged] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      checkPrerequisites();
-    }
-  }, [isOpen]);
-
   const checkPrerequisites = async () => {
     // Check for Traefik container
     try {
@@ -103,6 +97,13 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
       setPrerequisites(prev => prev.map(p => ({ ...p, status: 'unknown' })));
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- async prerequisite check; setState runs after await, not synchronously
+      checkPrerequisites();
+    }
+  }, [isOpen]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
