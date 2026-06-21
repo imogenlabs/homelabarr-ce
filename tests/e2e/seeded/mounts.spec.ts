@@ -12,7 +12,9 @@ test('enhanced-mount wizard opens and shows its prerequisite steps', async ({ pa
   test.setTimeout(60_000);
   await loginAdmin(page);
 
-  await page.getByPlaceholder(/search/i).first().fill('mount-enhanced');
+  // Search by the display name ("Mount Enhanced") — the catalog search matches the
+  // app's displayName, not the hyphenated backend id (`mount-enhanced`).
+  await page.getByPlaceholder(/search/i).first().fill('Mount Enhanced');
   await page.waitForLoadState('networkidle');
 
   const deployBtn = page.getByRole('button', { name: /^deploy$/i }).first();
@@ -23,12 +25,17 @@ test('enhanced-mount wizard opens and shows its prerequisite steps', async ({ pa
   const modal = page.getByRole('dialog').first();
   await modal.getByRole('button', { name: /^deploy/i }).last().click();
 
-  const wizard = page.getByRole('dialog').filter({ hasText: /Enhanced Cloud Mount Setup|prerequisite/i });
-  await expect(wizard).toBeVisible({ timeout: 15_000 });
-  // Prerequisite steps render (Traefik / Authelia / Domain checks).
-  await expect(wizard.getByText(/Traefik/i)).toBeVisible();
-  await expect(wizard.getByText(/Authelia/i)).toBeVisible();
+  // The onboarding wizard renders as a full-screen overlay (NOT a Radix dialog
+  // role), so assert its heading + prerequisite content directly.
+  await expect(page.getByRole('heading', { name: /Enhanced Cloud Mount Setup/i }))
+    .toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Prerequisites check/i)).toBeVisible();
+  // Prerequisite steps render (Traefik + Authelia infrastructure requirements).
+  await expect(page.getByText(/Traefik/i).first()).toBeVisible();
+  await expect(page.getByText(/Authelia/i).first()).toBeVisible();
 
-  // Non-destructive: close the wizard.
-  await page.getByRole('button', { name: /cancel/i }).first().click().catch(() => page.keyboard.press('Escape'));
+  // Non-destructive: close the wizard (Cancel/Close button, else Escape).
+  const close = page.getByRole('button', { name: /cancel|close|back to apps/i }).first();
+  if (await close.isVisible().catch(() => false)) await close.click();
+  else await page.keyboard.press('Escape');
 });
