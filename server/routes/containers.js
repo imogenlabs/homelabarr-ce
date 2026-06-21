@@ -1,5 +1,13 @@
 import { Router } from 'express';
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
+import { promisify } from 'util';
+
+// Async exec for the per-container stats sweep. execSync would block the single
+// Node thread, so the `Promise.all(map(async => execSync))` below was fake
+// concurrency — N containers serialized into N×(stats+inspect) of event-loop
+// freeze (~34s on a busy host), wedging the whole backend. promisify(exec) makes
+// the sweep truly non-blocking and concurrent (HLCE-275).
+const execAsync = promisify(exec);
 
 function calculateCPUPercentage(stats) {
   if (!stats || !stats.cpu_stats || !stats.precpu_stats) return 0;
@@ -160,15 +168,12 @@ export default function containerRoutes({ dockerManager, requireAuth, getRequest
               `docker inspect ${container.Id}`
             ];
 
-            const [statsResult, inspectResult] = await Promise.all([
-              execSync(statsCommand, {
-                encoding: 'utf8',
-                shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/sh'
-              }),
-              execSync(inspectCommand, {
-                encoding: 'utf8',
-                shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/sh'
-              })
+            const shell = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
+            // Truly concurrent + non-blocking: execAsync runs off the event loop,
+            // so Promise.all here actually parallelizes the whole sweep (HLCE-275).
+            const [{ stdout: statsResult }, { stdout: inspectResult }] = await Promise.all([
+              execAsync(statsCommand, { encoding: 'utf8', shell }),
+              execAsync(inspectCommand, { encoding: 'utf8', shell })
             ]);
 
             const info = JSON.parse(inspectResult)[0];
