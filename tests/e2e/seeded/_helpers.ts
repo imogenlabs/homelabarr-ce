@@ -7,9 +7,34 @@ import { fileURLToPath } from 'node:url';
 // can import it without re-registering the setup test.
 export const MFA_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '.seeded-mfa.json');
 
+// The backend serves GET /api/containers?stats=true by running a SYNCHRONOUS
+// `docker stats <id> --no-stream` per container on the event loop (server/routes/
+// containers.js). On the seeded target the socket-proxy exposes every container
+// on the shared host (~17), so one stats sweep blocks the single-threaded backend
+// for ~30s, during which it is fully unresponsive (health → 000). The frontend
+// polls stats on an interval, which repeatedly wedges the backend mid-test.
+//
+// This is a real backend bug, tracked as HLCE-275 (the `Promise.all(map(async =>
+// execSync))` is fake concurrency — execSync blocks the loop). It's amplified
+// here because the seeded target's shared socket exposes the whole host's ~17
+// containers, which no real CE deploy does. Until HLCE-275 lands, we neutralize
+// it at the harness level WITHOUT touching app code: strip `stats=true` from the
+// container-list polling so the backend serves its fast basic-info path instead.
+// That path still returns full container objects (State/Status/Names/Ports) —
+// everything the specs assert on — only the CPU/mem gauges read 0 (unchecked).
+// Remove this accommodation when HLCE-275 is fixed.
+export async function relaxStatsPolling(page: Page): Promise<void> {
+  await page.route('**/api/containers?*stats=true*', async (route) => {
+    const url = new URL(route.request().url());
+    url.searchParams.delete('stats');
+    await route.continue({ url: url.toString() });
+  });
+}
+
 // Fill the inline Sign In form and submit. Retries the fill until the values
 // stick (survives any hydration race), mirroring the live-suite helper.
 export async function fillLogin(page: Page, username: string, password: string): Promise<void> {
+  await relaxStatsPolling(page);
   await page.goto('/');
   const u = page.locator('#login-username');
   const p = page.locator('#login-password');
@@ -33,6 +58,60 @@ export async function expectLandedOnApp(page: Page): Promise<void> {
 export async function loginAdmin(page: Page): Promise<void> {
   await fillLogin(page, 'admin', 'admin');
   await expectLandedOnApp(page);
+}
+
+// The seeded non-admin user (role `user`, no MFA). Created idempotently by the
+// `setup` project and used by the permissions spec to prove the admin-only UI
+// is hidden for non-admins.
+export const VIEWER_USER = {
+  username: 'viewer',
+  email: 'viewer@e2e.local',
+  password: 'viewerpass123',
+} as const;
+
+// Open the top-right UserMenu dropdown. The trigger is the header button that
+// shows the logged-in username; it's identified robustly as the header button
+// that, once clicked, reveals the "Sign Out" menuitem.
+export async function openUserMenu(page: Page): Promise<void> {
+  const signOut = page.getByRole('menuitem', { name: /sign out/i });
+  // Already open? nothing to do.
+  if (await signOut.isVisible().catch(() => false)) return;
+  const trigger = page.locator('header button').filter({ hasText: /admin|user|viewer/i }).last();
+  await expect(async () => {
+    await trigger.click();
+    await expect(signOut).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 10_000 });
+}
+
+// Open UserMenu → Settings (the UserSettings modal).
+export async function openSettings(page: Page): Promise<void> {
+  await openUserMenu(page);
+  await page.getByRole('menuitem', { name: /settings/i }).click();
+  await expect(page.getByRole('heading', { name: /user settings/i })).toBeVisible({ timeout: 10_000 });
+}
+
+// Close the UserSettings modal (a plain overlay, not a Radix dialog — Escape is
+// not wired, so it's closed via the header X button).
+export async function closeSettings(page: Page): Promise<void> {
+  const heading = page.getByRole('heading', { name: /user settings/i });
+  if (!(await heading.isVisible().catch(() => false))) return;
+  await heading.locator('xpath=following-sibling::button[1]').click();
+  await expect(heading).toBeHidden({ timeout: 10_000 });
+}
+
+// Open UserMenu → API Keys (the ApiKeysModal).
+export async function openApiKeys(page: Page): Promise<void> {
+  await openUserMenu(page);
+  await page.getByRole('menuitem', { name: /api keys/i }).click();
+  await expect(page.getByRole('dialog').getByRole('heading', { name: /^api keys$/i }))
+    .toBeVisible({ timeout: 10_000 });
+}
+
+// Open UserMenu → Sign Out and return to the login wall.
+export async function logout(page: Page): Promise<void> {
+  await openUserMenu(page);
+  await page.getByRole('menuitem', { name: /sign out/i }).click();
+  await expect(page.locator('#login-username')).toBeVisible({ timeout: 15_000 });
 }
 
 export const IT_TOOLS_APP_ID = 'self-hosted-it-tools';

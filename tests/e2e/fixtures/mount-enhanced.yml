@@ -1,0 +1,17 @@
+---
+# SEEDED E2E STUB (HLCE-274) — NOT a real CE catalog app.
+#
+# Stock CE intentionally does not bundle the `mount-enhanced` app (it ships with
+# the full HomelabARR CLI), so the enhanced-mount onboarding wizard has nothing
+# to trigger it and mounts.spec used to self-skip. This stub is volume-mounted
+# into the seeded E2E target's apps/ dir via docker-compose.e2e.yml ONLY, so the
+# wizard journey runs in CI without adding a fake app to the real CE catalog.
+#
+# The app id `self-hosted-mount-enhanced` (name `mount-enhanced`) makes App.tsx
+# route the deploy through EnhancedMountOnboarding instead of a real deploy — so
+# this container is never actually started. The image is a harmless placeholder.
+services:
+  mount-enhanced:
+    container_name: "mount-enhanced"
+    image: "rclone/rclone:latest"
+    restart: "unless-stopped"

@@ -42,8 +42,16 @@ test('view the it-tools container logs', async ({ page }) => {
 
   const logs = page.getByRole('dialog').filter({ hasText: /logs/i });
   await expect(logs).toBeVisible({ timeout: 15_000 });
-  // The viewer rendered (header/controls present); close it.
   await expect(logs.getByText(/auto-refresh/i)).toBeVisible();
+
+  // Assert REAL log content, not just the viewer chrome. it-tools runs the
+  // corentinth/it-tools nginx image, whose entrypoint emits deterministic startup
+  // lines ("/docker-entrypoint.sh: …", "Configuration complete; ready for start
+  // up"). Match any of those so the assertion is robust to log ordering/volume.
+  await expect(
+    logs.getByText(/docker-entrypoint|nginx|Configuration complete|listen/i).first(),
+  ).toBeVisible({ timeout: 15_000 });
+
   await page.keyboard.press('Escape');
 });
 
@@ -53,11 +61,9 @@ test('remove the it-tools container', async ({ page }) => {
   await expect(card.getByText(/^\/?it-tools$/i)).toBeVisible();
   await card.getByTitle('Remove').click();
 
-  // A confirm dialog may appear; accept it if so.
-  const confirm = page.getByRole('button', { name: /^(remove|delete|confirm)$/i });
-  if (await confirm.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await confirm.click();
-  }
-
+  // This card's Remove (ContainerControls) removes immediately — there is no
+  // separate confirm dialog. Positively assert the confirming signal: the
+  // "Container removed successfully" toast, then the card is gone.
+  await expect(page.getByText(/removed successfully/i).first()).toBeVisible({ timeout: 25_000 });
   await expect(page.getByText(/^\/?it-tools$/i)).toHaveCount(0, { timeout: 25_000 });
 });
