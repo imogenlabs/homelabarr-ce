@@ -106,11 +106,17 @@ export default defineConfig({
       // lines 71.83 / statements 71.39 / functions 75.33 / branches 65.23. Floor
       // raised with CI-safe headroom (functions kept ~1.3 under the local baseline
       // per the documented CI under-instrumentation of functions).
+      // 2026-06-21 HLCE-271 (untested-route integration tests): supertest coverage
+      // of the four previously-untested route files — deployments.js 92% / ports.js
+      // 96% / health.js 75% / enhanced-mount.js 45% — plus a surfaced module-scope
+      // Router() fix in health/ports/deployments. +45 tests (640 → 685). Baseline
+      // lines 77.08 / statements 76.40 / functions 78.13 / branches 68.73. Floor
+      // raised to the integer just under each, functions kept ~1 under for CI.
       thresholds: {
-        lines: 71,
-        statements: 71,
-        functions: 74,
-        branches: 64,
+        lines: 76,
+        statements: 76,
+        functions: 77,
+        branches: 68,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.

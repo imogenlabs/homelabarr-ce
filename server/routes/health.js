@@ -2,11 +2,9 @@ import { Router } from 'express';
 import fs from 'fs';
 import os from 'os';
 import { execSync } from 'child_process';
-import { readSecretFresh } from '../secrets.js';
-
-const router = Router();
 
 export default function healthRoutes({ requireAuth, requireRole, sendError, dockerManager, envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger, logger, isDevelopment, getProcessCounters }) {
+  const router = Router();
 
   router.get('/health', (_req, res) => {
     const counters = getProcessCounters ? getProcessCounters() : {};
