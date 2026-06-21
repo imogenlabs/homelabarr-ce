@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { CLIBridge } from './cli-bridge.js';
+import { CLIBridge, parseAppId, APP_CATEGORIES } from './cli-bridge.js';
 
 // HLCE-218 — security-load-bearing PURE logic in the CLI bridge.
 //
@@ -202,27 +202,50 @@ describe('CLIBridge.resolveTemplateVar (static)', () => {
   });
 });
 
-// ---- KNOWN BUG (documented, NOT fixed — separate ticket) -------------------
-// appId.split('-') mis-parses hyphenated categories. For a real appId like
-// 'media-servers-plex' the intended split is category='media-servers',
-// app='plex', but split('-') yields ['media','servers','plex'] and the
-// destructure to [category, appName] keeps only the first two, silently
-// dropping 'plex' and pointing at the wrong file. This test PINS the current
-// (buggy) behavior so a future fix is a deliberate, visible change.
-describe('KNOWN BUG: appId.split(\'-\') mis-parses hyphenated categories', () => {
-  it('drops the trailing segment for a hyphenated category (current behavior)', async () => {
-    // category resolves to 'media', appName to 'servers' (the regex passes for
-    // both), so safeJoin does NOT throw — the call proceeds past the security
-    // gate to a wrong/nonexistent file rather than rejecting the input.
-    let caught;
-    try {
-      await bridge.stopApplication('media-servers-plex');
-    } catch (e) {
-      caught = e;
+// ---- HLCE-228 (AC2) regression — parseAppId handles hyphenated categories ---
+// The old `appId.split('-')` destructured to [category, appName] and mis-parsed
+// hyphenated categories: for 'media-servers-plex' it yielded category='media',
+// appName='servers' and silently dropped 'plex', pointing at the wrong file.
+// parseAppId now matches the known category prefix so the remainder is the app.
+describe('HLCE-228: parseAppId handles hyphenated categories and app names', () => {
+  it('parses a single-word category', () => {
+    expect(parseAppId('downloads-qbittorrent')).toEqual({
+      category: 'downloads',
+      appName: 'qbittorrent',
+    });
+  });
+
+  it('parses a hyphenated category, keeping the trailing app segment', () => {
+    expect(parseAppId('media-servers-plex')).toEqual({
+      category: 'media-servers',
+      appName: 'plex',
+    });
+  });
+
+  it('parses a hyphenated category AND a hyphenated app name', () => {
+    expect(parseAppId('self-hosted-nginx-proxy-manager')).toEqual({
+      category: 'self-hosted',
+      appName: 'nginx-proxy-manager',
+    });
+  });
+
+  it('keeps every known category resolvable', () => {
+    for (const category of APP_CATEGORIES) {
+      expect(parseAppId(`${category}-myapp`)).toEqual({ category, appName: 'myapp' });
     }
-    expect(caught).toBeTruthy();
-    // The bug means it is NOT rejected at the path gate...
-    expect(caught.message).not.toMatch(/Invalid path component/);
-    // ...it instead resolves to the wrong path (apps/media/servers.yml).
+  });
+
+  it('falls back to a first-hyphen split for an unknown category (preserves app name)', () => {
+    expect(parseAppId('unknown-foo-bar')).toEqual({ category: 'unknown', appName: 'foo-bar' });
+  });
+
+  it('returns an undefined appName for an id with no hyphen', () => {
+    expect(parseAppId('downloads')).toEqual({ category: 'downloads', appName: undefined });
+  });
+
+  it('still routes a malicious category to the path gate (rejected by safeJoin)', async () => {
+    // 'a/b-x' has no known category prefix → fallback yields category='a/b',
+    // which the path gate rejects, so the security behavior is unchanged.
+    await expect(bridge.stopApplication('a/b-x')).rejects.toThrow(/Invalid path component/);
   });
 });
