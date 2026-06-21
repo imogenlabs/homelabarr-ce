@@ -112,11 +112,17 @@ export default defineConfig({
       // Router() fix in health/ports/deployments. +45 tests (640 → 685). Baseline
       // lines 77.08 / statements 76.40 / functions 78.13 / branches 68.73. Floor
       // raised to the integer just under each, functions kept ~1 under for CI.
+      // 2026-06-21 HLCE-272 (frontend security components + lib/api gaps): RTL
+      // tests for UserSettings (80%), ApiKeysModal (93%), RcloneAuthWizard (91%),
+      // theme.ts (100%), plus api.ts gap-fills and EnhancedMountManager cost/wizard
+      // + LoginModal MFA-wrong-code paths. Also aligned UserSettings' client-side
+      // password minimum to the server's 12 (HLCE-268). +59 tests (685 → 744).
+      // Baseline lines 78.76 / statements 77.87 / functions 79.41 / branches 70.49.
       thresholds: {
-        lines: 76,
-        statements: 76,
-        functions: 77,
-        branches: 68,
+        lines: 78,
+        statements: 77,
+        functions: 78,
+        branches: 70,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
