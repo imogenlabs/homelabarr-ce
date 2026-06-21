@@ -186,8 +186,8 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
       const { userId } = req.params;
       const { newPassword } = req.body;
 
-      if (!newPassword || newPassword.length < 6) {
-        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      if (!newPassword || newPassword.length < 12) {
+        return res.status(400).json({ error: 'Password must be at least 12 characters' });
       }
 
       const users = loadUsers();

@@ -288,13 +288,15 @@ describe('change-password (AC1-adjacent)', () => {
 
     expect((await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'changerpass' })).status).toBe(400);
     expect((await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'changerpass', newPassword: 'short' })).status).toBe(400);
-    expect((await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'wrong', newPassword: 'longenough1' })).status).toBe(400);
+    // HLCE-268: 11-char password rejected (min length is now 12, unified with reset).
+    expect((await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'changerpass', newPassword: 'elevenchars' })).status).toBe(400);
+    expect((await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'wrong', newPassword: 'twelvechars1' })).status).toBe(400);
 
-    const ok = await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'changerpass', newPassword: 'longenough1' });
+    const ok = await hdrs(agent.post('/auth/change-password')).send({ currentPassword: 'changerpass', newPassword: 'twelvechars1' });
     expect(ok.status).toBe(200);
 
     // The new password authenticates; the current session is kept alive.
-    expect((await request(app).post('/auth/login').send({ username: 'changer', password: 'longenough1' })).status).toBe(200);
+    expect((await request(app).post('/auth/login').send({ username: 'changer', password: 'twelvechars1' })).status).toBe(200);
     expect((await agent.get('/auth/me')).status).toBe(200);
   });
 });
