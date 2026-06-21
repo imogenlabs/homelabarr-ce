@@ -9,7 +9,8 @@ test.describe('App Icons', () => {
   test('no broken image elements visible', async ({ page }) => {
     // Navigate to All Apps
     await page.getByRole('tab', { name: 'All Apps' }).click();
-    await page.waitForTimeout(500);
+    // Web-first: wait for cards (and their images) to render before scanning.
+    await expect(page.getByRole('button', { name: /deploy/i }).first()).toBeVisible({ timeout: 10_000 });
 
     // Check all img tags — none should have naturalWidth=0 while being visible
     const brokenImages = await page.evaluate(() => {
@@ -29,7 +30,8 @@ test.describe('App Icons', () => {
 
   test('known apps have real icons not letter fallbacks', async ({ page }) => {
     await page.getByRole('tab', { name: 'Media & Entertainment' }).click();
-    await page.waitForTimeout(500);
+    // Web-first: wait for cards to render before checking their icons.
+    await expect(page.getByRole('button', { name: /deploy/i }).first()).toBeVisible({ timeout: 10_000 });
 
     // These apps MUST have real icons — they're core to the product
     const coreApps = ['Plex', 'Sonarr', 'Radarr', 'Jellyfin', 'Bazarr'];

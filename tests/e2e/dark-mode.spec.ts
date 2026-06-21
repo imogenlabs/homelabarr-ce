@@ -15,14 +15,14 @@ test.describe('Dark Mode', () => {
     // Click theme toggle
     const toggle = page.getByRole('button', { name: /toggle theme/i });
     await toggle.click();
-    await page.waitForTimeout(500);
 
-    // Background should change
-    const bgAfter = await page.evaluate(() =>
-      window.getComputedStyle(document.body).backgroundColor
-    );
-
-    expect(bgBefore).not.toEqual(bgAfter);
+    // Web-first: poll the background until the theme CSS applies, rather than a
+    // fixed wait.
+    await expect
+      .poll(async () => page.evaluate(() => window.getComputedStyle(document.body).backgroundColor), {
+        timeout: 5_000,
+      })
+      .not.toBe(bgBefore);
   });
 
   test('dark mode has visible card separation', async ({ page }) => {
@@ -52,7 +52,8 @@ test.describe('Dark Mode', () => {
   test('category tags readable in dark mode', async ({ page }) => {
     await page.evaluate(() => document.documentElement.classList.add('dark'));
     await page.getByRole('tab', { name: 'All Apps' }).click();
-    await page.waitForTimeout(300);
+    // Web-first: wait for cards to render before scraping tag text.
+    await expect(page.getByRole('button', { name: /deploy/i }).first()).toBeVisible({ timeout: 10_000 });
 
     // Verify category tags are present and readable by checking visible text content
     // App cards show tags like "media-management", "transcoding", "Traefik", "Auth"

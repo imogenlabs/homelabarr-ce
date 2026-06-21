@@ -45,8 +45,7 @@ test.describe('App Catalog', () => {
   test('category tabs filter apps correctly', async ({ page }) => {
     // Click Media & Entertainment
     await page.getByRole('tab', { name: 'Media & Entertainment' }).click();
-    await page.waitForTimeout(500);
-    // Should show app content — look for deploy buttons which exist on every card
+    // Web-first: cards render asynchronously — assert directly, no fixed wait.
     const deployButtons = page.getByRole('button', { name: /deploy/i });
     await expect(deployButtons.first()).toBeVisible({ timeout: 10_000 });
   });
@@ -61,10 +60,9 @@ test.describe('App Catalog', () => {
   test('search filters apps', async ({ page }) => {
     const searchBox = page.getByPlaceholder(/search/i);
     await searchBox.fill('plex');
-    // Should show Plex-related apps and hide others
-    await page.waitForTimeout(300); // debounce
-    const visibleText = await page.locator('body').textContent();
-    expect(visibleText?.toLowerCase()).toContain('plex');
+    // Web-first: wait for a Plex result to render (covers the input debounce)
+    // instead of a fixed timeout.
+    await expect(page.getByText(/plex/i).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('sort toggle works', async ({ page }) => {
