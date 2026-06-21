@@ -94,11 +94,16 @@ export default defineConfig({
       // branches 56.48. Floor raised to just under — functions kept at the prior
       // integer floor (65) because CI instruments ~0.3% fewer functions than the
       // local run (CI baseline 65.42 vs local 65.71), so a 65.5 floor flaked red.
+      // 2026-06-20 HLCE-227 (security-invariant regression suite): 135 named
+      // guardrail tests in server/regression/ + src/lib/safeUrl.regression — they
+      // exercise the container/enhanced-mount/sendError routes (previously
+      // untested), lifting baseline to lines 62.56 / statements 62.47 /
+      // functions 67.00 / branches 58.11. Floor raised with ≥0.4 CI-safe headroom.
       thresholds: {
-        lines: 60.5,
-        statements: 60.5,
-        functions: 65,
-        branches: 56.4,
+        lines: 62,
+        statements: 62,
+        functions: 66,
+        branches: 57,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
