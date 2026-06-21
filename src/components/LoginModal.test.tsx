@@ -143,6 +143,26 @@ describe("LoginModal", () => {
     expect(reload).toHaveBeenCalled();
   });
 
+  it("shows an error and does not reload when the MFA code is wrong", async () => {
+    const user = userEvent.setup();
+    // server rejects the code: res.ok === false with an error message
+    vi.mocked(apiFetch).mockResolvedValue(
+      mockResponse(false, { error: "Invalid authentication code" }),
+    );
+    await reachMfaStep(user);
+    await user.type(screen.getByLabelText("Authentication Code"), "000000");
+    await user.click(screen.getByRole("button", { name: "Verify" }));
+
+    await waitFor(() =>
+      expect(error).toHaveBeenCalledWith("MFA Failed", "Invalid authentication code"),
+    );
+    expect(success).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(reload).not.toHaveBeenCalled();
+    // user stays on the Two-Factor step to retry
+    expect(screen.getByText("Two-Factor Authentication")).toBeInTheDocument();
+  });
+
   it("sends backup_code after toggling 'Use a backup code'", async () => {
     const user = userEvent.setup();
     vi.mocked(apiFetch).mockResolvedValue(mockResponse(true));

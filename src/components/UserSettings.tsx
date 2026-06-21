@@ -139,8 +139,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      error('Weak Password', 'Password must be at least 6 characters long');
+    if (newPassword.length < 12) {
+      error('Weak Password', 'Password must be at least 12 characters long');
       return;
     }
 
@@ -179,8 +179,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       error('Missing Fields', 'All fields are required');
       return;
     }
-    if (createForm.password.length < 6) {
-      error('Weak Password', 'Password must be at least 6 characters');
+    if (createForm.password.length < 12) {
+      error('Weak Password', 'Password must be at least 12 characters');
       return;
     }
 
@@ -230,8 +230,8 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
   const handleResetPassword = async () => {
     if (!resetPasswordUser) return;
-    if (!resetForm.newPassword || resetForm.newPassword.length < 6) {
-      error('Weak Password', 'Password must be at least 6 characters');
+    if (!resetForm.newPassword || resetForm.newPassword.length < 12) {
+      error('Weak Password', 'Password must be at least 12 characters');
       return;
     }
     if (resetForm.newPassword !== resetForm.confirmPassword) {
