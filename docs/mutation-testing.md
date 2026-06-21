@@ -145,3 +145,42 @@ npm run test:mutation
 # or, ad-hoc without editing the config (still set the vitest include to match):
 npx stryker run --mutate "server/auth.js"
 ```
+
+## Nightly mutation CI (HLCE-264)
+
+Mutation is too slow to gate every PR, so it runs on a schedule instead.
+`.github/workflows/mutation.yml` runs nightly (06:17 UTC) and on manual
+`workflow_dispatch`, on free hosted `ubuntu-latest`. It is **not a required
+status check** — a breach never blocks a merge; it's an over-time signal.
+
+The job runs `node scripts/mutation-ci.mjs`, which mutation-tests each high-risk
+module **one at a time** (the harness is single-project/node-only) by overriding
+`--mutate` and setting `MUTATION_TEST_FILE` for the vitest include, then reads the
+score out of Stryker's JSON report (`reports/mutation/mutation.json`) and **fails
+the job if any module is below its recorded floor**:
+
+| Module | Floor |
+|--------|-------|
+| `secrets.js` | 95% |
+| `ratelimit.js` | 90% |
+| `mfa.js` | 85% |
+| `audit.js` | 78% |
+| `auth.js` | 78% |
+
+These floors live in `scripts/mutation-ci.mjs` (the source of truth the ratchet
+enforces) — **only ever raise them**, in the same PR that raises the achieved
+score, mirroring the coverage ratchet. The per-module HTML reports upload as the
+`mutation-report` artifact (14-day retention) even on a breach, so a drop can be
+triaged.
+
+Run it locally the same way CI does (all modules, or a subset by name):
+
+```bash
+node scripts/mutation-ci.mjs            # all five modules
+node scripts/mutation-ci.mjs ratelimit  # just one (faster, for iterating)
+```
+
+**Runtime:** each module is a separate Stryker run at `concurrency: 2`; on hosted
+CI the full five-module sweep lands within the job's 30-minute budget (≈1 min for
+a small module like `ratelimit` locally, more for `auth`/`audit`). Scoping to the
+five high-risk modules — not the whole repo — is what keeps it bounded.
