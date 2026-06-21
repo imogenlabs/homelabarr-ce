@@ -1,3 +1,7 @@
+# StrykerJS mutation-testing output + sandbox (HLCE-262)
+reports/mutation/
+.stryker-tmp/
+
 # Node modules
 node_modules/
 npm-debug.log*
