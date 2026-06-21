@@ -105,21 +105,34 @@ describe('generateDockerCompose - traefik mode', () => {
     expect(labels).toContain('traefik.http.services.sonarr.loadbalancer.server.port=8989');
   });
 
-  // KNOWN BUG (HLCE-228 / HLCE-251): deployment.ts lines ~114-115 use plain
-  // double-quoted strings for the entrypoints and tls.certresolver labels, so
-  // `${template.id}` is emitted LITERALLY instead of being interpolated.
-  // (Lines 113 and 116 use template literals/backticks and DO interpolate.)
-  // These assertions lock in the CURRENT buggy behavior — do NOT "fix" them.
-  it('reproduces the literal ${template.id} bug in entrypoints/certresolver labels', () => {
+  // HLCE-228 (AC2) — regression. deployment.ts lines ~114-115 previously used
+  // plain double-quoted strings for the entrypoints and tls.certresolver labels,
+  // so `${template.id}` was emitted LITERALLY instead of being interpolated.
+  // They now use template literals (backticks) like the surrounding labels.
+  it('interpolates template.id in the entrypoints/certresolver labels', () => {
     const out = generateDockerCompose(makeTemplate(), { domain: 'example.com' }, mode('traefik'));
     const parsed = yaml.parse(out);
     const labels: string[] = parsed.services.sonarr.labels;
 
-    // BUG: not interpolated — literal ${template.id}
-    expect(labels).toContain('traefik.http.routers.${template.id}.entrypoints=websecure');
-    expect(labels).toContain('traefik.http.routers.${template.id}.tls.certresolver=letsencrypt');
+    // FIXED: properly interpolated
+    expect(labels).toContain('traefik.http.routers.sonarr.entrypoints=websecure');
+    expect(labels).toContain('traefik.http.routers.sonarr.tls.certresolver=letsencrypt');
 
-    // And the correctly-interpolated form is therefore absent
-    expect(labels).not.toContain('traefik.http.routers.sonarr.entrypoints=websecure');
+    // And the buggy literal form is gone
+    expect(labels).not.toContain('traefik.http.routers.${template.id}.entrypoints=websecure');
+    expect(labels).not.toContain('traefik.http.routers.${template.id}.tls.certresolver=letsencrypt');
+  });
+
+  it('interpolates template.id consistently across ALL traefik labels', () => {
+    const out = generateDockerCompose(
+      makeTemplate({ id: 'plex' }),
+      { domain: 'example.com' },
+      mode('traefik'),
+    );
+    const parsed = yaml.parse(out);
+    const labels: string[] = parsed.services.plex.labels;
+    // No label may contain the un-interpolated token.
+    expect(labels.some((l) => l.includes('${template.id}'))).toBe(false);
+    expect(labels).toContain('traefik.http.routers.plex.entrypoints=websecure');
   });
 });

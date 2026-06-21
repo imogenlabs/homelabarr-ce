@@ -18,6 +18,49 @@ function safeJoin(base, ...parts) {
   return resolved;
 }
 
+// The application directories under apps/. Several of these contain hyphens, so
+// an app id `${category}-${appName}` cannot be split naively on '-'.
+export const APP_CATEGORIES = [
+  'ai',
+  'backup',
+  'downloads',
+  'media-management',
+  'media-servers',
+  'monitoring',
+  'myapps',
+  'self-hosted',
+  'system',
+  'transcoding',
+  'virtual-desktops'
+];
+
+/**
+ * Split an app id (`${category}-${appName}`) back into its parts.
+ *
+ * Both the category (media-servers, self-hosted, …) and the app name
+ * (nginx-proxy-manager, …) can contain hyphens, so a plain `appId.split('-')`
+ * mis-parses them and silently drops segments. We disambiguate by matching the
+ * longest known category prefix; the remainder is the app name. Unknown
+ * categories fall back to a split on the first hyphen (which preserves a
+ * hyphenated app name and still lets the path gate validate each component).
+ */
+export function parseAppId(appId) {
+  if (typeof appId !== 'string') {
+    return { category: appId, appName: undefined };
+  }
+  for (const category of [...APP_CATEGORIES].sort((a, b) => b.length - a.length)) {
+    const prefix = `${category}-`;
+    if (appId.startsWith(prefix) && appId.length > prefix.length) {
+      return { category, appName: appId.slice(prefix.length) };
+    }
+  }
+  const idx = appId.indexOf('-');
+  if (idx === -1) {
+    return { category: appId, appName: undefined };
+  }
+  return { category: appId.slice(0, idx), appName: appId.slice(idx + 1) };
+}
+
 /**
  * CLI Bridge - Connects React frontend to HomelabARR CLI system
  * Provides seamless integration with 100+ proven Docker applications
@@ -131,21 +174,7 @@ export class CLIBridge {
     try {
       // Only scan specific HomelabARR application directories
       // This prevents duplicates from local-mode-apps and other test directories
-      const allowedCategories = [
-        'ai',
-        'backup',
-        'downloads',
-        'media-management',
-        'media-servers',
-        'monitoring',
-        'myapps',
-        'self-hosted',
-        'system',
-        'transcoding',
-        'virtual-desktops'
-      ];
-
-      for (const category of allowedCategories) {
+      for (const category of APP_CATEGORIES) {
         const categoryPath = path.join(this.appsPath, category);
         
         // Skip if category doesn't exist
@@ -242,7 +271,7 @@ export class CLIBridge {
    * Deploy application using CLI infrastructure
    */
   async deployApplication(appId, config, deploymentMode) {
-    const [category, appName] = appId.split('-');
+    const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
 
     if (!fs.existsSync(appPath)) {
@@ -562,7 +591,7 @@ export class CLIBridge {
    * Stop application using CLI
    */
   async stopApplication(appId) {
-    const [category, appName] = appId.split('-');
+    const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     return await this.executeDockerCompose(appPath, 'down');
@@ -572,7 +601,7 @@ export class CLIBridge {
    * Remove application and cleanup
    */
   async removeApplication(appId, removeVolumes = false) {
-    const [category, appName] = appId.split('-');
+    const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     const command = removeVolumes ? 'down -v' : 'down';
@@ -583,7 +612,7 @@ export class CLIBridge {
    * Get application logs
    */
   async getApplicationLogs(appId, lines = 100) {
-    const [category, appName] = appId.split('-');
+    const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     return await this.executeDockerCompose(appPath, `logs --tail=${lines}`);
