@@ -7,6 +7,28 @@ import os from 'node:os';
 import path from 'node:path';
 
 // HLCE-212: auth core (JWT, bcrypt, API keys, login tickets, RBAC).
+//
+// HLCE-263 mutation pass: score 61.60% -> 80.61% (526 mutants; the largest of the
+// five hardened modules). The residual survivors are EQUIVALENT or non-observable
+// mutants, left documented rather than gamed:
+//   - The `logger.error/warn/info('...message...')` argument string literals (e.g.
+//     'Error loading users', 'Authentication error', 'legacy_bearer_seen', and the
+//     `{ error: ... }` metadata objects): this suite asserts behaviour and return
+//     values, not log text, and no code path branches on the message. Mutating the
+//     wording is unobservable. (Asserting exact log strings would be brittle.)
+//   - validatePassword's `user.password.match(/^\$2[aby]\$(\d+)\$/)?.[1]` optional
+//     chaining and the bare-`^` regex variant (line 147): this only runs AFTER a
+//     successful bcrypt.compare, which guarantees user.password is a valid bcrypt
+//     hash, so .match() is never null and the `?.` short-circuit is never taken.
+//   - The `userIndex !== -1` / `idx !== -1` guards in validatePassword and
+//     changePassword (151/152/157/158/365): in normal flow the user located by
+//     findUserById/findUserByUsername is always present in loadUsers(), so the
+//     -1 branch is purely defensive. (The reachable -1 case in changePassword IS
+//     killed by the "user vanishes between lookup and save" test.)
+//   - requireAuth's legacy-Bearer warning branch (line 414): it only emits a
+//     logger.warn and never alters req/res, so its condition mutants are
+//     logging-only side effects.
+//
 // auth.js resolves its file paths (CONFIG_DIR/DATA_DIR), bcrypt cost
 // (BCRYPT_COST) and JWT keys at import time, and imports sessions.js which
 // opens DB_PATH. So every test resets modules and re-imports with env pointing
@@ -204,6 +226,17 @@ describe('validatePassword + bcrypt (AC2)', () => {
     expect(bcrypt.compareSync('hunter2', stored[0].password)).toBe(true);
   });
 
+  it('persists the lastLogin timestamp to the matching user row (HLCE-263)', async () => {
+    // Pins the lastLogin update block: findIndex `!== -1` (158) + the write.
+    const auth = await loadAuth();
+    await auth.createUser({ username: 'll', password: 'pw' });
+    expect(auth.findUserByUsername('ll').lastLogin).toBeNull();
+    await auth.validatePassword('ll', 'pw');
+    const ll = auth.findUserByUsername('ll').lastLogin;
+    expect(ll).not.toBeNull();
+    expect(() => new Date(ll).toISOString()).not.toThrow();
+  });
+
   it('updates lastLogin on a successful validation', async () => {
     const auth = await loadAuth();
     await auth.createUser({ username: 'alice', password: 'pw' });
@@ -291,6 +324,20 @@ describe('API keys (AC3)', () => {
     const stored = JSON.parse(fs.readFileSync(path.join(tmp, 'api-keys.json'), 'utf8'));
     expect(stored[0]).not.toHaveProperty('key');
     expect(stored[0].hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('returns null when a legacy plaintext key matches but its user is gone (HLCE-263)', async () => {
+    // Pins the `if (!user) return null` after a legacy-key match (line 268). The
+    // key migrates (hash written) but resolves to no user.
+    const { auth } = await setupUserAndAuth();
+    const legacyKey = 'hlr_' + 'b'.repeat(64);
+    fs.writeFileSync(path.join(tmp, 'api-keys.json'), JSON.stringify([
+      { id: 'key_orphan', userId: 'vanished-user', key: legacyKey, revoked: false },
+    ]));
+    expect(auth.validateApiKey(legacyKey)).toBeNull();
+    // It still migrated the storage (hash replaces the plaintext key).
+    const stored = JSON.parse(fs.readFileSync(path.join(tmp, 'api-keys.json'), 'utf8'));
+    expect(stored[0]).not.toHaveProperty('key');
   });
 
   // HLCE-273 AC4b: revokeApiKey is scoped to the owning user — it only matches
@@ -566,5 +613,570 @@ describe('middleware edge paths', () => {
     auth.optionalAuth(req, mockRes(), () => { called = true; });
     expect(called).toBe(true);
     expect(req.user).toMatchObject({ id: user.id, apiKey: true });
+  });
+});
+
+// ─── HLCE-263 mutation-pass additions ────────────────────────────────────────
+describe('session store (HLCE-263)', () => {
+  it('round-trips sessions to DATA_DIR/sessions.json and reads an empty list when absent', async () => {
+    const auth = await loadAuth();
+    // No file yet -> []. Pins loadSessions' `if (!fs.existsSync(...)) return []`.
+    expect(auth.loadSessions()).toEqual([]);
+    expect(fs.existsSync(path.join(tmp, 'sessions.json'))).toBe(false);
+
+    auth.saveSessions([
+      { id: 's1', userId: 'u1', invalidated: false },
+      { id: 's2', userId: 'u2', invalidated: false },
+    ]);
+    expect(fs.existsSync(path.join(tmp, 'sessions.json'))).toBe(true);
+    expect(auth.loadSessions()).toEqual([
+      { id: 's1', userId: 'u1', invalidated: false },
+      { id: 's2', userId: 'u2', invalidated: false },
+    ]);
+  });
+
+  it('getUserSessions returns only the user\'s non-invalidated sessions', async () => {
+    const auth = await loadAuth();
+    auth.saveSessions([
+      { id: 's1', userId: 'u1', invalidated: false },
+      { id: 's2', userId: 'u1', invalidated: true },  // invalidated -> excluded
+      { id: 's3', userId: 'u2', invalidated: false },  // other user -> excluded
+      { id: 's4', userId: 'u1', invalidated: false },
+    ]);
+    const got = auth.getUserSessions('u1').map(s => s.id);
+    expect(got).toEqual(['s1', 's4']);
+    // The other user is isolated.
+    expect(auth.getUserSessions('u2').map(s => s.id)).toEqual(['s3']);
+    // An unknown user gets nothing.
+    expect(auth.getUserSessions('nobody')).toEqual([]);
+  });
+
+  it('invalidateSession flips exactly the matching session and is a no-op for an unknown id', async () => {
+    const auth = await loadAuth();
+    auth.saveSessions([
+      { id: 's1', userId: 'u1', invalidated: false },
+      { id: 's2', userId: 'u1', invalidated: false },
+    ]);
+
+    // Unknown id FIRST, on an all-clean store: nothing must be invalidated. This
+    // pins both the `s.id === sessionId` predicate (322 — an always-true mutant
+    // would invalidate s1) and the `sessionIndex !== -1` guard (323).
+    auth.invalidateSession('ghost');
+    expect(auth.loadSessions().filter(s => s.invalidated)).toHaveLength(0);
+
+    auth.invalidateSession('s1');
+    const after = auth.loadSessions();
+    expect(after.find(s => s.id === 's1').invalidated).toBe(true);
+    expect(after.find(s => s.id === 's2').invalidated).toBe(false);
+  });
+
+  it('loadSessions returns [] when sessions.json holds malformed JSON', async () => {
+    const auth = await loadAuth();
+    fs.writeFileSync(path.join(tmp, 'sessions.json'), '{ not valid json');
+    // Pins the catch -> return [] error path.
+    expect(auth.loadSessions()).toEqual([]);
+  });
+});
+
+describe('file-store error paths (HLCE-263)', () => {
+  it('loadUsers returns [] when users.json is corrupt (catch path)', async () => {
+    const auth = await loadAuth();
+    fs.writeFileSync(path.join(tmp, 'users.json'), 'definitely-not-json{');
+    expect(auth.loadUsers()).toEqual([]);
+  });
+
+  it('saveUsers reports false when the write fails', async () => {
+    const auth = await loadAuth();
+    const spy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {
+      throw new Error('EROFS: read-only file system');
+    });
+    try {
+      // Pins saveUsers' try/catch: a thrown write returns false, not true.
+      expect(auth.saveUsers([{ id: 'u1' }])).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('loadApiKeys returns [] when api-keys.json is corrupt (catch path)', async () => {
+    const auth = await loadAuth();
+    fs.writeFileSync(path.join(tmp, 'api-keys.json'), '<<<corrupt>>>');
+    expect(auth.loadApiKeys()).toEqual([]);
+  });
+});
+
+describe('default paths + secret fallbacks (HLCE-263)', () => {
+  it('falls back to <cwd>/server/{config,data} when CONFIG_DIR/DATA_DIR are unset', async () => {
+    // Capture mkdir/writeFile targets instead of writing to the real tree.
+    vi.resetModules();
+    delete process.env.CONFIG_DIR;
+    delete process.env.DATA_DIR;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    process.env.JWT_SECRET = SECRET;
+    process.env.BCRYPT_COST = '4';
+    const writeSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    const mkdirSpy = vi.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
+    try {
+      const auth = await import('./auth.js');
+      // saveUsers writes to CONFIG_DIR default (server/config/users.json).
+      auth.saveUsers([{ id: 'u1' }]);
+      expect(writeSpy.mock.calls.some(c =>
+        c[0] === path.join(process.cwd(), 'server', 'config', 'users.json'))).toBe(true);
+      // saveSessions writes to DATA_DIR default (server/data/sessions.json).
+      auth.saveSessions([{ id: 's1' }]);
+      expect(writeSpy.mock.calls.some(c =>
+        c[0] === path.join(process.cwd(), 'server', 'data', 'sessions.json'))).toBe(true);
+    } finally {
+      writeSpy.mockRestore();
+      mkdirSpy.mockRestore();
+      delete process.env.CONFIG_DIR; delete process.env.DATA_DIR;
+    }
+  });
+
+  it('generateToken signs with the active JWT secret so it round-trips', async () => {
+    const auth = await loadAuth();
+    const token = auth.generateToken({ id: 'u1', username: 'u', role: 'user' });
+    expect(jwt.verify(token, SECRET, { algorithms: ['HS256'] })).toMatchObject({ sub: 'u1' });
+  });
+});
+
+describe('file-store write/dir error paths (HLCE-263)', () => {
+  it('saveApiKeys creates a missing dir and swallows write errors', async () => {
+    const auth = await loadAuth();
+    // First: a successful save creates the file (and would mkdir if absent).
+    const u = await auth.createUser({ username: 'm', password: 'pw' });
+    auth.createApiKey(u.id, 'k');
+    expect(fs.existsSync(path.join(tmp, 'api-keys.json'))).toBe(true);
+
+    // Now force the write to throw -> saveApiKeys must not propagate (catch path).
+    const spy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {
+      throw new Error('ENOSPC');
+    });
+    try {
+      expect(() => auth.saveApiKeys([{ id: 'x' }])).not.toThrow();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('saveSessions swallows write errors (catch path)', async () => {
+    const auth = await loadAuth();
+    const spy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {
+      throw new Error('EROFS');
+    });
+    try {
+      expect(() => auth.saveSessions([{ id: 's' }])).not.toThrow();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('creates the config dir at import when it does not yet exist (HLCE-263)', async () => {
+    // Pins the module-load `if (!fs.existsSync(configDir)) fs.mkdirSync(...)`
+    // (lines 49-50). Point CONFIG_DIR at a path that does not exist and assert
+    // the module created it on import.
+    vi.resetModules();
+    const freshCfg = path.join(tmp, 'brand', 'new', 'cfg');
+    process.env.CONFIG_DIR = freshCfg;
+    process.env.DATA_DIR = tmp;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    process.env.JWT_SECRET = SECRET;
+    process.env.BCRYPT_COST = '4';
+    expect(fs.existsSync(freshCfg)).toBe(false);
+    await import('./auth.js');
+    expect(fs.existsSync(freshCfg)).toBe(true);
+  });
+
+  it('saveApiKeys recreates a missing key-store directory before writing (HLCE-263)', async () => {
+    // Pins `if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })`
+    // (line 219). Remove the dir, then save: it must be recreated and the file
+    // written. (Here CONFIG_DIR is tmp itself; use a nested CONFIG_DIR instead.)
+    vi.resetModules();
+    const cfg = path.join(tmp, 'cfg-sub');
+    fs.mkdirSync(cfg, { recursive: true });
+    process.env.CONFIG_DIR = cfg;
+    process.env.DATA_DIR = tmp;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    process.env.JWT_SECRET = SECRET;
+    process.env.BCRYPT_COST = '4';
+    const auth = await import('./auth.js');
+    // Delete the directory so saveApiKeys must recreate it.
+    fs.rmSync(cfg, { recursive: true, force: true });
+    expect(fs.existsSync(cfg)).toBe(false);
+    auth.saveApiKeys([{ id: 'k1', userId: 'u1', revoked: false }]);
+    expect(fs.existsSync(path.join(cfg, 'api-keys.json'))).toBe(true);
+  });
+});
+
+describe('secret resolution chains (HLCE-263)', () => {
+  it('getActiveKeys honours JWT_KEY_CURRENT when JWT_SECRET is absent', async () => {
+    // Pins the `readSecretFresh('JWT_SECRET') || readSecretFresh('JWT_KEY_CURRENT')`
+    // chain (27). With JWT_SECRET unset, tokens must sign/verify under JWT_KEY_CURRENT.
+    vi.resetModules();
+    process.env.CONFIG_DIR = tmp;
+    process.env.DATA_DIR = tmp;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    delete process.env.JWT_SECRET;
+    const CURRENT = 'c'.repeat(40);
+    process.env.JWT_KEY_CURRENT = CURRENT;
+    process.env.BCRYPT_COST = '4';
+    try {
+      const auth = await import('./auth.js');
+      const token = auth.generateToken({ id: 'u1', username: 'u', role: 'user' });
+      expect(jwt.verify(token, CURRENT, { algorithms: ['HS256'] })).toMatchObject({ sub: 'u1' });
+      // And a token forged with a different key is rejected.
+      const forged = jwt.sign({ sub: 'u1' }, 'wrong-key-wrong-key', { algorithm: 'HS256' });
+      expect(auth.verifyToken(forged)).toBeNull();
+    } finally {
+      delete process.env.JWT_KEY_CURRENT;
+    }
+  });
+
+  it('getApiKeyHmacKey uses an explicit API_KEY_HMAC_KEY when configured', async () => {
+    // Pins `if (explicit) return explicit;` (36) — when API_KEY_HMAC_KEY is set,
+    // the HMAC must derive from it (not the JWT-derived fallback). Two modules
+    // with the same explicit key must mint mutually-validatable keys; a module
+    // without it must NOT validate a key minted under the explicit one.
+    vi.resetModules();
+    process.env.CONFIG_DIR = tmp;
+    process.env.DATA_DIR = tmp;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    process.env.JWT_SECRET = SECRET;
+    process.env.BCRYPT_COST = '4';
+    process.env.API_KEY_HMAC_KEY = 'explicit-hmac-key-value-1234567890';
+    let madeKey, userId;
+    try {
+      const auth = await import('./auth.js');
+      const u = await auth.createUser({ username: 'h', password: 'pw' });
+      userId = u.id;
+      madeKey = auth.createApiKey(u.id, 'k').key;
+      expect(auth.validateApiKey(madeKey)).toMatchObject({ id: u.id, apiKey: true });
+    } finally {
+      delete process.env.API_KEY_HMAC_KEY;
+    }
+    // Re-import WITHOUT the explicit key: the stored HMAC no longer matches, so
+    // the previously-minted key fails to validate.
+    vi.resetModules();
+    process.env.CONFIG_DIR = tmp;
+    process.env.DATA_DIR = tmp;
+    process.env.DB_PATH = ':memory:';
+    process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
+    process.env.JWT_SECRET = SECRET;
+    process.env.BCRYPT_COST = '4';
+    const auth2 = await import('./auth.js');
+    expect(auth2.validateApiKey(madeKey)).toBeNull();
+    expect(userId).toBeTruthy();
+  });
+});
+
+describe('listApiKeys preview fallback (HLCE-263)', () => {
+  it('falls back to "hlr_****" when a stored key has no lookup field', async () => {
+    const auth = await loadAuth();
+    // Legacy entry without a `lookup` field: the preview must use the fallback.
+    auth.saveApiKeys([{ id: 'k1', userId: 'u1', revoked: false, hash: 'deadbeef' }]);
+    const list = auth.listApiKeys('u1');
+    expect(list[0].keyPreview).toBe('hlr_****');
+  });
+});
+
+describe('verifyToken inner-catch (HLCE-263)', () => {
+  it('returns null when a token verifies under neither the current nor the previous key', async () => {
+    const auth = await loadAuth({ previous: PREV });
+    // A token signed with a THIRD, unknown key: current verify throws (triggers
+    // the previous-key branch), previous verify also throws -> inner catch
+    // returns null (pins line 190).
+    const bogus = jwt.sign({ sub: 'u1' }, 'z'.repeat(40), { algorithm: 'HS256' });
+    expect(auth.verifyToken(bogus)).toBeNull();
+  });
+});
+
+describe('authenticate + changePassword error paths (HLCE-263)', () => {
+  it('authenticate fails closed when validatePassword throws (catch path)', async () => {
+    const auth = await loadAuth();
+    // Corrupt users.json so the bcrypt.compare on a non-string hash throws inside
+    // validatePassword -> authenticate's catch returns the generic failure.
+    auth.saveUsers([{ id: 'u1', username: 'broken', password: { not: 'a-string' } }]);
+    const res = await auth.authenticate('broken', 'pw');
+    expect(res).toEqual({ success: false, error: 'Authentication failed' });
+  });
+
+  it('changePassword reports failure when the user vanishes between lookup and save', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'cp2', password: 'old-pw' });
+
+    // findUserById (read #1) + the bcrypt.compare see the real user; the post-verify
+    // loadUsers (read #2) returns an empty array, so userIndex === -1 and the
+    // "Failed to update password" branch (line 365 -> 371) fires.
+    const real = fs.readFileSync.bind(fs);
+    let usersReads = 0;
+    const spy = vi.spyOn(fs, 'readFileSync').mockImplementation((p, enc) => {
+      if (String(p).endsWith('users.json')) {
+        usersReads++;
+        if (usersReads >= 2) return '[]';
+      }
+      return real(p, enc);
+    });
+    try {
+      const res = await auth.changePassword(u.id, 'old-pw', 'new-pw');
+      expect(res).toEqual({ success: false, error: 'Failed to update password' });
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('createUser field defaults (HLCE-263)', () => {
+  it('defaults email to "", role to "user", and mustChangePassword to false', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'plain', password: 'pw' });
+    // Pins `userData.email || ''` (120), `userData.role || 'user'` (121),
+    // `userData.mustChangePassword || false` (123).
+    const stored = auth.findUserByUsername('plain');
+    expect(stored.email).toBe('');
+    expect(stored.role).toBe('user');
+    expect(stored.mustChangePassword).toBe(false);
+    expect(u).not.toHaveProperty('password');
+  });
+
+  it('keeps explicit email / role / mustChangePassword values', async () => {
+    const auth = await loadAuth();
+    await auth.createUser({
+      username: 'fancy', password: 'pw', email: 'f@x.io', role: 'operator', mustChangePassword: true,
+    });
+    const stored = auth.findUserByUsername('fancy');
+    expect(stored.email).toBe('f@x.io');
+    expect(stored.role).toBe('operator');
+    expect(stored.mustChangePassword).toBe(true);
+  });
+});
+
+describe('validatePassword cost-rehash (HLCE-263)', () => {
+  it('leaves an at-cost hash untouched on login (no rehash when currentCost >= BCRYPT_COST)', async () => {
+    const auth = await loadAuth({ cost: 4 });
+    await auth.createUser({ username: 'steady', password: 'pw' });
+    const before = auth.findUserByUsername('steady').password;
+    expect(before).toMatch(/^\$2[aby]\$04\$/); // cost matches BCRYPT_COST=4
+    const ok = await auth.validatePassword('steady', 'pw');
+    expect(ok).toMatchObject({ username: 'steady' });
+    // Pins `currentCost < BCRYPT_COST` (148): equal cost must NOT rehash, so the
+    // stored hash is byte-identical.
+    expect(auth.findUserByUsername('steady').password).toBe(before);
+  });
+
+  it('reads a multi-digit cost factor correctly (no spurious rehash at cost 12)', async () => {
+    // Pins the `(\d+)` capture group + the regex anchors (147). Seed a cost-12
+    // hash and log in under BCRYPT_COST=12: a `(\d)` mutant would read cost "1",
+    // see 1 < 12, and rehash; a `[^aby]` mutant would fail to match and read 0.
+    const auth = await loadAuth({ cost: 12 });
+    const hash12 = await bcrypt.hash('pw', 12);
+    auth.saveUsers([{ id: 'u1', username: 'big', password: hash12, role: 'user' }]);
+    const before = auth.findUserByUsername('big').password;
+    expect(before).toMatch(/^\$2[aby]\$12\$/);
+    await auth.validatePassword('big', 'pw');
+    // Cost already meets BCRYPT_COST=12 -> the hash must be untouched.
+    expect(auth.findUserByUsername('big').password).toBe(before);
+  }, 20000);
+
+  it('rehashes a hash whose cost is below BCRYPT_COST and persists the upgrade', async () => {
+    // Seed a deliberately low-cost (4) hash, then log in under a higher cost (6).
+    const auth = await loadAuth({ cost: 6 });
+    const lowHash = await bcrypt.hash('pw', 4);
+    auth.saveUsers([{ id: 'u1', username: 'old', password: lowHash, role: 'user' }]);
+    expect(auth.findUserByUsername('old').password).toMatch(/^\$2[aby]\$04\$/);
+
+    const ok = await auth.validatePassword('old', 'pw');
+    expect(ok).toMatchObject({ username: 'old' });
+    // The cost prefix moved up to 06 and the new hash was saved.
+    const after = auth.findUserByUsername('old').password;
+    expect(after).toMatch(/^\$2[aby]\$06\$/);
+    expect(after).not.toMatch(/^\$2[aby]\$04\$/);
+  });
+});
+
+describe('createApiKey / listApiKeys defaults (HLCE-263)', () => {
+  it('defaults the label to "Mobile App" when none is supplied', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'm', password: 'pw' });
+    const made = auth.createApiKey(u.id); // no label
+    // Pins `label || 'Mobile App'` (236).
+    expect(made.label).toBe('Mobile App');
+    const labelled = auth.createApiKey(u.id, 'Tablet');
+    expect(labelled.label).toBe('Tablet');
+  });
+
+  it('listApiKeys exposes the lookup as keyPreview and excludes revoked keys', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'm', password: 'pw' });
+    const k1 = auth.createApiKey(u.id, 'a');
+    const k2 = auth.createApiKey(u.id, 'b');
+    auth.revokeApiKey(k2.id, u.id);
+    const list = auth.listApiKeys(u.id);
+    // Pins the `!k.revoked` filter (278) and the lookup preview map (279).
+    expect(list).toHaveLength(1);
+    expect(list[0].id).toBe(k1.id);
+    expect(list[0].keyPreview).toBe(k1.lookup);
+    expect(list[0]).not.toHaveProperty('hash');
+    expect(list[0]).not.toHaveProperty('key');
+  });
+
+  it('listApiKeys scopes results to the requesting user only', async () => {
+    const auth = await loadAuth();
+    const a = await auth.createUser({ username: 'a', password: 'pw' });
+    const b = await auth.createUser({ username: 'b', password: 'pw' });
+    auth.createApiKey(a.id, 'a-key');
+    auth.createApiKey(b.id, 'b-key');
+    // Pins `k.userId === userId` (278): user a must not see user b's key.
+    expect(auth.listApiKeys(a.id)).toHaveLength(1);
+    expect(auth.listApiKeys(a.id)[0].label).toBe('a-key');
+  });
+});
+
+describe('changePassword paths (HLCE-263)', () => {
+  it('rejects a wrong current password and succeeds (persisting) on the right one', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'cp', password: 'old-pw' });
+
+    expect(await auth.changePassword(u.id, 'nope', 'new-pw'))
+      .toEqual({ success: false, error: 'Current password is incorrect' });
+
+    expect(await auth.changePassword(u.id, 'old-pw', 'new-pw')).toEqual({ success: true });
+    // The new password validates and the old one no longer does.
+    expect(await auth.validatePassword('cp', 'new-pw')).toMatchObject({ username: 'cp' });
+    expect(await auth.validatePassword('cp', 'old-pw')).toBeNull();
+  });
+
+  it('returns "User not found" for an unknown user id', async () => {
+    const auth = await loadAuth();
+    expect(await auth.changePassword('ghost', 'a', 'b'))
+      .toEqual({ success: false, error: 'User not found' });
+  });
+});
+
+describe('verifyToken previous-key age window (HLCE-263)', () => {
+  it('accepts a previous-key token just inside max-age and rejects one just outside', async () => {
+    const auth = await loadAuth({ previous: PREV });
+    const user = { id: 'u1', username: 'u', role: 'user' };
+
+    // iat just inside the 24h window -> accepted via the previous key. (Don't use
+    // noTimestamp: jsonwebtoken strips a manual iat in that mode; without it the
+    // explicit iat in the payload is honoured.)
+    const freshIat = Math.floor(Date.now() / 1000) - (PREVIOUS_KEY_MAX_AGE_SEC - 60);
+    const fresh = jwt.sign({ sub: user.id, iat: freshIat }, PREV, { algorithm: 'HS256' });
+    expect(auth.verifyToken(fresh)).toMatchObject({ sub: 'u1' });
+
+    // iat just past the window -> rejected (pins the `> PREVIOUS_KEY_MAX_AGE_SEC`
+    // comparison at 187).
+    const staleIat = Math.floor(Date.now() / 1000) - (PREVIOUS_KEY_MAX_AGE_SEC + 60);
+    const stale = jwt.sign({ sub: user.id, iat: staleIat }, PREV, { algorithm: 'HS256' });
+    expect(auth.verifyToken(stale)).toBeNull();
+  });
+
+  it('accepts a previous-key token exactly at the max-age boundary (strict > boundary)', async () => {
+    // Pins `> PREVIOUS_KEY_MAX_AGE_SEC` vs `>=` (187). At exactly MAX_AGE the age
+    // is NOT strictly greater, so the token is still accepted under fake time.
+    const auth = await loadAuth({ previous: PREV });
+    vi.useFakeTimers();
+    const nowSec = 1_800_000_000;
+    vi.setSystemTime(nowSec * 1000);
+    const boundaryIat = nowSec - PREVIOUS_KEY_MAX_AGE_SEC; // age === MAX_AGE exactly
+    const tok = jwt.sign({ sub: 'u1', iat: boundaryIat }, PREV, { algorithm: 'HS256' });
+    expect(auth.verifyToken(tok)).toMatchObject({ sub: 'u1' });
+  });
+});
+
+describe('login ticket TTL boundary (HLCE-263)', () => {
+  it('honours the 5-minute TTL: valid just before exp, null at/after exp', async () => {
+    const auth = await loadAuth();
+    vi.useFakeTimers();
+    const T0 = new Date('2026-06-21T00:00:00Z').getTime();
+    const TTL = 5 * 60 * 1000;
+
+    // Ticket A: consumed 1ms before its exp -> still valid. Pins both the
+    // `5 * 60 * 1000` TTL arithmetic (466) and `entry.exp < Date.now()` (476).
+    vi.setSystemTime(T0);
+    const a = auth.createLoginTicket('u1'); // exp = T0 + TTL
+    vi.setSystemTime(T0 + TTL - 1);
+    expect(auth.consumeLoginTicket(a)).toBe('u1');
+
+    // Ticket B: consumed 1ms after its exp -> expired -> null.
+    const TB = T0 + TTL;
+    vi.setSystemTime(TB);
+    const b = auth.createLoginTicket('u2'); // exp = TB + TTL
+    vi.setSystemTime(TB + TTL + 1);
+    expect(auth.consumeLoginTicket(b)).toBeNull();
+  });
+});
+
+describe('initializeAuth admin seeding (HLCE-263)', () => {
+  it('seeds exactly one mustChangePassword admin and skips when a user already exists', async () => {
+    const auth = await loadAuth();
+    await auth.initializeAuth();
+    const users = auth.loadUsers();
+    // Pins `users.length === 0` (382) gate + the seeded admin shape.
+    expect(users).toHaveLength(1);
+    expect(users[0]).toMatchObject({ username: 'admin', role: 'admin', mustChangePassword: true });
+
+    // Idempotent: a second call must NOT add another user.
+    await auth.initializeAuth();
+    expect(auth.loadUsers()).toHaveLength(1);
+  });
+
+  it('honours DEFAULT_ADMIN_PASSWORD when set', async () => {
+    const auth = await loadAuth();
+    process.env.DEFAULT_ADMIN_PASSWORD = 'super-secret-seed';
+    try {
+      await auth.initializeAuth();
+      // Pins `process.env.DEFAULT_ADMIN_PASSWORD || 'admin'` (386).
+      expect(await auth.validatePassword('admin', 'super-secret-seed')).toMatchObject({ username: 'admin' });
+      expect(await auth.validatePassword('admin', 'admin')).toBeNull();
+    } finally {
+      delete process.env.DEFAULT_ADMIN_PASSWORD;
+    }
+  });
+});
+
+describe('middleware header branches (HLCE-263)', () => {
+  it('requireAuth 403s nothing but routes API-key vs cookie correctly', async () => {
+    const auth = await loadAuth();
+    const u = await auth.createUser({ username: 'm', password: 'pw' });
+    const { key } = auth.createApiKey(u.id, 'phone');
+
+    // Valid hlr_ API key -> next() with req.user.apiKey (pins startsWith 'Bearer hlr_' at 407).
+    let called = false;
+    const req1 = { headers: { authorization: `Bearer ${key}` }, cookies: {} };
+    auth.requireAuth(req1, mockRes(), () => { called = true; });
+    expect(called).toBe(true);
+    expect(req1.user.apiKey).toBe(true);
+
+    // hlr_ prefix but bad key -> 401 'Invalid API key' (not the generic message).
+    const res2 = mockRes();
+    auth.requireAuth({ headers: { authorization: 'Bearer hlr_bogus' }, cookies: {} }, res2, () => {
+      throw new Error('next should not run');
+    });
+    expect(res2.statusCode).toBe(401);
+    expect(res2.body.error).toBe('Invalid API key');
+  });
+
+  it('requireRole 401s without user, 403s under-privileged, next()s when sufficient', async () => {
+    const auth = await loadAuth();
+    const mw = auth.requireRole('operator');
+
+    const r401 = mockRes();
+    mw({}, r401, () => { throw new Error('next should not run'); });
+    expect(r401.statusCode).toBe(401);
+
+    const r403 = mockRes();
+    mw({ user: { role: 'user' } }, r403, () => { throw new Error('next should not run'); });
+    expect(r403.statusCode).toBe(403);
+    expect(r403.body.error).toBe('Insufficient permissions');
+
+    let okCalled = false;
+    mw({ user: { role: 'admin' } }, mockRes(), () => { okCalled = true; });
+    expect(okCalled).toBe(true);
   });
 });
