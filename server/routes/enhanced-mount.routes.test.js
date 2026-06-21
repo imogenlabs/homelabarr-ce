@@ -269,3 +269,219 @@ describe('AC1 — additional proxy endpoints (coverage)', () => {
     expect(fetchSpy.mock.calls[0][0]).toContain('http://localhost:9000/api/v2/costs');
   });
 });
+
+// HLCE-278: the four remaining proxy handlers HLCE-271 left untested. Same proxy
+// shape — inspect → safeWebPort → fetch('/api/v2/<path>'). For each: auth gate
+// (401, no Docker), happy path (200 + URL/method/body assertion), and error path
+// (fetch non-ok → 500 via sendError). AC2 (safeWebPort guard) is pinned once more
+// on the GET /performance handler with an out-of-range HostPort.
+describe('HLCE-278 — GET /:id/performance', () => {
+  it('without a cookie → 401 and never touches Docker', async () => {
+    const dockerManager = makeDM();
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app).get('/enhanced-mount/c1/performance');
+
+    expect(res.status).toBe(401);
+    expect(dockerManager.getDocker).not.toHaveBeenCalled();
+  });
+
+  it('happy path proxies to /api/v2/performance and returns its data', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    const fetchSpy = okFetch({ cpu: 12, mem: 34 });
+    vi.stubGlobal('fetch', fetchSpy);
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .get('/enhanced-mount/c1/performance')
+      .set('Cookie', adminCookie());
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.containerId).toBe('c1');
+    expect(res.body.data).toEqual({ cpu: 12, mem: 34 });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][0]).toContain('http://localhost:9000/api/v2/performance');
+  });
+
+  it('container API non-ok response (502) → 500 via sendError', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }));
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .get('/enhanced-mount/c1/performance')
+      .set('Cookie', adminCookie());
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to fetch enhanced mount performance');
+  });
+
+  it('AC2: out-of-range container HostPort (99999) → 500, fetch never called', async () => {
+    const dockerManager = makeDM({ hostPort: '99999' });
+    const fetchSpy = okFetch();
+    vi.stubGlobal('fetch', fetchSpy);
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .get('/enhanced-mount/c1/performance')
+      .set('Cookie', adminCookie());
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to fetch enhanced mount performance');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('HLCE-278 — POST /:id/auth/complete', () => {
+  it('without a cookie → 401 and never touches Docker', async () => {
+    const dockerManager = makeDM();
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/complete')
+      .send({ provider: 'google', auth_code: 'abc' });
+
+    expect(res.status).toBe(401);
+    expect(dockerManager.getDocker).not.toHaveBeenCalled();
+  });
+
+  it('happy path proxies a POST to /api/v2/auth/complete with provider + auth_code', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    const fetchSpy = okFetch({ token: 'granted' });
+    vi.stubGlobal('fetch', fetchSpy);
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/complete')
+      .set('Cookie', adminCookie())
+      .send({ provider: 'google', auth_code: 'abc123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.containerId).toBe('c1');
+    expect(res.body.data).toEqual({ token: 'granted' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect(url).toContain('http://localhost:9000/api/v2/auth/complete');
+    expect(opts.method).toBe('POST');
+    expect(JSON.parse(opts.body)).toEqual({ provider: 'google', auth_code: 'abc123' });
+  });
+
+  it('fetch rejects → 500 via sendError', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connection refused')));
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/complete')
+      .set('Cookie', adminCookie())
+      .send({ provider: 'google', auth_code: 'abc' });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to complete authentication');
+  });
+});
+
+describe('HLCE-278 — POST /:id/auth/api-key', () => {
+  it('without a cookie → 401 and never touches Docker', async () => {
+    const dockerManager = makeDM();
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/api-key')
+      .send({ provider: 's3', credentials: { key: 'x' } });
+
+    expect(res.status).toBe(401);
+    expect(dockerManager.getDocker).not.toHaveBeenCalled();
+  });
+
+  it('happy path proxies a POST to /api/v2/auth/api-key with provider + credentials', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    const fetchSpy = okFetch({ stored: true });
+    vi.stubGlobal('fetch', fetchSpy);
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/api-key')
+      .set('Cookie', adminCookie())
+      .send({ provider: 's3', credentials: { access_key: 'AK', secret: 'SK' } });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.containerId).toBe('c1');
+    expect(res.body.data).toEqual({ stored: true });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect(url).toContain('http://localhost:9000/api/v2/auth/api-key');
+    expect(opts.method).toBe('POST');
+    expect(JSON.parse(opts.body)).toEqual({
+      provider: 's3',
+      credentials: { access_key: 'AK', secret: 'SK' },
+    });
+  });
+
+  it('container API non-ok response (502) → 500 via sendError', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }));
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/api-key')
+      .set('Cookie', adminCookie())
+      .send({ provider: 's3', credentials: { key: 'x' } });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to configure API credentials');
+  });
+});
+
+describe('HLCE-278 — POST /:id/auth/test', () => {
+  it('without a cookie → 401 and never touches Docker', async () => {
+    const dockerManager = makeDM();
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/test')
+      .send({ provider: 'dropbox' });
+
+    expect(res.status).toBe(401);
+    expect(dockerManager.getDocker).not.toHaveBeenCalled();
+  });
+
+  it('happy path proxies a POST to /api/v2/auth/test with the provider in the body', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    const fetchSpy = okFetch({ reachable: true });
+    vi.stubGlobal('fetch', fetchSpy);
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/test')
+      .set('Cookie', adminCookie())
+      .send({ provider: 'dropbox' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.containerId).toBe('c1');
+    expect(res.body.data).toEqual({ reachable: true });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect(url).toContain('http://localhost:9000/api/v2/auth/test');
+    expect(opts.method).toBe('POST');
+    expect(JSON.parse(opts.body)).toEqual({ provider: 'dropbox' });
+  });
+
+  it('container API non-ok response (502) → 500 via sendError', async () => {
+    const dockerManager = makeDM({ hostPort: '9000' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }));
+    const { app } = buildApp({ dockerManager });
+
+    const res = await request(app)
+      .post('/enhanced-mount/c1/auth/test')
+      .set('Cookie', adminCookie())
+      .send({ provider: 'dropbox' });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to test connection');
+  });
+});
