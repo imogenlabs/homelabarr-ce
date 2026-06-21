@@ -27,7 +27,18 @@ export class SqliteStore {
     }
     return { totalHits: hits, resetTime: new Date(resetAt) };
   }
-  async decrement() {}
+  // express-rate-limit calls decrement(key) to "uncount" a request after the
+  // fact — e.g. with skipSuccessfulRequests, once a 2xx response is sent. A
+  // no-op here made that option ineffective (HLCE-255): successful logins still
+  // counted toward the IP limit. Decrement the live bucket (never below 0, and
+  // only within the current window).
+  async decrement(key) {
+    const now = Date.now();
+    const row = this.db.prepare('SELECT hits, reset_at FROM rate_buckets WHERE key=?').get(key);
+    if (!row || row.reset_at <= now) return;
+    const hits = Math.max(0, row.hits - 1);
+    this.db.prepare('UPDATE rate_buckets SET hits=? WHERE key=?').run(hits, key);
+  }
   async resetKey(key) { this.db.prepare('DELETE FROM rate_buckets WHERE key=?').run(key); }
 }
 
