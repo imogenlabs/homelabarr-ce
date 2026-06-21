@@ -72,11 +72,15 @@ export default defineConfig({
       // progress-stream.js ~82% / environment-manager.js ~76% / network-manager.js
       // ~74%; overall baseline lines 57.18 / statements 57.24 / functions 61.51 /
       // branches 53.56. Floor raised.
+      // 2026-06-20 HLCE-223 (React contexts & hooks tests): AuthContext.tsx 100%
+      // lines (high-risk target was 80%), NotificationContext/ThemeContext/
+      // use-mobile/useLoading 100%; overall baseline lines 58.35 / statements 58.41 /
+      // functions 63.51 / branches 54.06. Floor raised to just under it.
       thresholds: {
-        lines: 57,
-        statements: 57,
-        functions: 61,
-        branches: 53,
+        lines: 58,
+        statements: 58,
+        functions: 63,
+        branches: 54,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
