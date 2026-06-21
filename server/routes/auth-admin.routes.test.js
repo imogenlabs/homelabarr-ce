@@ -227,6 +227,8 @@ describe('admin user management & activity log (AC5)', () => {
 
     // Too-short password.
     expect((await mutate(boss, 'put', `/auth/users/${id}/password`).send({ newPassword: 'short' })).status).toBe(400);
+    // HLCE-268: 11 chars rejected — admin reset shares the 12-char minimum.
+    expect((await mutate(boss, 'put', `/auth/users/${id}/password`).send({ newPassword: 'elevenchars' })).status).toBe(400);
     // Missing user.
     expect((await mutate(boss, 'put', '/auth/users/nope/password').send({ newPassword: 'longenough12' })).status).toBe(404);
     // Success — the new password authenticates.
