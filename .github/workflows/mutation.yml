@@ -1,0 +1,54 @@
+name: Mutation Testing
+
+# Nightly StrykerJS mutation run over the high-risk security modules (HLCE-264).
+# Mutation is too slow to gate every PR, so it runs on a schedule (+ manual
+# dispatch), uploads the per-module HTML reports, and FAILS if any module's
+# mutation score drops below its recorded floor (scripts/mutation-ci.mjs) — a
+# ratchet that mirrors the coverage floor. This is NOT a required status check,
+# so it never blocks a merge; it's an over-time signal.
+# Public repo -> free ubuntu-latest minutes; never self-hosted (HLCE-203/204).
+
+on:
+  schedule:
+    - cron: '17 6 * * *'   # 06:17 UTC nightly (off the hour to dodge runner spikes)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One mutation run at a time; a newer dispatch supersedes an in-flight one.
+concurrency:
+  group: mutation-testing
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    name: Stryker mutation (high-risk modules)
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runs Stryker per module (concurrency 2, scoped to one file at a time) and
+      # exits non-zero if any module is below its recorded score floor.
+      - name: Run mutation testing (enforces per-module score floors)
+        run: node scripts/mutation-ci.mjs
+
+      # Always publish the reports — including on a floor breach — so a drop can
+      # be triaged from the HTML.
+      - name: Upload mutation reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: mutation-report
+          path: reports/mutation/*.html
+          retention-days: 14
