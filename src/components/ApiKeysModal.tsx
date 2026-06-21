@@ -56,6 +56,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch on mount/poll; setState resolves after await, not during render
       fetchKeys();
       setNewKey(null);
       setShowCreate(false);
@@ -130,6 +131,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
   };
 
   const timeAgo = (dateStr: string) => {
+    // eslint-disable-next-line react-hooks/purity -- Date.now() reads the wall clock to render a relative "x ago" label; intentionally non-pure, recomputed every render
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `${mins}m ago`;
