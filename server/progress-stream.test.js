@@ -70,14 +70,12 @@ describe('ProgressStreamManager SSE fan-out (AC1)', () => {
     expect(() => mgr.subscribeToDeployment('ghost', 'dep1')).toThrow(/not found/);
   });
 
-  // PINNED BUG (regression marker, AC1): broadcastDeploymentProgress iterates the
+  // REGRESSION (HLCE-259, AC1): broadcastDeploymentProgress used to iterate the
   // LIVE subscriber array with for...of while a failing sendToClient → removeClient
-  // splices that same array. Splicing mid-iteration shifts the indices, so the
-  // client immediately after the failing one is SKIPPED. AC1's "removed mid-
-  // broadcast without corrupting iteration" is therefore NOT met. The failing
-  // client IS removed, but the next client misses the event. Flip this once the
-  // broadcast iterates a copy (e.g. [...clients]).
-  it('skips the client after a failing one mid-broadcast (iteration-corruption bug)', () => {
+  // spliced that same array, shifting indices so the client immediately after the
+  // failing one was SKIPPED. The fix iterates a snapshot (`[...clients]`) so the
+  // failing client is still removed but every healthy client is reached.
+  it('still reaches the client after a failing one mid-broadcast (snapshot iteration)', () => {
     const mgr = new ProgressStreamManager();
     const a = fakeRes(); const bad = fakeRes(); const c = fakeRes();
     mgr.addClient('a', a); mgr.addClient('bad', bad); mgr.addClient('c', c);
@@ -93,8 +91,8 @@ describe('ProgressStreamManager SSE fan-out (AC1)', () => {
 
     expect(a.write).toHaveBeenCalledWith('event: deployment-step\n'); // a got it
     expect(mgr.getConnectedClientCount()).toBe(2);                    // bad removed
-    // BUG: c was skipped because the splice shifted iteration past it.
-    expect(c.write).not.toHaveBeenCalledWith('event: deployment-step\n');
+    // FIXED: c is no longer skipped — the splice no longer corrupts iteration.
+    expect(c.write).toHaveBeenCalledWith('event: deployment-step\n');
   });
 
   it('removeClient cleans up client + deployment subscriptions; getStatistics reflects state', () => {
