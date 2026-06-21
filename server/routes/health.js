@@ -170,7 +170,9 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
 
       res.status(httpStatus).json(healthResponse);
     } catch (error) {
-      sendError(res, 200, 'Health check error', error);
+      // A failure of the health handler itself must surface as 500 — returning
+      // 200 here made monitoring read a broken endpoint as healthy (HLCE-265).
+      sendError(res, 500, 'Health check error', error);
     }
   });
 
