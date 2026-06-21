@@ -17,8 +17,9 @@ export function validateConfig(
   // Validate paths
   Object.entries(config).forEach(([key, value]) => {
     const field = template.configFields?.find(f => f.name === key);
-    // Skip domain validation for path format
-    if (field?.type === 'text' && key.includes('path') && (value.includes('/path/to') || !value.startsWith('/'))) {
+    // Skip domain validation for path format. Case-insensitive on the key so
+    // camelCase fields (dataPath, configPath) aren't silently skipped (HLCE-266).
+    if (field?.type === 'text' && key.toLowerCase().includes('path') && (value.includes('/path/to') || !value.startsWith('/'))) {
       errors.push(`${field.label} must be a valid absolute path`);
     }
   });

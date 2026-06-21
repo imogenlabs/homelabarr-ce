@@ -59,10 +59,16 @@ describe('validateConfig — required fields', () => {
 });
 
 describe('validateConfig — path validation', () => {
-  // NOTE: validateConfig only runs path validation when the field NAME includes
-  // the lowercase substring "path" (validation.ts:21, case-sensitive), so the
-  // field name must contain lowercase "path".
+  // Path validation triggers when the field NAME contains "path" case-INsensitively
+  // (validation.ts uses key.toLowerCase().includes('path'), HLCE-266).
   const pathField = field({ name: 'configpath', label: 'Config Path', type: 'text' });
+
+  it('flags a camelCase path field (HLCE-266 — case-insensitive key match)', () => {
+    const camel = field({ name: 'dataPath', label: 'Data Path', type: 'text' });
+    const t = template([camel]);
+    const errors = validateConfig(t, { dataPath: 'relative/dir' }, false);
+    expect(errors).toContain('Data Path must be a valid absolute path');
+  });
 
   it('flags a path that does not start with /', () => {
     const t = template([pathField]);
