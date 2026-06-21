@@ -9,12 +9,14 @@ import { defineConfig } from "vitest/config";
 // minimal single-project node config, scoped to just the file(s) under mutation.
 //
 // To scope the run to a different backend file, change `include` here to that
-// file's test and `mutate` in stryker.conf.json to the source file. See
-// docs/mutation-testing.md. The normal `npm test` / coverage gate is untouched —
-// nothing reads this file except `stryker run`.
+// file's test and `mutate` in stryker.conf.json to the source file — or set the
+// MUTATION_TEST_FILE env var (the nightly CI runner, scripts/mutation-ci.mjs, sets
+// it per module while overriding `mutate` with --mutate). See docs/mutation-testing.md.
+// The normal `npm test` / coverage gate is untouched — nothing reads this file
+// except `stryker run`.
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["server/auth.test.js"],
+    include: [process.env.MUTATION_TEST_FILE || "server/auth.test.js"],
   },
 });
