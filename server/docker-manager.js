@@ -1135,23 +1135,63 @@ function createDockerManager() {
     ? new Docker({ host: new URL(dockerHost).hostname, port: parseInt(new URL(dockerHost).port) || 2375, protocol: 'http' })
     : new Docker({ socketPath: networkConfig.serviceUrls?.docker?.replace('unix://', '') || '/var/run/docker.sock' });
 
+  // Real health state, updated by an actual ping probe instead of hardcoded
+  // (HLCE-258). Starts 'unknown' so the very first request before the initial
+  // probe resolves is not falsely reported as unavailable (routes only 503 on
+  // 'unavailable'); the probe + each successful operation then keep it honest.
+  const state = {
+    isConnected: null, // null = not yet probed, true/false = real result
+    lastError: null,
+    lastSuccessfulConnection: null,
+  };
+
+  const probe = async () => {
+    try {
+      await cliDocker.ping();
+      state.isConnected = true;
+      state.lastError = null;
+      state.lastSuccessfulConnection = new Date();
+    } catch (error) {
+      state.isConnected = false;
+      state.lastError = error;
+    }
+    return state.isConnected;
+  };
+
+  // Initial probe (fire-and-forget) + periodic re-probe; unref so it never keeps
+  // the process alive.
+  probe();
+  const probeTimer = setInterval(probe, 30_000);
+  if (typeof probeTimer.unref === 'function') probeTimer.unref();
+
   const manager = {
     docker: cliDocker,
     config: {
       platform: networkConfig.platform,
       cliPath: 'docker',
     },
+    probe,
     getConnectionState: () => ({
-      isConnected: true,
-      lastSuccessfulConnection: new Date(),
-      platform: 'windows-cli'
+      isConnected: state.isConnected === true,
+      lastSuccessfulConnection: state.lastSuccessfulConnection,
+      lastError: state.lastError ? (state.lastError.message || String(state.lastError)) : null,
+      platform: networkConfig.platform,
     }),
-    getServiceStatus: () => ({
-      status: 'available',
-      message: 'Docker CLI integration active'
-    }),
+    getServiceStatus: () => {
+      if (state.isConnected === true) {
+        return { status: 'available', message: 'Docker CLI integration active' };
+      }
+      if (state.isConnected === false) {
+        return { status: 'unavailable', message: state.lastError?.message || 'Docker daemon is not reachable' };
+      }
+      return { status: 'unknown', message: 'Docker connection state not yet determined' };
+    },
     executeWithRetry: async (operation, _description) => {
-      return operation(cliDocker);
+      const result = await operation(cliDocker);
+      // A completed operation is positive proof the daemon is reachable.
+      state.isConnected = true;
+      state.lastSuccessfulConnection = new Date();
+      return result;
     },
     createErrorResponse: (operation, error, includeDetails = true) => ({
       success: false,
@@ -1170,6 +1210,7 @@ function createDockerManager() {
       userMessage: 'Docker operation failed'
     }),
     destroy: () => {
+      clearInterval(probeTimer);
       logger.info('🔧 CLI Docker manager cleanup complete');
     }
   };
