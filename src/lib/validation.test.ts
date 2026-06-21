@@ -162,4 +162,53 @@ describe('validatePortConflicts', () => {
     expect(errors).toEqual([]);
     warnSpy.mockRestore();
   });
+
+  // Catalog apps render port fields as type 'text', so the old type==='number'
+  // gate skipped them and the user got no pre-submit conflict warning (HLCE-276).
+  it('reports a TEXT-typed port field (catalog app) that collides with a used port', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8096] });
+    const t = template([field({ name: 'port', label: 'Port', type: 'text' })]);
+
+    const errors = await validatePortConflicts(t, { port: '8096' });
+
+    expect(errors).toContain('Port 8096 is already in use by another container');
+  });
+
+  it('recognises a text port field by its label (e.g. "HTTP Port") even when the key does not say port', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [443] });
+    const t = template([field({ name: 'webUi', label: 'HTTP Port', type: 'text' })]);
+
+    const errors = await validatePortConflicts(t, { webUi: '443' });
+
+    expect(errors).toContain('Port 443 is already in use by another container');
+  });
+
+  it('does not report a non-colliding text port field', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8096] });
+    const t = template([field({ name: 'port', label: 'Port', type: 'text' })]);
+
+    const errors = await validatePortConflicts(t, { port: '9090' });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('does not treat an unrelated text field as a port', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8096] });
+    const t = template([field({ name: 'apikey', label: 'API Key', type: 'text' })]);
+
+    // Even if the value happens to parse to a used port number, a non-port field
+    // must not be conflict-checked.
+    const errors = await validatePortConflicts(t, { apikey: '8096' });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('regression: a numeric-typed port field still reports a conflict', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8080] });
+    const t = template([field({ name: 'webPort', label: 'Web Port', type: 'number' })]);
+
+    const errors = await validatePortConflicts(t, { webPort: '8080' });
+
+    expect(errors).toContain('Port 8080 is already in use by another container');
+  });
 });
