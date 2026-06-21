@@ -1,13 +1,13 @@
 # DAST Trend Report
 
-Generated: 2026-06-14T09:28:35Z
+Generated: 2026-06-21T09:44:42Z
 
 | Date | Workflow | Status | Findings |
 |------|---------|--------|----------|
-| 2026-06-14T08:30:30Z | dast-active | success | - |
-| 2026-06-13T08:01:26Z | dast-active | success | - |
-| 2026-06-12T08:46:01Z | dast-active | success | - |
-| 2026-06-11T08:58:53Z | dast-active | success | - |
-| 2026-06-10T08:31:29Z | dast-active | success | - |
-| 2026-06-09T08:06:38Z | dast-active | success | - |
-| 2026-06-08T09:11:41Z | dast-active | success | - |
+| 2026-06-21T08:45:34Z | dast-active | success | - |
+| 2026-06-20T08:02:03Z | dast-active | success | - |
+| 2026-06-19T09:18:54Z | dast-active | success | - |
+| 2026-06-18T08:59:54Z | dast-active | success | - |
+| 2026-06-17T09:17:46Z | dast-active | success | - |
+| 2026-06-16T09:39:36Z | dast-active | success | - |
+| 2026-06-15T10:43:07Z | dast-active | success | - |
