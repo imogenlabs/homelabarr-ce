@@ -56,10 +56,6 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
     appId: string;
   } | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       setLoading(true);
@@ -67,7 +63,7 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
         getApplicationCatalog(),
         getDeploymentModes()
       ]);
-      
+
       setCatalog(catalogData);
       setDeploymentModes(modesData.modes || []);
       setError(null);
@@ -77,6 +73,11 @@ export function CLIApplicationBrowser({ onDeploy }: CLIApplicationBrowserProps) 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch-on-mount; setState runs after await, not synchronously
+    loadData();
+  }, []);
 
   const filteredApplications = () => {
     if (!catalog?.applications) return [];

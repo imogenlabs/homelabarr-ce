@@ -49,12 +49,6 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
   const [authWizardOpen, setAuthWizardOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-  useEffect(() => {
-    fetchEnhancedMountStats();
-    const interval = setInterval(fetchEnhancedMountStats, 30000); // Update every 30s
-    return () => clearInterval(interval);
-  }, [containerId]);
-
   const fetchEnhancedMountStats = async () => {
     try {
       // Call the backend API which proxies to the container
@@ -99,6 +93,13 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch-on-mount; setState runs after await, not synchronously
+    fetchEnhancedMountStats();
+    const interval = setInterval(fetchEnhancedMountStats, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, [containerId]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

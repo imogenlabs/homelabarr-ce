@@ -145,11 +145,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async catalog fetch on auth; loadCatalog sets catalog state on resolve.
     if (isAuthenticated) loadCatalog();
   }, [isAuthenticated, loadCatalog]);
 
   // Fetch starred apps when authenticated
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs starred set to auth state: reset on logout, async fetch on login.
     if (!isAuthenticated) { setStarredApps(new Set()); return; }
     getStars().then(data => setStarredApps(new Set(data.stars))).catch(() => {});
   }, [isAuthenticated]);
@@ -229,28 +231,7 @@ export default function App() {
     ];
   }, [starredApps.size]);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    fetchContainers(false);
-    const basicInterval = setInterval(() => fetchContainers(false), 10000);
-    const statsInterval = setInterval(() => {
-      if (activeCategory === 'deployed') {
-        fetchContainers(true);
-      }
-    }, 30000);
-    return () => {
-      clearInterval(basicInterval);
-      clearInterval(statsInterval);
-    };
-  }, [activeCategory, isAuthenticated]);
-
-  useEffect(() => {
-    if (activeCategory === 'deployed' && deployedApps.length === 0) {
-      info('No Deployed Apps', 'Deploy some applications to see them here. Browse the categories above to get started!');
-    }
-  }, [activeCategory, deployedApps.length]);
-
-  const fetchContainers = async (includeStats = false) => {
+  const fetchContainers = useCallback(async (includeStats = false) => {
     try {
       const response = await getContainers(includeStats);
       const containers: RawContainer[] = response.containers;
@@ -280,7 +261,29 @@ export default function App() {
     } catch (err) {
       console.warn('Container fetch failed:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial container fetch + 10s/30s polling subscription; fetchContainers sets deployedApps from the Docker API on each tick.
+    fetchContainers(false);
+    const basicInterval = setInterval(() => fetchContainers(false), 10000);
+    const statsInterval = setInterval(() => {
+      if (activeCategory === 'deployed') {
+        fetchContainers(true);
+      }
+    }, 30000);
+    return () => {
+      clearInterval(basicInterval);
+      clearInterval(statsInterval);
+    };
+  }, [activeCategory, isAuthenticated, fetchContainers]);
+
+  useEffect(() => {
+    if (activeCategory === 'deployed' && deployedApps.length === 0) {
+      info('No Deployed Apps', 'Deploy some applications to see them here. Browse the categories above to get started!');
+    }
+  }, [activeCategory, deployedApps.length]);
 
   const handleDeploy = async (appId: string, config: Record<string, string>, mode: DeploymentMode) => {
     info('Deployment Started', `Deploying ${appId} via HomelabARR CLI...`);

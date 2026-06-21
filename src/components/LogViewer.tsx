@@ -28,6 +28,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch on mount/poll; setState resolves after await, not during render
     fetchLogs();
     let interval: NodeJS.Timeout;
     if (autoRefresh) {

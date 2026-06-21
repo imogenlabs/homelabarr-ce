@@ -118,6 +118,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
   useEffect(() => {
     if (isOpen && activeTab === 'users' && isAdmin) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch on mount/poll; setState resolves after await, not during render
       fetchUsers();
     }
     if (isOpen && activeTab === 'activity' && isAdmin) {
