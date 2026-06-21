@@ -5,6 +5,16 @@ const ALLOWED_PROVIDERS = ['local', 'google', 'dropbox', 'onedrive', 'sftp', 'we
 export default function enhancedMountRoutes({ sendError, dockerManager, requireAuth }) {
   const router = Router();
 
+  // Validate the container-reported web port before any localhost fetch. The
+  // enable/disable handlers already did this inline; the GET + auth handlers
+  // didn't, leaving an inconsistent localhost-fetch surface (HLCE-267). Throws
+  // (→ caught by each handler's try/catch → sendError) on a bad/out-of-range port.
+  const safeWebPort = (webPort) => {
+    const p = parseInt(webPort, 10);
+    if (isNaN(p) || p < 1 || p > 65535) throw new Error('Invalid container web port');
+    return p;
+  };
+
   router.get('/:containerId/status', requireAuth, async (req, res) => {
     try {
       const { containerId } = req.params;
@@ -23,7 +33,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/status`);
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/status`);
       if (!response.ok) {
         throw new Error(`Container API returned ${response.status}`);
       }
@@ -56,7 +66,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/providers`);
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/providers`);
       if (!response.ok) {
         throw new Error(`Container API returned ${response.status}`);
       }
@@ -89,7 +99,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/costs`);
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/costs`);
       if (!response.ok) {
         throw new Error(`Container API returned ${response.status}`);
       }
@@ -122,7 +132,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/performance`);
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/performance`);
       if (!response.ok) {
         throw new Error(`Container API returned ${response.status}`);
       }
@@ -250,7 +260,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's auth API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/auth/start`, {
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/auth/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -291,7 +301,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's auth API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/auth/complete`, {
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/auth/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -332,7 +342,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's auth API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/auth/api-key`, {
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/auth/api-key`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -374,7 +384,7 @@ export default function enhancedMountRoutes({ sendError, dockerManager, requireA
       }
 
       // Proxy request to container's test API
-      const response = await fetch(`http://localhost:${webPort}/api/v2/auth/test`, {
+      const response = await fetch(`http://localhost:${safeWebPort(webPort)}/api/v2/auth/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
