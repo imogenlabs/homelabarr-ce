@@ -304,7 +304,7 @@ describe('AC2 — POST / deploy spawns docker with an argv array (no shell)', ()
     const { app } = buildApp({ cliBridge: null });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'it-tools', config: { port: '8080' } });
@@ -326,7 +326,7 @@ describe('AC2 — POST / deploy spawns docker with an argv array (no shell)', ()
     const evilPort = '8080 && rm -rf / #';
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'it-tools', config: { port: evilPort } });
@@ -345,7 +345,7 @@ describe('AC2 — POST / deploy spawns docker with an argv array (no shell)', ()
     const { app } = buildApp({ cliBridge: null });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ config: { port: '8080' } });
@@ -359,7 +359,7 @@ describe('AC2 — POST / deploy spawns docker with an argv array (no shell)', ()
     const { app } = buildApp({ cliBridge: null });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'it-tools' });
@@ -374,7 +374,7 @@ describe('AC2 — POST / deploy spawns docker with an argv array (no shell)', ()
     const { app } = buildApp({ cliBridge, streamingCLIBridge: null });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: { PUID: '1000' } });
@@ -593,7 +593,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     const { app, logActivity } = buildApp({ cliBridge: null, streamingCLIBridge });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: { PUID: '1000' }, mode: { type: 'standard' } });
@@ -609,7 +609,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
   it('returns 501 for an unsupported app when no bridge can handle it', async () => {
     const { app } = buildApp({ cliBridge: null, streamingCLIBridge: null });
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: {} });
@@ -621,7 +621,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     const cliBridge = { deployApplication: vi.fn().mockRejectedValue(new Error('cli failed')) };
     const { app } = buildApp({ cliBridge, streamingCLIBridge: null });
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: {} });
@@ -635,7 +635,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     const { app } = buildApp({ cliBridge: null });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'it-tools', config: { port: '8080' } });
@@ -653,7 +653,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
   it('rejects an unauthenticated deploy with 401 before any spawn', async () => {
     vi.mocked(spawn).mockReturnValue(capturingChild());
     const { app } = buildApp({ cliBridge: null });
-    const res = await request(app).post('/').send({ appId: 'it-tools', config: { port: '8080' } });
+    const res = await request(app).post('/deploy').send({ appId: 'it-tools', config: { port: '8080' } });
     expect(res.status).toBe(401);
     expect(spawn).not.toHaveBeenCalled();
   });
@@ -662,7 +662,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     vi.mocked(spawn).mockImplementation(() => { throw new Error('spawn ENOENT'); });
     const { app } = buildApp({ cliBridge: null });
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'it-tools', config: { port: '8080' } });
@@ -675,7 +675,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     };
     const { app } = buildApp({ cliBridge: null, streamingCLIBridge });
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: {} });
@@ -692,7 +692,7 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     const { app } = buildApp({ cliBridge, streamingCLIBridge });
 
     const res = await request(app)
-      .post('/')
+      .post('/deploy')
       .set('Cookie', adminCookie())
       .set('x-requested-with', 'XMLHttpRequest')
       .send({ appId: 'media-servers-plex', config: {} });

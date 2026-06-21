@@ -59,7 +59,12 @@ services:
     container_name: hlce-e2e-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
+      # development (not production) so auth cookies are NOT flagged Secure — the
+      # E2E target is reached over plain HTTP, and a Secure cookie would never be
+      # sent back, breaking every authenticated journey. (Cookie-hardening in
+      # production is covered by the unit/regression suites, not E2E.) The server
+      # still boots: the listen() guard only skips when NODE_ENV === 'test'.
+      - NODE_ENV=development
       - PORT=8092
       - LOG_LEVEL=warn
       - CORS_ORIGIN=http://localhost:8099
@@ -105,6 +110,16 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    # Same render as docker-entrypoint.sh, but strips the CSP
+    # `upgrade-insecure-requests` directive: the E2E target is served over plain
+    # HTTP, and that directive would force every asset/XHR to https:// and fail
+    # with SSL errors (the app would never mount). Prod keeps the directive.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        envsubst '$$BACKEND_URL' < /etc/nginx/templates/nginx.conf.template \
+          | sed 's/upgrade-insecure-requests;//' > /etc/nginx/conf.d/default.conf
+        exec nginx -g 'daemon off;'
 
 networks:
   hlce-e2e:
