@@ -53,7 +53,7 @@
 
 You know how setting up self-hosted apps usually means Googling Docker Compose files, copying YAML, editing ports, and hoping it works? HomelabARR skips all of that.
 
-It's a dashboard. You open it, you see 116 apps, you click **Deploy**, and the app is running. That's it.
+It's a dashboard. You open it, you see 117 apps, you click **Deploy**, and the app is running. That's it.
 
 Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're all in there, ready to go.
 
@@ -103,7 +103,7 @@ Want to build from source? See the [full install guide](https://wiki.homelabarr.
 
 ## What You Get
 
-- **116 apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
+- **117 apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
 - **Three deployment modes.** Just IP:port, Traefik for SSL, or Traefik + Authelia for 2FA.
 - **Manage running containers.** Start, stop, restart, remove, view logs.
 - **Port Manager.** See every port in use across your stack.
@@ -122,7 +122,7 @@ Want to build from source? See the [full install guide](https://wiki.homelabarr.
 | Media Management | 15 | Sonarr, Radarr, Lidarr, Bazarr, Prowlarr |
 | Downloads | 13 | qBittorrent, SABnzbd, NZBGet, Deluge, Transmission |
 | Monitoring | 6 | Grafana, Netdata, Uptime Kuma, Tautulli |
-| Self-hosted | 34 | Nextcloud, Vaultwarden, Immich, Home Assistant, n8n |
+| Self-hosted | 35 | Nextcloud, Vaultwarden, Immich, Home Assistant, n8n, IT-Tools |
 | System | 12 | Portainer, Dozzle, Watchtower, Traefik |
 | Virtual Desktops | 10 | Kasm Workspaces, Firefox, Chrome, Tor Browser |
 | Transcoding | 4 | Tdarr, Handbrake, MakeMKV |
@@ -246,7 +246,20 @@ npm run test:coverage # Run with a v8 coverage report
 
 ### Testing
 
-[Vitest](https://vitest.dev) runs two projects: **`server`** (backend, node environment) and **`web`** (frontend, jsdom + Testing Library). Backend HTTP tests drive the Express app in-process via `supertest` (the app is exported from `server/index.js` and only calls `listen()` outside `NODE_ENV=test`). Backend DB tests run against an in-memory SQLite database (`DB_PATH=:memory:`); set `BCRYPT_COST` low in tests to keep bcrypt fast. Unit/integration tests live next to the code (`server/**.test.js`, `src/**.test.ts(x)`); end-to-end Playwright specs live in `tests/e2e/` and are out of scope for vitest.
+[Vitest](https://vitest.dev) runs two projects: **`server`** (backend, node environment) and **`web`** (frontend, jsdom + Testing Library). Backend HTTP tests drive the Express app in-process via `supertest` (the app is exported from `server/index.js` and only calls `listen()` outside `NODE_ENV=test`). Backend DB tests run against an in-memory SQLite database (`DB_PATH=:memory:`); set `BCRYPT_COST` low in tests to keep bcrypt fast. Unit/integration tests live next to the code (`server/**.test.js`, `src/**.test.ts(x)`).
+
+#### End-to-end (Playwright)
+
+E2E specs live in `tests/e2e/` (out of scope for vitest) and run in two lanes — full runbook in [`tests/e2e/README.md`](tests/e2e/README.md):
+
+- **`seeded`** — the reliable lane. Brings up a deterministic, self-contained target from [`docker-compose.e2e.yml`](docker-compose.e2e.yml) (namespaced `socket-proxy` + backend/frontend built from the tree, a fresh `admin`/`admin`, and a real allow-listed Docker socket) on port 8099, and drives the critical journeys: login + MFA, deploy-through-the-stream, container lifecycle + logs. Gates CI.
+- **`smoke`** — best-effort cosmetic checks against a live deploy (ce-dev by default, override with `TEST_BASE_URL`); non-deterministic, so it does not gate.
+
+```bash
+docker compose -p hlce-e2e -f docker-compose.e2e.yml up -d --build
+E2E_BASE_URL=http://localhost:8099 npx playwright test --project=seeded --workers=1
+docker compose -p hlce-e2e -f docker-compose.e2e.yml down -v
+```
 
 #### CI gate & coverage ratchet
 
