@@ -8,6 +8,21 @@ import path from 'node:path';
 // modules and re-imports with env pointing at a throwaway tmp dir and a low
 // bcrypt cost. TOTP reads the wall clock, so the time-sensitive tests run under
 // vi fake timers.
+//
+// HLCE-263 mutation pass: score 81.82% -> 90.91%. The 6 remaining survivors are
+// genuine EQUIVALENT mutants (no observable behaviour change), left documented
+// rather than gamed away:
+//   - mfa.js:17 / :23  readFileSync('utf8') -> '' : Node's JSON.parse accepts a
+//     Buffer and decodes it as UTF-8 itself, so dropping the encoding parses the
+//     same object for the ASCII JSON these files hold.
+//   - mfa.js:36  new Secret({ size: 20 }) -> new Secret({}) : otpauth's default
+//     Secret size IS 20 bytes (32 base32 chars), so the object is identical.
+//   - mfa.js:42 / :43  verifyTotp issuer/label : these fields are cosmetic
+//     metadata; TOTP.validate() uses only secret/digits/period/algorithm, so the
+//     verification result is unchanged.
+//   - mfa.js:61  verifyBackupCode `i < hashes.length` -> `<=` : the extra
+//     iteration reads hashes[length] === undefined, which the `if (hashes[i] &&
+//     ...)` guard skips, so it returns the same index / -1.
 let tmp;
 
 async function loadMfa() {
@@ -35,6 +50,19 @@ describe('newTotp', () => {
     expect(totp.digits).toBe(6);
     expect(totp.period).toBe(30);
     expect(totp.secret.base32).toMatch(/^[A-Z2-7]+$/);
+  });
+});
+
+describe('newTotp metadata (HLCE-263)', () => {
+  // Pins the TOTP option object: the `{}` and issuer-string mutants leave
+  // digits/period at their library defaults (also 6/30), so those alone don't
+  // distinguish the mutant. The issuer/label DO differ from the defaults.
+  it('stamps the HomelabARR issuer and the username as the label', async () => {
+    const mfa = await loadMfa();
+    const totp = mfa.newTotp('alice@homelabarr');
+    expect(totp.issuer).toBe('HomelabARR');
+    expect(totp.label).toBe('alice@homelabarr');
+    expect(totp.algorithm).toBe('SHA1');
   });
 });
 
@@ -102,6 +130,15 @@ describe('backup codes (AC3)', () => {
     expect(mfa.makeBackupCodes(3)).toHaveLength(3);
   });
 
+  it('honours BCRYPT_COST for the backup-code hash cost factor (HLCE-263)', async () => {
+    // The bcrypt hash string encodes its cost as `$2a$NN$`. Pinning it kills the
+    // `Number(process.env.BCRYPT_COST) || 12` -> `&&` mutant, which would force
+    // cost 12 regardless of the env override.
+    const mfa = await loadMfa(); // loadMfa sets BCRYPT_COST='4'
+    const [hash] = await mfa.hashBackupCodes(['abcdef0123']);
+    expect(hash).toMatch(/^\$2[aby]\$04\$/);
+  });
+
   it('verifyBackupCode returns the matching index and -1 for a wrong code', async () => {
     const mfa = await loadMfa();
     const codes = mfa.makeBackupCodes(5);
@@ -140,6 +177,27 @@ describe('per-user MFA store', () => {
   });
 });
 
+describe('default storage location (HLCE-263)', () => {
+  it('defaults CONFIG_DIR to <cwd>/server/config when the env var is unset', async () => {
+    // Don't actually write to the real server/config: re-import with CONFIG_DIR
+    // cleared and a writeFileSync spy that captures the target path instead.
+    vi.resetModules();
+    delete process.env.CONFIG_DIR;
+    process.env.BCRYPT_COST = '4';
+    const writeSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    try {
+      const mfa = await import('./mfa.js');
+      mfa.saveMfaForUser('u1', { enabled: true });
+      const target = writeSpy.mock.calls[0][0];
+      expect(target).toBe(path.join(process.cwd(), 'server', 'config', 'mfa.json'));
+    } finally {
+      writeSpy.mockRestore();
+      delete process.env.CONFIG_DIR;
+      delete process.env.BCRYPT_COST;
+    }
+  });
+});
+
 describe('pending MFA TTL (AC4)', () => {
   it('returns a pending entry before expiry and null after', async () => {
     const mfa = await loadMfa();
@@ -148,6 +206,17 @@ describe('pending MFA TTL (AC4)', () => {
 
     mfa.setPendingMfa('u2', { secret: 'S2', exp: Date.now() - 1 });
     expect(mfa.getPendingMfa('u2')).toBeNull();
+  });
+
+  it('treats an entry expiring exactly now as still valid (strict < boundary, HLCE-263)', async () => {
+    const mfa = await loadMfa();
+    vi.useFakeTimers();
+    const NOW = new Date('2026-06-21T00:00:00Z').getTime();
+    vi.setSystemTime(NOW);
+    // exp === Date.now(): the code uses `entry.exp < Date.now()` so this is NOT
+    // yet expired. The `<=` mutant would wrongly treat it as expired -> null.
+    mfa.setPendingMfa('edge', { secret: 'S', exp: NOW });
+    expect(mfa.getPendingMfa('edge')).toMatchObject({ secret: 'S' });
   });
 
   it('returns null for a user with no pending entry, and clearPendingMfa removes it', async () => {

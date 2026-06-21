@@ -124,11 +124,18 @@ export default defineConfig({
       // ownership edges; removed the orphaned eventAllowed/ALLOWED_EVENTS dead code.
       // +21 net tests (744 → 765). Baseline lines 79.49 / statements 78.70 /
       // functions 79.76 / branches 71.53. Floor raised (functions kept ~1 under for CI).
+      // 2026-06-21 HLCE-263 (StrykerJS mutation pass): hardened the 5 security
+      // modules' unit suites against surviving mutants — secrets.js 81.58→100%,
+      // ratelimit.js 83.52→97.80%, mfa.js 81.82→90.91%, audit.js 66.46→81.37%,
+      // auth.js 61.60→80.61% mutation score. The added/strengthened assertions
+      // lifted the overall coverage to lines 80.25 / statements 79.65 /
+      // functions 80.53 / branches 72.49 (831 tests). Floor raised to the integer
+      // just under each (functions kept ~1 under for CI under-instrumentation).
       thresholds: {
-        lines: 79,
-        statements: 78,
-        functions: 78,
-        branches: 71,
+        lines: 80,
+        statements: 79,
+        functions: 79,
+        branches: 72,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
