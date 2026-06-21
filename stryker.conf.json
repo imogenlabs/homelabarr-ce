@@ -7,7 +7,7 @@
   "coverageAnalysis": "perTest",
   "concurrency": 2,
   "timeoutMS": 60000,
-  "mutate": ["server/ratelimit.js"],
+  "mutate": ["server/auth.js"],
   "vitest": {
     "configFile": "stryker.vitest.config.ts"
   }
