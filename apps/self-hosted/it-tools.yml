@@ -1,0 +1,15 @@
+---
+# IT-Tools — a self-hosted collection of handy developer/sysadmin utilities
+# (https://github.com/CorentinTh/it-tools). A single stateless container with
+# no template variables, which makes it the lightweight, deterministic app used
+# by the E2E deploy journey (HLCE-226) as well as a genuinely useful utility.
+services:
+  it-tools:
+    container_name: "it-tools"
+    image: "corentinth/it-tools:latest"
+    restart: "unless-stopped"
+    ports:
+      - target: 80
+        published: 8089
+        protocol: tcp
+        mode: host
