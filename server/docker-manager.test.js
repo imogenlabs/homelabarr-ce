@@ -146,25 +146,37 @@ describe('getServiceStatus & executeWithRetry (AC3)', () => {
   });
 });
 
-describe('createDockerManager — getServiceStatus lie (AC4)', () => {
-  // PINNED REGRESSION (AC4): the production CLI manager hardcodes a healthy
-  // status. getServiceStatus() always returns 'available' and getConnectionState()
-  // always returns isConnected:true, even though no connection test is ever run —
-  // so a dead Docker socket is reported as healthy. This documents the current
-  // (mis)behaviour; the fix should make these reflect a real probe.
-  it('always reports available / connected regardless of real socket health', () => {
+describe('createDockerManager — real health probe (AC4)', () => {
+  // REGRESSION (HLCE-258): the production CLI manager used to hardcode a healthy
+  // status — getServiceStatus() always 'available' and getConnectionState()
+  // isConnected:true — with no connection test, so a dead Docker socket was
+  // reported as healthy. It now pings the daemon: a successful ping → available,
+  // a failing ping → unavailable.
+  it('reflects a real ping probe instead of hardcoding healthy', async () => {
     const m = createDockerManager();
+
+    // Healthy daemon: ping resolves → available / connected.
+    m.docker.ping = vi.fn().mockResolvedValue('OK');
+    expect(await m.probe()).toBe(true);
     expect(m.getServiceStatus()).toMatchObject({ status: 'available' });
     expect(m.getConnectionState()).toMatchObject({ isConnected: true });
-    expect(typeof m.executeWithRetry).toBe('function');
+
+    // Dead socket: ping rejects → unavailable / disconnected (no longer a lie).
+    m.docker.ping = vi.fn().mockRejectedValue(new Error('connect ENOENT /var/run/docker.sock'));
+    expect(await m.probe()).toBe(false);
+    expect(m.getServiceStatus()).toMatchObject({ status: 'unavailable' });
+    expect(m.getConnectionState()).toMatchObject({ isConnected: false });
+
     m.destroy();
   });
 
-  it('executeWithRetry passes the docker client straight through (no retry/guard)', async () => {
+  it('executeWithRetry runs the operation and marks the daemon reachable on success', async () => {
     const m = createDockerManager();
     const op = vi.fn().mockResolvedValue('ok');
     await expect(m.executeWithRetry(op, 'ping')).resolves.toBe('ok');
     expect(op).toHaveBeenCalledWith(m.docker);
+    // a completed operation is proof of reachability
+    expect(m.getServiceStatus()).toMatchObject({ status: 'available' });
     m.destroy();
   });
 });
