@@ -2,9 +2,8 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-const router = Router();
-
 export default function applicationRoutes({ sendError, cliBridge, authEnabled, requireAuth, optionalAuth }) {
+  const router = Router();
 
   router.get('/applications', async (req, res) => {
     try {

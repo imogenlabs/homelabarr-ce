@@ -99,11 +99,18 @@ export default defineConfig({
       // exercise the container/enhanced-mount/sendError routes (previously
       // untested), lifting baseline to lines 62.56 / statements 62.47 /
       // functions 67.00 / branches 58.11. Floor raised with ≥0.4 CI-safe headroom.
+      // 2026-06-20 HLCE-229 (dangerous-op integration tests): supertest coverage
+      // of containers.js delete/lifecycle (94%), deploy.js it-tools spawn (argv,
+      // no shell), and applications.js remove/down -v (95%); also removed ~340
+      // lines of unreachable template-mode dead code from deploy.js. Baseline
+      // lines 71.83 / statements 71.39 / functions 75.33 / branches 65.23. Floor
+      // raised with CI-safe headroom (functions kept ~1.3 under the local baseline
+      // per the documented CI under-instrumentation of functions).
       thresholds: {
-        lines: 62,
-        statements: 62,
-        functions: 66,
-        branches: 57,
+        lines: 71,
+        statements: 71,
+        functions: 74,
+        branches: 64,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
