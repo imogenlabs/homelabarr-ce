@@ -67,7 +67,7 @@ describe('SqliteStore (AC1)', () => {
     expect(c.resetTime).toEqual(new Date(T0 + 1001 + 1000));
   });
 
-  it('tracks keys independently; resetKey clears a bucket and decrement is a no-op', async () => {
+  it('tracks keys independently; resetKey clears a bucket and decrement uncounts one hit', async () => {
     const { SqliteStore } = await loadRl();
     const store = new SqliteStore(60_000);
 
@@ -77,10 +77,10 @@ describe('SqliteStore (AC1)', () => {
     expect((await store.increment('a')).totalHits).toBe(3);
     expect((await store.increment('b')).totalHits).toBe(2);
 
-    // decrement() is intentionally a no-op in this store (see the AC4 divergence
-    // test below) — calling it must not change the count.
+    // decrement() rolls back one hit on the named key (HLCE-255): a→3 becomes 2,
+    // so the next increment lands on 3, not 4.
     await store.decrement('a');
-    expect((await store.increment('a')).totalHits).toBe(4);
+    expect((await store.increment('a')).totalHits).toBe(3);
 
     await store.resetKey('a');
     expect((await store.increment('a')).totalHits).toBe(1);
@@ -154,24 +154,21 @@ describe('createLoginLimiter (AC4)', () => {
     expect(blocked.body.error).toMatch(/too many login attempts/i);
   });
 
-  // KNOWN DIVERGENCE (pinned, not fixed here): createLoginLimiter sets
-  // `skipSuccessfulRequests: true`, but SqliteStore.decrement() is a no-op, so
-  // the post-response decrement that would "uncount" a 2xx never happens.
-  // Result: successful logins count toward the limit just like failures, and a
-  // 26th request is blocked even when every prior request returned 200. The
-  // AC's intended "a 2xx does not count" is therefore NOT the current behavior.
-  // This test asserts the real behavior so the divergence is captured; flipping
-  // it requires implementing SqliteStore.decrement (follow-up fix ticket).
-  it('successful (2xx) responses still count — skipSuccessfulRequests is ineffective', async () => {
+  // REGRESSION (HLCE-255): createLoginLimiter sets `skipSuccessfulRequests: true`,
+  // and SqliteStore.decrement() now actually "uncounts" a 2xx after the response.
+  // So a stream of successful logins from one IP never trips the limiter — the
+  // per-request increment is rolled back once the 200 is sent. (Failures, which
+  // are not skipped, still accumulate — covered by the 25-then-429 test above.)
+  it('successful (2xx) responses do not count — skipSuccessfulRequests is effective', async () => {
     const { createLoginLimiter } = await loadRl();
     const app = miniApp(createLoginLimiter(), () => 200);
 
     const statuses = [];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 40; i++) {
       statuses.push((await request(app).post('/login')).status);
     }
-    expect(statuses.slice(0, 25)).toEqual(Array(25).fill(200));
-    expect(statuses[25]).toBe(429);
+    expect(statuses).toEqual(Array(40).fill(200));
+    expect(statuses).not.toContain(429);
   });
 });
 
