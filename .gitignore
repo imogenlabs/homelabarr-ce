@@ -92,3 +92,4 @@ server/activity-data/
 
 # Playwright auth state
 playwright/.auth/
+tests/e2e/seeded/.seeded-mfa.json

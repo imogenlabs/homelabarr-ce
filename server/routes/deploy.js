@@ -16,7 +16,11 @@ export default function deployRoutes({
 }) {
   const router = Router();
 
-  router.post('/', authEnabled ? requireAuth : optionalAuth, async (req, res) => {
+  // POST /deploy — the frontend calls apiFetch('/deploy'), and every other
+  // router here registers full resource paths (mounted at root). This route was
+  // mistakenly registered at '/', so /api/deploy 404'd and deploy-from-UI was
+  // unreachable in production (HLCE-226 — surfaced by the deploy E2E journey).
+  router.post('/deploy', authEnabled ? requireAuth : optionalAuth, async (req, res) => {
     try {
       const { appId, config, mode } = req.body;
       logger.info(`🚀 Starting deployment of ${appId} using ${cliBridge ? 'CLI Bridge' : 'Template Mode'}...`);

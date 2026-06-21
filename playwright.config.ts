@@ -1,9 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Test against a running deployment (ce-dev by default), the same approach the suite
-// originally used. The app is warm and CDN-fronted, so pages hydrate fast — no local
-// build/preview, no per-test cold-start. Override with TEST_BASE_URL.
-const BASE_URL = process.env.TEST_BASE_URL || 'https://ce-dev.homelabarr.com';
+// Two lanes (HLCE-226):
+//   • `seeded` — the deterministic containerised target from docker-compose.e2e.yml
+//     (fresh admin, real allow-listed Docker socket). Drives the critical user
+//     journeys: login + MFA, deploy-through-progress-stream, container lifecycle,
+//     mount wizard. Override its URL with E2E_BASE_URL (default localhost:8099).
+//   • `smoke` — the cosmetic catalog/theme/footer checks against a LIVE deploy
+//     (ce-dev by default). Override with TEST_BASE_URL.
+//
+// The `setup` project runs first (a `seeded` dependency) and seeds an
+// MFA-enabled user via the API so the MFA login journey is deterministic.
+const SEEDED_URL = process.env.E2E_BASE_URL || 'http://localhost:8099';
+const SMOKE_URL = process.env.TEST_BASE_URL || 'https://ce-dev.homelabarr.com';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -15,15 +23,28 @@ export default defineConfig({
   timeout: 30_000,
 
   use: {
-    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
 
   projects: [
+    // Seeds the MFA-enabled user against the seeded target; writes its TOTP
+    // secret + a backup code to tests/e2e/.seeded-mfa.json for the auth spec.
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'setup',
+      testMatch: /seeded\/mfa\.setup\.ts$/,
+      use: { baseURL: SEEDED_URL },
+    },
+    {
+      name: 'seeded',
+      testMatch: /seeded\/.*\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'], baseURL: SEEDED_URL },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'smoke',
+      testMatch: /(catalog|dark-mode|footer|icons|modals)\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'], baseURL: SMOKE_URL },
     },
   ],
 });
