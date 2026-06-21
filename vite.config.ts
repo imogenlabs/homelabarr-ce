@@ -87,11 +87,18 @@ export default defineConfig({
       // EnhancedMountManager ~83%; App.tsx (composition root) excluded from
       // instrumentation (E2E surface, HLCE-226). Overall baseline lines 60.75 /
       // statements 60.71 / functions 65.75 / branches 56.38. Floor raised.
+      // 2026-06-20 HLCE-228 (bug-lock regression): fixed safeUrl control-char
+      // guard, deployment.ts literal ${template.id}, and cli-bridge/progress
+      // -stream appId parsing; flipped the 3 pinned tests + added regression
+      // coverage. Baseline lines 60.83 / statements 60.80 / functions 65.71 /
+      // branches 56.48. Floor raised to just under — functions kept at the prior
+      // integer floor (65) because CI instruments ~0.3% fewer functions than the
+      // local run (CI baseline 65.42 vs local 65.71), so a 65.5 floor flaked red.
       thresholds: {
-        lines: 60,
-        statements: 60,
+        lines: 60.5,
+        statements: 60.5,
         functions: 65,
-        branches: 56,
+        branches: 56.4,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.

@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import { DeploymentLogger } from './deployment-logger.js';
+import { parseAppId } from './cli-bridge.js';
 
 function sanitizePathComponent(input) {
   if (!input || typeof input !== 'string') return '';
@@ -282,7 +283,7 @@ export class StreamingCLIBridge {
         'Validating application configuration...'
       );
 
-      const [category, appName] = appId.split('-');
+      const { category, appName } = parseAppId(appId);
       const appPath = path.join(this.cliBridge.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
       
       if (!fs.existsSync(appPath)) {
