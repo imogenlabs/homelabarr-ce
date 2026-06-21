@@ -102,13 +102,6 @@ describe('meta redaction & event allowlist (AC2)', () => {
     });
   });
 
-  it('eventAllowed gates the known alertable events', async () => {
-    const { audit } = await loadAudit();
-    expect(audit.eventAllowed('login.locked')).toBe(true);
-    expect(audit.eventAllowed('totally.made.up')).toBe(false);
-    expect(audit.eventAllowed(undefined)).toBe(false);
-  });
-
   // REGRESSION (HLCE-257, AC2): row_hash previously joined fields with `.join('')`
   // (no delimiter), so adjacent fields had ambiguous boundaries — shifting a
   // character across the actor/event boundary kept the concatenation, and the

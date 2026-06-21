@@ -118,11 +118,17 @@ export default defineConfig({
       // + LoginModal MFA-wrong-code paths. Also aligned UserSettings' client-side
       // password minimum to the server's 12 (HLCE-268). +59 tests (685 → 744).
       // Baseline lines 78.76 / statements 77.87 / functions 79.41 / branches 70.49.
+      // 2026-06-21 HLCE-273 (deploy-execution + remaining backend branches): new
+      // server/cli-bridge-exec.test.js (compose-verb argv incl down -v, deployStandard
+      // rewrite, env char-set seal) + auth.js previous-key/revoked-jti + revokeApiKey
+      // ownership edges; removed the orphaned eventAllowed/ALLOWED_EVENTS dead code.
+      // +21 net tests (744 → 765). Baseline lines 79.49 / statements 78.70 /
+      // functions 79.76 / branches 71.53. Floor raised (functions kept ~1 under for CI).
       thresholds: {
-        lines: 78,
-        statements: 77,
+        lines: 79,
+        statements: 78,
         functions: 78,
-        branches: 70,
+        branches: 71,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
