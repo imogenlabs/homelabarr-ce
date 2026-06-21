@@ -91,11 +91,13 @@ export default defineConfig({
       // guard, deployment.ts literal ${template.id}, and cli-bridge/progress
       // -stream appId parsing; flipped the 3 pinned tests + added regression
       // coverage. Baseline lines 60.83 / statements 60.80 / functions 65.71 /
-      // branches 56.48. Floor raised to just under.
+      // branches 56.48. Floor raised to just under — functions kept at the prior
+      // integer floor (65) because CI instruments ~0.3% fewer functions than the
+      // local run (CI baseline 65.42 vs local 65.71), so a 65.5 floor flaked red.
       thresholds: {
         lines: 60.5,
         statements: 60.5,
-        functions: 65.5,
+        functions: 65,
         branches: 56.4,
       },
     },
