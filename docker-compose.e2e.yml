@@ -78,7 +78,9 @@ services:
       - hlce-e2e
       - hlce-e2e-internal
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8092/health"]
+      # curl (present in the image) on 127.0.0.1 — busybox wget lacks --spider and
+      # resolves localhost to ::1, which the IPv4-only bind refuses.
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8092/health"]
       interval: 5s
       timeout: 3s
       retries: 20
