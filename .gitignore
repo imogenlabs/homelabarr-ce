@@ -2,8 +2,10 @@
 reports/mutation/
 .stryker-tmp/
 
-# Node modules
+# Node modules — match both the directory and a bare `node_modules` symlink
+# (worktree dev setups symlink it; `node_modules/` alone wouldn't ignore the link).
 node_modules/
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

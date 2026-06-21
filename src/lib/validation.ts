@@ -45,22 +45,31 @@ export function validateConfig(
 
 import { checkUsedPorts } from './api';
 
+// A config field carries a port either when it's typed as a number OR when its
+// key/label denotes a port (case-insensitive). Catalog apps render port fields
+// as type 'text', so the type check alone misses them (HLCE-276).
+function isPortField(field: { type: string; name: string; label?: string } | undefined, key: string): boolean {
+  if (!field) return false;
+  if (field.type === 'number') return true;
+  return key.toLowerCase().includes('port') || (field.label?.toLowerCase().includes('port') ?? false);
+}
+
 // Async validation for port conflicts
 export async function validatePortConflicts(
   template: AppTemplate,
   config: Record<string, string>
 ): Promise<string[]> {
   const errors: string[] = [];
-  
+
   try {
     const { usedPorts } = await checkUsedPorts();
-    
+
     // Check configured ports against used ports
     Object.entries(config).forEach(([key, value]) => {
       const field = template.configFields?.find(f => f.name === key);
-      if (field?.type === 'number') {
+      if (isPortField(field, key)) {
         const port = parseInt(value, 10);
-        if (usedPorts.includes(port)) {
+        if (!isNaN(port) && usedPorts.includes(port)) {
           errors.push(`Port ${port} is already in use by another container`);
         }
       }
