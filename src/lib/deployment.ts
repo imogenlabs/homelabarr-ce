@@ -111,8 +111,8 @@ function generateTraefikLabels(
   const labels = [
     "traefik.enable=true",
     `traefik.http.routers.${template.id}.rule=Host(\`${template.id}.${domain}\`)`,
-    "traefik.http.routers.${template.id}.entrypoints=websecure",
-    "traefik.http.routers.${template.id}.tls.certresolver=letsencrypt",
+    `traefik.http.routers.${template.id}.entrypoints=websecure`,
+    `traefik.http.routers.${template.id}.tls.certresolver=letsencrypt`,
     `traefik.http.services.${template.id}.loadbalancer.server.port=${getDefaultPort(template, 'web')}`
   ];
 
