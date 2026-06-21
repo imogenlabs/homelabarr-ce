@@ -136,6 +136,30 @@ describe('JWT key rotation (AC1)', () => {
     const token = jwt.sign({ sub: 'u1', role: 'admin' }, PREV, { algorithm: 'HS256', expiresIn: 3600 });
     expect(auth.verifyToken(token)).toBeNull();
   });
+
+  // HLCE-273 AC4a: jti revocation must be enforced on the previous-key fallback
+  // path too, not only the current-key path. Sign with PREV (so the current-key
+  // verify throws JsonWebTokenError and the fallback runs), keep iat recent so
+  // the max-age guard passes, then revoke the jti so isJtiActive is false.
+  it('rejects a previous-key token within max-age whose jti has been revoked', async () => {
+    const auth = await loadAuth({ previous: PREV });
+    const sessions = await import('./sessions.js');
+    const { jti } = sessions.createSession({ userId: 'u1', userAgent: '', ip: '' });
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const token = jwt.sign(
+      { sub: 'u1', role: 'admin', jti, iat: nowSec - 60, exp: nowSec + 3600 },
+      PREV,
+      { algorithm: 'HS256' },
+    );
+    // Sanity: while the session is active, the previous-key path accepts it.
+    expect(auth.verifyToken(token)).toMatchObject({ sub: 'u1', jti });
+
+    // Revoking the jti makes isJtiActive(jti) false; the previous-key path must
+    // now reject even though the signature is valid and the token is in-window.
+    sessions.revokeSession(jti);
+    expect(auth.verifyToken(token)).toBeNull();
+  });
 });
 
 describe('validatePassword + bcrypt (AC2)', () => {
@@ -267,6 +291,36 @@ describe('API keys (AC3)', () => {
     const stored = JSON.parse(fs.readFileSync(path.join(tmp, 'api-keys.json'), 'utf8'));
     expect(stored[0]).not.toHaveProperty('key');
     expect(stored[0].hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  // HLCE-273 AC4b: revokeApiKey is scoped to the owning user — it only matches
+  // an entry where BOTH id and userId line up, returns false otherwise, and must
+  // not flip `revoked` on a key it didn't own.
+  it('revokeApiKey refuses a wrong owner and leaves the key unrevoked', async () => {
+    const { auth } = await setupUserAndAuth();
+    const entry = auth.createApiKey('userA', 'label');
+
+    expect(auth.revokeApiKey(entry.id, 'userB')).toBe(false);
+
+    const stored = JSON.parse(fs.readFileSync(path.join(tmp, 'api-keys.json'), 'utf8'));
+    const persisted = stored.find(k => k.id === entry.id);
+    expect(persisted.revoked).toBe(false);
+  });
+
+  it('revokeApiKey returns false for a non-existent key id', async () => {
+    const { auth } = await setupUserAndAuth();
+    expect(auth.revokeApiKey('key_doesnotexist', 'userA')).toBe(false);
+  });
+
+  it('revokeApiKey by the owner returns true and persists revoked:true', async () => {
+    const { auth } = await setupUserAndAuth();
+    const entry = auth.createApiKey('userA', 'label');
+
+    expect(auth.revokeApiKey(entry.id, 'userA')).toBe(true);
+
+    const stored = JSON.parse(fs.readFileSync(path.join(tmp, 'api-keys.json'), 'utf8'));
+    const persisted = stored.find(k => k.id === entry.id);
+    expect(persisted.revoked).toBe(true);
   });
 
   it('listApiKeys hides hash/key and exposes only a preview', async () => {
