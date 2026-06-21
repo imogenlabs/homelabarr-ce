@@ -202,7 +202,11 @@ export function generateUserId() {
 export function loadApiKeys() {
   try {
     if (!fs.existsSync(API_KEYS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(API_KEYS_FILE, 'utf8'));
+    // Guard against a malformed store: a non-array JSON value (e.g. a stray `{}`)
+    // would otherwise propagate to listApiKeys().filter(...) and 500 the API-key
+    // endpoints. Treat anything that isn't an array as "no keys" (HLCE-274).
+    const parsed = JSON.parse(fs.readFileSync(API_KEYS_FILE, 'utf8'));
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
     logger.error('Error loading API keys', { error: error.message });
     return [];

@@ -79,6 +79,11 @@ services:
       - RATE_LIMIT_DISABLED=true
       - ACCESS_TOKEN_TTL=15m
       - REFRESH_TOKEN_TTL=14d
+    volumes:
+      # Seeded-only stub so the enhanced-mount onboarding wizard has an app to
+      # trigger it in CI (stock CE doesn't bundle mount-enhanced). Mounted into the
+      # catalog dir the cli-bridge scans; never added to the real CE catalog. (HLCE-274)
+      - ./tests/e2e/fixtures/mount-enhanced.yml:/app/apps/self-hosted/mount-enhanced.yml:ro
     networks:
       - hlce-e2e
       - hlce-e2e-internal

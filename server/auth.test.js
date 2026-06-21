@@ -332,6 +332,17 @@ describe('API keys (AC3)', () => {
     expect(listed[0]).not.toHaveProperty('key');
     expect(listed[0].keyPreview).toMatch(/^hlr_/);
   });
+
+  // HLCE-274: a malformed store (a non-array JSON value, e.g. a stray `{}`) must
+  // not propagate to listApiKeys().filter(...) and 500 the API-key endpoints —
+  // loadApiKeys guards with Array.isArray and treats it as "no keys".
+  it('treats a non-array api-keys store as empty instead of throwing', async () => {
+    const { auth } = await setupUserAndAuth();
+    fs.writeFileSync(path.join(tmp, 'api-keys.json'), '{}');
+    expect(auth.loadApiKeys()).toEqual([]);
+    expect(() => auth.listApiKeys('userA')).not.toThrow();
+    expect(auth.listApiKeys('userA')).toEqual([]);
+  });
 });
 
 describe('login tickets (AC4)', () => {
