@@ -23,15 +23,15 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
-      // react-hooks v7 ships three new architectural rules that the existing
-      // (untested) components don't yet satisfy. Keep them visible as warnings
-      // until the dedicated context/component test stories (HLCE-223/225) add a
-      // safety net and refactor the effects; flipping them back to error is
-      // tracked there. They are not auto-fixable and refactoring blind risks
-      // behaviour regressions.
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/purity': 'warn',
-      'react-hooks/immutability': 'warn',
+      // react-hooks v7 architectural rules, enforced as errors (HLCE-254). The
+      // component/context test stories (HLCE-223/225) added the safety net that
+      // let us refactor the flagged effects; where a setState-in-effect is the
+      // legitimate shape of an async fetch/poll initialiser (no cleaner idiom
+      // without a data-fetching library), it carries a targeted, justified
+      // eslint-disable at the call site rather than a blanket downgrade.
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/purity': 'error',
+      'react-hooks/immutability': 'error',
     },
   }
 );
