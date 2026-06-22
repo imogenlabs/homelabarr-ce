@@ -269,4 +269,70 @@ describe('destroy clears timers (AC5)', () => {
     expect(m.statsLogTimer).toBeNull();
     expect(m.state.isConnected).toBe(false);
   });
+
+  // HLCE-284 (fix 1): the circuit-breaker OPEN→HALF_OPEN setTimeout was never
+  // tracked, so it kept the event loop alive and could fire against a torn-down
+  // manager. It is now stored on this.halfOpenTimer and cleared by destroy().
+  it('tracks the half-open timer when the breaker opens and clears it on destroy', () => {
+    const m = makeManager({ circuitBreakerThreshold: 1, circuitBreakerTimeout: 60000 });
+    expect(m.halfOpenTimer).toBeNull();
+
+    m.openCircuitBreaker();
+    expect(m.circuitBreaker.state).toBe('OPEN');
+    expect(m.halfOpenTimer).not.toBeNull(); // tracked, was untracked before fix
+
+    m.destroy();
+    expect(m.halfOpenTimer).toBeNull();
+  });
+
+  // HLCE-284 (fix 1): a clean close cancels the pending OPEN→HALF_OPEN timer
+  // instead of letting it fire later.
+  it('clears the half-open timer when the breaker closes on success', () => {
+    const m = makeManager({ circuitBreakerThreshold: 1, circuitBreakerTimeout: 60000 });
+    m.openCircuitBreaker();
+    expect(m.halfOpenTimer).not.toBeNull();
+
+    m.updateCircuitBreakerOnSuccess();
+    expect(m.circuitBreaker.state).toBe('CLOSED');
+    expect(m.halfOpenTimer).toBeNull();
+  });
+});
+
+// HLCE-284 (fix 2): the production CLI manager's executeWithRetry set
+// isConnected:true on success but never isConnected:false when an op threw a
+// connection-class error — a partial health lie (getServiceStatus stayed
+// 'available' over a dead socket). It now marks the manager unavailable on a
+// connection-class throw.
+describe('createDockerManager.executeWithRetry connection-class failure (fix 2)', () => {
+  it('marks the daemon unavailable when an op throws a connection error', async () => {
+    const m = createDockerManager();
+    // Prime it healthy first.
+    m.docker.ping = vi.fn().mockResolvedValue('OK');
+    await m.probe();
+    expect(m.getServiceStatus()).toMatchObject({ status: 'available' });
+
+    const connErr = new Error('connect ENOENT /var/run/docker.sock');
+    connErr.code = 'ENOENT';
+    await expect(m.executeWithRetry(() => Promise.reject(connErr), 'list')).rejects.toThrow(/ENOENT/);
+
+    // No longer a lie: status reflects the failed connection.
+    expect(m.getServiceStatus()).toMatchObject({ status: 'unavailable' });
+    expect(m.getConnectionState()).toMatchObject({ isConnected: false });
+    m.destroy();
+  });
+
+  it('leaves reachability untouched for a non-connection (application) error', async () => {
+    const m = createDockerManager();
+    m.docker.ping = vi.fn().mockResolvedValue('OK');
+    await m.probe();
+    expect(m.getServiceStatus()).toMatchObject({ status: 'available' });
+
+    const appErr = new Error('no such container'); // daemon answered → reachable
+    appErr.statusCode = 404;
+    await expect(m.executeWithRetry(() => Promise.reject(appErr), 'inspect')).rejects.toThrow(/no such container/);
+
+    // Daemon answered, so reachability is unchanged.
+    expect(m.getServiceStatus()).toMatchObject({ status: 'available' });
+    m.destroy();
+  });
 });
