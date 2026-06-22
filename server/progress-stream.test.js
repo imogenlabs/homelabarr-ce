@@ -8,7 +8,8 @@ import fs from 'node:fs';
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'x'.repeat(40);
 
-const { ProgressStreamManager, StreamingCLIBridge } = await import('./progress-stream.js');
+const { ProgressStreamManager, StreamingCLIBridge, resolveAllowedOrigin } = await import('./progress-stream.js');
+const { EnvironmentManager } = await import('./environment-manager.js');
 
 // HLCE-220: SSE progress stream + StreamingCLIBridge. ProgressStreamManager
 // writes SSE frames to a response object — we drive it with a fake `res`
@@ -16,10 +17,19 @@ const { ProgressStreamManager, StreamingCLIBridge } = await import('./progress-s
 // progressStream that records the emitted step/error/complete events.
 function fakeRes() {
   const r = new EventEmitter();
-  r.setHeader = vi.fn();
+  r.headers = {};
+  r.setHeader = vi.fn((k, v) => { r.headers[k] = v; });
   r.end = vi.fn();
   r.write = vi.fn(() => true);
   return r;
+}
+
+// A minimal Express-like request with an Origin header and an authenticated user.
+function fakeReq({ origin, userId } = {}) {
+  return {
+    headers: origin ? { origin } : {},
+    user: userId ? { id: userId } : undefined,
+  };
 }
 
 beforeEach(() => {
@@ -95,6 +105,54 @@ describe('ProgressStreamManager SSE fan-out (AC1)', () => {
     expect(c.write).toHaveBeenCalledWith('event: deployment-step\n');
   });
 
+  // HLCE-284 (fix 3a): the credentialed SSE stream used to hardcode
+  // Access-Control-Allow-Origin: '*', which is invalid with credentials and
+  // leaks the stream to any origin. It now reflects ONLY an allowlisted origin
+  // and never emits '*'.
+  it('never sets a wildcard ACAO and reflects only an allowlisted origin', () => {
+    vi.spyOn(EnvironmentManager, 'getConfiguration')
+      .mockReturnValue({ corsOrigin: ['https://ce-demo.homelabarr.com'] });
+    const mgr = new ProgressStreamManager();
+
+    const ok = fakeRes();
+    mgr.addClient('ok', ok, fakeReq({ origin: 'https://ce-demo.homelabarr.com' }));
+    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://ce-demo.homelabarr.com');
+    expect(ok.headers['Access-Control-Allow-Origin']).not.toBe('*');
+    expect(ok.headers['Access-Control-Allow-Credentials']).toBe('true');
+
+    const bad = fakeRes();
+    mgr.addClient('bad', bad, fakeReq({ origin: 'https://evil.example.com' }));
+    expect(bad.headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    const same = fakeRes(); // same-origin: no Origin header → no ACAO at all
+    mgr.addClient('same', same, fakeReq());
+    expect(same.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+
+  it('resolveAllowedOrigin gates against the configured allowlist', () => {
+    vi.spyOn(EnvironmentManager, 'getConfiguration')
+      .mockReturnValue({ corsOrigin: ['https://a.test', 'https://b.test'] });
+    expect(resolveAllowedOrigin('https://a.test')).toBe('https://a.test');
+    expect(resolveAllowedOrigin('https://c.test')).toBeNull();
+    expect(resolveAllowedOrigin(undefined)).toBeNull();
+  });
+
+  // HLCE-284 (fix 3b): per-deployment authorization. A subscribe whose requesting
+  // session does not own the client must be REJECTED so a client can't subscribe
+  // to another session's stream.
+  it('rejects a subscribe from a session that does not own the client', () => {
+    const mgr = new ProgressStreamManager();
+    mgr.addClient('c-alice', fakeRes(), fakeReq({ userId: 'alice' }));
+
+    // Bob (session 'bob') tries to subscribe Alice's client → forbidden.
+    expect(() => mgr.subscribeToDeployment('c-alice', 'dep1', 'bob'))
+      .toThrow(/not owned/);
+
+    // The owning session succeeds.
+    expect(() => mgr.subscribeToDeployment('c-alice', 'dep1', 'alice')).not.toThrow();
+    expect(mgr.getStatistics()).toMatchObject({ activeDeployments: 1 });
+  });
+
   it('removeClient cleans up client + deployment subscriptions; getStatistics reflects state', () => {
     const mgr = new ProgressStreamManager();
     const a = fakeRes();
@@ -162,6 +220,43 @@ describe('StreamingCLIBridge.deployApplicationWithProgress (AC2)', () => {
     expect(stream.events).toContainEqual(expect.objectContaining({ kind: 'error' }));
     expect(stream.events).toContainEqual({ kind: 'complete', success: false });
     expect(bridge.getDeploymentStatus('dep2')).toMatchObject({ status: 'failed' });
+  });
+
+  // HLCE-284 (fix 4): the appId path used sanitizePathComponent (strip-not-reject),
+  // which silently swallowed traversal-ish components. It now routes through the
+  // strict safeJoin, which REJECTS a bad component instead of stripping it.
+  it('rejects a traversal-ish appId via strict safeJoin (not silently stripped)', async () => {
+    const existsSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    const cli = { ...fakeCli(), appsPath: '/apps' };
+    const bridge = new StreamingCLIBridge(cli, fakeStream());
+
+    // parseAppId('media-../../etc/passwd') → appName '../../etc/passwd', which
+    // safeJoin rejects as an invalid path component.
+    await expect(
+      bridge.deployApplicationWithProgress('media-../../etc/passwd', {}, { type: 'standard' }, 'dep-bad'),
+    ).rejects.toThrow(/Invalid path component|Path traversal/);
+
+    // It never even got as far as the fs existence check / deploy.
+    expect(cli.deployStandard).not.toHaveBeenCalled();
+    existsSpy.mockRestore();
+  });
+
+  // HLCE-284 (fix 4): the 30s post-complete cleanup setTimeout is now tracked and
+  // cleared on destroy() so it can't leak / fire against a torn-down manager.
+  it('tracks the 30s cleanup timer and destroy() clears it', () => {
+    vi.useFakeTimers();
+    try {
+      const mgr = new ProgressStreamManager();
+      mgr.streamDeploymentComplete('dep-x', true, {});
+      expect(mgr.cleanupTimers.has('dep-x')).toBe(true);
+
+      mgr.destroy();
+      expect(mgr.cleanupTimers.size).toBe(0);
+      // No pending timers remain after destroy.
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('getActiveDeployments lists tracked deployments', async () => {

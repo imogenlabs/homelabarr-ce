@@ -4,7 +4,7 @@ import path from 'path';
 import yaml from 'yaml';
 import { DeploymentLogger } from './deployment-logger.js';
 
-function safeJoin(base, ...parts) {
+export function safeJoin(base, ...parts) {
   for (const p of parts) {
     if (typeof p !== 'string' || !/^[a-z0-9][a-z0-9_.-]{0,63}$/i.test(p)) {
       throw new Error(`Invalid path component: ${JSON.stringify(p)}`);

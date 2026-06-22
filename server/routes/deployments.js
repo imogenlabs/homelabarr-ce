@@ -34,7 +34,9 @@ export default function deploymentRoutes({ sendError, cliBridge, streamingCLIBri
   router.get('/stream/progress', requireAuth, (req, res) => {
     const clientId = randomUUID();
     try {
-      progressStream.addClient(clientId, res);
+      // Pass req so the stream can bind this client to the requesting session
+      // and reflect a validated CORS origin (HLCE-284).
+      progressStream.addClient(clientId, res, req);
       const stats = progressStream.getStatistics();
       progressStream.sendToClient(clientId, 'statistics', stats);
     } catch (error) {
@@ -49,9 +51,17 @@ export default function deploymentRoutes({ sendError, cliBridge, streamingCLIBri
       if (!clientId) {
         return res.status(400).json({ error: 'Client ID is required' });
       }
-      progressStream.subscribeToDeployment(clientId, deploymentId);
+      // Scope the subscription to the requesting session so a client can't
+      // subscribe to a stream it doesn't own (HLCE-284). When auth is enabled the
+      // session id is authoritative; with auth disabled it falls back to null,
+      // which matches the null owner recorded for anonymous streams.
+      const requestingSessionId = req.user?.id ?? req.sessionId ?? null;
+      progressStream.subscribeToDeployment(clientId, deploymentId, requestingSessionId);
       res.json({ success: true, message: `Subscribed to deployment ${deploymentId}`, deploymentId, clientId });
     } catch (error) {
+      if (error.code === 'SUBSCRIBE_FORBIDDEN') {
+        return res.status(403).json({ error: 'Not authorized to subscribe to this deployment stream' });
+      }
       sendError(res, 500, 'Failed to subscribe to deployment', error);
     }
   });
