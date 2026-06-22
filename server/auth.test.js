@@ -200,6 +200,17 @@ describe('validatePassword + bcrypt (AC2)', () => {
     expect(await auth.validatePassword('nobody', 'whatever')).toBeNull();
   });
 
+  it('runs a bcrypt compare on the absent-user path (no enumeration timing oracle) (HLCE-285)', async () => {
+    const auth = await loadAuth();
+    await auth.createUser({ username: 'alice', password: 'correct horse' });
+    // The unknown-user branch must still pay the bcrypt cost so its timing
+    // matches the known-user path. Spy on bcrypt.compare and assert it ran.
+    const spy = vi.spyOn(bcrypt, 'compare');
+    expect(await auth.validatePassword('ghost-user', 'whatever')).toBeNull();
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
   it('never stores the plaintext password (stored value is a bcrypt hash)', async () => {
     const auth = await loadAuth();
     await auth.createUser({ username: 'alice', password: 'secretpw' });

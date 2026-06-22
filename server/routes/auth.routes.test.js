@@ -172,6 +172,24 @@ describe('MFA-gated login (AC2)', () => {
     const none = await request(app).post('/auth/login/mfa').send({ code: '000000' });
     expect(none.status).toBe(400);
   });
+
+  it('a login ticket is single-use — a second /auth/login/mfa with the same ticket → 401 (HLCE-285)', async () => {
+    // The ticket is consumed on the FIRST /auth/login/mfa call regardless of
+    // whether the code was valid; replaying it must 401. This throttles TOTP
+    // brute force: each guess needs a fresh password round-trip to mint a ticket.
+    await auth.createUser({ username: 'mfaonce', email: 'mo@x.com', password: 'mfapass12', role: 'user' });
+    const { totp } = await enableMfa('mfaonce');
+    const t = await request(app).post('/auth/login').send({ username: 'mfaonce', password: 'mfapass12' });
+    const ticket = t.body.ticket;
+    expect(ticket).toBeTruthy();
+
+    const first = await request(app).post('/auth/login/mfa').send({ ticket, code: totp.generate() });
+    expect(first.status).toBe(200);
+
+    // Same ticket again — already consumed → 401 even with a valid current code.
+    const replay = await request(app).post('/auth/login/mfa').send({ ticket, code: totp.generate() });
+    expect(replay.status).toBe(401);
+  });
 });
 
 describe('refresh rotation & reuse detection (AC2)', () => {
@@ -339,5 +357,29 @@ describe('MFA setup / verify / disable (AC2-adjacent)', () => {
     const disabled = await hdrs2(agent.post('/auth/mfa/disable')).send({ password: 'mfaflowpass' });
     expect(disabled.status).toBe(200);
     expect(disabled.body.disabled).toBe(true);
+  });
+
+  it('MFA enroll is session-gated while disable additionally requires the password (HLCE-285)', async () => {
+    // Documents the intentional asymmetry: setup/verify only need a live session
+    // (you are already authenticated, so adding a second factor is low-risk),
+    // but disabling a factor weakens the account and must re-prove the password.
+    // Enroll endpoints reject an unauthenticated caller (session gate).
+    expect((await request(app).post('/auth/mfa/setup')).status).toBe(401);
+    expect((await request(app).post('/auth/mfa/verify').send({ code: '123456' })).status).toBe(401);
+    // Disable is session-gated too...
+    expect((await request(app).post('/auth/mfa/disable').send({ password: 'whatever' })).status).toBe(401);
+
+    // ...and even WITH a session, disable rejects a missing/wrong password (4xx),
+    // whereas setup with a session succeeds without any password.
+    await auth.createUser({ username: 'mfagate', email: 'mg@x.com', password: 'mfagatepass', role: 'user' });
+    const { agent, csrf } = await login('mfagate', 'mfagatepass');
+    const hdrs = (r) => r.set('x-csrf-token', csrf).set('x-requested-with', 'XMLHttpRequest');
+
+    // setup needs only the session.
+    expect((await hdrs(agent.post('/auth/mfa/setup'))).status).toBe(200);
+    // disable without a password is rejected (4xx — not a successful disable).
+    const noPw = await hdrs(agent.post('/auth/mfa/disable')).send({});
+    expect(noPw.status).toBeGreaterThanOrEqual(400);
+    expect(noPw.status).toBeLessThan(500);
   });
 });

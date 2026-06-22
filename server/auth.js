@@ -133,12 +133,22 @@ export async function createUser(userData) {
   return userWithoutPassword;
 }
 
+// A fixed, valid bcrypt hash used only to equalize timing when the requested
+// user does not exist. Without this, the absent-user path skips bcrypt entirely
+// and returns much faster than the present-user path, giving an attacker a
+// timing oracle to enumerate valid usernames. Comparing against this dummy makes
+// both paths pay roughly the same bcrypt cost before returning null.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('homelabarr-timing-equalizer', BCRYPT_COST);
+
 export async function validatePassword(username, password) {
   const user = findUserByUsername(username);
   if (!user) {
+    // Run a throwaway compare so timing matches the known-user path (constant
+    // against username enumeration), then fail closed.
+    await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
     return null;
   }
-  
+
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
     return null;
@@ -165,12 +175,12 @@ export async function validatePassword(username, password) {
   return userWithoutPassword;
 }
 
-export function generateToken(user, jti) {
+export function generateToken(user, jti, expiresInSec = JWT_EXPIRES_IN) {
   const { current } = getActiveKeys();
   return jwt.sign(
     { sub: user.id, id: user.id, username: user.username, role: user.role, jti },
     current,
-    { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
+    { expiresIn: expiresInSec, algorithm: 'HS256' }
   );
 }
 
