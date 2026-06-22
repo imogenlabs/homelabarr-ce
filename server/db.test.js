@@ -81,18 +81,31 @@ describe('SQLCipher encryption-at-rest (AC1 / HLCE-256)', () => {
     await expect(loadDb('w'.repeat(40), file)).rejects.toThrow(/not a database|SQLCipher key invalid/i);
   });
 
-  it('opens UNENCRYPTED when the key is under 32 chars (documents the silent-downgrade contract)', async () => {
-    const { db } = await loadDb('too-short-key'); // < 32 chars → cipher skipped
-    openHandles.push(db);
-    db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)');
-    db.prepare('INSERT INTO t (v) VALUES (?)').run('plain-value');
-    expect(db.prepare('SELECT v FROM t WHERE id = 1').get().v).toBe('plain-value');
-
-    // Silent downgrade: the file is a normal plaintext SQLite database.
-    expect(fileHeader(dbPath).startsWith(SQLITE_MAGIC_PREFIX)).toBe(true);
+  it('FAILS CLOSED when the key is under 32 chars instead of silently writing plaintext (HLCE-282)', async () => {
+    // REGRESSION (HLCE-282): a non-empty SQLCIPHER_KEY under 32 chars used to be
+    // silently ignored — the DB was written in PLAINTEXT while the operator
+    // believed it was encrypted (a silent encryption downgrade). open() must now
+    // throw a clear, actionable error rather than open the file at all.
+    await expect(loadDb('too-short-key')).rejects.toThrow(/too short.*32|Refusing to open the database in PLAINTEXT/i);
   });
 
-  it('opens unencrypted when no key is configured', async () => {
+  it('gives a clear diagnostic when opening an existing encrypted DB with NO key (HLCE-282)', async () => {
+    // Create an encrypted DB first, then reopen it with no key configured. The
+    // old code hit a cryptic WAL "file is not a database" error; open() must now
+    // translate that into a "missing/invalid key for an existing encrypted DB"
+    // diagnostic.
+    const key = 'k'.repeat(40);
+    const file = path.join(tmp, 'enc-nokey.db');
+    let mod = await loadDb(key, file);
+    openHandles.push(mod.db);
+    mod.db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)');
+    mod.db.prepare('INSERT INTO t (v) VALUES (?)').run('persisted');
+    mod.db.close();
+
+    await expect(loadDb(undefined, file)).rejects.toThrow(/encryption key|encrypted database/i);
+  });
+
+  it('opens unencrypted when no key is configured (fresh DB)', async () => {
     const { db } = await loadDb(undefined);
     openHandles.push(db);
     db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY)');
