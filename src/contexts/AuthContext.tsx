@@ -53,12 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Track the cold-load retry timer + a cancelled flag so an unmount within
+    // the 1500ms window clears the pending timer and can't setState on an
+    // unmounted provider (HLCE-280).
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async session bootstrap: checkAuth sets user/loading on resolve, with a 1500ms cold-load retry. This is the documented "subscribe to an external system" effect shape; no cleaner idiom without a data-fetching library.
     checkAuth().then(ok => {
-      if (!ok) {
-        setTimeout(() => checkAuth(), 1500);
+      if (!ok && !cancelled) {
+        retryTimer = setTimeout(() => checkAuth(), 1500);
       }
     });
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [checkAuth]);
 
   useEffect(() => {
