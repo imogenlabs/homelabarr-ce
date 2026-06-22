@@ -135,9 +135,21 @@ app.use(globalRateLimit);
 app.use((req, res, next) => {
   const csrfExempt = ['/auth/login', '/auth/login/mfa', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/cli-mint', '/csp-report', '/internal/audit'];
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !csrfExempt.includes(req.path)) {
-    const cookieTok = req.cookies?.hl_csrf;
-    const hdrTok = req.headers['x-csrf-token'];
-    if (cookieTok && hdrTok) {
+    const hasAuth = req.cookies?.hl_session || req.headers.authorization?.startsWith('Bearer ');
+    if (!hasAuth) {
+      return next();
+    }
+    // API keys (Bearer hlr_) are not browser cookie sessions and cannot be
+    // ridden by a cross-site request, so they are exempt from the CSRF/XHR gate.
+    const isApiKey = req.headers.authorization?.startsWith('Bearer hlr_');
+    if (!isApiKey) {
+      const cookieTok = req.cookies?.hl_csrf;
+      const hdrTok = req.headers['x-csrf-token'];
+      // Double-submit is MANDATORY: a missing/empty cookie or header is a 403,
+      // never a fall-through to the weaker XHR-only check.
+      if (!cookieTok || !hdrTok) {
+        return res.status(403).json({ error: 'CSRF validation failed' });
+      }
       try {
         const a = Buffer.from(String(cookieTok));
         const b = Buffer.from(String(hdrTok));
@@ -147,13 +159,9 @@ app.use((req, res, next) => {
       } catch {
         return res.status(403).json({ error: 'CSRF validation failed' });
       }
-    }
-    const hasAuth = req.cookies?.hl_session || req.headers.authorization?.startsWith('Bearer ');
-    if (!hasAuth) {
-      return next();
-    }
-    if (req.headers['x-requested-with'] !== 'XMLHttpRequest' && !req.headers.authorization?.startsWith('hlr_')) {
-      return res.status(403).json({ error: 'XHR required' });
+      if (req.headers['x-requested-with'] !== 'XMLHttpRequest') {
+        return res.status(403).json({ error: 'XHR required' });
+      }
     }
   }
   next();

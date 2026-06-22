@@ -232,7 +232,11 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
     if (!u || typeof u !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(u)) return res.status(400).json({ ok: false });
     if (!['viewer', 'scanner'].includes(role)) return res.status(400).json({ ok: false });
     if (ttl_s < 60 || ttl_s > 3600) return res.status(400).json({ ok: false });
-    const token = generateToken({ id: u, username: u, role }, 'mint-' + crypto.randomBytes(8).toString('hex'));
+    // Mint a stateless, jti-less token: verifyToken only consults the sessions
+    // table when a jti is present, so a minted CLI token (no session row) must
+    // omit it or it would always 401. Its lifetime IS the requested ttl_s — the
+    // JWT's real `exp` is what enforces revocation here (no server-side session).
+    const token = generateToken({ id: u, username: u, role }, undefined, ttl_s);
     audit({ actor: u, ip: req.ip, event: 'auth.cli_mint', result: 'ok', meta: { role, ttl_s } });
     res.json({ a: token, exp: Math.floor(Date.now() / 1000) + ttl_s });
   });
