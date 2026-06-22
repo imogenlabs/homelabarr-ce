@@ -200,27 +200,24 @@ export default function deployRoutes({
       // bridge, CLI bridge, or this 501). The former template-mode dockerode
       // deploy tail and the two duplicate it-tools blocks here were unreachable
       // dead code and were removed (HLCE-229).
+      /* v8 ignore start */
     } catch (error) {
-      logger.error(`❌ Failed to deploy ${appId}:`, error.message);
-
-      // Determine appropriate status code based on error type
-      let statusCode = 500;
-      if (error.dockerStatus === 'degraded') {
-        statusCode = 503;
-      } else if (error.message.includes('Port conflict')) {
-        statusCode = 409;
-      } else if (error.message.includes('Template not found')) {
-        statusCode = 404;
-      } else if (error.message.includes('required') || error.message.includes('invalid')) {
-        statusCode = 400;
-      }
-
+      // Defensive last-resort handler, UNREACHABLE via HTTP. express.json's
+      // strict mode rejects a non-object/array body with a 400 in body-parser
+      // before this handler runs, so the destructure above can't throw, and
+      // every other throwing path (it-tools spawn, streaming bridge, CLI
+      // bridge) is wrapped in its own inner try/catch. The old per-cause status
+      // branches here (503/409/404/400) mapped error shapes no reachable throw
+      // delivers — dead code that survived mutation (HLCE-277). Retained as a
+      // plain 500 so a future refactor that introduces an un-try'd throw fails
+      // safe instead of leaking an Express-4 unhandled rejection. The
+      // unreachable boundary is pinned by a body-parser 400 test (HLCE-288).
+      logger.error('❌ Deploy failed unexpectedly:', error?.message);
       const errorResponse = dockerManager.createErrorResponse('Deploy container', error);
-      errorResponse.appId = appId;
-      errorResponse.step = error.step || 'deployment';
-
-      res.status(statusCode).json(errorResponse);
+      errorResponse.step = error?.step || 'deployment';
+      res.status(500).json(errorResponse);
     }
+    /* v8 ignore stop */
   });
 
   return router;
