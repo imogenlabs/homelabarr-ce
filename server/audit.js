@@ -7,8 +7,57 @@ import { db } from './db.js';
 import { REDACT_KEYS } from './log.js';
 
 const AUDIT_DIR = process.env.AUDIT_DIR || path.join(process.cwd(), 'server', 'activity-data');
+// Out-of-band chain-tip anchor, deliberately a separate file from the audit DB
+// so a full-DB rewrite leaves it stale (HLCE-287).
+const ANCHOR_PATH = path.join(AUDIT_DIR, 'chain-tip.anchor');
 
 let auditLogger = null;
+
+// Secret for the out-of-band anchor signature. AUDIT_ANCHOR_KEY is preferred;
+// JWT_SECRET is the fallback so the anchor is signed by default in any
+// configured deployment. Returns null when neither is set — the anchor is then
+// disabled (writes skipped, verify skips the anchor check) so a key-less or
+// legacy install behaves exactly as before (HLCE-287).
+function anchorSecret() {
+  return process.env.AUDIT_ANCHOR_KEY || process.env.JWT_SECRET || null;
+}
+
+// HMAC-SHA256 over the tip's identifying fields. Same framing on write and
+// verify; the request value never participates — only the persisted tip does.
+function signTip({ last_row_id, last_row_hash, count }, secret) {
+  return crypto.createHmac('sha256', secret)
+    .update(JSON.stringify([last_row_id, last_row_hash, count]))
+    .digest('hex');
+}
+
+// Constant-time hex comparison; false (not throw) on any shape/length mismatch.
+function hexEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
+// Mirror the committed in-DB chain tip to the signed, out-of-band anchor file.
+// An attacker who can rewrite the whole audit DB (rows AND the audit_chain_tip
+// row) cannot forge a matching signature without the secret, so verifyChain can
+// still detect the rewrite. Best-effort: the audited write has already
+// committed, so a failure here is swallowed (the in-DB tip stays primary) and
+// must never break the operation that is being audited (HLCE-287).
+function writeAnchor(tip) {
+  const secret = anchorSecret();
+  if (!secret || !tip) return;
+  try {
+    const sig = signTip(tip, secret);
+    fs.writeFileSync(ANCHOR_PATH, JSON.stringify({
+      last_row_id: tip.last_row_id, last_row_hash: tip.last_row_hash, count: tip.count, sig,
+    }), 'utf8');
+  } catch {
+    // Out-of-band anchor is best-effort; never fail the audited write over it.
+  }
+}
 
 export function initAudit() {
   db.exec(`
@@ -100,6 +149,8 @@ export function audit(evt) {
       .run({ id: info.lastInsertRowid, hash: r.row_hash });
   });
   writeRow(row);
+  // Mirror the just-committed tip to the out-of-band signed anchor (HLCE-287).
+  writeAnchor(db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get());
   if (auditLogger) auditLogger.info(row);
   return row_hash;
 }
@@ -133,6 +184,36 @@ export function verifyChain() {
       (tip.count > 0 && rows.length === 0);
     if (truncated) {
       return { ok: false, kind: 'tail_truncated', expectedCount: tip.count, actualCount: rows.length };
+    }
+  }
+
+  // Out-of-band signed anchor (HLCE-287). The in-DB tip above is defeated by a
+  // fully DB-privileged attacker who rewrites the rows AND the audit_chain_tip
+  // row consistently. The anchor lives outside the DB and is HMAC-signed with a
+  // secret that isn't in the DB, so such a rewrite is caught here: a present,
+  // validly-signed anchor that disagrees with the in-DB tip means the DB was
+  // altered out from under the anchor. Skipped when no secret is configured or
+  // no anchor exists yet (legacy DB / before the first append) so existing
+  // installs are unaffected. (A privileged attacker who also deletes the anchor
+  // file downgrades to the in-DB-only guarantee — an inherent, documented limit
+  // of a local anchor; the signature defeats rewriting it.)
+  const secret = anchorSecret();
+  if (secret && fs.existsSync(ANCHOR_PATH)) {
+    let anchor;
+    try {
+      anchor = JSON.parse(fs.readFileSync(ANCHOR_PATH, 'utf8'));
+    } catch {
+      return { ok: false, kind: 'anchor_unreadable' };
+    }
+    if (!anchor.sig || !hexEqual(anchor.sig, signTip(anchor, secret))) {
+      return { ok: false, kind: 'anchor_unsigned' };
+    }
+    const tipMatches = tip
+      && anchor.last_row_id === tip.last_row_id
+      && anchor.last_row_hash === tip.last_row_hash
+      && anchor.count === tip.count;
+    if (!tipMatches) {
+      return { ok: false, kind: 'anchor_mismatch', anchorCount: anchor.count, actualCount: tip ? tip.count : 0 };
     }
   }
 
