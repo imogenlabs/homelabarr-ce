@@ -195,9 +195,11 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
     setAuthWizardOpen(true);
   };
 
-  const handleAuthComplete = (credentials: unknown) => {
-    console.log('Auth completed:', credentials);
-    // Refresh stats to show updated provider status
+  const handleAuthComplete = () => {
+    // Intentionally ignores the credentials arg — it carries freshly-minted
+    // rclone OAuth tokens / provider secrets; the previous `console.log` leaked
+    // them to the browser console (devtools history, screen-shares, extensions)
+    // (HLCE-280). Just refresh stats to show updated provider status.
     fetchEnhancedMountStats();
   };
 

@@ -110,11 +110,31 @@ describe('validateConfig — port range validation', () => {
     expect(errors).not.toContain('Web Port must be a valid port number (1-65535)');
   });
 
-  it('warns (but does not invalidate) on a privileged port below 1024', () => {
+  it('does NOT block a privileged port below 1024 (HLCE-280: no warning pushed into errors[])', () => {
     const t = template([portField]);
     const errors = validateConfig(t, { webPort: '80' }, false);
-    expect(errors).toContain('Warning: Port 80 is a privileged port and may require elevated permissions');
-    expect(errors).not.toContain('Web Port must be a valid port number (1-65535)');
+    // Previously a "Warning: …privileged port" string was pushed into the
+    // blocking errors[] array, so DeployModal refused every deploy on 80/443.
+    expect(errors).toHaveLength(0);
+    expect(errors.some(e => /privileged/i.test(e))).toBe(false);
+  });
+
+  // HLCE-280 AC4: catalog apps render port fields as type 'text'; the range
+  // check must apply to them too (via isPortField), not only type 'number'.
+  it('range-validates a TEXT-typed port field (out-of-range rejected)', () => {
+    const textPort = field({ name: 'httpPort', label: 'HTTP Port', type: 'text' });
+    const t = template([textPort]);
+    expect(validateConfig(t, { httpPort: '99999' }, false))
+      .toContain('HTTP Port must be a valid port number (1-65535)');
+    expect(validateConfig(t, { httpPort: 'abc' }, false))
+      .toContain('HTTP Port must be a valid port number (1-65535)');
+  });
+
+  it('accepts a valid TEXT-typed port and does not block a privileged text port', () => {
+    const textPort = field({ name: 'httpPort', label: 'HTTP Port', type: 'text' });
+    const t = template([textPort]);
+    expect(validateConfig(t, { httpPort: '8080' }, false)).toHaveLength(0);
+    expect(validateConfig(t, { httpPort: '443' }, false)).toHaveLength(0);
   });
 });
 

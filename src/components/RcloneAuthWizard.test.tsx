@@ -105,6 +105,32 @@ describe('RcloneAuthWizard', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  // HLCE-280 (XSS): a server-returned auth_url with a dangerous scheme must NOT
+  // become a live href. React doesn't sanitize javascript:/data: on an anchor,
+  // so safeExternalHref must strip it and the "open in new tab" link must not render.
+  it('does not render a javascript: auth_url as a clickable href', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce(
+      okJson({ success: true, data: { auth_url: 'javascript:alert(document.cookie)' } }),
+    );
+
+    renderWizard({ provider: 'gdrive' });
+    await user.click(screen.getByRole('button', { name: /generate auth url/i }));
+
+    // We're on the authorize step (the raw value shows in the readonly text input,
+    // which is harmless — it's text, not an executable sink).
+    await screen.findByDisplayValue('javascript:alert(document.cookie)');
+
+    // The "open in new tab" anchor (the XSS sink) must be absent / carry no
+    // javascript: href.
+    const link = screen.queryByRole('link', { name: /open in new tab/i });
+    expect(link).toBeNull();
+    for (const a of screen.queryAllByRole('link')) {
+      expect(a.getAttribute('href') ?? '').not.toMatch(/^javascript:/i);
+    }
+  });
+
   // AC4 (clipboard): copy the generated auth URL. Drive the copy click with
   // fireEvent rather than user-event — userEvent.setup() installs its own
   // navigator.clipboard stub, which would shadow the spy we asserted on.
