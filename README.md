@@ -200,6 +200,7 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 | `DOCKER_GID` | **Yes** | Docker group ID on your host. |
 | `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. |
 | `DEFAULT_ADMIN_PASSWORD` | Optional | Default is `admin` — change it. |
+| `AUDIT_ANCHOR_KEY` | Optional | Signs the audit log's out-of-band tamper-evidence anchor. Falls back to `JWT_SECRET` if unset. |
 | `TZ` | Optional | Your timezone. Defaults to `America/New_York`. |
 
 All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)
