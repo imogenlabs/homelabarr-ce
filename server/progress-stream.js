@@ -20,8 +20,14 @@ export function resolveAllowedOrigin(origin) {
     return null;
   }
   const allowed = Array.isArray(allow) ? allow : [allow];
-  if (allowed.includes('*')) return origin; // dev wildcard: reflect, never emit '*'
-  return allowed.includes(origin) ? origin : null;
+  // Echo the matching entry FROM the configured allowlist rather than the
+  // request-supplied Origin, so the untrusted request value never flows into
+  // the credentialed ACAO header (js/cors-misconfiguration-for-credentials).
+  // A bare '*' is intentionally NOT honored here: reflecting an arbitrary
+  // origin alongside Access-Control-Allow-Credentials is a credential leak
+  // (CWE-942). Same-origin dev traffic carries no Origin header and needs no
+  // ACAO; any cross-origin client must be explicitly allowlisted in corsOrigin.
+  return allowed.find((entry) => entry === origin) ?? null;
 }
 
 /**
