@@ -1095,6 +1095,27 @@ describe('AC2/AC5 — deploy: streaming bridge, unsupported app, fallback, and s
     expect(silentLogger.error).toHaveBeenCalledWith('Streaming CLI deployment failed:', 'stream init failed');
     expect(silentLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Falling back to standard CLI'));
   });
+
+  // HLCE-288: pins the boundary that makes deploy.js's defensive outer catch
+  // unreachable via HTTP. express.json({ strict: true }) rejects a top-level
+  // non-object/array body (here a JSON `null`) with a 400 in body-parser BEFORE
+  // the handler runs — so the top-level destructure never throws, and since
+  // every other throwing path is wrapped in an inner try/catch, the outer catch
+  // can't be reached. The dockerManager is never touched, proving the request
+  // died at the parser rather than in the handler's catch.
+  it('rejects a non-object JSON body at the parser (400), never reaching the deploy handler', async () => {
+    const dockerManager = dockerManagerStub();
+    const { app } = buildApp({ dockerManager, cliBridge: null });
+    const res = await request(app)
+      .post('/deploy')
+      .set('Cookie', adminCookie())
+      .set('x-requested-with', 'XMLHttpRequest')
+      .set('Content-Type', 'application/json')
+      .send('null');
+    expect(res.status).toBe(400);
+    expect(dockerManager.createErrorResponse).not.toHaveBeenCalled();
+    expect(dockerManager.executeWithRetry).not.toHaveBeenCalled();
+  });
 });
 
 describe('AC5 — applications route supporting handlers', () => {
