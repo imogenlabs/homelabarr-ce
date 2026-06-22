@@ -12,6 +12,7 @@ import {
   // Globe,
   // RefreshCw
 } from 'lucide-react';
+import { safeExternalHref } from '@/lib/safeUrl';
 
 // interface AuthStep {
 //   id: string;
@@ -329,15 +330,23 @@ const OAuthSetup: React.FC<{ provider: Provider; containerId: string; onComplete
               >
                 <Copy className="w-4 h-4" />
               </button>
-              <a
-                href={authUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-muted-foreground hover:text-foreground"
-                title="Open in new tab"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
+              {/* Guard the server-provided auth_url against javascript:/data:
+                  scheme injection (XSS) before using it as an href — same
+                  safeExternalHref guard DeployedAppCard uses (HLCE-280). */}
+              {(() => {
+                const safeAuthUrl = safeExternalHref(authUrl);
+                return safeAuthUrl ? (
+                  <a
+                    href={safeAuthUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-muted-foreground hover:text-foreground"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : null;
+              })()}
             </div>
           </div>
 
