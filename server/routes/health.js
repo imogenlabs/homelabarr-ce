@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 import { execSync } from 'child_process';
 
 export default function healthRoutes({ requireAuth, requireRole, sendError, dockerManager, envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger, logger, isDevelopment, getProcessCounters }) {
@@ -185,7 +186,7 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
     const results = { stale: [], missing: [], ok: [] };
 
     for (const [name, maxDays] of Object.entries(thresholds)) {
-      const filePath = SECRET_ROOT + '/' + name;
+      const filePath = path.join(SECRET_ROOT, name);
       try {
         const stat = fs.statSync(filePath);
         const ageDays = Math.floor((Date.now() - stat.mtimeMs) / 86400000);

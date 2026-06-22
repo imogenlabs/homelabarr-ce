@@ -189,4 +189,27 @@ describe('AC2b — CSRF/XHR double-submit guard on state-changing requests', () 
       .set('x-requested-with', 'XMLHttpRequest');
     expect(res.status).toBe(200);
   });
+
+  it('an authed POST with the XHR header but NO x-csrf-token is 403 — double-submit is MANDATORY (HLCE-283)', async () => {
+    // Regression for HLCE-283: previously the CSRF compare only ran when BOTH the
+    // cookie AND the header were present, so a missing x-csrf-token fell through
+    // to the weaker XHR-only gate and a forged XHR was accepted (200). The token
+    // is now mandatory: a missing/empty header is a hard 403.
+    const { agent } = await login('inv-user', 'invpassword');
+    const res = await agent
+      .post('/auth/logout')
+      .set('x-requested-with', 'XMLHttpRequest'); // valid session cookie, but NO x-csrf-token
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ error: 'CSRF validation failed' });
+  });
+
+  it('an authed POST with an EMPTY x-csrf-token is also 403 (no empty-string bypass, HLCE-283)', async () => {
+    const { agent } = await login('inv-user', 'invpassword');
+    const res = await agent
+      .post('/auth/logout')
+      .set('x-requested-with', 'XMLHttpRequest')
+      .set('x-csrf-token', '');
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ error: 'CSRF validation failed' });
+  });
 });
