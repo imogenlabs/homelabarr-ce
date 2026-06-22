@@ -26,6 +26,7 @@ Optional, but useful:
 | `BACKEND_PORT` | `8092` | Port for the API server |
 | `TZ` | `UTC` | Your timezone (e.g., `America/New_York`, `Europe/London`) |
 | `AUTH_ENABLED` | `true` | Set to `false` to disable the login screen |
+| `AUDIT_ANCHOR_KEY` | falls back to `JWT_SECRET` | Signs the tamper-evident audit log's out-of-band chain-tip anchor. Leave unset to reuse `JWT_SECRET`; set a dedicated random value (`openssl rand -hex 32`) to keep audit integrity independent of JWT key rotation. |
 
 !!! danger "Don't disable auth on a networked server"
     Setting `AUTH_ENABLED=false` removes the login screen and exposes all API endpoints — including container management and user administration — to anyone who can reach your server. Only use this in isolated local testing environments.

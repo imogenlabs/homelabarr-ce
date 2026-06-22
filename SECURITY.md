@@ -168,7 +168,7 @@ docker buildx imagetools inspect \
 1. **Read recent security events** — `GET /api/audit?limit=500` (requires admin auth)
 2. **Revoke all sessions** — `POST /api/auth/sessions/revoke-all` or directly: `sqlite3 /app/data/sessions.db "UPDATE sessions SET revoked_at = strftime('%s','now') * 1000 WHERE revoked_at IS NULL;"`
 3. **Rotate JWT_SECRET** — regenerate with `openssl rand -base64 48`, update the env, restart backend. All outstanding tokens become invalid.
-4. **Verify audit chain integrity** — `GET /api/audit` returns `chain.ok: true/false`
+4. **Verify audit chain integrity** — `GET /api/audit` returns `chain.ok: true/false`. The audit log is a per-row hash chain anchored two ways: an in-DB `audit_chain_tip` (detects tail truncation) and an **out-of-band, HMAC-signed anchor file** (`<AUDIT_DIR>/chain-tip.anchor`, signed with `AUDIT_ANCHOR_KEY`, falling back to `JWT_SECRET`). A `chain.ok: false` carries a `kind`: `prev_hash_mismatch`/`row_hash_mismatch`/`id_gap`/`tail_truncated` (in-DB tampering), or `anchor_mismatch`/`anchor_unsigned`/`anchor_unreadable` (the signed anchor disagrees with the DB — evidence of a full-DB rewrite by a privileged attacker). The anchor secret is **not** stored in the DB, so a DB-only compromise cannot forge it; keep the anchor file on storage the DB process can write but treat its deletion as a tamper signal.
 5. **Archive audit logs** — rotated JSONL files at `/app/server/activity-data/audit-*.jsonl.gz`
 
 ## Key Rotation Runbook
