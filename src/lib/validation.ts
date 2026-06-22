@@ -24,19 +24,21 @@ export function validateConfig(
     }
   });
 
-  // Validate ports
+  // Validate ports — for number-typed fields AND text-typed catalog port fields
+  // (HLCE-276/280: catalog apps render ports as type 'text', so the old
+  // `type === 'number'` gate skipped their range validation entirely).
   Object.entries(config).forEach(([key, value]) => {
     const field = template.configFields?.find(f => f.name === key);
-    if (field?.type === 'number') {
+    if (isPortField(field, key)) {
       const port = parseInt(value, 10);
       if (isNaN(port) || port < 1 || port > 65535) {
-        errors.push(`${field.label} must be a valid port number (1-65535)`);
+        errors.push(`${field?.label ?? key} must be a valid port number (1-65535)`);
       }
-      
-      // Warn about privileged ports (below 1024) but don't block them
-      if (port < 1024 && port > 0) {
-        errors.push(`Warning: Port ${port} is a privileged port and may require elevated permissions`);
-      }
+      // NOTE: privileged ports (< 1024) are intentionally NOT flagged here.
+      // The previous "Warning: …privileged port" string was pushed into this
+      // blocking errors[] array, so DeployModal (which blocks on errors.length)
+      // silently refused every deploy on port 80/443/etc. (HLCE-280). Privileged
+      // ports are a legitimate operator choice; the backend governs the bind.
     }
   });
 
