@@ -118,7 +118,42 @@ describe('AC4 — POST /stream/deployments/:deploymentId/subscribe', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(progressStream.subscribeToDeployment).toHaveBeenCalledTimes(1);
-    expect(progressStream.subscribeToDeployment).toHaveBeenCalledWith('c-1', 'dep-1');
+    // HLCE-284: the route now scopes the subscription to the requesting session.
+    // With auth disabled (optionalAuth, no req.user) the session id is null.
+    expect(progressStream.subscribeToDeployment).toHaveBeenCalledWith('c-1', 'dep-1', null);
+  });
+
+  // HLCE-284: per-deployment authorization. When the stream rejects an
+  // unauthorized subscribe (client owned by a different session) the route must
+  // surface it as 403, not a generic 500.
+  it('returns 403 when the stream reports the client is not owned (SUBSCRIBE_FORBIDDEN)', async () => {
+    const progressStream = stubProgressStream();
+    progressStream.subscribeToDeployment.mockImplementation(() => {
+      const err = new Error('Client c-1 is not owned by the requesting session');
+      err.code = 'SUBSCRIBE_FORBIDDEN';
+      throw err;
+    });
+    const { app } = buildApp({ authEnabled: false, progressStream });
+
+    const res = await request(app)
+      .post('/stream/deployments/dep-1/subscribe')
+      .send({ clientId: 'c-1' });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/Not authorized/);
+  });
+
+  it('passes the authenticated session id through to subscribeToDeployment', async () => {
+    const progressStream = stubProgressStream();
+    const { app } = buildApp({ authEnabled: true, progressStream });
+
+    const res = await request(app)
+      .post('/stream/deployments/dep-1/subscribe')
+      .set('Cookie', adminCookie())
+      .send({ clientId: 'c-1' });
+
+    expect(res.status).toBe(200);
+    expect(progressStream.subscribeToDeployment).toHaveBeenCalledWith('c-1', 'dep-1', 'u-admin');
   });
 
   it('rejects an unauthenticated subscribe with 401 when authEnabled wires requireAuth', async () => {
