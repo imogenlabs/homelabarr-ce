@@ -5,29 +5,30 @@ import { DeploymentLogger } from './deployment-logger.js';
 import { parseAppId, safeJoin } from './cli-bridge.js';
 
 /**
+ * The configured CORS allowlist as an array (empty when unset/unreadable).
+ * A bare `*` is intentionally NOT expanded here: this stream is credentialed,
+ * and reflecting an arbitrary origin alongside Access-Control-Allow-Credentials
+ * is a credential leak (CWE-942 / js/cors-misconfiguration-for-credentials).
+ * Cross-origin clients must be listed explicitly in corsOrigin.
+ */
+export function getCorsAllowlist() {
+  try {
+    const allow = EnvironmentManager.getConfiguration().corsOrigin;
+    return Array.isArray(allow) ? allow : [allow];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Return the request's Origin only when it is in the configured CORS allowlist.
  * Used to reflect a validated origin on the credentialed SSE stream instead of a
- * wildcard `*` (a wildcard is invalid with credentials and leaks the stream to
- * any origin — HLCE-284). Returns null for a same-origin request (no Origin
- * header) or a disallowed origin, in which case no ACAO header is sent.
+ * wildcard `*`. Returns null for a same-origin request (no Origin header) or a
+ * disallowed origin, in which case no ACAO header is sent.
  */
 export function resolveAllowedOrigin(origin) {
   if (!origin) return null;
-  let allow;
-  try {
-    allow = EnvironmentManager.getConfiguration().corsOrigin;
-  } catch {
-    return null;
-  }
-  const allowed = Array.isArray(allow) ? allow : [allow];
-  // Echo the matching entry FROM the configured allowlist rather than the
-  // request-supplied Origin, so the untrusted request value never flows into
-  // the credentialed ACAO header (js/cors-misconfiguration-for-credentials).
-  // A bare '*' is intentionally NOT honored here: reflecting an arbitrary
-  // origin alongside Access-Control-Allow-Credentials is a credential leak
-  // (CWE-942). Same-origin dev traffic carries no Origin header and needs no
-  // ACAO; any cross-origin client must be explicitly allowlisted in corsOrigin.
-  return allowed.find((entry) => entry === origin) ?? null;
+  return getCorsAllowlist().includes(origin) ? origin : null;
 }
 
 /**
@@ -64,11 +65,12 @@ export class ProgressStreamManager extends EventEmitter {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     // Reflect a validated origin on this credentialed stream instead of a
-    // wildcard (HLCE-284). A wildcard is both invalid with credentials and an
-    // open door; same-origin requests carry no Origin header and need no ACAO.
-    const allowedOrigin = resolveAllowedOrigin(req?.headers?.origin);
-    if (allowedOrigin) {
-      res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    // wildcard (HLCE-284). The allowlist membership check sits inline at the
+    // sink so the request Origin is only echoed after passing it; same-origin
+    // requests carry no Origin header and need no ACAO.
+    const reqOrigin = req?.headers?.origin;
+    if (reqOrigin && getCorsAllowlist().includes(reqOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', reqOrigin);
       res.setHeader('Vary', 'Origin');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
