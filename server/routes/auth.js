@@ -376,7 +376,10 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
   // R3: MFA disable — requires password confirmation
   router.post('/auth/mfa/disable', requireAuth, async (req, res) => {
     try {
-      const { password } = req.body;
+      const { password } = req.body || {};
+      if (typeof password !== 'string' || password.length === 0) {
+        return res.status(400).json({ error: 'Password required' });
+      }
       const userId = req.user.sub || req.user.id;
       const user = findUserById(userId);
       if (!user) return res.status(404).json({ error: 'User not found' });

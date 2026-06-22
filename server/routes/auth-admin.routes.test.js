@@ -202,6 +202,30 @@ describe('cli-mint token endpoint (AC4)', () => {
     expect((await request(app).post('/auth/cli-mint').set('X-Mint-Key', key).send({ u: 'scanbot', ttl_s: 10 })).status).toBe(400);
     expect((await request(app).post('/auth/cli-mint').set('X-Mint-Key', key).send({ u: 'scanbot', ttl_s: 99999 })).status).toBe(400);
   });
+
+  it('a minted token actually authenticates a protected route and honors ttl_s (HLCE-285)', async () => {
+    const key = process.env.CLI_MINT_KEY;
+    const ttl = 600;
+    const before = Math.floor(Date.now() / 1000);
+    const mint = await request(app).post('/auth/cli-mint')
+      .set('X-Mint-Key', key).send({ u: 'scanbot', role: 'scanner', ttl_s: ttl });
+    expect(mint.status).toBe(200);
+    const token = mint.body.a;
+
+    // Previously the route stamped a jti that was never written to the sessions
+    // table, so verifyToken's isJtiActive check failed and every minted token
+    // 401'd. The token must now authenticate a requireAuth-gated route.
+    const me = await request(app).get('/auth/me/stars').set('Cookie', `hl_session=${token}`);
+    expect(me.status).toBe(200);
+    expect(Array.isArray(me.body.stars)).toBe(true);
+
+    // The JWT's real `exp` reflects the requested ttl_s (not the hardcoded 900s).
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+    expect(payload.exp).toBeGreaterThanOrEqual(before + ttl - 2);
+    expect(payload.exp).toBeLessThanOrEqual(Math.floor(Date.now() / 1000) + ttl + 2);
+    // A jti-less token is exactly what makes it verifiable without a session row.
+    expect(payload.jti).toBeUndefined();
+  });
 });
 
 describe('internal audit token endpoint (AC4)', () => {
