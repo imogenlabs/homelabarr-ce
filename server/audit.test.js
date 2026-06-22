@@ -194,6 +194,29 @@ describe('meta redaction & event allowlist (AC2)', () => {
     });
   });
 
+  it('redacts refresh_token / access_token / api_key in stored meta (HLCE-282)', async () => {
+    // REGRESSION (HLCE-282): the audit sink's local REDACT list was anchored on
+    // `token` and did NOT include refresh_token/access_token/api_key, so those
+    // bearer/session secrets were persisted in CLEARTEXT in the encrypted audit
+    // trail while the structured logger (log.js) redacted them. The fix shares
+    // ONE merged superset regex (exported from log.js) across both modules.
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({
+      actor: 'u', event: 'session.refresh', result: 'ok',
+      meta: {
+        refresh_token: 'rt-leak', access_token: 'at-leak', api_key: 'ak-leak',
+        nested: { refresh_token: 'nested-rt' }, keep: 'visible',
+      },
+    });
+    const meta = JSON.parse(audit.getRecentAuditEvents(1)[0].meta_json);
+    expect(meta.refresh_token).toBe('[REDACTED]');
+    expect(meta.access_token).toBe('[REDACTED]');
+    expect(meta.api_key).toBe('[REDACTED]');
+    expect(meta.nested.refresh_token).toBe('[REDACTED]');
+    expect(meta.keep).toBe('visible');
+  });
+
   it('only redacts keys that fully match the sensitive set, not substrings (HLCE-263)', async () => {
     // Pins the ^...$ anchors on the REDACT regex (audit.js:50). A key that merely
     // CONTAINS a sensitive word (e.g. "passwordHint", "mytoken") must survive; an
@@ -413,6 +436,38 @@ describe('tail-truncation detection (HLCE-269)', () => {
     const result = audit.verifyChain();
     expect(result.ok).toBe(false);
     expect(result.kind).toBe('tail_truncated');
+  });
+
+  it('rolls back the row INSERT atomically when the chain-tip advance fails (HLCE-282)', async () => {
+    // Pins the db.transaction(...) wrapper around the row INSERT + tip UPDATE
+    // (audit.js). Without the transaction the row would be committed while the
+    // tip advance throws, leaving rows.length > tip.count — verifyChain would
+    // then falsely report tail_truncated on a chain nobody actually truncated.
+    // We force the tip statement to throw by spying on db.prepare so that only
+    // the audit_chain_tip statement blows up.
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' }); // one good row + tip
+
+    const realPrepare = db.prepare.bind(db);
+    const spy = vi.spyOn(db, 'prepare').mockImplementation((sql) => {
+      if (sql.includes('audit_chain_tip') && sql.includes('INSERT')) {
+        throw new Error('simulated tip-write failure');
+      }
+      return realPrepare(sql);
+    });
+    try {
+      expect(() => audit.audit({ actor: 'u', event: 'b', result: 'ok' })).toThrow(/simulated tip-write/);
+    } finally {
+      spy.mockRestore();
+    }
+
+    // The failed second write must have left NO orphan row: still exactly one
+    // row, and the tip still agrees with it -> chain verifies cleanly.
+    const rows = audit.getRecentAuditEvents();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].event).toBe('a');
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 1 });
   });
 
   it('does NOT flag a clean equal-count chain whose tip matches exactly (HLCE-263)', async () => {

@@ -27,13 +27,27 @@ const ALERT_HOOK_URL = (() => {
 let auditEventFn = null;
 export function setAuditHook(fn) { auditEventFn = fn; }
 
+// Test-only: expose the live cooldown-map size so the prune behaviour (bounded
+// growth) is observable without leaking the Map itself (HLCE-282).
+export function cooldownSizeForTest() { return lastSentByKey.size; }
+
+// Drop cooldown entries older than the window. The cooldown key embeds the
+// caller-supplied ip, so without pruning an attacker spraying unique IPs would
+// grow lastSentByKey without bound (HLCE-282). Anything older than COOLDOWN_MS
+// can never suppress again, so it is safe to evict.
+function pruneCooldowns(now) {
+  for (const [k, ts] of lastSentByKey) {
+    if (ts <= now - COOLDOWN_MS) lastSentByKey.delete(k);
+  }
+}
+
 export async function maybeAlert(payload) {
   if (!ALERT_HOOK_URL) return;
   if (!ALERT_ON.has(payload.event)) return;
   const key = payload.event + '|' + (payload.ip || 'anon');
   const now = Date.now();
+  pruneCooldowns(now);
   if ((lastSentByKey.get(key) || 0) > now - COOLDOWN_MS) return;
-  lastSentByKey.set(key, now);
   const safe = Object.fromEntries(Object.entries(payload).filter(([k]) => ALLOWED_FIELDS.has(k)));
   const body = JSON.stringify({ ...safe, source: 'homelabarr-ce', ts: new Date().toISOString() });
   const headers = { 'Content-Type': 'application/json' };
@@ -42,7 +56,13 @@ export async function maybeAlert(payload) {
   }
   try {
     const r = await fetch(ALERT_HOOK_URL, { method: 'POST', headers, body, signal: AbortSignal.timeout(3000) });
-    if (!r.ok && auditEventFn) {
+    if (r.ok) {
+      // Arm the cooldown only on a confirmed delivery. Recording it before the
+      // fetch let a failed/unreachable webhook suppress the NEXT (possibly
+      // successful) alert for the whole window — so a flapping endpoint silently
+      // dropped alerts (HLCE-282). On failure we leave the key unset to retry.
+      lastSentByKey.set(key, now);
+    } else if (auditEventFn) {
       auditEventFn({ event: 'alert.webhook.failed', status: r.status, event_kind: payload.event });
     }
   } catch (err) {
