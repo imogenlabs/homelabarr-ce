@@ -98,9 +98,74 @@ describe('per-key cooldown (AC4)', () => {
     await alert.maybeAlert({ event: 'login.locked', ip: '1.1.1.1' });
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
+
+  it('does NOT arm the cooldown when the webhook delivery fails (HLCE-282)', async () => {
+    // REGRESSION (HLCE-282): the cooldown was recorded BEFORE the fetch, so a
+    // failed/unreachable webhook armed the cooldown and silently suppressed the
+    // NEXT (possibly successful) alert for the whole window. The cooldown must
+    // arm only on a confirmed delivery; an HTTP error or a thrown fetch must
+    // leave the key unset so the next attempt can still send.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z').getTime());
+    const alert = await loadAlert({ ALERT_WEBHOOK_URL: 'https://hook.test/x', ALERT_EVENTS: 'login.locked' });
+
+    // First delivery returns a 500 -> must NOT arm the cooldown.
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({ ok: false, status: 500 });
+    await alert.maybeAlert({ event: 'login.locked', ip: '9.9.9.9' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    // Immediately retry (well within the window). Because the prior send failed,
+    // the cooldown is NOT armed, so this attempt still fires.
+    fetchSpy.mockResolvedValueOnce({ ok: true, status: 200 });
+    await alert.maybeAlert({ event: 'login.locked', ip: '9.9.9.9' });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+    // Now the cooldown IS armed (last send succeeded) -> a third attempt is suppressed.
+    await alert.maybeAlert({ event: 'login.locked', ip: '9.9.9.9' });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('prunes cooldown entries older than the window so the Map stays bounded (HLCE-282)', async () => {
+    // The cooldown key embeds the caller-supplied ip; without pruning an attacker
+    // spraying unique IPs grows lastSentByKey without bound. Entries older than
+    // COOLDOWN_MS can never suppress again, so maybeAlert must evict them. We
+    // assert the cooldown for an OLD ip no longer suppresses after the window —
+    // an entry that was never pruned would still be present (but harmlessly
+    // expired); the observable bound-keeping signal is that an expired key sends.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z').getTime());
+    const alert = await loadAlert({ ALERT_WEBHOOK_URL: 'https://hook.test/x', ALERT_EVENTS: 'login.locked' });
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, status: 200 });
+
+    // Seed many distinct-ip entries.
+    for (let i = 0; i < 5; i++) {
+      await alert.maybeAlert({ event: 'login.locked', ip: `10.0.0.${i}` });
+    }
+    expect(fetchSpy).toHaveBeenCalledTimes(5);
+
+    // Advance past the window and fire one more alert: the prune pass on this
+    // call must have evicted all 5 stale entries (they can no longer suppress),
+    // leaving the Map holding only the just-sent key.
+    vi.setSystemTime(new Date('2026-01-01T00:06:00Z').getTime());
+    await alert.maybeAlert({ event: 'login.locked', ip: '10.0.0.99' });
+    const size = alert.cooldownSizeForTest();
+    expect(size).toBe(1);
+  });
 });
 
 describe('SSRF / scheme guard (AC4)', () => {
+  // Pins the https-only egress check in alert.js (the ALERT_HOOK_URL IIFE): the
+  // webhook URL must be https unless ALERT_WEBHOOK_ALLOW_INSECURE=true, so a
+  // plaintext http:// (or otherwise malformed) URL is dropped and never fetched.
+  // This is the SSRF/exfil guard for the only outbound request this module makes.
+  it('accepts an https webhook URL and fires the request (https-only pin, HLCE-282)', async () => {
+    const alert = await loadAlert({ ALERT_WEBHOOK_URL: 'https://hook.test/x', ALERT_EVENTS: 'login.locked' });
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, status: 200 });
+    await alert.maybeAlert({ event: 'login.locked', ip: '1.1.1.1' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][0]).toBe('https://hook.test/x');
+  });
+
   it('refuses a non-https webhook URL (no fetch) unless insecure is explicitly allowed', async () => {
     const alert = await loadAlert({ ALERT_WEBHOOK_URL: 'http://insecure.test/x', ALERT_EVENTS: 'login.locked' });
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, status: 200 });
