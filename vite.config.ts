@@ -135,15 +135,16 @@ export default defineConfig({
       // validation for text-typed catalog fields (276), the dangerous-op route
       // mutation pass strengthening dangerous-ops.routes.test.js (277 —
       // applications 54→96% / containers 32→68% / deploy 26→70% mutation score,
-      // floors wired into scripts/mutation-ci.mjs), and the remaining enhanced-mount
-      // handlers (278, enhanced-mount.js 45→79%). Overall coverage lines 82.05 /
-      // statements 81.37 / functions 81.07 / branches 73.76 (865 tests). Floor
-      // raised with conservative headroom (lines/functions ~1 under for CI safety).
+      // floors wired into scripts/mutation-ci.mjs), and the HLCE-279 adversarial-review
+      // remediation (280-285: validation/CORS/auth/docker-mgr hardening + pinning tests).
+      // Overall coverage lines 82.57 / statements 81.92 / functions 81.44 / branches 74.26
+      // (898 tests). Floor raised with conservative headroom (statements/functions ~1 under
+      // for CI under-instrumentation safety).
       thresholds: {
-        lines: 81,
+        lines: 82,
         statements: 81,
         functions: 80,
-        branches: 73,
+        branches: 74,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.
