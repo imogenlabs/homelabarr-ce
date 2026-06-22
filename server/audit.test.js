@@ -61,7 +61,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   fs.rmSync(tmp, { recursive: true, force: true });
-  for (const k of ['DB_PATH', 'DATA_DIR', 'SECRET_ROOT', 'AUDIT_DIR']) delete process.env[k];
+  for (const k of ['DB_PATH', 'DATA_DIR', 'SECRET_ROOT', 'AUDIT_DIR', 'AUDIT_ANCHOR_KEY', 'JWT_SECRET']) delete process.env[k];
 });
 
 describe('hash-chain build & verify (AC1)', () => {
@@ -480,5 +480,118 @@ describe('tail-truncation detection (HLCE-269)', () => {
     audit.audit({ actor: 'u', event: 'b', result: 'ok' });
     audit.audit({ actor: 'u', event: 'c', result: 'ok' });
     expect(audit.verifyChain()).toEqual({ ok: true, rows: 3 });
+  });
+});
+
+describe('out-of-band signed anchor (HLCE-287)', () => {
+  const anchorPath = () => path.join(process.env.AUDIT_DIR, 'chain-tip.anchor');
+
+  it('writes a signed anchor on append and a clean chain still verifies', async () => {
+    process.env.AUDIT_ANCHOR_KEY = 'anchor-secret-key-0123456789abcdef';
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'login.success', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'login.fail', result: 'fail' });
+
+    // Anchor file exists, carries a signature, and matches the in-DB tip.
+    expect(fs.existsSync(anchorPath())).toBe(true);
+    const anchor = JSON.parse(fs.readFileSync(anchorPath(), 'utf8'));
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    expect(anchor).toMatchObject({ last_row_id: tip.last_row_id, last_row_hash: tip.last_row_hash, count: tip.count });
+    expect(typeof anchor.sig).toBe('string');
+    expect(anchor.sig).toHaveLength(64);
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 2 });
+  });
+
+  it('detects a full-DB rewrite: a consistent DB tip that disagrees with the signed anchor', async () => {
+    process.env.AUDIT_ANCHOR_KEY = 'anchor-secret-key-0123456789abcdef';
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'b', result: 'ok' });
+
+    // Snapshot the validly-signed anchor for the 2-row tip, then let the DB
+    // advance to a new internally-consistent state (a 3rd real append updates
+    // rows + the in-DB tip together). Restoring the OLD signed anchor models an
+    // attacker who rewrote the DB to a self-consistent state but cannot re-sign
+    // the out-of-band anchor — its signature is valid but its tip is stale.
+    const staleAnchor = fs.readFileSync(anchorPath(), 'utf8');
+    audit.audit({ actor: 'u', event: 'c', result: 'ok' });
+    fs.writeFileSync(anchorPath(), staleAnchor, 'utf8');
+
+    const result = audit.verifyChain();
+    expect(result.ok).toBe(false);
+    expect(result.kind).toBe('anchor_mismatch');
+    expect(result.anchorCount).toBe(2);
+    expect(result.actualCount).toBe(3);
+  });
+
+  it('rejects a forged anchor whose signature was not produced with the secret', async () => {
+    process.env.AUDIT_ANCHOR_KEY = 'anchor-secret-key-0123456789abcdef';
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    // Attacker rewrites the anchor to match their (rewritten) DB tip, but cannot
+    // sign it without the secret. Values match the tip exactly; only the sig is
+    // bogus — so the signature check must fail before the value comparison.
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    fs.writeFileSync(anchorPath(), JSON.stringify({
+      last_row_id: tip.last_row_id, last_row_hash: tip.last_row_hash, count: tip.count, sig: 'f'.repeat(64),
+    }), 'utf8');
+
+    const result = audit.verifyChain();
+    expect(result.ok).toBe(false);
+    expect(result.kind).toBe('anchor_unsigned');
+  });
+
+  it('reports an unreadable (corrupt) anchor file', async () => {
+    process.env.AUDIT_ANCHOR_KEY = 'anchor-secret-key-0123456789abcdef';
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    fs.writeFileSync(anchorPath(), '{ not valid json', 'utf8');
+    const result = audit.verifyChain();
+    expect(result.ok).toBe(false);
+    expect(result.kind).toBe('anchor_unreadable');
+  });
+
+  it('writes no anchor and skips the anchor check when no secret is configured', async () => {
+    // No AUDIT_ANCHOR_KEY and no JWT_SECRET → anchor disabled, behaves as before.
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+    expect(fs.existsSync(anchorPath())).toBe(false);
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 1 });
+  });
+
+  it('gracefully skips when the anchor file is absent even though a secret is set', async () => {
+    process.env.AUDIT_ANCHOR_KEY = 'anchor-secret-key-0123456789abcdef';
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    // A privileged attacker who deletes the anchor downgrades to the in-DB-only
+    // guarantee (documented limit); verify must not false-positive on absence.
+    fs.rmSync(anchorPath());
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 1 });
+  });
+
+  it('falls back to JWT_SECRET to sign the anchor when AUDIT_ANCHOR_KEY is unset', async () => {
+    delete process.env.AUDIT_ANCHOR_KEY;
+    process.env.JWT_SECRET = 'jwt-secret-fallback-0123456789abcdef';
+    const { audit } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    expect(fs.existsSync(anchorPath())).toBe(true);
+    expect(audit.verifyChain()).toEqual({ ok: true, rows: 1 });
+    // A validly-signed anchor that disagrees with the tip is still caught under
+    // the fallback key (proves the fallback is actually used for verification).
+    const stale = fs.readFileSync(anchorPath(), 'utf8');
+    audit.audit({ actor: 'u', event: 'b', result: 'ok' });
+    fs.writeFileSync(anchorPath(), stale, 'utf8');
+    expect(audit.verifyChain().kind).toBe('anchor_mismatch');
   });
 });
