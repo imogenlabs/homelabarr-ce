@@ -1,13 +1,5 @@
 import { Router } from 'express';
-import { execSync, exec } from 'child_process';
-import { promisify } from 'util';
-
-// Async exec for the per-container stats sweep. execSync would block the single
-// Node thread, so the `Promise.all(map(async => execSync))` below was fake
-// concurrency — N containers serialized into N×(stats+inspect) of event-loop
-// freeze (~34s on a busy host), wedging the whole backend. promisify(exec) makes
-// the sweep truly non-blocking and concurrent (HLCE-275).
-const execAsync = promisify(exec);
+import { execSync } from 'child_process';
 
 function calculateCPUPercentage(stats) {
   if (!stats || !stats.cpu_stats || !stats.precpu_stats) return 0;
@@ -44,44 +36,6 @@ function calculateUptime(container) {
   if (!container.State || !container.State.StartedAt) return 0;
   const startTime = new Date(container.State.StartedAt).getTime();
   return Math.floor((Date.now() - startTime) / 1000);
-}
-
-function parseMemoryUsage(memoryString) {
-  const parts = memoryString.split(' / ');
-  if (parts.length !== 2) return { usage: 0, limit: 0, percentage: 0 };
-  const usage = parseBytes(parts[0].trim());
-  const limit = parseBytes(parts[1].trim());
-  const percentage = limit > 0 ? (usage / limit) * 100 : 0;
-  return { usage, limit, percentage };
-}
-
-function parseNetworkUsage(networkString) {
-  const parts = networkString.split(' / ');
-  if (parts.length !== 2) return { rx: 0, tx: 0 };
-  return {
-    rx: parseBytes(parts[0].trim()),
-    tx: parseBytes(parts[1].trim())
-  };
-}
-
-function parseBytes(bytesString) {
-  const match = bytesString.match(/^([\d.]+)\s*([KMGTPE]?i?B?)$/i);
-  if (!match) return 0;
-
-  const value = parseFloat(match[1]);
-  const unit = match[2].toUpperCase();
-
-  const multipliers = {
-    'B': 1,
-    'KB': 1000, 'KIB': 1024,
-    'MB': 1000000, 'MIB': 1048576,
-    'GB': 1000000000, 'GIB': 1073741824,
-    'TB': 1000000000000, 'TIB': 1099511627776,
-    'PB': 1000000000000000, 'PIB': 1125899906842624,
-    'EB': 1000000000000000000, 'EIB': 1152921504606846976
-  };
-
-  return value * (multipliers[unit] || 1);
 }
 
 // Route factory
@@ -160,32 +114,28 @@ export default function containerRoutes({ dockerManager, requireAuth, getRequest
         });
       }
 
+      // Per-container stats via dockerode (no shell). The id comes straight from
+      // `docker ps` output above, but dockerode talks to the Docker API socket,
+      // so there's no command string to inject into regardless (HLCE-283). This
+      // mirrors the GET /containers/:id/stats path and reuses the same
+      // calculate* helpers as that route. getDocker() is resolved inside the
+      // per-container try so a transient connection failure degrades that one
+      // entry to zeroed stats instead of 500-ing the whole list.
       const containersWithStats = await Promise.all(
         containers.map(async (container) => {
           try {
-            const [statsCommand, inspectCommand] = [
-              `docker stats ${container.Id} --no-stream --format "table {{.CPUPerc}},{{.MemUsage}},{{.NetIO}},{{.PIDs}}"`,
-              `docker inspect ${container.Id}`
-            ];
-
-            const shell = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
-            // Truly concurrent + non-blocking: execAsync runs off the event loop,
-            // so Promise.all here actually parallelizes the whole sweep (HLCE-275).
-            const [{ stdout: statsResult }, { stdout: inspectResult }] = await Promise.all([
-              execAsync(statsCommand, { encoding: 'utf8', shell }),
-              execAsync(inspectCommand, { encoding: 'utf8', shell })
+            const handle = dockerManager.getDocker().getContainer(container.Id);
+            const [stats, info] = await Promise.all([
+              handle.stats({ stream: false }),
+              handle.inspect()
             ]);
-
-            const info = JSON.parse(inspectResult)[0];
-            const statsLines = statsResult.trim().split('\n');
-            const statsData = statsLines.length > 1 ? statsLines[1].split(',') : ['0%', '0B / 0B', '0B / 0B', '0'];
 
             return {
               ...container,
               stats: {
-                cpu: parseFloat(statsData[0]?.replace('%', '') || '0'),
-                memory: parseMemoryUsage(statsData[1] || '0B / 0B'),
-                network: parseNetworkUsage(statsData[2] || '0B / 0B'),
+                cpu: calculateCPUPercentage(stats),
+                memory: calculateMemoryUsage(stats),
+                network: calculateNetworkUsage(stats),
                 uptime: calculateUptime(info)
               },
               config: info.Config,

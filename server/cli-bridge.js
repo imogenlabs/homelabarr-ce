@@ -288,25 +288,26 @@ export class CLIBridge {
     });
 
     try {
-      // Prepare environment configuration
-      await this.prepareEnvironmentConfig(config, deploymentMode);
-      
+      // Build the per-deploy trusted-default env and thread it explicitly into
+      // the deploy method (no global process.env mutation, no instance-state race).
+      const deployEnv = await this.prepareEnvironmentConfig(config, deploymentMode);
+
       // Deploy based on mode
       let deploymentResult;
       switch (deploymentMode.type) {
         case 'traefik':
-          deploymentResult = await this.deployWithTraefik(appPath, config);
+          deploymentResult = await this.deployWithTraefik(appPath, config, deployEnv);
           break;
         case 'local':
         case 'standard':
-          deploymentResult = await this.deployStandard(appPath, config);
+          deploymentResult = await this.deployStandard(appPath, config, deployEnv);
           break;
         case 'authelia':
-          deploymentResult = await this.deployWithAuthelia(appPath, config);
+          deploymentResult = await this.deployWithAuthelia(appPath, config, deployEnv);
           break;
         default:
           // Fallback to local/standard for unknown modes
-          deploymentResult = await this.deployStandard(appPath, config);
+          deploymentResult = await this.deployStandard(appPath, config, deployEnv);
           break;
       }
 
@@ -331,7 +332,7 @@ export class CLIBridge {
   /**
    * Deploy application with Traefik integration
    */
-  async deployWithTraefik(appPath, config) {
+  async deployWithTraefik(appPath, config, deployEnv = this._deployEnv) {
     // Ensure Traefik is installed and running
     await this.ensureTraefikRunning();
 
@@ -349,7 +350,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      });
+      }, deployEnv);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -358,7 +359,7 @@ export class CLIBridge {
   /**
    * Deploy application in standard mode (without Traefik)
    */
-  async deployStandard(appPath, config) {
+  async deployStandard(appPath, config, deployEnv = this._deployEnv) {
     // For local/standard mode, rewrite compose to remove Traefik + external networks
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
@@ -374,16 +375,22 @@ export class CLIBridge {
       if (Object.keys(doc.networks).length === 0) delete doc.networks;
     }
 
-    // For each service: remove networks, strip traefik/dockupdater labels, remove security_opt
+    // For each service: drop per-service networks, strip ONLY the
+    // traefik.*/dockupdater.* labels (matched by key prefix, not substring, so a
+    // benign label whose value happens to mention "traefik" survives), and
+    // replace security_opt with the hardening default rather than dropping it —
+    // standard mode must not silently un-harden a container.
     if (doc.services) {
       for (const svcName of Object.keys(doc.services)) {
         const svc = doc.services[svcName];
         delete svc.networks;
-        delete svc.security_opt;
+        svc.security_opt = ['no-new-privileges:true'];
         if (svc.labels && Array.isArray(svc.labels)) {
-          svc.labels = svc.labels.filter(l =>
-            typeof l === 'string' && !l.includes('traefik') && !l.includes('dockupdater')
-          );
+          svc.labels = svc.labels.filter(l => {
+            if (typeof l !== 'string') return false;
+            const key = l.split('=')[0].trim();
+            return !key.startsWith('traefik.') && !key.startsWith('dockupdater.');
+          });
           if (svc.labels.length === 0) delete svc.labels;
         }
       }
@@ -407,7 +414,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      });
+      }, deployEnv);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -416,7 +423,7 @@ export class CLIBridge {
   /**
    * Deploy application with Authelia authentication
    */
-  async deployWithAuthelia(appPath, config) {
+  async deployWithAuthelia(appPath, config, deployEnv = this._deployEnv) {
     // Ensure both Traefik and Authelia are running
     await this.ensureTraefikRunning();
     await this.ensureAutheliaRunning();
@@ -435,16 +442,25 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      });
+      }, deployEnv);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
   }
 
   /**
-   * Execute docker-compose commands with proper environment
+   * Execute docker-compose commands with proper environment.
+   *
+   * `envVars` is the USER-supplied config: every key must clear the
+   * ALLOWED_TEMPLATE_VARS allowlist and the value character/length gate, or it
+   * is dropped (non-allowlisted) / rejected (bad value). `baseEnv` is the set of
+   * TRUSTED, code-controlled defaults (image tags, restart policy, …) built by
+   * prepareEnvironmentConfig; it is merged ahead of the validated user vars so a
+   * user value can override a default but never smuggle an unvalidated value in.
+   * The host `process.env` is read for inherited basics (PATH, DOCKER_GID, …) but
+   * is NEVER mutated — nothing here leaks across deploys.
    */
-  async executeDockerCompose(appPath, command, envVars = {}) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}) {
     return new Promise((resolve, reject) => {
       const filtered = {};
       for (const [k, v] of Object.entries(envVars)) {
@@ -454,13 +470,18 @@ export class CLIBridge {
         }
         filtered[k] = v;
       }
-      const env = { ...process.env, ...filtered };
+      const env = { ...process.env, ...baseEnv, ...filtered };
 
       const args = ['-f', appPath];
       if (command === 'up -d') args.push('up', '-d');
       else if (command === 'down') args.push('down');
       else if (command === 'down -v') args.push('down', '-v');
-      else if (command.startsWith('logs')) args.push('logs', '--tail=' + (command.match(/--tail=(\d+)/)?.[1] || '100'));
+      else if (command.startsWith('logs')) {
+        const match = command.match(/--tail=(\d+)/);
+        const parsed = match ? Number.parseInt(match[1], 10) : NaN;
+        const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
+        args.push('logs', '--tail=' + tail);
+      }
       else throw new Error(`Unsupported compose command: ${command}`);
 
       const dockerCompose = spawn('docker-compose', args, {
@@ -614,8 +635,14 @@ export class CLIBridge {
   async getApplicationLogs(appId, lines = 100) {
     const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
-    
-    return await this.executeDockerCompose(appPath, `logs --tail=${lines}`);
+
+    // Coerce `lines` to a positive integer; anything non-numeric, zero, or
+    // negative falls back to the 100-line default. (`parseInt` lets a numeric
+    // string like "50" through but a value such as "abc" or "" becomes NaN.)
+    const parsed = Number.parseInt(lines, 10);
+    const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
+
+    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`);
   }
 
   // Helper methods for parsing application configurations
@@ -688,7 +715,15 @@ export class CLIBridge {
   }
 
   /**
-   * Prepare environment configuration for deployment
+   * Prepare environment configuration for deployment.
+   *
+   * Builds the trusted-default env for this deploy (image tags, restart policy,
+   * theme defaults, …) and stashes it on the instance as `_deployEnv` so the
+   * deploy methods can thread it into the compose spawn. It deliberately does
+   * NOT touch the global `process.env`: the user-supplied `config` must flow
+   * only through executeDockerCompose's allowlist + character gate, never get
+   * spread wholesale into a shared, persistent environment (which both bypassed
+   * the gate and leaked one deploy's values into the next).
    */
   async prepareEnvironmentConfig(config, deploymentMode) {
     // Set default environment variables based on CLI standards
@@ -766,8 +801,12 @@ export class CLIBridge {
       ARIA_RPC_SECRET: 'homelabarr',
     };
 
-    // Merge with user configuration
-    Object.assign(process.env, defaultEnv, config);
+    // Stash the trusted defaults for this deploy. The user `config` is NOT
+    // merged in here — it travels separately through the validated path in
+    // executeDockerCompose. Returned as well so callers can thread it through
+    // explicitly without reaching into instance state.
+    this._deployEnv = defaultEnv;
+    return defaultEnv;
   }
 }
 
