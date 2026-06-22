@@ -4,6 +4,7 @@ import path from 'node:path';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { db } from './db.js';
+import { REDACT_KEYS } from './log.js';
 
 const AUDIT_DIR = process.env.AUDIT_DIR || path.join(process.cwd(), 'server', 'activity-data');
 
@@ -47,13 +48,16 @@ export function initAudit() {
   auditLogger = winston.createLogger({ transports: [rotator], format: winston.format.json() });
 }
 
-const REDACT = /^(authorization|cookie|set-cookie|password|passcode|secret|token|x-csrf-token|x-api-key|jwt_secret)$/i;
+// Reuse the single shared redaction list (server/log.js) so the encrypted audit
+// sink and the structured logger redact the SAME keys. The old local list was
+// anchored on `token` and missed refresh_token/access_token, leaking them into
+// the persistent audit trail (HLCE-282).
 function redact(obj) {
   if (!obj || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(redact);
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
-    out[k] = REDACT.test(k) ? '[REDACTED]' : (typeof v === 'object' ? redact(v) : v);
+    out[k] = REDACT_KEYS.test(k) ? '[REDACTED]' : (typeof v === 'object' ? redact(v) : v);
   }
   return out;
 }
@@ -82,13 +86,20 @@ export function audit(evt) {
   });
   const row = { ts, actor: evt.actor || null, ip: evt.ip || null, event: evt.event,
                 target: evt.target || null, result: evt.result, meta_json, prev_hash, row_hash };
-  const info = db.prepare(`INSERT INTO audit_events (ts, actor, ip, event, target, result, meta_json, prev_hash, row_hash)
-             VALUES (@ts, @actor, @ip, @event, @target, @result, @meta_json, @prev_hash, @row_hash)`).run(row);
-  // Advance the chain tip so a later tail-truncation is detectable (HLCE-269).
-  db.prepare(`INSERT INTO audit_chain_tip (id, last_row_id, last_row_hash, count)
-              VALUES (1, @id, @hash, 1)
-              ON CONFLICT(id) DO UPDATE SET last_row_id = @id, last_row_hash = @hash, count = count + 1`)
-    .run({ id: info.lastInsertRowid, hash: row_hash });
+  // The row INSERT and the chain-tip advance are two statements that MUST move
+  // together — a crash between them would leave the tip disagreeing with the
+  // table and verifyChain() would falsely report tail_truncated. Wrap both in a
+  // single transaction so they commit atomically (HLCE-282).
+  const writeRow = db.transaction((r) => {
+    const info = db.prepare(`INSERT INTO audit_events (ts, actor, ip, event, target, result, meta_json, prev_hash, row_hash)
+               VALUES (@ts, @actor, @ip, @event, @target, @result, @meta_json, @prev_hash, @row_hash)`).run(r);
+    // Advance the chain tip so a later tail-truncation is detectable (HLCE-269).
+    db.prepare(`INSERT INTO audit_chain_tip (id, last_row_id, last_row_hash, count)
+                VALUES (1, @id, @hash, 1)
+                ON CONFLICT(id) DO UPDATE SET last_row_id = @id, last_row_hash = @hash, count = count + 1`)
+      .run({ id: info.lastInsertRowid, hash: r.row_hash });
+  });
+  writeRow(row);
   if (auditLogger) auditLogger.info(row);
   return row_hash;
 }
