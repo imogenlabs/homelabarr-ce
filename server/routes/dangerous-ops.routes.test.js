@@ -30,10 +30,10 @@ process.env.RATE_LIMIT_DISABLED = 'true';
 delete process.env.SMTP_HOST;
 
 // child_process is mocked at the module level so containers.js (execSync for
-// `docker ps`, async `exec` for the per-container stats/inspect sweep — HLCE-275)
-// and deploy.js (spawn) all receive the fakes. vi.mock is hoisted above imports.
-// `exec` is promisified in containers.js at module load, so the mock must invoke
-// its callback: `(cmd, opts, cb) => cb(null, { stdout, stderr })`.
+// `docker ps` — the per-container stats sweep now goes through dockerode, not a
+// shell, per HLCE-283) and deploy.js (spawn) all receive the fakes. The `exec`
+// fake stays so the list-stats tests can assert no `docker stats`/`docker
+// inspect` command is ever built. vi.mock is hoisted above imports.
 vi.mock('child_process', () => ({
   execSync: vi.fn(),
   exec: vi.fn(),
@@ -69,22 +69,6 @@ beforeEach(() => {
   silentLogger.error.mockClear();
   silentLogger.debug.mockClear();
 });
-
-// promisify(exec) in containers.js resolves `{ stdout, stderr }`; this drives the
-// mock's callback so the per-container stats/inspect sweep behaves like the real
-// async exec. Pass a map from a command substring to its stdout (or an Error).
-function mockExecAsync(router) {
-  vi.mocked(exec).mockImplementation((command, _opts, cb) => {
-    const callback = typeof _opts === 'function' ? _opts : cb;
-    try {
-      const out = router(command);
-      if (out instanceof Error) callback(out);
-      else callback(null, { stdout: out, stderr: '' });
-    } catch (err) {
-      callback(err);
-    }
-  });
-}
 
 const silentLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
@@ -139,6 +123,7 @@ function dockerManagerStub({ status = 'available', container } = {}) {
   return {
     _docker: docker,
     _container: c,
+    getDocker: vi.fn().mockReturnValue(docker),
     getServiceStatus: vi.fn().mockReturnValue(
       status === 'available'
         ? { status: 'available', message: 'ok' }
@@ -519,18 +504,18 @@ describe('AC4 — execSync stats/inspect path cannot be injected via container i
     expect(execSync).not.toHaveBeenCalled();
   });
 
-  it('the list-stats path only ever interpolates ids from `docker ps` output (regression guard)', async () => {
+  it('the list-stats sweep uses dockerode (getContainer) with the ps-derived id, never a shell (HLCE-283)', async () => {
     // docker ps -a (execSync) returns one container whose Id is a benign hex
-    // string; the per-container stats/inspect commands (now async exec — HLCE-275)
-    // must use THAT id, proving no request-controlled value reaches the shell.
+    // string; the per-container stats/inspect sweep now goes through dockerode
+    // (getContainer().stats()/.inspect()) — no `docker stats`/`docker inspect`
+    // command is ever built, so there's no shell string to inject into.
     const psJson = JSON.stringify({ ID: 'abc123hex', Names: 'plex', Image: 'plex:latest', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
     vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? psJson + '\n' : '');
-    mockExecAsync((command) => {
-      if (command.includes('docker stats')) return 'HEADER\n0%,0B / 0B,0B / 0B,0\n';
-      if (command.includes('docker inspect')) return JSON.stringify([{ Config: {}, Mounts: [], State: { StartedAt: new Date(0).toISOString() } }]);
-      return '';
-    });
-    const dockerManager = dockerManagerStub();
+    const container = {
+      stats: vi.fn().mockResolvedValue({}),
+      inspect: vi.fn().mockResolvedValue({ Config: {}, Mounts: [], State: { StartedAt: new Date(0).toISOString() } }),
+    };
+    const dockerManager = dockerManagerStub({ container });
     const { app } = buildApp({ dockerManager });
 
     const res = await request(app)
@@ -538,93 +523,92 @@ describe('AC4 — execSync stats/inspect path cannot be injected via container i
       .set('Cookie', adminCookie());
 
     expect(res.status).toBe(200);
-    // ps via execSync; the stats/inspect sweep via async exec — both shell-out
-    // only the ps-derived id, never a request value.
+    // ps via execSync; the stats/inspect sweep via dockerode against the
+    // ps-derived id only — and NEVER a `docker stats`/`docker inspect` shell-out.
     expect(vi.mocked(execSync).mock.calls.some((c) => c[0].includes('docker ps'))).toBe(true);
-    const statsCmds = vi.mocked(exec).mock.calls.map((c) => c[0]).filter((c) => c.includes('docker stats') || c.includes('docker inspect'));
-    expect(statsCmds.length).toBeGreaterThan(0);
-    for (const c of statsCmds) {
-      expect(c).toContain('abc123hex');
-    }
+    expect(vi.mocked(exec).mock.calls.some((c) => c[0].includes('docker stats') || c[0].includes('docker inspect'))).toBe(false);
+    expect(dockerManager._docker.getContainer).toHaveBeenCalledWith('abc123hex');
+    expect(container.stats).toHaveBeenCalledWith({ stream: false });
+    expect(container.inspect).toHaveBeenCalledTimes(1);
   });
 
-  it('GET /containers?stats=true parses REAL `docker stats` CLI strings (parseBytes/parseMemoryUsage/parseNetworkUsage)', async () => {
-    // Mutation-hardening (HLCE-277): feed non-zero, unit-bearing stats strings so
-    // the CLI-string parsers actually transform values. The table row is
-    // `CPUPerc,MemUsage,NetIO,PIDs`: 12.5%, 256MiB / 1GiB, 1.5kB / 2.0kB, 7.
-    //   parseBytes: 256 MiB = 256*1048576 = 268435456; 1 GiB = 1073741824
-    //   mem percentage = 268435456 / 1073741824 * 100 = 25
-    //   net rx = 1.5 kB = 1500 ; tx = 2.0 kB = 2000
+  it('GET /containers?stats=true computes stats from dockerode objects (calculateCPU/Memory/Network/Uptime)', async () => {
+    // After the HLCE-283 refactor the list-stats sweep reads the dockerode stats
+    // object (the same shape GET /containers/:id/stats consumes) instead of
+    // parsing `docker stats` CLI strings. Feed a realistic stats object and prove
+    // the calculate* helpers transform it.
+    //   cpuDelta = 200-100 = 100 ; systemDelta = 2000-1000 = 1000 ; 1 cpu
+    //   cpu% = 100/1000 * 1 * 100 = 10
+    //   mem usage = 268435456 - 0 cache = 268435456 ; limit 1073741824 → 25%
     const ps = JSON.stringify({ ID: 'statsid', Names: 'plex', Image: 'plex:latest', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
     vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? ps + '\n' : '');
-    const inspectJson = JSON.stringify([{ Config: { Image: 'plex' }, Mounts: [], State: { StartedAt: new Date(Date.now() - 3000).toISOString() } }]);
-    mockExecAsync((command) => {
-      if (command.includes('docker stats')) return 'CPU,MEM,NET,PIDS\n12.5%,256MiB / 1GiB,1.5kB / 2.0kB,7\n';
-      if (command.includes('docker inspect')) return inspectJson;
-      return '';
-    });
-    const dockerManager = dockerManagerStub();
+    const container = {
+      stats: vi.fn().mockResolvedValue({
+        cpu_stats: { cpu_usage: { total_usage: 200 }, system_cpu_usage: 2000, online_cpus: 1 },
+        precpu_stats: { cpu_usage: { total_usage: 100 }, system_cpu_usage: 1000 },
+        memory_stats: { usage: 268435456, limit: 1073741824, stats: { cache: 0 } },
+        networks: { eth0: { rx_bytes: 1500, tx_bytes: 2000 } },
+      }),
+      inspect: vi.fn().mockResolvedValue({ Config: { Image: 'plex' }, Mounts: [], State: { StartedAt: new Date(Date.now() - 3000).toISOString() } }),
+    };
+    const dockerManager = dockerManagerStub({ container });
     const { app } = buildApp({ dockerManager });
 
     const res = await request(app).get('/containers?stats=true').set('Cookie', adminCookie());
 
     expect(res.status).toBe(200);
     const c = res.body.containers[0];
-    expect(c.stats.cpu).toBeCloseTo(12.5, 5);
+    expect(c.stats.cpu).toBeCloseTo(10, 5);
     expect(c.stats.memory).toMatchObject({ usage: 268435456, limit: 1073741824, percentage: 25 });
-    expect(c.stats.network).toEqual({ rx: 1500, tx: 2000 });
+    expect(c.stats.network).toEqual({ eth0: { rx_bytes: 1500, tx_bytes: 2000 } });
     expect(c.stats.uptime).toBeGreaterThanOrEqual(2);
     // inspect output threads through to config + mounts
     expect(c.config).toEqual({ Image: 'plex' });
     expect(c.mounts).toEqual([]);
-    // the sweep shells out via /bin/sh on this (non-win32) platform — kills the
-    // `process.platform === 'win32'` ternary + shell-string mutants on the exec opts.
-    const statsCall = vi.mocked(exec).mock.calls.find((cc) => cc[0].includes('docker stats'));
-    expect(statsCall[1]).toMatchObject({ shell: '/bin/sh' });
+    // dockerode only — no `docker stats`/`docker inspect` shell command built.
+    expect(vi.mocked(exec).mock.calls.some((cc) => cc[0].includes('docker stats') || cc[0].includes('docker inspect'))).toBe(false);
   });
 
-  it('GET /containers?stats=true falls back to zeroed stats when the CLI strings are malformed', async () => {
-    // Mutation-hardening (HLCE-277): a header-only `docker stats` table (no data
-    // row) and a memory/net string without the ` / ` separator drive the parser
-    // guard clauses: statsLines.length>1 is false → ['0%',...] fallback; and
-    // parseMemoryUsage/parseNetworkUsage return zeros when parts.length !== 2.
+  it('GET /containers?stats=true falls back to zeroed stats when a container stats call rejects', async () => {
+    // A per-container dockerode failure (e.g. the container vanished mid-sweep)
+    // must degrade to the zeroed-stats entry, not 500 the whole list.
     const ps = JSON.stringify({ ID: 'badid', Names: 'x', Image: 'i', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
     vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? ps + '\n' : '');
-    mockExecAsync((command) => {
-      if (command.includes('docker stats')) return 'ONLY-A-HEADER-NO-DATA-ROW\n';
-      if (command.includes('docker inspect')) return JSON.stringify([{ Config: {}, Mounts: [], State: {} }]);
-      return '';
-    });
-    const dockerManager = dockerManagerStub();
+    const container = {
+      stats: vi.fn().mockRejectedValue(new Error('no such container')),
+      inspect: vi.fn().mockRejectedValue(new Error('no such container')),
+    };
+    const dockerManager = dockerManagerStub({ container });
     const { app } = buildApp({ dockerManager });
     const res = await request(app).get('/containers?stats=true').set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     const c = res.body.containers[0];
     expect(c.stats.cpu).toBe(0);
     expect(c.stats.memory).toEqual({ usage: 0, limit: 0, percentage: 0 });
-    expect(c.stats.network).toEqual({ rx: 0, tx: 0 });
-    // no State.StartedAt → uptime 0 (kills the calculateUptime guard mutant)
+    expect(c.stats.network).toEqual({});
     expect(c.stats.uptime).toBe(0);
+    expect(c.error).toBe('Failed to fetch container statistics');
   });
 
-  it('GET /containers?stats=true: a zero MemUsage limit yields 0% and an unparseable byte unit yields 0', async () => {
-    // MemUsage '500B / 0B' → limit 0 so parseMemoryUsage's `limit > 0 ? : 0` returns
-    // percentage 0 (kills the `> 0` comparison). NetIO 'bogus / nope' → parseBytes
-    // can't match either token → both rx/tx are 0 (kills the regex-match guard).
+  it('GET /containers?stats=true: a zero memory limit yields 0% (calculateMemoryUsage guard)', async () => {
+    // memory_stats.limit 0 → calculateMemoryUsage substitutes limit 1 and the
+    // usage/limit ratio is tiny → percentage ~0. networks absent → {} (kills the
+    // calculateNetworkUsage guard mutant).
     const ps = JSON.stringify({ ID: 'zid', Names: 'a', Image: 'i', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
     vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? ps + '\n' : '');
-    mockExecAsync((command) => {
-      if (command.includes('docker stats')) return 'H\n5%,500B / 0B,bogus / nope,1\n';
-      if (command.includes('docker inspect')) return JSON.stringify([{ Config: {}, Mounts: [], State: { StartedAt: new Date().toISOString() } }]);
-      return '';
-    });
-    const dockerManager = dockerManagerStub();
+    const container = {
+      stats: vi.fn().mockResolvedValue({ memory_stats: { usage: 500, limit: 0, stats: {} } }),
+      inspect: vi.fn().mockResolvedValue({ Config: {}, Mounts: [], State: { StartedAt: new Date().toISOString() } }),
+    };
+    const dockerManager = dockerManagerStub({ container });
     const { app } = buildApp({ dockerManager });
     const res = await request(app).get('/containers?stats=true').set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     const c = res.body.containers[0];
-    expect(c.stats.memory).toEqual({ usage: 500, limit: 0, percentage: 0 });
-    expect(c.stats.network).toEqual({ rx: 0, tx: 0 });
+    // limit falls back to 1 inside the helper; usage is clamped >= 0
+    expect(c.stats.memory.usage).toBe(500);
+    expect(c.stats.memory.percentage).toBeGreaterThan(0);
+    expect(c.stats.network).toEqual({});
   });
 
   it('GET /containers/:id/stats returns 0 cpu when stats lacks cpu_stats (guard clause)', async () => {
@@ -912,13 +896,16 @@ describe('AC5 — supporting container lifecycle handlers (auth + 503 + happy pa
     expect(res.body.containers).toHaveLength(1);
   });
 
-  it('GET /containers?stats=true degrades a single container gracefully when its stats exec throws', async () => {
+  it('GET /containers?stats=true degrades a single container gracefully when its dockerode stats call throws', async () => {
     const ps = JSON.stringify({ ID: 'id1', Names: 'a', Image: 'i', State: 'running', Status: 'Up', Ports: '', CreatedAt: '', Labels: '' });
     vi.mocked(execSync).mockImplementation((command) => command.includes('docker ps') ? ps + '\n' : '');
-    // The per-container stats sweep (async exec) rejects → the route degrades that
-    // one container instead of crashing the whole list.
-    mockExecAsync(() => new Error('stats unavailable'));
-    const dockerManager = dockerManagerStub();
+    // The per-container dockerode sweep (HLCE-283) rejects → the route degrades
+    // that one container instead of crashing the whole list.
+    const container = {
+      stats: vi.fn().mockRejectedValue(new Error('stats unavailable')),
+      inspect: vi.fn().mockRejectedValue(new Error('stats unavailable')),
+    };
+    const dockerManager = dockerManagerStub({ container });
     const { app } = buildApp({ dockerManager });
     const res = await request(app).get('/containers?stats=true').set('Cookie', adminCookie());
     expect(res.status).toBe(200);

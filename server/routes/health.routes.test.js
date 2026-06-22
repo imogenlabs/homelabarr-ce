@@ -240,4 +240,26 @@ describe('AC2 — GET /health/secrets (admin-only freshness audit)', () => {
     expect(res.status).toBe(503);
     expect(res.body.stale.map((s) => s.name)).toContain('jwt_key_current');
   });
+
+  it('reads ONLY the three allowlisted names under SECRET_ROOT via path.join — no extra files, no traversal (HLCE-283)', async () => {
+    // Drop a decoy alongside the real secrets; the fixed allowlist loop must never
+    // statSync it. And every path the loop touches must be exactly
+    // path.join(SECRET_ROOT, <allowlisted name>) — never a `+ '/' +` concat that
+    // could be coaxed outside the root.
+    for (const name of SECRET_NAMES) writeSecret(name, 1);
+    writeSecret('decoy_should_not_be_read', 1);
+    const statSpy = vi.spyOn(fs, 'statSync');
+    const { app } = buildApp();
+    const res = await request(app).get('/health/secrets').set('Cookie', adminCookie());
+    expect(res.status).toBe(200);
+
+    const secretPaths = statSpy.mock.calls
+      .map((c) => String(c[0]))
+      .filter((p) => p.startsWith(secretRoot));
+    const expected = SECRET_NAMES.map((n) => path.join(secretRoot, n)).sort();
+    expect([...new Set(secretPaths)].sort()).toEqual(expected);
+    // the decoy is never touched
+    expect(secretPaths.some((p) => p.includes('decoy_should_not_be_read'))).toBe(false);
+    statSpy.mockRestore();
+  });
 });

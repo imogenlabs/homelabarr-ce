@@ -1,7 +1,12 @@
 import winston from 'winston';
 import { randomUUID } from 'node:crypto';
 
-const REDACT_KEYS = /^(authorization|cookie|set-cookie|password|passcode|secret|jwt_secret|refresh_token|access_token|x-api-key|x-csrf-token)$/i;
+// Single source of truth for sensitive header/field names, shared with the
+// encrypted audit sink (audit.js imports this). audit.js previously used a
+// narrower list anchored on `token` and missed refresh_token/access_token, so
+// the persistent sink leaked them; keeping one merged superset here closes that
+// gap (HLCE-282). Anchored ^...$ so substrings ("passwordHint") are not redacted.
+export const REDACT_KEYS = /^(authorization|cookie|set-cookie|password|passcode|secret|token|jwt_secret|refresh_token|access_token|api_key|x-api-key|x-csrf-token)$/i;
 
 function deepRedact(obj) {
   if (!obj || typeof obj !== 'object') return obj;
