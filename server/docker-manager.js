@@ -37,6 +37,20 @@ const logger = {
   }
 };
 
+// Error codes/markers that mean "the Docker daemon is not reachable" (as opposed
+// to the daemon answering with an application-level error like a 404). Used by the
+// CLI manager's executeWithRetry to keep its reachability state honest (HLCE-284).
+const CONNECTION_ERROR_CODES = new Set([
+  'ENOENT', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH'
+]);
+
+function isConnectionError(error) {
+  if (!error) return false;
+  if (error.code && CONNECTION_ERROR_CODES.has(error.code)) return true;
+  const msg = typeof error.message === 'string' ? error.message : '';
+  return /ECONNREFUSED|ECONNRESET|ENOENT|EPIPE|ETIMEDOUT|EHOSTUNREACH|ENETUNREACH|connect|socket|not reachable/i.test(msg);
+}
+
 class DockerConnectionManager {
   constructor(options = {}) {
     const dockerConfig = EnvironmentManager.getDockerConfig();
@@ -75,6 +89,8 @@ class DockerConnectionManager {
     this.healthCheckTimer = null;
     this.retryTimer = null;
     this.statsLogTimer = null;
+    this.halfOpenTimer = null;
+    this.connectionTestTimer = null;
 
     // Log initialization with platform-specific context
     logger.dockerConnection('info', 'Initializing Docker Connection Manager', {
@@ -309,13 +325,29 @@ class DockerConnectionManager {
         // Test the connection by listing containers with detailed logging
         logger.dockerConnection('debug', 'Testing Docker connection with container list operation');
 
-        // Add timeout to prevent hanging on modem errors
+        // Add timeout to prevent hanging on modem errors. Track the handle so it
+        // can be cleared in the finally below — an untracked 5s timer would keep
+        // the event loop alive and reject after the connection already resolved
+        // (HLCE-284).
         const testPromise = this.docker.listContainers({ limit: 1 });
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Docker connection test timeout')), 5000)
-        );
+        const timeoutPromise = new Promise((_, reject) => {
+          this.connectionTestTimer = setTimeout(
+            () => reject(new Error('Docker connection test timeout')),
+            5000
+          );
+          if (typeof this.connectionTestTimer.unref === 'function') {
+            this.connectionTestTimer.unref();
+          }
+        });
 
-        testResult = await Promise.race([testPromise, timeoutPromise]);
+        try {
+          testResult = await Promise.race([testPromise, timeoutPromise]);
+        } finally {
+          if (this.connectionTestTimer) {
+            clearTimeout(this.connectionTestTimer);
+            this.connectionTestTimer = null;
+          }
+        }
 
         logger.dockerConnection('debug', 'Docker connection test successful', {
           testContainers: testResult.length
@@ -511,6 +543,13 @@ class DockerConnectionManager {
     this.circuitBreaker.nextAttemptTime = null;
     this.circuitBreaker.state = 'CLOSED';
 
+    // The breaker closed cleanly, so the pending OPEN→HALF_OPEN transition is
+    // moot — clear its timer instead of leaving it to fire later (HLCE-284).
+    if (this.halfOpenTimer) {
+      clearTimeout(this.halfOpenTimer);
+      this.halfOpenTimer = null;
+    }
+
     if (previousState !== 'CLOSED' || previousFailures > 0) {
       logger.dockerConnection('info', 'Circuit breaker reset after successful connection', {
         previousState,
@@ -531,8 +570,14 @@ class DockerConnectionManager {
       timeoutDuration: this.config.circuitBreakerTimeout
     });
 
-    // Schedule circuit breaker to transition to HALF_OPEN
-    setTimeout(() => {
+    // Schedule circuit breaker to transition to HALF_OPEN. Track the handle so
+    // destroy() can clear it — an untracked timer keeps the event loop alive and
+    // can fire against a torn-down manager (HLCE-284).
+    if (this.halfOpenTimer) {
+      clearTimeout(this.halfOpenTimer);
+    }
+    this.halfOpenTimer = setTimeout(() => {
+      this.halfOpenTimer = null;
       if (this.circuitBreaker.state === 'OPEN') {
         this.circuitBreaker.state = 'HALF_OPEN';
         logger.dockerConnection('info', 'Circuit breaker transitioned to HALF_OPEN', {
@@ -541,6 +586,7 @@ class DockerConnectionManager {
         });
       }
     }, this.config.circuitBreakerTimeout);
+    if (typeof this.halfOpenTimer.unref === 'function') this.halfOpenTimer.unref();
   }
 
   canAttemptConnection() {
@@ -1077,7 +1123,9 @@ class DockerConnectionManager {
       timersCleared: {
         healthCheck: !!this.healthCheckTimer,
         retry: !!this.retryTimer,
-        statsLog: !!this.statsLogTimer
+        statsLog: !!this.statsLogTimer,
+        halfOpen: !!this.halfOpenTimer,
+        connectionTest: !!this.connectionTestTimer
       }
     });
 
@@ -1097,6 +1145,18 @@ class DockerConnectionManager {
       clearInterval(this.statsLogTimer);
       this.statsLogTimer = null;
       logger.dockerConnection('debug', 'Statistics logging timer cleared');
+    }
+
+    if (this.halfOpenTimer) {
+      clearTimeout(this.halfOpenTimer);
+      this.halfOpenTimer = null;
+      logger.dockerConnection('debug', 'Circuit-breaker half-open timer cleared');
+    }
+
+    if (this.connectionTestTimer) {
+      clearTimeout(this.connectionTestTimer);
+      this.connectionTestTimer = null;
+      logger.dockerConnection('debug', 'Connection-test timer cleared');
     }
 
     // Log final state change
@@ -1187,11 +1247,24 @@ function createDockerManager() {
       return { status: 'unknown', message: 'Docker connection state not yet determined' };
     },
     executeWithRetry: async (operation, _description) => {
-      const result = await operation(cliDocker);
-      // A completed operation is positive proof the daemon is reachable.
-      state.isConnected = true;
-      state.lastSuccessfulConnection = new Date();
-      return result;
+      try {
+        const result = await operation(cliDocker);
+        // A completed operation is positive proof the daemon is reachable.
+        state.isConnected = true;
+        state.lastSuccessfulConnection = new Date();
+        return result;
+      } catch (error) {
+        // A connection-class failure is proof the daemon is NOT reachable. Mark
+        // the manager disconnected so getServiceStatus() stops reporting healthy
+        // — leaving isConnected:true after a throw was a partial health lie
+        // (HLCE-284). Non-connection errors (e.g. a 404 from the daemon) leave
+        // the reachability state untouched and just rethrow.
+        if (isConnectionError(error)) {
+          state.isConnected = false;
+          state.lastError = error;
+        }
+        throw error;
+      }
     },
     createErrorResponse: (operation, error, includeDetails = true) => ({
       success: false,

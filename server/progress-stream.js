@@ -1,12 +1,34 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
-import path from 'path';
+import { EnvironmentManager } from './environment-manager.js';
 import { DeploymentLogger } from './deployment-logger.js';
-import { parseAppId } from './cli-bridge.js';
+import { parseAppId, safeJoin } from './cli-bridge.js';
 
-function sanitizePathComponent(input) {
-  if (!input || typeof input !== 'string') return '';
-  return input.replace(/[\/\\\.]{2,}/g, '').replace(/[\/\\\0]/g, '').replace(/^\.+/, '');
+/**
+ * The configured CORS allowlist as an array (empty when unset/unreadable).
+ * A bare `*` is intentionally NOT expanded here: this stream is credentialed,
+ * and reflecting an arbitrary origin alongside Access-Control-Allow-Credentials
+ * is a credential leak (CWE-942 / js/cors-misconfiguration-for-credentials).
+ * Cross-origin clients must be listed explicitly in corsOrigin.
+ */
+export function getCorsAllowlist() {
+  try {
+    const allow = EnvironmentManager.getConfiguration().corsOrigin;
+    return Array.isArray(allow) ? allow : [allow];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Return the request's Origin only when it is in the configured CORS allowlist.
+ * Used to reflect a validated origin on the credentialed SSE stream instead of a
+ * wildcard `*`. Returns null for a same-origin request (no Origin header) or a
+ * disallowed origin, in which case no ACAO header is sent.
+ */
+export function resolveAllowedOrigin(origin) {
+  if (!origin) return null;
+  return getCorsAllowlist().includes(origin) ? origin : null;
 }
 
 /**
@@ -17,7 +39,9 @@ export class ProgressStreamManager extends EventEmitter {
   constructor() {
     super();
     this.clients = new Map(); // Map of clientId -> response object
+    this.clientOwners = new Map(); // Map of clientId -> owning session id (HLCE-284)
     this.deploymentStreams = new Map(); // Map of deploymentId -> client list
+    this.cleanupTimers = new Map(); // Map of deploymentId -> 30s cleanup timeout (HLCE-284)
     
     DeploymentLogger.logNetworkActivity('Progress Stream Manager initialized', {
       level: 'info',
@@ -28,14 +52,28 @@ export class ProgressStreamManager extends EventEmitter {
   /**
    * Add a new SSE client
    */
-  addClient(clientId, res) {
+  addClient(clientId, res, req = null) {
+    // Bind this client to the authenticated session that opened it (HLCE-284) so
+    // subscribeToDeployment can verify ownership and a client can't subscribe a
+    // stream it doesn't own. Falls back to null when no session info is present.
+    const ownerSessionId = req?.user?.id ?? req?.sessionId ?? null;
     this.clients.set(clientId, res);
-    
+    this.clientOwners.set(clientId, ownerSessionId);
+
     // Set up SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Reflect a validated origin on this credentialed stream instead of a
+    // wildcard (HLCE-284). The allowlist membership check sits inline at the
+    // sink so the request Origin is only echoed after passing it; same-origin
+    // requests carry no Origin header and need no ACAO.
+    const reqOrigin = req?.headers?.origin;
+    if (reqOrigin && getCorsAllowlist().includes(reqOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
 
     // Send initial connection event with the server-assigned clientId
@@ -71,7 +109,8 @@ export class ProgressStreamManager extends EventEmitter {
     }
     
     this.clients.delete(clientId);
-    
+    this.clientOwners.delete(clientId);
+
     // Remove from deployment streams
     for (const [deploymentId, clients] of this.deploymentStreams.entries()) {
       const index = clients.indexOf(clientId);
@@ -93,9 +132,22 @@ export class ProgressStreamManager extends EventEmitter {
   /**
    * Subscribe client to a deployment stream
    */
-  subscribeToDeployment(clientId, deploymentId) {
+  subscribeToDeployment(clientId, deploymentId, requestingSessionId = undefined) {
     if (!this.clients.has(clientId)) {
       throw new Error(`Client ${clientId} not found`);
+    }
+
+    // Scope a subscription to the session that owns the client stream (HLCE-284).
+    // Without this, any caller could subscribe an arbitrary clientId — including
+    // another user's stream — to a deployment. When a requesting session is
+    // supplied it MUST match the client's recorded owner.
+    if (requestingSessionId !== undefined) {
+      const ownerSessionId = this.clientOwners.get(clientId) ?? null;
+      if (ownerSessionId !== requestingSessionId) {
+        const err = new Error(`Client ${clientId} is not owned by the requesting session`);
+        err.code = 'SUBSCRIBE_FORBIDDEN';
+        throw err;
+      }
     }
 
     if (!this.deploymentStreams.has(deploymentId)) {
@@ -210,10 +262,26 @@ export class ProgressStreamManager extends EventEmitter {
       completedAt: new Date().toISOString()
     });
 
-    // Clean up deployment stream after a delay
-    setTimeout(() => {
+    // Clean up deployment stream after a delay. Track the handle so it can be
+    // cleared (e.g. in destroy) and never keeps the event loop alive (HLCE-284).
+    const prior = this.cleanupTimers.get(deploymentId);
+    if (prior) clearTimeout(prior);
+    const timer = setTimeout(() => {
       this.deploymentStreams.delete(deploymentId);
+      this.cleanupTimers.delete(deploymentId);
     }, 30000); // Keep for 30 seconds for any late clients
+    if (typeof timer.unref === 'function') timer.unref();
+    this.cleanupTimers.set(deploymentId, timer);
+  }
+
+  /**
+   * Clear all pending cleanup timers (test teardown / shutdown).
+   */
+  destroy() {
+    for (const timer of this.cleanupTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.cleanupTimers.clear();
   }
 
   /**
@@ -287,8 +355,10 @@ export class StreamingCLIBridge {
       );
 
       const { category, appName } = parseAppId(appId);
-      const appPath = path.join(this.cliBridge.appsPath, sanitizePathComponent(category), `${sanitizePathComponent(appName)}.yml`);
-      
+      // Strict join: safeJoin REJECTS a bad/traversal component instead of
+      // silently stripping it like the old sanitizePathComponent (HLCE-284).
+      const appPath = safeJoin(this.cliBridge.appsPath, category, `${appName}.yml`);
+
       if (!fs.existsSync(appPath)) {
         throw new Error(`Application ${appId} not found at ${appPath}`);
       }
