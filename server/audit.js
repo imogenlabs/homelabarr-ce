@@ -104,8 +104,12 @@ export function initAudit() {
 function redact(obj) {
   if (!obj || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(redact);
+  // meta is request-supplied, so copying its keys onto a plain object lets a
+  // `__proto__`/`constructor` key poison the prototype. Skip those keys (audit
+  // meta never legitimately uses them); everything else copies through.
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     out[k] = REDACT_KEYS.test(k) ? '[REDACTED]' : (typeof v === 'object' ? redact(v) : v);
   }
   return out;

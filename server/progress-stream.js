@@ -339,6 +339,16 @@ export class StreamingCLIBridge {
    * Deploy application with progress streaming
    */
   async deployApplicationWithProgress(appId, config, deploymentMode, deploymentId) {
+    // Normalize the caller-supplied deployment mode against a fixed allowlist so
+    // that the infrastructure-setup and dispatch decisions below are driven by a
+    // trusted, known value rather than raw request input (CodeQL
+    // js/user-controlled-bypass). Anything unrecognized falls back to 'standard',
+    // matching the existing switch default.
+    const SUPPORTED_MODES = ['traefik', 'local', 'standard', 'authelia'];
+    const requestedType = deploymentMode && deploymentMode.type;
+    const modeType = SUPPORTED_MODES.includes(requestedType) ? requestedType : 'standard';
+    deploymentMode = { ...deploymentMode, type: modeType };
+
     this.activeDeployments.set(deploymentId, {
       appId,
       startedAt: new Date().toISOString(),

@@ -2,7 +2,6 @@ import { Router } from 'express';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { execSync } from 'child_process';
 
 export default function healthRoutes({ requireAuth, requireRole, sendError, dockerManager, envConfig, networkConfig, EnvironmentManager, NetworkManager, DeploymentLogger, logger, isDevelopment, getProcessCounters }) {
   const router = Router();
@@ -25,23 +24,9 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
     const serviceStatus = dockerManager.getServiceStatus();
 
     try {
-      let dockerStatus = 'connected';
+      let dockerStatus;
       let dockerDetails = {};
       let dockerInfo = null;
-
-      const dockerHost = process.env.DOCKER_HOST;
-      if (dockerHost && dockerHost.startsWith('tcp://')) {
-        try {
-          const url = new URL(dockerHost.replace('tcp://', 'http://'));
-          const pingRes = await fetch(`http://${url.hostname}:${url.port}/_ping`, { signal: AbortSignal.timeout(2000) });
-          dockerStatus = pingRes.ok ? 'connected' : 'disconnected';
-        } catch { dockerStatus = 'disconnected'; }
-      } else {
-        try {
-          execSync('docker info --format "{{.ServerVersion}}"', { encoding: 'utf8', timeout: 5000 });
-          dockerStatus = 'connected';
-        } catch { dockerStatus = 'disconnected'; }
-      }
 
       if (connectionState.isConnected) {
         try {

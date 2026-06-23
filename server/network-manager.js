@@ -1,4 +1,3 @@
-import os from 'os';
 import fs from 'fs';
 import { EnvironmentManager } from './environment-manager.js';
 
