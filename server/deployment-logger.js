@@ -72,8 +72,11 @@ export class DeploymentLogger {
    * @private
    */
   static #sanitizeForLog(value) {
+    // Strip CR/LF first (this is what prevents forged/split log lines), then any
+    // other C0/DEL control chars. The explicit [\r\n] replace is the form CodeQL
+    // recognizes as a js/log-injection sanitizer.
     // eslint-disable-next-line no-control-regex
-    return String(value).replace(/[\x00-\x1f\x7f]/g, ' ');
+    return String(value).replace(/[\r\n]+/g, ' ').replace(/[\x00-\x1f\x7f]/g, ' ');
   }
 
   /**
@@ -83,36 +86,32 @@ export class DeploymentLogger {
   static #outputLog(logEntry, emoji = '') {
     const { level, component, message, timestamp, ...context } = logEntry;
 
-    // Create formatted message. message/component/context can carry untrusted
-    // values (CORS origins, request URLs, Docker error text), so neutralize
-    // CR/LF and other control chars before they reach the console to prevent
-    // forged log entries (CodeQL js/log-injection).
-    const formattedMessage = DeploymentLogger.#sanitizeForLog(`${emoji} [${component}] ${message}`);
-
-    // Create context string if context exists. JSON.stringify already escapes
-    // CR/LF and control chars inside string values to their \uXXXX/\n literals,
-    // so the only real newlines here are the pretty-print indentation — safe.
-    const contextStr = Object.keys(context).length > 0 ?
-      '\n' + JSON.stringify(context, null, 2) : '';
+    // message/component AND the context values are all request-derived (CORS
+    // origins, request URLs, Docker error text). Build the whole line and run it
+    // through the sanitizer so no untrusted CR/LF in either the message or the
+    // serialized context can forge or split a log entry (CodeQL js/log-injection).
+    // Context is serialized compactly because sanitizing strips newlines anyway.
+    const contextStr = Object.keys(context).length > 0 ? ' ' + JSON.stringify(context) : '';
+    const body = DeploymentLogger.#sanitizeForLog(`${emoji} [${component}] ${message}${contextStr}`);
 
     // Output based on log level
     switch (level.toLowerCase()) {
       case 'info':
-        console.log(`ℹ️  ${formattedMessage}${contextStr}`);
+        console.log(`ℹ️  ${body}`);
         break;
       case 'warn':
-        console.warn(`⚠️  ${formattedMessage}${contextStr}`);
+        console.warn(`⚠️  ${body}`);
         break;
       case 'error':
-        console.error(`❌ ${formattedMessage}${contextStr}`);
+        console.error(`❌ ${body}`);
         break;
       case 'debug':
         if (this.#getConfig().environment === 'development' || this.#getConfig().logLevel === 'debug') {
-          console.log(`🐛 ${formattedMessage}${contextStr}`);
+          console.log(`🐛 ${body}`);
         }
         break;
       default:
-        console.log(`📝 ${formattedMessage}${contextStr}`);
+        console.log(`📝 ${body}`);
     }
 
     return logEntry;
