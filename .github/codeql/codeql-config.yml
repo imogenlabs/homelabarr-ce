@@ -1,0 +1,9 @@
+name: "HomelabARR CE CodeQL config"
+
+# Exclude generated/vendored JavaScript from SAST. wiki/site is the MkDocs
+# build output (committed to serve via Pages) and bundles the third-party lunr
+# search library — it is not our source and produced 37 noise alerts that
+# buried real findings. Also skip any minified bundles repo-wide.
+paths-ignore:
+  - wiki/site
+  - '**/*.min.js'

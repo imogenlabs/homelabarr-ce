@@ -10,7 +10,6 @@ import {
   loadUsers,
   saveUsers,
   findUserByUsername,
-  findUserById,
   generateToken,
   createApiKey,
   listApiKeys,

@@ -3,11 +3,8 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { readSecret, readSecretFresh } from './secrets.js';
-import { createSession, isJtiActive, getSessionByJti, rotateRefresh, revokeSession, revokeAllForUser, listForUser } from './sessions.js';
-import { newTotp, verifyTotp, makeBackupCodes, hashBackupCodes, verifyBackupCode, getMfaForUser, saveMfaForUser, disableMfaForUser, setPendingMfa, getPendingMfa, clearPendingMfa } from './mfa.js';
-import transporter from './email.js';
-import QRCode from 'qrcode';
+import { readSecretFresh } from './secrets.js';
+import { createSession, isJtiActive } from './sessions.js';
 import { hkdfSync } from 'node:crypto';
 import { logger } from './log.js';
 
@@ -503,18 +500,29 @@ function saveResets(data) {
   fs.writeFileSync(RESET_FILE, JSON.stringify(data, null, 2));
 }
 
+// userId comes from request bodies (reset flow), so reject the prototype-poisoning
+// keys before using it as a property name on the resets map. A real user id never
+// matches these, so this only blocks abuse.
+function isSafeResetKey(userId) {
+  return typeof userId === 'string' && userId !== '__proto__'
+    && userId !== 'constructor' && userId !== 'prototype';
+}
+
 export function saveResetToken(userId, hash, exp) {
+  if (!isSafeResetKey(userId)) return;
   const all = loadResets();
   all[userId] = { hash, exp };
   saveResets(all);
 }
 
 export function getResetTokenForUser(userId) {
+  if (!isSafeResetKey(userId)) return null;
   const all = loadResets();
-  return all[userId] || null;
+  return Object.hasOwn(all, userId) ? all[userId] : null;
 }
 
 export function clearResetToken(userId) {
+  if (!isSafeResetKey(userId)) return;
   const all = loadResets();
   delete all[userId];
   saveResets(all);

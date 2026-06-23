@@ -1,5 +1,12 @@
 import nodemailer from 'nodemailer';
 
+// Neutralize CR/LF and other control chars before echoing mail fields to the
+// console, so a tainted recipient/subject/body (e.g. a forged Host header that
+// reaches the reset URL) cannot forge or split log entries (CodeQL
+// js/log-injection).
+// eslint-disable-next-line no-control-regex
+const stripLogControl = (v) => String(v).replace(/[\x00-\x1f\x7f]/g, ' ');
+
 let transporter;
 
 if (process.env.SMTP_HOST) {
@@ -12,8 +19,8 @@ if (process.env.SMTP_HOST) {
 } else {
   transporter = {
     sendMail: async (opts) => {
-      console.log('[email-stub] To:', opts.to, 'Subject:', opts.subject);
-      console.log('[email-stub] Body:', opts.text);
+      console.log('[email-stub] To:', stripLogControl(opts.to), 'Subject:', stripLogControl(opts.subject));
+      console.log('[email-stub] Body:', stripLogControl(opts.text));
       return { messageId: 'stub-' + Date.now() };
     },
   };

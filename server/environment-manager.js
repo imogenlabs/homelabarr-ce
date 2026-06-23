@@ -1,6 +1,5 @@
 import os from 'os';
 import fs from 'fs';
-import path from 'path';
 
 /**
  * Environment Detection and Configuration Manager

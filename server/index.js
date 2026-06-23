@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import yaml from 'yaml';
-import fs from 'fs';
-import path from 'path';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
@@ -12,7 +10,7 @@ import { initializeActivityLog, logActivity } from './activity-logger.js';
 import { initAudit, audit, verifyChain } from './audit.js';
 import { maybeAlert, setAuditHook } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
-import { SqliteStore, createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import { createLoginLimiter, createLockoutGuard } from './ratelimit.js';
 import { attackTag } from './middleware/attackTag.js';
 import { mountHoney } from './routes/honey.js';
 import { EnvironmentManager } from './environment-manager.js';
@@ -20,7 +18,7 @@ import { NetworkManager } from './network-manager.js';
 import { DeploymentLogger } from './deployment-logger.js';
 import { CLIBridge } from './cli-bridge.js';
 import { progressStream, StreamingCLIBridge } from './progress-stream.js';
-import { DockerConnectionManager, createDockerManager } from './docker-manager.js';
+import { createDockerManager } from './docker-manager.js';
 
 import authRoutes from './routes/auth.js';
 import authAdminRoutes from './routes/auth-admin.js';
@@ -100,7 +98,21 @@ app.use((err, req, res, next) => {
 app.use(DeploymentLogger.createCorsLoggingMiddleware());
 app.use(cors(corsOptions));
 app.use(helmet({
-  contentSecurityPolicy: false,
+  // This is a JSON-only API behind the nginx frontend. nginx owns the CSP for
+  // the HTML/SPA routes (see nginx.conf.template) and deliberately does NOT add
+  // a CSP to proxied /api responses, so there is no duplicate-header concern
+  // (M-25). A locked-down "default-src 'none'" is the correct policy for API
+  // JSON responses — they load no scripts/styles/images — and is strictly safer
+  // than disabling CSP entirely.
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      'default-src': ["'none'"],
+      'frame-ancestors': ["'none'"],
+      'base-uri': ["'none'"],
+      'form-action': ["'none'"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginResourcePolicy: { policy: 'same-site' },
@@ -111,6 +123,11 @@ app.use((req, res, next) => {
   next();
 });
 app.use(cookieParser());
+// CSRF protection for cookie-session requests is enforced globally by the
+// mandatory double-submit middleware below (cookie hl_csrf vs x-csrf-token
+// header, timing-safe compare, XHR-required). CodeQL's js/missing-token-validation
+// cannot follow that custom global guard from this cookieParser() call — the
+// validation is present (false positive); see the CSRF middleware further down.
 app.use(requestContext);
 app.use(attackTag);
 mountHoney(app);
@@ -196,7 +213,7 @@ if (isDevelopment) {
 let unhandledRejectionCount = 0;
 let uncaughtExceptionCount = 0;
 
-const dockerManager = createDockerManager(networkConfig);
+const dockerManager = createDockerManager();
 
 const deps = {
   sendError, getRequestMeta, loginLimiter, lockout, authEnabled, isDevelopment,

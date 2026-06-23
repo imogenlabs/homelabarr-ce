@@ -66,17 +66,33 @@ export class DeploymentLogger {
   }
 
   /**
+   * Strip CR/LF and other C0 control characters from a value before it is
+   * written to the console, so untrusted input cannot forge or split log
+   * entries (CodeQL js/log-injection). Tabs/newlines collapse to a space.
+   * @private
+   */
+  static #sanitizeForLog(value) {
+    // eslint-disable-next-line no-control-regex
+    return String(value).replace(/[\x00-\x1f\x7f]/g, ' ');
+  }
+
+  /**
    * Format and output a log entry
    * @private
    */
   static #outputLog(logEntry, emoji = '') {
     const { level, component, message, timestamp, ...context } = logEntry;
-    
-    // Create formatted message
-    const formattedMessage = `${emoji} [${component}] ${message}`;
-    
-    // Create context string if context exists
-    const contextStr = Object.keys(context).length > 0 ? 
+
+    // Create formatted message. message/component/context can carry untrusted
+    // values (CORS origins, request URLs, Docker error text), so neutralize
+    // CR/LF and other control chars before they reach the console to prevent
+    // forged log entries (CodeQL js/log-injection).
+    const formattedMessage = DeploymentLogger.#sanitizeForLog(`${emoji} [${component}] ${message}`);
+
+    // Create context string if context exists. JSON.stringify already escapes
+    // CR/LF and control chars inside string values to their \uXXXX/\n literals,
+    // so the only real newlines here are the pretty-print indentation — safe.
+    const contextStr = Object.keys(context).length > 0 ?
       '\n' + JSON.stringify(context, null, 2) : '';
 
     // Output based on log level
