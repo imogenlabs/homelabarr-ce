@@ -1,7 +1,13 @@
 name: Security Audit and Compliance
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Nightly rescan so Trivy catches newly-disclosed CVEs in the unchanged
+    # :latest images and a fresh result lands on the default branch.
+    - cron: '37 4 * * *'
   workflow_dispatch:
     inputs:
       run_docker_scan:
@@ -245,7 +251,10 @@ jobs:
   docker-vulnerability-scan:
     runs-on: ubuntu-latest
     needs: [changes]
-    if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch'
+    # On push to main and on the nightly schedule, always scan the published
+    # images so a fresh Trivy result lands on refs/heads/main regardless of
+    # which files changed (image CVEs appear independently of source changes).
+    if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       contents: read
       security-events: write
