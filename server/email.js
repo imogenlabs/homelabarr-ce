@@ -4,8 +4,10 @@ import nodemailer from 'nodemailer';
 // console, so a tainted recipient/subject/body (e.g. a forged Host header that
 // reaches the reset URL) cannot forge or split log entries (CodeQL
 // js/log-injection).
+// Strip CR/LF first (the explicit [\r\n] form is what CodeQL recognizes as a
+// js/log-injection sanitizer) then any other C0/DEL control chars.
 // eslint-disable-next-line no-control-regex
-const stripLogControl = (v) => String(v).replace(/[\x00-\x1f\x7f]/g, ' ');
+const stripLogControl = (v) => String(v).replace(/[\r\n]+/g, ' ').replace(/[\x00-\x1f\x7f]/g, ' ');
 
 let transporter;
 
