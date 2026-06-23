@@ -745,16 +745,7 @@ export default function App() {
             </Button>
             <ThemeToggle />
 
-            {isAuthenticated ? (
-              <UserMenu onOpenSettings={() => setSettingsModalOpen(true)} onOpenApiKeys={() => setApiKeysModalOpen(true)} />
-            ) : (
-              <Button
-                onClick={() => setLoginModalOpen(true)}
-                className="text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2"
-              >
-                Sign In
-              </Button>
-            )}
+            <UserMenu onOpenSettings={() => setSettingsModalOpen(true)} onOpenApiKeys={() => setApiKeysModalOpen(true)} />
           </div>
         </div>
       </header>
