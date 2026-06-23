@@ -257,6 +257,7 @@ jobs:
     if: needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       contents: read
+      packages: read
       security-events: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
@@ -291,6 +292,12 @@ jobs:
           echo "Images to scan:"; cat docker-images.txt
 
       - name: Scan HomelabARR container images
+        env:
+          # The frontend/backend images are private GHCR packages. Trivy's remote
+          # keychain reads these to authenticate the pull; without them the pull
+          # returns UNAUTHORIZED, Trivy FATALs, and no SARIF is produced.
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Scanning container images for vulnerabilities..."
           mkdir -p trivy-results
@@ -318,8 +325,20 @@ jobs:
             $HOME/.local/bin/trivy image --format sarif --output "trivy-results/trivy-$image_name.sarif" \
               --severity CRITICAL,HIGH \
               "$image" || true
-              
+
           done < docker-images.txt
+
+          # The trivy calls above swallow errors so a single CVE never fails the
+          # job — but that also hid a total auth failure (no SARIF for days).
+          # If nothing was produced, the scan really failed: surface it. Hard-fail
+          # only where a result MUST land on a ref (push to main / nightly / manual);
+          # PRs from forks lack package access, so leave those green.
+          if ! ls trivy-results/*.sarif >/dev/null 2>&1; then
+            echo "::error::Trivy produced no SARIF output — image pull or scan failed (check GHCR auth / image availability)"
+            if [ "${{ github.event_name }}" != "pull_request" ]; then
+              exit 1
+            fi
+          fi
 
       - name: Generate vulnerability summary
         run: |
