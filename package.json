@@ -46,7 +46,7 @@
     "dockerode": "^5.0.0",
     "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
-    "helmet": "^7.1.0",
+    "helmet": "^8.2.0",
     "ipaddr.js": "^2.4.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^1.21.0",
