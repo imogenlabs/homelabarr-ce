@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-06-19 16:05 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-23 05:54 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1332
+**Total brand references found:** 1365
 
 ---
 
@@ -18,13 +18,13 @@
 | ---- | ---- | ----- |
 | `index.html` | 9 | `    <link rel="canonical" href="https://ce-demo.homelabarr.com/">` |
 | `index.html` | 14 | `    <meta property="og:url" content="https://ce-demo.homelabarr.com/">` |
-| `src/App.tsx` | 522 | `              const isEnhancedMount = app.name.includes('homelabarr-mount-enhanced') \|\|` |
-| `src/App.tsx` | 888 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
-| `src/App.tsx` | 889 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
-| `src/App.tsx` | 890 | `            <a href="https://github.com/imogenlabs/homelabarr-ce" target="_blank" rel="noopener noreferrer" className="h` |
-| `src/components/EnhancedMountOnboarding.tsx` | 36 | `      helpUrl: 'https://docs.homelabarr.com/installation/traefik'` |
-| `src/components/EnhancedMountOnboarding.tsx` | 44 | `      helpUrl: 'https://docs.homelabarr.com/installation/authelia'` |
-| `src/components/EnhancedMountOnboarding.tsx` | 52 | `      helpUrl: 'https://docs.homelabarr.com/setup/domain'` |
+| `src/App.tsx` | 536 | `              const isEnhancedMount = app.name.includes('homelabarr-mount-enhanced') \|\|` |
+| `src/App.tsx` | 893 | `            <a href="https://wiki.homelabarr.com" target="_blank" rel="noopener noreferrer" className="hover:text-foregr` |
+| `src/App.tsx` | 894 | `            <a href="https://discord.gg/Pc7mXX786x" target="_blank" rel="noopener noreferrer" className="hover:text-fore` |
+| `src/App.tsx` | 895 | `            <a href="https://github.com/imogenlabs/homelabarr-ce" target="_blank" rel="noopener noreferrer" className="h` |
+| `src/components/EnhancedMountOnboarding.tsx` | 40 | `      helpUrl: 'https://docs.homelabarr.com/installation/traefik'` |
+| `src/components/EnhancedMountOnboarding.tsx` | 48 | `      helpUrl: 'https://docs.homelabarr.com/installation/authelia'` |
+| `src/components/EnhancedMountOnboarding.tsx` | 56 | `      helpUrl: 'https://docs.homelabarr.com/setup/domain'` |
 | `src/components/HelpModal.tsx` | 107 | `                  { label: "Wiki & Docs", href: "https://wiki.homelabarr.com", desc: "Full documentation" },` |
 | `src/components/HelpModal.tsx` | 108 | `                  { label: "GitHub", href: "https://github.com/imogenlabs/homelabarr-ce", desc: "Source code & issues" }` |
 | `src/components/HelpModal.tsx` | 109 | `                  { label: "Discord Community", href: "https://discord.gg/Pc7mXX786x", desc: "Get help & chat" },` |
@@ -36,32 +36,31 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**23 references**
+**22 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
-| `server/alert.js` | 38 | `  const body = JSON.stringify({ ...safe, source: 'homelabarr-ce', ts: new Date().toISOString() });` |
-| `server/auth.js` | 33 | `  return Buffer.from(hkdfSync('sha256', current, Buffer.alloc(0), 'homelabarr-api-key-hmac/v1', 32)).toString('hex');` |
-| `server/auth.js` | 52 | `  email: 'admin@homelabarr.local',` |
-| `server/cli-bridge.js` | 737 | `      ARIA_RPC_SECRET: 'homelabarr',` |
+| `server/alert.js` | 52 | `  const body = JSON.stringify({ ...safe, source: 'homelabarr-ce', ts: new Date().toISOString() });` |
+| `server/alert.test.js` | 57 | `    expect(body).toMatchObject({ event: 'login.locked', actor: 'bob', ip: '1.2.3.4', reason: 'too many', source: 'homela` |
+| `server/auth.js` | 35 | `  return Buffer.from(hkdfSync('sha256', current, Buffer.alloc(0), 'homelabarr-api-key-hmac/v1', 32)).toString('hex');` |
+| `server/auth.js` | 54 | `  email: 'admin@homelabarr.local',` |
+| `server/auth.js` | 138 | `const DUMMY_PASSWORD_HASH = bcrypt.hashSync('homelabarr-timing-equalizer', BCRYPT_COST);` |
+| `server/cli-bridge.js` | 801 | `      ARIA_RPC_SECRET: 'homelabarr',` |
 | `server/db.js` | 5 | `const DB_PATH = process.env.DB_PATH \|\| path.join(process.env.DATA_DIR \|\| path.join(process.cwd(), 'data'), 'homelaba` |
 | `server/email.test.js` | 33 | `      from: 'noreply@homelabarr.com',` |
-| `server/log.js` | 26 | `  defaultMeta: { service: 'homelabarr-backend' },` |
-| `server/network-manager.js` | 139 | `                'sqlite://./data/homelabarr.db',` |
-| `server/network-manager.js` | 161 | `      serviceUrls.database = process.env.DATABASE_URL \|\| 'sqlite:///app/data/homelabarr.db';` |
-| `server/routes/auth-admin.js` | 68 | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
-| `server/routes/deploy.js` | 47 | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
-| `server/routes/deploy.js` | 173 | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
-| `server/routes/deploy.js` | 263 | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
-| `server/routes/deploy.js` | 403 | `            // Create homelabarr network if it doesn't exist` |
-| `server/routes/deploy.js` | 404 | `            const homelabarrExists = networks.some(n => n.Name === 'homelabarr');` |
-| `server/routes/deploy.js` | 405 | `            if (!homelabarrExists) {` |
-| `server/routes/deploy.js` | 406 | `              logger.info('Creating homelabarr network');` |
-| `server/routes/deploy.js` | 408 | `                Name: 'homelabarr',` |
-| `server/routes/deploy.js` | 511 | `          NetworkMode: 'homelabarr', // Use homelabarr network by default` |
-| `server/routes/deploy.js` | 575 | `            const homelabarrNetwork = docker.getNetwork('homelabarr');` |
-| `server/routes/deploy.js` | 576 | `            await homelabarrNetwork.connect({ Container: container.id });` |
-| `server/routes/deploy.js` | 577 | `            logger.info('Connected to homelabarr network');` |
+| `server/log.js` | 31 | `  defaultMeta: { service: 'homelabarr-backend' },` |
+| `server/mfa.test.js` | 49 | `    const totp = mfa.newTotp('alice@homelabarr');` |
+| `server/mfa.test.js` | 62 | `    const totp = mfa.newTotp('alice@homelabarr');` |
+| `server/mfa.test.js` | 64 | `    expect(totp.label).toBe('alice@homelabarr');` |
+| `server/network-manager.js` | 138 | `                'sqlite://./data/homelabarr.db',` |
+| `server/network-manager.js` | 160 | `      serviceUrls.database = process.env.DATABASE_URL \|\| 'sqlite:///app/data/homelabarr.db';` |
+| `server/progress-stream.test.js` | 114 | `      .mockReturnValue({ corsOrigin: ['https://ce-demo.homelabarr.com'] });` |
+| `server/progress-stream.test.js` | 118 | `    mgr.addClient('ok', ok, fakeReq({ origin: 'https://ce-demo.homelabarr.com' }));` |
+| `server/progress-stream.test.js` | 119 | `    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://ce-demo.homelabarr.com');` |
+| `server/routes/auth-admin.js` | 67 | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
+| `server/routes/dangerous-ops.routes.test.js` | 347 | `    expect(nameArg).toMatch(/^homelabarr-it-tools-\d+$/);` |
+| `server/routes/dangerous-ops.routes.test.js` | 361 | `    expect(res.body.containerName).toMatch(/^homelabarr-it-tools-\d+$/);` |
+| `server/routes/deploy.js` | 48 | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
 | `server/start.sh` | 63 | `# Fix ownership if running as homelabarr but files are root-owned (bind mount)` |
 
 ## Docker (`Dockerfile*`, `homelabarr.yml`)
@@ -132,7 +131,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**28 references**
+**29 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -153,7 +152,8 @@
 | `.github/workflows/docker-build-push.yml` | 249 | `        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 256 | `        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 273 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
-| `.github/workflows/e2e-tests.yml` | 39 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
+| `.github/workflows/e2e-tests.yml` | 87 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
+| `.github/workflows/pages.yml` | 22 | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/pentest.yml` | 32 | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
 | `.github/workflows/security-audit.yml` | 278 | `          ghcr.io/imogenlabs/homelabarr-frontend:latest` |
@@ -171,8 +171,8 @@
 
 | File | Line | Match |
 | ---- | ---- | ----- |
-| `.env.example` | 29 | `# If you cloned to /opt/homelabarr (recommended), leave this as-is.` |
-| `.env.example` | 30 | `CLI_BRIDGE_HOST_PATH=/opt/homelabarr` |
+| `.env.example` | 32 | `# If you cloned to /opt/homelabarr (recommended), leave this as-is.` |
+| `.env.example` | 33 | `CLI_BRIDGE_HOST_PATH=/opt/homelabarr` |
 | `CNAME` | 1 | `wiki.homelabarr.com` |
 | `package.json` | 2 | `  "name": "homelabarr",` |
 
@@ -244,7 +244,7 @@
 
 ## Root documentation
 
-**71 references**
+**103 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -252,13 +252,45 @@
 | `CHANGELOG.md` | 7 | `- **shadcn/ui modernization**: converted all 83 'React.forwardRef' wrappers across 16 'src/components/ui/*' components t` |
 | `CHANGELOG.md` | 8 | `- **lucide-react 0.344 → 1.21**: required for React 19 peer support (the old range hard-blocked installs). Brand icons` |
 | `CHANGELOG.md` | 10 | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
-| `CHANGELOG.md` | 20 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
-| `CHANGELOG.md` | 21 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
-| `CHANGELOG.md` | 22 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
-| `CHANGELOG.md` | 23 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
-| `CHANGELOG.md` | 26 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
-| `CHANGELOG.md` | 27 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
-| `CHANGELOG.md` | 30 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
+| `CHANGELOG.md` | 14 | `- **Automated test foundation + Wave 1** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), [#294](https:` |
+| `CHANGELOG.md` | 16 | `- **Auth core tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-212, [#296](https://github.` |
+| `CHANGELOG.md` | 17 | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
+| `CHANGELOG.md` | 18 | `- **Rate-limit & lockout tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-215, [#299](http` |
+| `CHANGELOG.md` | 19 | `- **Auth HTTP route integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-216, [#30` |
+| `CHANGELOG.md` | 20 | `- **Persistence-integrity tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-221, [#301](htt` |
+| `CHANGELOG.md` | 21 | `- **Audit hash-chain + secure-logging tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-217` |
+| `CHANGELOG.md` | 22 | `- **Docker connection-manager tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-219, [#304]` |
+| `CHANGELOG.md` | 23 | `- **Deploy/SSE + startup-guard + network tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-` |
+| `CHANGELOG.md` | 24 | `- **High-value component tests (RTL)** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-225, [#307` |
+| `CHANGELOG.md` | 25 | `- **React contexts & hooks tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-223, [#306](ht` |
+| `CHANGELOG.md` | 26 | `- **Bug-lock regression suite — 3 latent bugs fixed** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209)` |
+| `CHANGELOG.md` | 27 | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
+| `CHANGELOG.md` | 28 | `- **Dangerous-operation integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-229, ` |
+| `CHANGELOG.md` | 29 | `- **react-hooks v7 architectural rules enforced as errors** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-` |
+| `CHANGELOG.md` | 30 | `- **Playwright E2E: seeded container target + critical-journey suite** (Epic [HLCE-209](https://mjashley.atlassian.net/b` |
+| `CHANGELOG.md` | 31 | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
+| `CHANGELOG.md` | 32 | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
+| `CHANGELOG.md` | 33 | `- **Frontend security-component tests + lib/api gap-fills + a password-policy fix** (Epic [HLCE-270](https://mjashley.at` |
+| `CHANGELOG.md` | 34 | `- **Deploy-execution + remaining backend-branch coverage; dead-code removal** (Epic [HLCE-270](https://mjashley.atlassia` |
+| `CHANGELOG.md` | 35 | `- **E2E round 2 — failure / permission / account journeys + hardened assertions** (Epic [HLCE-270](https://mjashley.at` |
+| `CHANGELOG.md` | 39 | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
+| `CHANGELOG.md` | 40 | `- **Mutation pass on the high-risk security core** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE-261), HLC` |
+| `CHANGELOG.md` | 41 | `- **Fix: 'GET /containers?stats=true' no longer blocks the event loop** (HLCE-275, [#331](https://github.com/imogenlabs/` |
+| `CHANGELOG.md` | 43 | `- **Fix deploy endpoint 404 — deploy-from-UI was unreachable in production** (Epic [HLCE-209](https://mjashley.atlassi` |
+| `CHANGELOG.md` | 46 | `- **Docker health now reflects a real probe instead of always reporting healthy** (Epic [HLCE-209](https://mjashley.atla` |
+| `CHANGELOG.md` | 47 | `- **Audit hash chain now detects boundary-ambiguous tampering** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/H` |
+| `CHANGELOG.md` | 48 | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
+| `CHANGELOG.md` | 49 | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
+| `CHANGELOG.md` | 52 | `- **Audit chain tip gets an out-of-band signed anchor** (Epic [HLCE-286](https://mjashley.atlassian.net/browse/HLCE-286)` |
+| `CHANGELOG.md` | 53 | `- **'POST /deploy' outer catch is unreachable — dead status branches removed** (Epic [HLCE-286](https://mjashley.atlas` |
+| `CHANGELOG.md` | 54 | `- **Adversarial-review remediation: validation, CORS, auth, and Docker-manager hardening** (Epic [HLCE-279](https://mjas` |
+| `CHANGELOG.md` | 68 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
+| `CHANGELOG.md` | 69 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
+| `CHANGELOG.md` | 70 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
+| `CHANGELOG.md` | 71 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
+| `CHANGELOG.md` | 74 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
+| `CHANGELOG.md` | 75 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
+| `CHANGELOG.md` | 78 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `CONTRIBUTING.md` | 9 | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitH` |
 | `CONTRIBUTING.md` | 19 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run ` |
 | `CONTRIBUTING.md` | 20 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
@@ -294,17 +326,17 @@
 | `README.md` | 169 | `\| **Disclosure** \| [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known` |
 | `README.md` | 184 | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-` |
 | `README.md` | 185 | `3. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
-| `README.md` | 205 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
-| `README.md` | 212 | `homelabarr-ce/` |
-| `README.md` | 226 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
-| `README.md` | 230 | `├── homelabarr.yml    # Production Docker Compose` |
-| `README.md` | 253 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 254 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 255 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 256 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
-| `README.md` | 257 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 258 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 268 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
+| `README.md` | 206 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
+| `README.md` | 213 | `homelabarr-ce/` |
+| `README.md` | 227 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
+| `README.md` | 231 | `├── homelabarr.yml    # Production Docker Compose` |
+| `README.md` | 279 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
+| `README.md` | 280 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
+| `README.md` | 281 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
+| `README.md` | 282 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
+| `README.md` | 283 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
+| `README.md` | 284 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
+| `README.md` | 294 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 11 | `\| Latest release \| Yes — see [Releases](https://github.com/imogenlabs/homelabarr-ce/releases/latest) \|` |
 | `SECURITY.md` | 79 | `- Backend container runs as non-root user ('homelabarr:1001')` |
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
@@ -334,12 +366,12 @@
 | `wiki/docs/guides/cli-installation.md` | 19 | `2. Download the HomelabARR repo to '/opt/homelabarr'` |
 | `wiki/docs/guides/cli-installation.md` | 46 | `cd /opt/homelabarr` |
 | `wiki/docs/guides/cli-installation.md` | 52 | `docker compose -f homelabarr.yml up -d` |
-| `wiki/docs/guides/configuration.md` | 56 | `\| 'CLI_BRIDGE_HOST_PATH' \| '/opt/homelabarr' \| Path to the repo with app templates (must contain 'apps/') \|` |
-| `wiki/docs/guides/configuration.md` | 62 | `Instead of typing 'export' commands every time — which only last until you close your terminal — save your settings ` |
-| `wiki/docs/guides/configuration.md` | 91 | `docker compose -f homelabarr.yml --env-file .env up -d` |
-| `wiki/docs/guides/configuration.md` | 113 | `- 'homelabarr-data' — app data and logs` |
-| `wiki/docs/guides/configuration.md` | 114 | `- 'homelabarr-config' — user accounts, API keys, and sessions ('/app/server/config/')` |
-| `wiki/docs/guides/configuration.md` | 129 | `All auth data is stored in '/app/server/config/' inside the backend container, persisted by the 'homelabarr-config' volu` |
+| `wiki/docs/guides/configuration.md` | 57 | `\| 'CLI_BRIDGE_HOST_PATH' \| '/opt/homelabarr' \| Path to the repo with app templates (must contain 'apps/') \|` |
+| `wiki/docs/guides/configuration.md` | 63 | `Instead of typing 'export' commands every time — which only last until you close your terminal — save your settings ` |
+| `wiki/docs/guides/configuration.md` | 92 | `docker compose -f homelabarr.yml --env-file .env up -d` |
+| `wiki/docs/guides/configuration.md` | 114 | `- 'homelabarr-data' — app data and logs` |
+| `wiki/docs/guides/configuration.md` | 115 | `- 'homelabarr-config' — user accounts, API keys, and sessions ('/app/server/config/')` |
+| `wiki/docs/guides/configuration.md` | 130 | `All auth data is stored in '/app/server/config/' inside the backend container, persisted by the 'homelabarr-config' volu` |
 | `wiki/docs/guides/contributing.md` | 8 | `- Report issues through [GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)` |
 | `wiki/docs/guides/contributing.md` | 52 | `git clone https://github.com/YOUR_USERNAME/homelabarr-ce.git` |
 | `wiki/docs/guides/contributing.md` | 53 | `cd homelabarr-ce` |
@@ -525,7 +557,7 @@
 
 ## Other
 
-**875 references**
+**876 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -1391,7 +1423,7 @@
 | `pentest/atomics/audit-continuity/09-audit-log-continuity.sh` | 4 | `BASE="${ART_TARGET:-https://ce-demo.homelabarr.com}"` |
 | `pentest/harness/env.example` | 1 | `ART_TARGET=https://ce-demo.homelabarr.com` |
 | `pentest/harness/run.sh` | 3 | `# Usage: ART_TARGET=https://ce-demo.homelabarr.com ./run.sh [--class A1\|A2\|A3\|A4\|A5]` |
-| `playwright.config.ts` | 6 | `const BASE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
+| `playwright.config.ts` | 14 | `const SMOKE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
 | `public/.well-known/security.txt` | 2 | `Contact: https://github.com/imogenlabs/homelabarr-ce/security/advisories/new` |
 | `public/.well-known/security.txt` | 5 | `Canonical: https://ce-demo.homelabarr.com/.well-known/security.txt` |
 | `public/.well-known/security.txt` | 6 | `Policy: https://github.com/imogenlabs/homelabarr-ce/blob/main/SECURITY.md` |
@@ -1400,6 +1432,7 @@
 | `public/sitemap.xml` | 4 | `    <loc>https://ce-demo.homelabarr.com/</loc>` |
 | `tests/README.md` | 16 | `TEST_BASE_URL=https://ce-dev.homelabarr.com npx playwright test` |
 | `tests/README.md` | 19 | `TEST_BASE_URL=https://ce-staging.homelabarr.com npx playwright test` |
+| `tests/e2e/README.md` | 50 | `TEST_BASE_URL=https://ce-dev.homelabarr.com npx playwright test --project=smoke` |
 | `traefik/installer/ubuntu.sh` | 40 | `   source="/opt/homelabarr/traefik/templates/"` |
 | `traefik/installer/ubuntu.sh` | 41 | `   envmigrate="/opt/homelabarr/apps/.subactions/envmigrate.sh"` |
 | `traefik/installer/ubuntu.sh` | 359 | `   envmigrate="/opt/homelabarr/apps/.subactions/envmigrate.sh"` |
