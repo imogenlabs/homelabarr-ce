@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-06-23 05:54 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-25 18:14 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -156,14 +156,14 @@
 | `.github/workflows/pages.yml` | 22 | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/pentest.yml` | 32 | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
-| `.github/workflows/security-audit.yml` | 278 | `          ghcr.io/imogenlabs/homelabarr-frontend:latest` |
-| `.github/workflows/security-audit.yml` | 279 | `          ghcr.io/imogenlabs/homelabarr-backend:latest` |
-| `.github/workflows/security-audit.yml` | 362 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif') != ''` |
-| `.github/workflows/security-audit.yml` | 364 | `          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif'` |
-| `.github/workflows/security-audit.yml` | 365 | `          category: 'trivy-homelabarr-frontend'` |
-| `.github/workflows/security-audit.yml` | 369 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif') != ''` |
-| `.github/workflows/security-audit.yml` | 371 | `          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif'` |
-| `.github/workflows/security-audit.yml` | 372 | `          category: 'trivy-homelabarr-backend'` |
+| `.github/workflows/security-audit.yml` | 288 | `          ghcr.io/imogenlabs/homelabarr-frontend:latest` |
+| `.github/workflows/security-audit.yml` | 289 | `          ghcr.io/imogenlabs/homelabarr-backend:latest` |
+| `.github/workflows/security-audit.yml` | 390 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif') != ''` |
+| `.github/workflows/security-audit.yml` | 392 | `          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-frontend_latest.sarif'` |
+| `.github/workflows/security-audit.yml` | 393 | `          category: 'trivy-homelabarr-frontend'` |
+| `.github/workflows/security-audit.yml` | 397 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif') != ''` |
+| `.github/workflows/security-audit.yml` | 399 | `          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif'` |
+| `.github/workflows/security-audit.yml` | 400 | `          category: 'trivy-homelabarr-backend'` |
 
 ## Config files (`package.json`, `CNAME`, `.env.example`, `nginx.conf.template`)
 
