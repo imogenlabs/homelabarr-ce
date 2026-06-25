@@ -43,7 +43,7 @@
     "cmdk": "^1.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dockerode": "^5.0.0",
+    "dockerode": "^5.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
     "helmet": "^8.2.0",
