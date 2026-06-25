@@ -6,11 +6,15 @@ FROM node:24-alpine3.23@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7
 # Update Alpine packages to pick up latest security patches
 RUN apk upgrade --no-cache
 
-# Force-update npm and patch vulnerable transitive deps (minimatch, tar)
+# Force-update npm and patch vulnerable transitive deps (minimatch, tar, undici).
+# undici is bundled inside npm itself; npm@latest still ships an undici with
+# CVE-2026-12151 (HIGH, WebSocket-frame DoS), so pin it forward here. npm is a
+# build-time tool only — the runtime entrypoint is dumb-init/node — but Trivy
+# scans the image filesystem, so patch it to keep the scan clean (HLCE-290).
 RUN npm install -g npm@latest && \
-    npm install -g minimatch@latest tar@latest 2>/dev/null; \
+    npm install -g minimatch@latest tar@latest undici@latest 2>/dev/null; \
     cd /usr/local/lib/node_modules/npm && \
-    npm install minimatch@latest tar@latest --save 2>/dev/null; \
+    npm install minimatch@latest tar@latest undici@latest --save 2>/dev/null; \
     true
 
 # Set working directory
