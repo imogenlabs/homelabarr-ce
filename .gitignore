@@ -99,6 +99,7 @@ server/activity-data/
 # Playwright auth state
 playwright/.auth/
 tests/e2e/seeded/.seeded-mfa.json
+tests/e2e/.smoke-auth.json
 
 # Playwright MCP screenshot artifacts (transient)
 .playwright-mcp/

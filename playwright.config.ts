@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { SMOKE_STATE_FILE } from './tests/e2e/helpers';
 
 // Two lanes (HLCE-226):
 //   • `seeded` — the deterministic containerised target from docker-compose.e2e.yml
@@ -41,10 +42,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: SEEDED_URL },
       dependencies: ['setup'],
     },
+    // Logs in once against the live smoke target and saves storageState, so the
+    // smoke specs reuse one session instead of one login per test (HLCE-295).
+    {
+      name: 'smoke-setup',
+      testMatch: /smoke\.setup\.ts$/,
+      use: { baseURL: SMOKE_URL },
+    },
     {
       name: 'smoke',
       testMatch: /(catalog|dark-mode|footer|icons|modals)\.spec\.ts$/,
-      use: { ...devices['Desktop Chrome'], baseURL: SMOKE_URL },
+      use: { ...devices['Desktop Chrome'], baseURL: SMOKE_URL, storageState: SMOKE_STATE_FILE },
+      dependencies: ['smoke-setup'],
     },
   ],
 });
