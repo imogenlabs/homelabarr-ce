@@ -1,11 +1,14 @@
 name: Build and Push Docker Images
 
 on:
-  # Manual-only. GitHub Actions minutes are exhausted and are NOT being restored,
-  # so an auto-trigger on push just fails at setup and spams red checks. Deploys
-  # are done by hand on ce-prod (see CLAUDE.md "Build & Deploy — MANUAL ONLY").
-  # Kept dispatchable for if/when a self-hosted runner exists.
-  # (Was: push to [main, dev] + v* tags.)
+  # Auto-publish on merge. This is a PUBLIC repo, so GitHub-hosted minutes are
+  # free and unlimited here (the "minutes out" emails are the org's PRIVATE-repo
+  # usage — see CLAUDE.md). Pushes to main/dev and v* tags build and push images
+  # to BOTH GHCR (imogenlabs) and Docker Hub (smashingtags) — Docker Hub is the
+  # primary pull source, so it must keep getting fresh images. (HLCE-293.)
+  push:
+    branches: [main, dev]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       push_images:
@@ -17,6 +20,10 @@ on:
 env:
   REGISTRY: ghcr.io
   NAMESPACE: imogenlabs
+  # Docker Hub namespace stays smashingtags: that's where the existing repos,
+  # working DOCKERHUB_TOKEN, and all the pull history live. The imogenlabs org
+  # does not exist on Docker Hub. (HLCE-293; regressed by HLCE-194.)
+  DOCKERHUB_NAMESPACE: smashingtags
   FRONTEND_IMAGE_NAME: homelabarr-frontend
   BACKEND_IMAGE_NAME: homelabarr-backend
 
@@ -43,8 +50,11 @@ jobs:
       uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4
       
     - name: Log in to Docker Hub
+      # Skipped on PRs (no push happens there); on push/dispatch a bad login
+      # must fail the job loudly rather than be swallowed and resurface as a
+      # cryptic "insufficient_scope" at the push step. (HLCE-293.)
+      if: github.event_name != 'pull_request'
       uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4
-      continue-on-error: true
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -60,7 +70,7 @@ jobs:
       with:
         images: |
           ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}
-          ${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}
+          ${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr,prefix=pr-
@@ -80,7 +90,7 @@ jobs:
       with:
         images: |
           ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}
-          ${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}
+          ${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr,prefix=pr-
@@ -196,12 +206,22 @@ jobs:
         severity: CRITICAL,HIGH
         ignore-unfixed: true
 
-    - name: Upload Trivy SARIF
-      if: always() && github.event_name != 'pull_request'
+    - name: Upload Trivy SARIF (frontend)
+      # Guard on the file existing: if the build/scan failed upstream the SARIF
+      # is never written, and an unconditional upload errors with
+      # "Path does not exist". (HLCE-293.)
+      if: always() && github.event_name != 'pull_request' && hashFiles('trivy-frontend.sarif') != ''
+      uses: github/codeql-action/upload-sarif@09dec6cc8c147fd5737df267d90a7d19cd5ff9ea  # v3
+      with:
+        sarif_file: trivy-frontend.sarif
+        category: trivy-frontend
+
+    - name: Upload Trivy SARIF (backend)
+      if: always() && github.event_name != 'pull_request' && hashFiles('trivy-backend.sarif') != ''
       uses: github/codeql-action/upload-sarif@09dec6cc8c147fd5737df267d90a7d19cd5ff9ea  # v3
       with:
         sarif_file: trivy-backend.sarif
-        category: trivy-image
+        category: trivy-backend
 
     - name: Test image functionality
       if: github.event_name == 'pull_request'
