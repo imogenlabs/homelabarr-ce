@@ -1,19 +1,26 @@
 import { expect, type Page } from '@playwright/test';
 
-// Log in through the inline Sign In screen and wait for the dashboard.
-//
-// We log in per test rather than reuse a saved session: the app logs you out on
-// reload (GET /api/auth/me returns the user flat, but AuthContext reads data.user),
-// so storageState / session-reuse lands back on the login wall. The login response
-// itself is correct, so a fresh UI login works. ce-dev is warm so this is fast; we
-// still retry the fill until the value sticks to survive any hydration race.
+// Persisted-session file for the live smoke lane (gitignored). The `smoke-setup`
+// project logs in once and writes it; the smoke specs reuse it via storageState
+// so the suite makes a single login instead of one per test. (HLCE-295.)
+export const SMOKE_STATE_FILE = 'tests/e2e/.smoke-auth.json';
+
+// Ensure we land on the authenticated dashboard. With a reused session
+// (storageState) the dashboard renders immediately and we skip the login form;
+// without one we log in through the inline Sign In screen. We race the login form
+// against the dashboard so the already-authenticated path stays fast (no waiting
+// out the full login-form timeout on every test).
 export async function login(page: Page): Promise<void> {
   await page.goto('/');
 
   const username = page.locator('#login-username');
   const password = page.locator('#login-password');
+  const dashboard = page.locator('text=/Connected|Browse Mode/').first();
 
-  if (await username.isVisible({ timeout: 20_000 }).catch(() => false)) {
+  // Whichever appears first: the login wall, or the already-authenticated dashboard.
+  await expect(username.or(dashboard).first()).toBeVisible({ timeout: 20_000 });
+
+  if (await username.isVisible()) {
     await expect(async () => {
       await username.fill('admin');
       await password.fill('admin');
