@@ -9,6 +9,11 @@ on:
   push:
     branches: [main, dev]
     tags: ['v*']
+  # Weekly no-cache rebuild so security-sensitive layers (the Alpine-edge
+  # docker-cli binary and the base image) can't silently freeze in the gha
+  # build cache and keep shipping a stale, CVE-flagged binary. (HLCE-296.)
+  schedule:
+    - cron: '0 6 * * 1'
   workflow_dispatch:
     inputs:
       push_images:
@@ -117,6 +122,9 @@ jobs:
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max' || '' }}
+        # The weekly scheduled run builds from scratch so the Alpine-edge
+        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
+        no-cache: ${{ github.event_name == 'schedule' }}
         provenance: ${{ github.event_name != 'pull_request' }}
         sbom: ${{ github.event_name != 'pull_request' }}
         build-args: |
@@ -135,6 +143,9 @@ jobs:
         labels: ${{ steps.meta-backend.outputs.labels }}
         cache-from: type=gha
         cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max' || '' }}
+        # The weekly scheduled run builds from scratch so the Alpine-edge
+        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
+        no-cache: ${{ github.event_name == 'schedule' }}
         provenance: ${{ github.event_name != 'pull_request' }}
         sbom: ${{ github.event_name != 'pull_request' }}
         build-args: |
