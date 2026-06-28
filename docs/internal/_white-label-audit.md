@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-06-25 18:17 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-06-28 08:47 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1365
+**Total brand references found:** 1368
 
 ---
 
@@ -84,21 +84,21 @@
 | `Dockerfile` | 37 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
 | `Dockerfile` | 40 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `Dockerfile` | 42 | `USER homelabarr` |
-| `Dockerfile.backend` | 33 | `# Create homelabarr user` |
-| `Dockerfile.backend` | 34 | `RUN addgroup -g 1001 homelabarr && \` |
-| `Dockerfile.backend` | 35 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
-| `Dockerfile.backend` | 55 | `RUN mkdir -p /homelabarr` |
-| `Dockerfile.backend` | 67 | `    /var/log/homelabarr && \` |
-| `Dockerfile.backend` | 68 | `    chown -R homelabarr:homelabarr \` |
-| `Dockerfile.backend` | 70 | `    /homelabarr \` |
-| `Dockerfile.backend` | 71 | `    /var/log/homelabarr` |
-| `Dockerfile.backend` | 82 | `# Switch to homelabarr user` |
-| `Dockerfile.backend` | 83 | `USER homelabarr` |
-| `Dockerfile.backend` | 93 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
-| `Dockerfile.backend` | 95 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
-| `Dockerfile.backend` | 96 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
-| `Dockerfile.backend` | 97 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
-| `Dockerfile.backend` | 100 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
+| `Dockerfile.backend` | 40 | `# Create homelabarr user` |
+| `Dockerfile.backend` | 41 | `RUN addgroup -g 1001 homelabarr && \` |
+| `Dockerfile.backend` | 42 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
+| `Dockerfile.backend` | 62 | `RUN mkdir -p /homelabarr` |
+| `Dockerfile.backend` | 74 | `    /var/log/homelabarr && \` |
+| `Dockerfile.backend` | 75 | `    chown -R homelabarr:homelabarr \` |
+| `Dockerfile.backend` | 77 | `    /homelabarr \` |
+| `Dockerfile.backend` | 78 | `    /var/log/homelabarr` |
+| `Dockerfile.backend` | 89 | `# Switch to homelabarr user` |
+| `Dockerfile.backend` | 90 | `USER homelabarr` |
+| `Dockerfile.backend` | 100 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
+| `Dockerfile.backend` | 102 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
+| `Dockerfile.backend` | 103 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
+| `Dockerfile.backend` | 104 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
+| `Dockerfile.backend` | 107 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `homelabarr.yml` | 5 | `#   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)` |
 | `homelabarr.yml` | 8 | `#   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)` |
 | `homelabarr.yml` | 12 | `#   docker compose -f homelabarr.yml up -d` |
@@ -131,7 +131,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**29 references**
+**32 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -141,17 +141,20 @@
 | `.github/workflows/dast-baseline.yml` | 28 | `          target: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/dependency-staleness.yml` | 96 | `                  body: '**Staleness alert:** This ${b.cls} dependency PR has been open ${b.ageDays} days. ${b.status} p` |
 | `.github/workflows/deploy-drift.yml` | 19 | `            const LIVE_URL = 'https://ce-demo.homelabarr.com/';` |
-| `.github/workflows/docker-build-push.yml` | 20 | `  FRONTEND_IMAGE_NAME: homelabarr-frontend` |
-| `.github/workflows/docker-build-push.yml` | 21 | `  BACKEND_IMAGE_NAME: homelabarr-backend` |
-| `.github/workflows/docker-build-push.yml` | 153 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
-| `.github/workflows/docker-build-push.yml` | 161 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
-| `.github/workflows/docker-build-push.yml` | 221 | `        # Update homelabarr.yml with latest image tags` |
-| `.github/workflows/docker-build-push.yml` | 222 | `        sed -i 's\|ghcr.io/.*/homelabarr-frontend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NA` |
-| `.github/workflows/docker-build-push.yml` | 223 | `        sed -i 's\|ghcr.io/.*/homelabarr-backend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME` |
-| `.github/workflows/docker-build-push.yml` | 246 | `        echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml" >> ` |
-| `.github/workflows/docker-build-push.yml` | 249 | `        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY` |
-| `.github/workflows/docker-build-push.yml` | 256 | `        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY` |
-| `.github/workflows/docker-build-push.yml` | 273 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
+| `.github/workflows/docker-build-push.yml` | 7 | `  # to BOTH GHCR (imogenlabs) and Docker Hub (smashingtags) — Docker Hub is the` |
+| `.github/workflows/docker-build-push.yml` | 28 | `  # Docker Hub namespace stays smashingtags: that's where the existing repos,` |
+| `.github/workflows/docker-build-push.yml` | 31 | `  DOCKERHUB_NAMESPACE: smashingtags` |
+| `.github/workflows/docker-build-push.yml` | 32 | `  FRONTEND_IMAGE_NAME: homelabarr-frontend` |
+| `.github/workflows/docker-build-push.yml` | 33 | `  BACKEND_IMAGE_NAME: homelabarr-backend` |
+| `.github/workflows/docker-build-push.yml` | 174 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
+| `.github/workflows/docker-build-push.yml` | 182 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
+| `.github/workflows/docker-build-push.yml` | 252 | `        # Update homelabarr.yml with latest image tags` |
+| `.github/workflows/docker-build-push.yml` | 253 | `        sed -i 's\|ghcr.io/.*/homelabarr-frontend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NA` |
+| `.github/workflows/docker-build-push.yml` | 254 | `        sed -i 's\|ghcr.io/.*/homelabarr-backend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME` |
+| `.github/workflows/docker-build-push.yml` | 277 | `        echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml" >> ` |
+| `.github/workflows/docker-build-push.yml` | 280 | `        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY` |
+| `.github/workflows/docker-build-push.yml` | 287 | `        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY` |
+| `.github/workflows/docker-build-push.yml` | 304 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
 | `.github/workflows/e2e-tests.yml` | 87 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
 | `.github/workflows/pages.yml` | 22 | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
@@ -1423,7 +1426,7 @@
 | `pentest/atomics/audit-continuity/09-audit-log-continuity.sh` | 4 | `BASE="${ART_TARGET:-https://ce-demo.homelabarr.com}"` |
 | `pentest/harness/env.example` | 1 | `ART_TARGET=https://ce-demo.homelabarr.com` |
 | `pentest/harness/run.sh` | 3 | `# Usage: ART_TARGET=https://ce-demo.homelabarr.com ./run.sh [--class A1\|A2\|A3\|A4\|A5]` |
-| `playwright.config.ts` | 14 | `const SMOKE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
+| `playwright.config.ts` | 15 | `const SMOKE_URL = process.env.TEST_BASE_URL \|\| 'https://ce-dev.homelabarr.com';` |
 | `public/.well-known/security.txt` | 2 | `Contact: https://github.com/imogenlabs/homelabarr-ce/security/advisories/new` |
 | `public/.well-known/security.txt` | 5 | `Canonical: https://ce-demo.homelabarr.com/.well-known/security.txt` |
 | `public/.well-known/security.txt` | 6 | `Policy: https://github.com/imogenlabs/homelabarr-ce/blob/main/SECURITY.md` |
