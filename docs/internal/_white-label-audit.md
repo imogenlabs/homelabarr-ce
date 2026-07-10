@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-07-05 08:48 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-07-10 07:12 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -569,7 +569,7 @@
 | `.github/ISSUE_TEMPLATE/bug_report.md` | 6 | `assignees: 'smashingtags'` |
 | `.github/dependabot.yml` | 13 | `      - "smashingtags"` |
 | `.github/dependabot.yml` | 33 | `      - "smashingtags"` |
-| `.github/dependabot.yml` | 49 | `      - "smashingtags"` |
+| `.github/dependabot.yml` | 54 | `      - "smashingtags"` |
 | `.gitleaks.toml` | 1 | `title = "homelabarr-ce gitleaks config"` |
 | `.gitleaks.toml` | 7 | `id = "homelabarr-jwt-secret"` |
 | `.gitleaks.toml` | 13 | `id = "homelabarr-admin-password"` |
