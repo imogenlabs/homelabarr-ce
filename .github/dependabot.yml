@@ -38,6 +38,11 @@ updates:
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
+    ignore:
+      # typescript-eslint@8.63.0 peer-requires typescript ">=4.8.4 <6.1.0";
+      # a TS7 bump ERESOLVEs the whole dev-tools group (broke HLCE PR #385).
+      - dependency-name: "typescript"
+        versions: [">=6.1.0"]
 
   - package-ecosystem: "docker"
     directory: "/"
