@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-07-10 07:12 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-07-30 08:29 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
