@@ -13,12 +13,19 @@ RUN apk upgrade --no-cache
 # the whole image filesystem, so we swap in the fixed in-major release (HLCE-290).
 # `npm install` inside npm's own dir fails (its manifest references the
 # unpublished internal @npmcli/docs workspace dep), so pack-and-replace instead.
+# Same pattern patches tar <=7.5.20 (GHSA-r292-9mhp-454m, MEDIUM — uncontrolled
+# recursion in mapHas/filesFilter) bundled inside npm@latest (HLCE-302).
 RUN npm install -g npm@latest && \
     cd /tmp && npm pack undici@6.27.0 && \
     tar -xzf undici-6.27.0.tgz && \
     rm -rf /usr/local/lib/node_modules/npm/node_modules/undici && \
     mv package /usr/local/lib/node_modules/npm/node_modules/undici && \
-    rm -f /tmp/undici-6.27.0.tgz
+    rm -f /tmp/undici-6.27.0.tgz && \
+    npm pack tar@7.5.21 && \
+    tar -xzf tar-7.5.21.tgz && \
+    rm -rf /usr/local/lib/node_modules/npm/node_modules/tar && \
+    mv package /usr/local/lib/node_modules/npm/node_modules/tar && \
+    rm -f /tmp/tar-7.5.21.tgz
 
 # Set working directory
 WORKDIR /app
