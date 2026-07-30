@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-07-30 08:29 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-07-30 08:53 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -84,21 +84,21 @@
 | `Dockerfile` | 37 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
 | `Dockerfile` | 40 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `Dockerfile` | 42 | `USER homelabarr` |
-| `Dockerfile.backend` | 40 | `# Create homelabarr user` |
-| `Dockerfile.backend` | 41 | `RUN addgroup -g 1001 homelabarr && \` |
-| `Dockerfile.backend` | 42 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
-| `Dockerfile.backend` | 62 | `RUN mkdir -p /homelabarr` |
-| `Dockerfile.backend` | 74 | `    /var/log/homelabarr && \` |
-| `Dockerfile.backend` | 75 | `    chown -R homelabarr:homelabarr \` |
-| `Dockerfile.backend` | 77 | `    /homelabarr \` |
-| `Dockerfile.backend` | 78 | `    /var/log/homelabarr` |
-| `Dockerfile.backend` | 89 | `# Switch to homelabarr user` |
-| `Dockerfile.backend` | 90 | `USER homelabarr` |
-| `Dockerfile.backend` | 100 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
-| `Dockerfile.backend` | 102 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
-| `Dockerfile.backend` | 103 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
-| `Dockerfile.backend` | 104 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
-| `Dockerfile.backend` | 107 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
+| `Dockerfile.backend` | 47 | `# Create homelabarr user` |
+| `Dockerfile.backend` | 48 | `RUN addgroup -g 1001 homelabarr && \` |
+| `Dockerfile.backend` | 49 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
+| `Dockerfile.backend` | 69 | `RUN mkdir -p /homelabarr` |
+| `Dockerfile.backend` | 81 | `    /var/log/homelabarr && \` |
+| `Dockerfile.backend` | 82 | `    chown -R homelabarr:homelabarr \` |
+| `Dockerfile.backend` | 84 | `    /homelabarr \` |
+| `Dockerfile.backend` | 85 | `    /var/log/homelabarr` |
+| `Dockerfile.backend` | 96 | `# Switch to homelabarr user` |
+| `Dockerfile.backend` | 97 | `USER homelabarr` |
+| `Dockerfile.backend` | 107 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
+| `Dockerfile.backend` | 109 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
+| `Dockerfile.backend` | 110 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
+| `Dockerfile.backend` | 111 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
+| `Dockerfile.backend` | 114 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `homelabarr.yml` | 5 | `#   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)` |
 | `homelabarr.yml` | 8 | `#   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)` |
 | `homelabarr.yml` | 12 | `#   docker compose -f homelabarr.yml up -d` |
