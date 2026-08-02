@@ -1,7 +1,7 @@
 # HomelabARR CE Frontend
 # Multi-stage build: Node for building, nginx for serving
 
-FROM node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS build
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS build
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
