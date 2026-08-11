@@ -3,8 +3,11 @@ name: E2E Tests
 on:
   pull_request:
     branches: [dev, staging, main]
+  # main included so a broken lane surfaces without waiting for someone to open
+  # a PR. HLCE-306 went unnoticed for two weeks because main had no E2E signal
+  # at all and every PR was red for the same reason, so nobody could tell.
   push:
-    branches: [dev]
+    branches: [dev, main]
 
 permissions:
   contents: read
@@ -32,6 +35,26 @@ jobs:
 
       - name: Build + start the seeded target
         run: docker compose -p hlce-e2e -f docker-compose.e2e.yml up -d --build
+
+      # `up -d --build` aborts with a bare "container is unhealthy" and prints
+      # nothing about why. The diagnostics below used to live only in the
+      # wait-for-health step, which never ran when the failure happened here —
+      # so HLCE-306 showed two weeks of red with zero evidence in the logs.
+      - name: Diagnose a failed bring-up
+        if: ${{ failure() }}
+        run: |
+          echo "::group::compose ps"
+          docker compose -p hlce-e2e -f docker-compose.e2e.yml ps -a || true
+          echo "::endgroup::"
+          for svc in backend socket-proxy frontend; do
+            echo "::group::$svc logs"
+            docker compose -p hlce-e2e -f docker-compose.e2e.yml logs --tail=120 "$svc" || true
+            echo "::endgroup::"
+          done
+          echo "::group::backend healthcheck probes"
+          docker inspect hlce-e2e-backend \
+            --format '{{if .State.Health}}{{range .State.Health.Log}}exit={{.ExitCode}} {{.Output}}{{end}}{{end}}' || true
+          echo "::endgroup::"
 
       - name: Wait for the target to be healthy
         run: |
