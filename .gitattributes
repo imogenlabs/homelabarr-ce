@@ -7,3 +7,7 @@
 # Force LF for Docker and config files
 Dockerfile* text eol=lf
 *.conf text eol=lf
+
+# npm can rewrite the lock with CRLF, which turns a 4-package bump into a
+# 28,000-line whole-file diff and hides the real change.
+package-lock.json text eol=lf
