@@ -1,31 +1,10 @@
 # HomelabARR Backend Docker Image
 # Optimized Node.js backend with CLI Bridge integration
 
-FROM node:24-alpine3.23@sha256:595398b0081eacda8e1c4c5b97b76cd1020e4d58a8ebcb4843b9bca1e79e7436
+FROM node:24-alpine3.23@sha256:244cc2b53f46f9e876304391d17682b0ddae9ac33491f4857e25e35a36ba7995
 
 # Update Alpine packages to pick up latest security patches
 RUN apk upgrade --no-cache
-
-# Force-update npm, then patch its bundled undici (CVE-2026-12151, HIGH —
-# WebSocket-frame DoS in undici 6.26.0, which npm@latest still ships at
-# /usr/local/lib/node_modules/npm/node_modules/undici). npm is a build-time tool
-# only — the runtime entrypoint is dumb-init/node, never npm — but Trivy scans
-# the whole image filesystem, so we swap in the fixed in-major release (HLCE-290).
-# `npm install` inside npm's own dir fails (its manifest references the
-# unpublished internal @npmcli/docs workspace dep), so pack-and-replace instead.
-# Same pattern patches tar <=7.5.20 (GHSA-r292-9mhp-454m, MEDIUM — uncontrolled
-# recursion in mapHas/filesFilter) bundled inside npm@latest (HLCE-302).
-RUN npm install -g npm@latest && \
-    cd /tmp && npm pack undici@6.27.0 && \
-    tar -xzf undici-6.27.0.tgz && \
-    rm -rf /usr/local/lib/node_modules/npm/node_modules/undici && \
-    mv package /usr/local/lib/node_modules/npm/node_modules/undici && \
-    rm -f /tmp/undici-6.27.0.tgz && \
-    npm pack tar@7.5.21 && \
-    tar -xzf tar-7.5.21.tgz && \
-    rm -rf /usr/local/lib/node_modules/npm/node_modules/tar && \
-    mv package /usr/local/lib/node_modules/npm/node_modules/tar && \
-    rm -f /tmp/tar-7.5.21.tgz
 
 # Set working directory
 WORKDIR /app
@@ -49,10 +28,33 @@ RUN addgroup -g 1001 homelabarr && \
     adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr
 
 # Copy package files and install dependencies (with native build tools for better-sqlite3-multiple-ciphers)
+#
+# npm is deleted in this same layer once it has done its job. It is a build-time
+# tool only — the entrypoint is dumb-init and the command is `bash
+# server/start.sh`, neither of which touches npm or npx. But Trivy scans the
+# whole image filesystem, and npm vendors its own dependency tree, which is
+# where every image CVE on this backend has come from: undici (HLCE-290), tar
+# (HLCE-302), then undici again plus ip-address and brace-expansion (HLCE-304).
+# Hand-patching that tree meant re-patching it every few weeks; removing npm
+# retires the entire alert class instead.
+#
+# The node -e line is a build-time assertion, not a formality. `npm install -g
+# npm@latest` used to run above this; when npm@latest floated 11.16.0 -> 12.0.2,
+# npm 12's new allowScripts policy silently blocked every install script, so
+# better-sqlite3-multiple-ciphers never compiled its native binding. The image
+# still built and pushed clean — it only died at runtime in server/db.js, then
+# restart-looped forever without ever binding :8092. That cost two weeks of a
+# red E2E lane (HLCE-306). Loading the module here turns that class of silent
+# breakage into a loud build failure.
 COPY package*.json ./
 RUN apk add --no-cache --virtual .build python3 make g++ && \
-    npm ci --only=production --no-audit --loglevel=error --no-fund && \
-    apk del .build
+    npm ci --omit=dev --no-audit --loglevel=error --no-fund && \
+    node -e "const D=require('better-sqlite3-multiple-ciphers'); new D(':memory:').close()" && \
+    apk del .build && \
+    rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/bin/npm \
+           /usr/local/bin/npx \
+           /root/.npm
 
 # Copy server files and configurations
 COPY server/ ./server/
