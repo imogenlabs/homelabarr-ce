@@ -57,3 +57,9 @@ updates:
       include: "scope"
     allow:
       - dependency-type: "direct"
+    ignore:
+      # Node 25 is the Current line and never becomes LTS; 24 is Active LTS and
+      # is what every CI lane pins (node-version: 24). Taking a major here would
+      # split the runtime from CI. Revisit when 26 goes LTS (PR #426).
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
