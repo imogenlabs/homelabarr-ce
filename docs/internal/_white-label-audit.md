@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-11 03:22 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-11 04:04 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -84,21 +84,21 @@
 | `Dockerfile` | 37 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
 | `Dockerfile` | 40 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `Dockerfile` | 42 | `USER homelabarr` |
-| `Dockerfile.backend` | 47 | `# Create homelabarr user` |
-| `Dockerfile.backend` | 48 | `RUN addgroup -g 1001 homelabarr && \` |
-| `Dockerfile.backend` | 49 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
-| `Dockerfile.backend` | 69 | `RUN mkdir -p /homelabarr` |
-| `Dockerfile.backend` | 81 | `    /var/log/homelabarr && \` |
-| `Dockerfile.backend` | 82 | `    chown -R homelabarr:homelabarr \` |
-| `Dockerfile.backend` | 84 | `    /homelabarr \` |
-| `Dockerfile.backend` | 85 | `    /var/log/homelabarr` |
-| `Dockerfile.backend` | 96 | `# Switch to homelabarr user` |
-| `Dockerfile.backend` | 97 | `USER homelabarr` |
-| `Dockerfile.backend` | 107 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
-| `Dockerfile.backend` | 109 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
-| `Dockerfile.backend` | 110 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
-| `Dockerfile.backend` | 111 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
-| `Dockerfile.backend` | 114 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
+| `Dockerfile.backend` | 26 | `# Create homelabarr user` |
+| `Dockerfile.backend` | 27 | `RUN addgroup -g 1001 homelabarr && \` |
+| `Dockerfile.backend` | 28 | `    adduser -u 1001 -G homelabarr -s /bin/bash -D homelabarr` |
+| `Dockerfile.backend` | 71 | `RUN mkdir -p /homelabarr` |
+| `Dockerfile.backend` | 83 | `    /var/log/homelabarr && \` |
+| `Dockerfile.backend` | 84 | `    chown -R homelabarr:homelabarr \` |
+| `Dockerfile.backend` | 86 | `    /homelabarr \` |
+| `Dockerfile.backend` | 87 | `    /var/log/homelabarr` |
+| `Dockerfile.backend` | 98 | `# Switch to homelabarr user` |
+| `Dockerfile.backend` | 99 | `USER homelabarr` |
+| `Dockerfile.backend` | 109 | `LABEL org.opencontainers.image.title="homelabarr-ce-backend"` |
+| `Dockerfile.backend` | 111 | `LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"` |
+| `Dockerfile.backend` | 112 | `LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"` |
+| `Dockerfile.backend` | 113 | `LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"` |
+| `Dockerfile.backend` | 116 | `LABEL io.homelabarr.security.contact="https://github.com/imogenlabs/homelabarr-ce/security/policy"` |
 | `homelabarr.yml` | 5 | `#   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)` |
 | `homelabarr.yml` | 8 | `#   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)` |
 | `homelabarr.yml` | 12 | `#   docker compose -f homelabarr.yml up -d` |
@@ -155,7 +155,7 @@
 | `.github/workflows/docker-build-push.yml` | 280 | `        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 287 | `        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY` |
 | `.github/workflows/docker-build-push.yml` | 304 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
-| `.github/workflows/e2e-tests.yml` | 87 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
+| `.github/workflows/e2e-tests.yml` | 110 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
 | `.github/workflows/pages.yml` | 22 | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/pentest.yml` | 32 | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
