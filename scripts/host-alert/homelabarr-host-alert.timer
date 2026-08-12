@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the HomelabARR hypervisor health alert every 5 minutes
+Documentation=https://mjashley.atlassian.net/browse/HLCE-318
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=homelabarr-host-alert.service
+
+[Install]
+WantedBy=timers.target

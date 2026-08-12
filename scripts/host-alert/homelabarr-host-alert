@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Alerts when this hypervisor is heading for the failure that took the public
+# demo down for sixteen days: the root filesystem fills, QEMU pauses the guests
+# with I/O errors, and a paused domain looks exactly like a powered-off box.
+#
+# Deliberately standalone. The Prometheus/Alertmanager stack on this host
+# belongs to Eight.ly OS — its compose file is schema-managed, and editing it
+# would mark the appliance operator-modified and stop it receiving fixes. So
+# this owns nothing of theirs and they own nothing of this.
+#
+# It is silent while healthy, alerts once when a condition starts, and says so
+# again when it clears. It does NOT swallow delivery failures: a webhook that
+# stopped working must make this unit fail visibly, because a notifier that
+# quietly posts into the void is worse than no notifier at all.
+
+set -uo pipefail
+
+ENV_FILE=${HOMELABARR_ALERT_ENV:-/etc/homelabarr/host-alert.env}
+STATE_FILE=${HOMELABARR_ALERT_STATE:-/var/lib/homelabarr/host-alert.state}
+DISK_THRESHOLD=${DISK_THRESHOLD:-85}
+MOUNT=${MOUNT:-/}
+
+# shellcheck source=/dev/null
+[ -r "$ENV_FILE" ] && . "$ENV_FILE"
+
+HOST=$(hostname)
+
+problems=()
+
+disk_pct=$(df --output=pcent "$MOUNT" | tail -1 | tr -dc '0-9')
+if [ -n "$disk_pct" ] && [ "$disk_pct" -ge "$DISK_THRESHOLD" ]; then
+  avail=$(df -h --output=avail "$MOUNT" | tail -1 | tr -d ' ')
+  problems+=("disk:${disk_pct}|Root filesystem on \`${HOST}\` is ${disk_pct}% full (${avail} free, threshold ${DISK_THRESHOLD}%). This is how the July outage started: the disk filled, QEMU paused every guest with I/O errors, and the demo stayed dark for sixteen days.")
+fi
+
+# --state-paused covers a deliberate suspend; "pmsuspended" and the I/O-error
+# pause both surface through domstate, so ask for the reason too.
+while read -r domain; do
+  [ -z "$domain" ] && continue
+  reason=$(virsh domstate "$domain" --reason 2>/dev/null | head -1)
+  problems+=("paused:${domain}|Domain \`${domain}\` on \`${HOST}\` is ${reason:-paused}. It will answer no ping and no SSH, which looks identical to dead hardware — it is not. Check \`virsh domstate ${domain} --reason\` before touching anything.")
+done < <(virsh list --state-paused --name 2>/dev/null)
+
+current_keys=$(printf '%s\n' "${problems[@]+"${problems[@]}"}" | cut -d'|' -f1 | sort | tr '\n' ' ' | sed 's/ *$//')
+previous_keys=""
+[ -r "$STATE_FILE" ] && previous_keys=$(cat "$STATE_FILE")
+
+if [ "$current_keys" = "$previous_keys" ]; then
+  exit 0   # nothing changed since the last run — stay quiet
+fi
+
+if [ -n "$current_keys" ]; then
+  body=":rotating_light: **${HOST}**"$'\n'
+  for p in "${problems[@]}"; do
+    body+=$'\n'"- ${p#*|}"
+  done
+else
+  body=":white_check_mark: **${HOST}** — cleared. Previously: ${previous_keys}"
+fi
+
+if [ -z "${WEBHOOK_URL:-}" ] || [[ "$WEBHOOK_URL" == *REPLACE_ME* ]]; then
+  echo "ALERT NOT DELIVERED — no webhook configured in ${ENV_FILE}." >&2
+  echo "Would have sent:" >&2
+  echo "$body" >&2
+  exit 78   # EX_CONFIG: the unit fails, so this is visible in systemctl
+fi
+
+payload=$(BODY="$body" python3 -c 'import json,os; print(json.dumps({"content": os.environ["BODY"]}))')
+status=$(curl -sS -o /tmp/homelabarr-host-alert.resp -w '%{http_code}' \
+  -X POST -H 'Content-Type: application/json' \
+  --max-time 15 --retry 2 --retry-delay 3 \
+  -d "$payload" "$WEBHOOK_URL")
+
+if [ "$status" != "204" ] && [ "$status" != "200" ]; then
+  echo "Discord rejected the alert: HTTP ${status} $(head -c 300 /tmp/homelabarr-host-alert.resp 2>/dev/null)" >&2
+  echo "Undelivered alert was:" >&2
+  echo "$body" >&2
+  exit 1   # do NOT record state — retry on the next run rather than go quiet
+fi
+
+mkdir -p "$(dirname "$STATE_FILE")"
+printf '%s' "$current_keys" > "$STATE_FILE"
+echo "Alert delivered (HTTP ${status}); state now: ${current_keys:-clear}"
