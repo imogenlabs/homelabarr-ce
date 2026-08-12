@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-11 22:08 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-12 02:02 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1368
+**Total brand references found:** 1375
 
 ---
 
@@ -131,7 +131,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**32 references**
+**38 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -167,6 +167,12 @@
 | `.github/workflows/security-audit.yml` | 397 | `        if: always() && hashFiles('trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif') != ''` |
 | `.github/workflows/security-audit.yml` | 399 | `          sarif_file: 'trivy-results/trivy-ghcr.io_imogenlabs_homelabarr-backend_latest.sarif'` |
 | `.github/workflows/security-audit.yml` | 400 | `          category: 'trivy-homelabarr-backend'` |
+| `.github/workflows/uptime.yml` | 39 | `            "https://demo.homelabarr.com/\|"` |
+| `.github/workflows/uptime.yml` | 40 | `            "https://demo.homelabarr.com/api/health\|\"ok\":true"` |
+| `.github/workflows/uptime.yml` | 41 | `            "https://ce-dev.homelabarr.com/\|"` |
+| `.github/workflows/uptime.yml` | 42 | `            "https://ce-dev.homelabarr.com/api/health\|\"ok\":true"` |
+| `.github/workflows/uptime.yml` | 100 | `          WEBHOOK_1: ${{ secrets.DISCORD_WEBHOOK_HOMELABARR }}` |
+| `.github/workflows/uptime.yml` | 115 | `          # Try each configured webhook until one is accepted. DISCORD_WEBHOOK_HOMELABARR` |
 
 ## Config files (`package.json`, `CNAME`, `.env.example`, `nginx.conf.template`)
 
@@ -177,7 +183,7 @@
 | `.env.example` | 32 | `# If you cloned to /opt/homelabarr (recommended), leave this as-is.` |
 | `.env.example` | 33 | `CLI_BRIDGE_HOST_PATH=/opt/homelabarr` |
 | `CNAME` | 1 | `wiki.homelabarr.com` |
-| `package.json` | 2 | `  "name": "homelabarr",` |
+| `package.json` | 2 | `  "name": "homelabarr",` |
 
 ## Install & utility scripts
 
@@ -247,53 +253,54 @@
 
 ## Root documentation
 
-**103 references**
+**104 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
-| `CHANGELOG.md` | 6 | `- **React 18 → 19**: upgraded 'react', 'react-dom', '@types/react', '@types/react-dom' to 19.2.7 (matched majors). Res` |
-| `CHANGELOG.md` | 7 | `- **shadcn/ui modernization**: converted all 83 'React.forwardRef' wrappers across 16 'src/components/ui/*' components t` |
-| `CHANGELOG.md` | 8 | `- **lucide-react 0.344 → 1.21**: required for React 19 peer support (the old range hard-blocked installs). Brand icons` |
-| `CHANGELOG.md` | 10 | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
-| `CHANGELOG.md` | 14 | `- **Automated test foundation + Wave 1** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), [#294](https:` |
-| `CHANGELOG.md` | 16 | `- **Auth core tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-212, [#296](https://github.` |
-| `CHANGELOG.md` | 17 | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
-| `CHANGELOG.md` | 18 | `- **Rate-limit & lockout tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-215, [#299](http` |
-| `CHANGELOG.md` | 19 | `- **Auth HTTP route integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-216, [#30` |
-| `CHANGELOG.md` | 20 | `- **Persistence-integrity tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-221, [#301](htt` |
-| `CHANGELOG.md` | 21 | `- **Audit hash-chain + secure-logging tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-217` |
-| `CHANGELOG.md` | 22 | `- **Docker connection-manager tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-219, [#304]` |
-| `CHANGELOG.md` | 23 | `- **Deploy/SSE + startup-guard + network tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-` |
-| `CHANGELOG.md` | 24 | `- **High-value component tests (RTL)** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-225, [#307` |
-| `CHANGELOG.md` | 25 | `- **React contexts & hooks tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-223, [#306](ht` |
-| `CHANGELOG.md` | 26 | `- **Bug-lock regression suite — 3 latent bugs fixed** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209)` |
-| `CHANGELOG.md` | 27 | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
-| `CHANGELOG.md` | 28 | `- **Dangerous-operation integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-229, ` |
-| `CHANGELOG.md` | 29 | `- **react-hooks v7 architectural rules enforced as errors** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-` |
-| `CHANGELOG.md` | 30 | `- **Playwright E2E: seeded container target + critical-journey suite** (Epic [HLCE-209](https://mjashley.atlassian.net/b` |
-| `CHANGELOG.md` | 31 | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
-| `CHANGELOG.md` | 32 | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
-| `CHANGELOG.md` | 33 | `- **Frontend security-component tests + lib/api gap-fills + a password-policy fix** (Epic [HLCE-270](https://mjashley.at` |
-| `CHANGELOG.md` | 34 | `- **Deploy-execution + remaining backend-branch coverage; dead-code removal** (Epic [HLCE-270](https://mjashley.atlassia` |
-| `CHANGELOG.md` | 35 | `- **E2E round 2 — failure / permission / account journeys + hardened assertions** (Epic [HLCE-270](https://mjashley.at` |
-| `CHANGELOG.md` | 39 | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
-| `CHANGELOG.md` | 40 | `- **Mutation pass on the high-risk security core** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE-261), HLC` |
-| `CHANGELOG.md` | 41 | `- **Fix: 'GET /containers?stats=true' no longer blocks the event loop** (HLCE-275, [#331](https://github.com/imogenlabs/` |
-| `CHANGELOG.md` | 43 | `- **Fix deploy endpoint 404 — deploy-from-UI was unreachable in production** (Epic [HLCE-209](https://mjashley.atlassi` |
-| `CHANGELOG.md` | 46 | `- **Docker health now reflects a real probe instead of always reporting healthy** (Epic [HLCE-209](https://mjashley.atla` |
-| `CHANGELOG.md` | 47 | `- **Audit hash chain now detects boundary-ambiguous tampering** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/H` |
-| `CHANGELOG.md` | 48 | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
-| `CHANGELOG.md` | 49 | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
-| `CHANGELOG.md` | 52 | `- **Audit chain tip gets an out-of-band signed anchor** (Epic [HLCE-286](https://mjashley.atlassian.net/browse/HLCE-286)` |
-| `CHANGELOG.md` | 53 | `- **'POST /deploy' outer catch is unreachable — dead status branches removed** (Epic [HLCE-286](https://mjashley.atlas` |
-| `CHANGELOG.md` | 54 | `- **Adversarial-review remediation: validation, CORS, auth, and Docker-manager hardening** (Epic [HLCE-279](https://mjas` |
-| `CHANGELOG.md` | 68 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
-| `CHANGELOG.md` | 69 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
-| `CHANGELOG.md` | 70 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
-| `CHANGELOG.md` | 71 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
-| `CHANGELOG.md` | 74 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
-| `CHANGELOG.md` | 75 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
-| `CHANGELOG.md` | 78 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
+| `CHANGELOG.md` | 9 | `If you pulled a 'homelabarr-backend' image built between **26 July and 10 August 2026**, it crash-looped on startup and ` |
+| `CHANGELOG.md` | 25 | `- **React 18 → 19**: upgraded 'react', 'react-dom', '@types/react', '@types/react-dom' to 19.2.7 (matched majors). Res` |
+| `CHANGELOG.md` | 26 | `- **shadcn/ui modernization**: converted all 83 'React.forwardRef' wrappers across 16 'src/components/ui/*' components t` |
+| `CHANGELOG.md` | 27 | `- **lucide-react 0.344 → 1.21**: required for React 19 peer support (the old range hard-blocked installs). Brand icons` |
+| `CHANGELOG.md` | 29 | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
+| `CHANGELOG.md` | 33 | `- **Automated test foundation + Wave 1** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), [#294](https:` |
+| `CHANGELOG.md` | 35 | `- **Auth core tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-212, [#296](https://github.` |
+| `CHANGELOG.md` | 36 | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
+| `CHANGELOG.md` | 37 | `- **Rate-limit & lockout tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-215, [#299](http` |
+| `CHANGELOG.md` | 38 | `- **Auth HTTP route integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-216, [#30` |
+| `CHANGELOG.md` | 39 | `- **Persistence-integrity tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-221, [#301](htt` |
+| `CHANGELOG.md` | 40 | `- **Audit hash-chain + secure-logging tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-217` |
+| `CHANGELOG.md` | 41 | `- **Docker connection-manager tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-219, [#304]` |
+| `CHANGELOG.md` | 42 | `- **Deploy/SSE + startup-guard + network tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-` |
+| `CHANGELOG.md` | 43 | `- **High-value component tests (RTL)** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-225, [#307` |
+| `CHANGELOG.md` | 44 | `- **React contexts & hooks tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-223, [#306](ht` |
+| `CHANGELOG.md` | 45 | `- **Bug-lock regression suite — 3 latent bugs fixed** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209)` |
+| `CHANGELOG.md` | 46 | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
+| `CHANGELOG.md` | 47 | `- **Dangerous-operation integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-229, ` |
+| `CHANGELOG.md` | 48 | `- **react-hooks v7 architectural rules enforced as errors** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-` |
+| `CHANGELOG.md` | 49 | `- **Playwright E2E: seeded container target + critical-journey suite** (Epic [HLCE-209](https://mjashley.atlassian.net/b` |
+| `CHANGELOG.md` | 50 | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
+| `CHANGELOG.md` | 51 | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
+| `CHANGELOG.md` | 52 | `- **Frontend security-component tests + lib/api gap-fills + a password-policy fix** (Epic [HLCE-270](https://mjashley.at` |
+| `CHANGELOG.md` | 53 | `- **Deploy-execution + remaining backend-branch coverage; dead-code removal** (Epic [HLCE-270](https://mjashley.atlassia` |
+| `CHANGELOG.md` | 54 | `- **E2E round 2 — failure / permission / account journeys + hardened assertions** (Epic [HLCE-270](https://mjashley.at` |
+| `CHANGELOG.md` | 58 | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
+| `CHANGELOG.md` | 59 | `- **Mutation pass on the high-risk security core** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE-261), HLC` |
+| `CHANGELOG.md` | 60 | `- **Fix: 'GET /containers?stats=true' no longer blocks the event loop** (HLCE-275, [#331](https://github.com/imogenlabs/` |
+| `CHANGELOG.md` | 62 | `- **Fix deploy endpoint 404 — deploy-from-UI was unreachable in production** (Epic [HLCE-209](https://mjashley.atlassi` |
+| `CHANGELOG.md` | 65 | `- **Docker health now reflects a real probe instead of always reporting healthy** (Epic [HLCE-209](https://mjashley.atla` |
+| `CHANGELOG.md` | 66 | `- **Audit hash chain now detects boundary-ambiguous tampering** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/H` |
+| `CHANGELOG.md` | 67 | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
+| `CHANGELOG.md` | 68 | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
+| `CHANGELOG.md` | 71 | `- **Audit chain tip gets an out-of-band signed anchor** (Epic [HLCE-286](https://mjashley.atlassian.net/browse/HLCE-286)` |
+| `CHANGELOG.md` | 72 | `- **'POST /deploy' outer catch is unreachable — dead status branches removed** (Epic [HLCE-286](https://mjashley.atlas` |
+| `CHANGELOG.md` | 73 | `- **Adversarial-review remediation: validation, CORS, auth, and Docker-manager hardening** (Epic [HLCE-279](https://mjas` |
+| `CHANGELOG.md` | 87 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
+| `CHANGELOG.md` | 88 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
+| `CHANGELOG.md` | 89 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
+| `CHANGELOG.md` | 90 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
+| `CHANGELOG.md` | 93 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
+| `CHANGELOG.md` | 94 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
+| `CHANGELOG.md` | 97 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `CONTRIBUTING.md` | 9 | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitH` |
 | `CONTRIBUTING.md` | 19 | `\| 'main' \| Production — stable, released \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) \| Safe to run ` |
 | `CONTRIBUTING.md` | 20 | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
