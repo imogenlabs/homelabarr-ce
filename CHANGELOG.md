@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [v2.3.0] - August 11, 2026
+
+### 🚨 Critical — the backend image could not open its database
+
+If you pulled a `homelabarr-backend` image built between **26 July and 10 August 2026**, it crash-looped on startup and never served traffic. **Upgrade to `2.3.0`.**
+
+- **Native SQLite binding was never compiled** ([HLCE-306](https://mjashley.atlassian.net/browse/HLCE-306)): `Dockerfile.backend` ran `npm install -g npm@latest`. When `npm@latest` floated from 11.16.0 to **12.0.2**, npm 12's new `allowScripts` policy began blocking install scripts by default, so `better-sqlite3-multiple-ciphers` never built `better_sqlite3.node`. The image built and pushed **clean** — the failure only appeared at runtime as `Could not locate the bindings file` in `server/db.js`, after which the container restart-looped without ever binding its port. Nothing in the repo changed; a single unpinned floating dependency inside an otherwise digest-pinned image did.
+- **Guardrail added** so this class cannot ship silently again: the image build now asserts the native module actually loads, turning a silent runtime landmine into a loud build failure. Verified in both directions — reintroducing the npm upgrade now fails the build.
+- **E2E lane restored and made honest**: the seeded end-to-end suite had been red on every branch for two weeks with no usable logs, because its diagnostics lived in a step that never ran on this failure path. Bring-up failures now dump compose state, per-service logs and healthcheck probe output, and the lane runs on pushes to `main` so a break surfaces without waiting for a PR.
+
+### 🐳 Container image
+- **npm removed from the backend runtime image** ([HLCE-304](https://mjashley.atlassian.net/browse/HLCE-304)): npm is a build-time tool only — the entrypoint is `dumb-init` and the command is `server/start.sh`, neither of which touches it. But image scanners read the whole filesystem, and npm vendors its own dependency tree, which was the source of **every** image CVE reported on this backend (undici, tar, ip-address, brace-expansion). Deleting npm after install retires that entire alert class instead of hand-patching it every few weeks. Cleared 8 outstanding CVE alerts.
+- **Dropped the unused `better-sqlite3` dependency** ([HLCE-308](https://mjashley.atlassian.net/browse/HLCE-308)): nothing imported it — the SQLCipher fork `better-sqlite3-multiple-ciphers` is the only database driver in use. It was compiling and shipping a native addon for nothing.
+- Backend image is **921 MB → 859 MB** as a result of the two removals.
+
+### ⬆️ Dependencies
+- Consolidated the outstanding dependency updates and pinned Node to major **24** (Active LTS) ([HLCE-305](https://mjashley.atlassian.net/browse/HLCE-305)). Node 25 is a Current-line release that never becomes LTS, and taking it would split the runtime from every CI lane.
+- `package-lock.json` is now pinned to LF line endings, so a routine dependency bump can no longer render as a 28,000-line whole-file diff and hide the real change.
+
 ### ⬆️ Dependencies & Framework
 - **React 18 → 19**: upgraded `react`, `react-dom`, `@types/react`, `@types/react-dom` to 19.2.7 (matched majors). Resolves the recurring mismatched-major hazard where Dependabot tried to bump `react-dom` to 19 alone. ([#273](https://github.com/imogenlabs/homelabarr-ce/pull/273), HLCE-200)
 - **shadcn/ui modernization**: converted all 83 `React.forwardRef` wrappers across 16 `src/components/ui/*` components to React 19 ref-as-prop. No behavioral change. ([#273](https://github.com/imogenlabs/homelabarr-ce/pull/273), HLCE-201)
