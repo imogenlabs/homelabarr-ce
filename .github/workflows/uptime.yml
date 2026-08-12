@@ -113,5 +113,16 @@ jobs:
             --arg desc "$DESC" \
             --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{embeds:[{title:"HomelabARR is unreachable",description:$desc,color:15158332,timestamp:$ts,footer:{text:"uptime check - github actions"}}]}')
-          curl -sS -m 20 -X POST -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" >/dev/null \
-            && echo "Discord notified." || echo "Discord notification failed."
+          # Report what Discord actually said. Swallowing this is how you ship
+          # an alerting system that looks fine and never pages anyone.
+          resp=$(mktemp)
+          code=$(curl -sS -m 20 -o "$resp" -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" || true)
+          [ -z "$code" ] && code="000"
+          if [ "$code" = "204" ] || [ "$code" = "200" ]; then
+            echo "Discord notified (HTTP $code)."
+          else
+            echo "Discord notification FAILED with HTTP $code"
+            echo "response: $(head -c 300 "$resp")"
+          fi
+          rm -f "$resp"
