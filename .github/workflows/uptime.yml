@@ -1,0 +1,117 @@
+name: Uptime
+
+# Runs on GitHub's infrastructure on purpose. The Prometheus stack on ce-prod
+# cannot report that ce-prod is down, and any checker living in the homelab dies
+# with the homelab — which is why the 2026-07-26 outage ran for sixteen days
+# before anyone noticed (HLCE-313). This check is independent of both the
+# homelab and the VPS.
+#
+# Silent when everything is healthy. It only speaks up when something is wrong.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Override targets (space-separated URLs) — used to prove the alert path works'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe public surfaces
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check targets
+        id: check
+        env:
+          OVERRIDE: ${{ inputs.targets }}
+        run: |
+          set -uo pipefail
+
+          # url|expected-substring ("" = only require HTTP 200)
+          DEFAULT_TARGETS=(
+            "https://demo.homelabarr.com/|"
+            "https://demo.homelabarr.com/api/health|\"ok\":true"
+            "https://ce-dev.homelabarr.com/|"
+            "https://ce-dev.homelabarr.com/api/health|\"ok\":true"
+          )
+
+          if [ -n "${OVERRIDE:-}" ]; then
+            TARGETS=(); for u in $OVERRIDE; do TARGETS+=("$u|"); done
+            echo "Using override targets"
+          else
+            TARGETS=("${DEFAULT_TARGETS[@]}")
+          fi
+
+          FAILURES=""
+          for entry in "${TARGETS[@]}"; do
+            url="${entry%%|*}"
+            expect="${entry#*|}"
+
+            # Retry before declaring an outage — a single dropped packet is not
+            # an incident, and a false alert teaches you to ignore alerts.
+            ok=false; status=""; detail=""
+            for attempt in 1 2 3; do
+              body_file="$(mktemp)"
+              # curl already emits 000 via -w when it cannot connect; a `|| echo 000`
+              # here would concatenate and report a nonsense "HTTP 000000".
+              status=$(curl -sS -m 20 -o "$body_file" -w '%{http_code}' "$url" 2>/dev/null || true)
+              [ -z "$status" ] && status="000"
+              body=$(head -c 500 "$body_file" 2>/dev/null); rm -f "$body_file"
+
+              if [ "$status" = "200" ]; then
+                if [ -z "$expect" ] || printf '%s' "$body" | grep -qF -- "$expect"; then
+                  ok=true; break
+                fi
+                detail="200 but response did not contain: $expect"
+              else
+                detail="HTTP $status"
+              fi
+              [ "$attempt" -lt 3 ] && sleep 10
+            done
+
+            if [ "$ok" = true ]; then
+              echo "OK    $url"
+            else
+              echo "DOWN  $url — $detail"
+              FAILURES="${FAILURES}- \`${url}\` — ${detail}\n"
+            fi
+          done
+
+          if [ -n "$FAILURES" ]; then
+            {
+              echo "failures<<EOF"
+              printf '%b' "$FAILURES"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "All targets healthy."
+
+      - name: Notify Discord
+        if: ${{ failure() && steps.check.outputs.failures != '' }}
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_HOMELABARR }}
+          FAILURES: ${{ steps.check.outputs.failures }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_WEBHOOK_HOMELABARR not set; skipping notification"
+            exit 0
+          fi
+          DESC=$(printf '%s\n\n[View run](%s)' "$FAILURES" "$RUN_URL")
+          # jq builds the JSON so the failure text is escaped correctly — it
+          # contains backticks, newlines and URLs.
+          payload=$(jq -n \
+            --arg desc "$DESC" \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{embeds:[{title:"HomelabARR is unreachable",description:$desc,color:15158332,timestamp:$ts,footer:{text:"uptime check - github actions"}}]}')
+          curl -sS -m 20 -X POST -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" >/dev/null \
+            && echo "Discord notified." || echo "Discord notification failed."
