@@ -1,0 +1,9 @@
+[Unit]
+Description=HomelabARR hypervisor health alert (disk pressure, paused domains)
+Documentation=https://mjashley.atlassian.net/browse/HLCE-318
+After=network-online.target libvirtd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/homelabarr-host-alert
