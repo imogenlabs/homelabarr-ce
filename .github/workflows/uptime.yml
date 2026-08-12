@@ -102,10 +102,18 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -uo pipefail
-          if [ -z "${WEBHOOK:-}" ]; then
+          # Strip whitespace. A secret pasted with a trailing newline yields a
+          # URL curl cannot parse, which surfaces as HTTP 000 — indistinguishable
+          # from the network being down, and it silently disables alerting.
+          WEBHOOK="$(printf '%s' "${WEBHOOK:-}" | tr -d '[:space:]')"
+          if [ -z "$WEBHOOK" ]; then
             echo "DISCORD_WEBHOOK_HOMELABARR not set; skipping notification"
             exit 0
           fi
+          case "$WEBHOOK" in
+            https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) ;;
+            *) echo "WARNING: webhook secret is not a discord webhook URL (length ${#WEBHOOK}); attempting anyway" ;;
+          esac
           DESC=$(printf '%s\n\n[View run](%s)' "$FAILURES" "$RUN_URL")
           # jq builds the JSON so the failure text is escaped correctly — it
           # contains backticks, newlines and URLs.
