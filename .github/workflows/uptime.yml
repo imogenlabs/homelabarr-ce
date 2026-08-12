@@ -38,8 +38,8 @@ jobs:
           DEFAULT_TARGETS=(
             "https://demo.homelabarr.com/|"
             "https://demo.homelabarr.com/api/health|\"ok\":true"
-            "https://ce-dev.homelabarr.com/|"
-            "https://ce-dev.homelabarr.com/api/health|\"ok\":true"
+            "https://dev.homelabarr.com/|"
+            "https://dev.homelabarr.com/api/health|\"ok\":true"
           )
 
           if [ -n "${OVERRIDE:-}" ]; then
