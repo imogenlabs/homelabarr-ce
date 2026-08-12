@@ -97,23 +97,13 @@ jobs:
       - name: Notify Discord
         if: ${{ failure() && steps.check.outputs.failures != '' }}
         env:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_HOMELABARR }}
+          WEBHOOK_1: ${{ secrets.DISCORD_WEBHOOK_HOMELABARR }}
+          WEBHOOK_2: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          WEBHOOK_3: ${{ secrets.DISCORD_RLS }}
           FAILURES: ${{ steps.check.outputs.failures }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -uo pipefail
-          # Strip whitespace. A secret pasted with a trailing newline yields a
-          # URL curl cannot parse, which surfaces as HTTP 000 — indistinguishable
-          # from the network being down, and it silently disables alerting.
-          WEBHOOK="$(printf '%s' "${WEBHOOK:-}" | tr -d '[:space:]')"
-          if [ -z "$WEBHOOK" ]; then
-            echo "DISCORD_WEBHOOK_HOMELABARR not set; skipping notification"
-            exit 0
-          fi
-          case "$WEBHOOK" in
-            https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) ;;
-            *) echo "WARNING: webhook secret is not a discord webhook URL (length ${#WEBHOOK}); attempting anyway" ;;
-          esac
           DESC=$(printf '%s\n\n[View run](%s)' "$FAILURES" "$RUN_URL")
           # jq builds the JSON so the failure text is escaped correctly — it
           # contains backticks, newlines and URLs.
@@ -121,16 +111,28 @@ jobs:
             --arg desc "$DESC" \
             --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{embeds:[{title:"HomelabARR is unreachable",description:$desc,color:15158332,timestamp:$ts,footer:{text:"uptime check - github actions"}}]}')
-          # Report what Discord actually said. Swallowing this is how you ship
-          # an alerting system that looks fine and never pages anyone.
-          resp=$(mktemp)
-          code=$(curl -sS -m 20 -o "$resp" -w '%{http_code}' \
-            -X POST -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK" || true)
-          [ -z "$code" ] && code="000"
-          if [ "$code" = "204" ] || [ "$code" = "200" ]; then
-            echo "Discord notified (HTTP $code)."
-          else
-            echo "Discord notification FAILED with HTTP $code"
-            echo "response: $(head -c 300 "$resp")"
+
+          # Try each configured webhook until one is accepted. DISCORD_WEBHOOK_HOMELABARR
+          # was found deleted on 2026-08-11 (404 "Unknown Webhook", code 10015) — a
+          # single hard-coded webhook means one revoked URL silently disables alerting.
+          sent=false
+          for n in 1 2 3; do
+            eval "raw=\${WEBHOOK_$n:-}"
+            # Strip whitespace: a secret pasted with a trailing newline yields a URL
+            # curl cannot parse, surfacing as HTTP 000 and looking like a network fault.
+            url="$(printf '%s' "$raw" | tr -d '[:space:]')"
+            [ -z "$url" ] && continue
+            resp=$(mktemp)
+            code=$(curl -sS -m 20 -o "$resp" -w '%{http_code}' \
+              -X POST -H 'Content-Type: application/json' -d "$payload" "$url" || true)
+            [ -z "$code" ] && code="000"
+            if [ "$code" = "204" ] || [ "$code" = "200" ]; then
+              echo "Discord notified via WEBHOOK_$n (HTTP $code)."
+              sent=true; rm -f "$resp"; break
+            fi
+            echo "WEBHOOK_$n rejected: HTTP $code $(head -c 200 "$resp")"
+            rm -f "$resp"
+          done
+          if [ "$sent" != true ]; then
+            echo "::error::All Discord webhooks failed - the outage alert could NOT be delivered."
           fi
-          rm -f "$resp"
