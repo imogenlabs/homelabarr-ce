@@ -60,8 +60,11 @@ A notifier that quietly posts into the void is worse than no notifier. Five sepa
 silent failures were found on 2026-08-11, including a Discord webhook dead since February
 whose failure was swallowed by `>/dev/null`. So:
 
-- No webhook configured → exit **78**, the unit fails, and the undelivered alert is
-  written to the journal. Visible in `systemctl list-units --failed`.
+- No webhook configured → exit **78** on **every** run, healthy or not, so the unit sits
+  in `systemctl list-units --failed` until it is fixed. This is checked up front on
+  purpose: checking it only when there was something to send meant a healthy host exited
+  0 without ever touching the webhook, leaving an unconfigured notifier invisible until
+  the outage it was installed to report.
 - Webhook rejects (e.g. `404 Unknown Webhook`) → exit **1**, the response body is logged,
   and **state is not recorded** so the next run retries instead of going quiet.
 

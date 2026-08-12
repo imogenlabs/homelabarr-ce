@@ -25,6 +25,17 @@ MOUNT=${MOUNT:-/}
 
 HOST=$(hostname)
 
+# Checked up front, before anything else, and not only when there is something
+# to send. Validating it lazily meant a healthy host exited 0 without ever
+# touching the webhook, so an unconfigured notifier stayed invisible until the
+# outage it was installed to report — which is the failure mode this whole
+# thing exists to prevent.
+if [ -z "${WEBHOOK_URL:-}" ] || [[ "$WEBHOOK_URL" == *REPLACE_ME* ]]; then
+  echo "No webhook configured in ${ENV_FILE}: this host has NO alerting." >&2
+  echo "Set WEBHOOK_URL to a Discord webhook, then: systemctl start homelabarr-host-alert.service" >&2
+  exit 78   # EX_CONFIG: fails every run, so the gap shows in systemctl list-units --failed
+fi
+
 problems=()
 
 disk_pct=$(df --output=pcent "$MOUNT" | tail -1 | tr -dc '0-9')
@@ -56,13 +67,6 @@ if [ -n "$current_keys" ]; then
   done
 else
   body=":white_check_mark: **${HOST}** — cleared. Previously: ${previous_keys}"
-fi
-
-if [ -z "${WEBHOOK_URL:-}" ] || [[ "$WEBHOOK_URL" == *REPLACE_ME* ]]; then
-  echo "ALERT NOT DELIVERED — no webhook configured in ${ENV_FILE}." >&2
-  echo "Would have sent:" >&2
-  echo "$body" >&2
-  exit 78   # EX_CONFIG: the unit fails, so this is visible in systemctl
 fi
 
 payload=$(BODY="$body" python3 -c 'import json,os; print(json.dumps({"content": os.environ["BODY"]}))')
