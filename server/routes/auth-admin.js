@@ -24,6 +24,7 @@ import { logActivity, getActivities } from '../activity-logger.js';
 import { getUserStars, addStar, removeStar } from '../stars.js';
 import transporter from '../email.js';
 import { readSecret } from '../secrets.js';
+import { demoGuard } from '../demo-mode.js';
 
 export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopment, logger }) {
   const router = Router();
@@ -54,7 +55,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // R3: Forgot password — send reset email
-  router.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), async (req, res) => {
+  router.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), demoGuard, async (req, res) => {
     const { username } = req.body || {};
     const user = username ? findUserByUsername(username) : null;
     if (user?.email) {
@@ -74,7 +75,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // R3: Reset password — consume reset token and update password
-  router.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), async (req, res) => {
+  router.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), demoGuard, async (req, res) => {
     try {
       const { user_id, token, new_password } = req.body || {};
       if (!user_id || !token || !new_password) return res.status(400).json({ error: 'Missing fields' });
@@ -100,7 +101,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // Admin-only user management routes
-  router.post('/auth/users', requireAuth, requireRole('admin'), async (req, res) => {
+  router.post('/auth/users', requireAuth, requireRole('admin'), demoGuard, async (req, res) => {
     try {
       const { username, email, password, role } = req.body;
 
@@ -143,7 +144,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
     res.json(sanitizedUsers);
   });
 
-  router.delete('/auth/users/:userId', requireAuth, requireRole('admin'), (req, res) => {
+  router.delete('/auth/users/:userId', requireAuth, requireRole('admin'), demoGuard, (req, res) => {
     try {
       const { userId } = req.params;
 
@@ -180,7 +181,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
     }
   });
 
-  router.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), async (req, res) => {
+  router.put('/auth/users/:userId/password', requireAuth, requireRole('admin'), demoGuard, async (req, res) => {
     try {
       const { userId } = req.params;
       const { newPassword } = req.body;
@@ -241,7 +242,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // ─── API Key Routes ─────────────────────────────────────────────────────
-  router.post('/auth/api-keys', requireAuth, async (req, res) => {
+  router.post('/auth/api-keys', requireAuth, demoGuard, async (req, res) => {
     try {
       const { label } = req.body;
       const entry = createApiKey(req.user.id, label);
@@ -261,7 +262,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
     res.json({ apiKeys: listApiKeys(req.user.id) });
   });
 
-  router.delete('/auth/api-keys/:keyId', requireAuth, (req, res) => {
+  router.delete('/auth/api-keys/:keyId', requireAuth, demoGuard, (req, res) => {
     const success = revokeApiKey(req.params.keyId, req.user.id);
     if (success) res.json({ message: 'API key revoked' });
     else res.status(404).json({ error: 'API key not found' });
@@ -313,7 +314,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
     }
   });
 
-  router.post('/auth/register', requireAuth, requireRole('admin'), async (req, res) => {
+  router.post('/auth/register', requireAuth, requireRole('admin'), demoGuard, async (req, res) => {
     try {
       const { username, password, email, role } = req.body;
 

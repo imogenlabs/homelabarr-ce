@@ -35,6 +35,18 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
   const getCsrfToken = () =>
     document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
 
+  // Prefer the server's own explanation over a generic one. A refusal that says
+  // why (a demo instance declining account changes, say) is worth showing; both
+  // handlers below used to drop it, and revoke said nothing at all.
+  const reasonFrom = async (res: Response, fallback: string) => {
+    try {
+      const data = await res.json();
+      return typeof data?.error === "string" && data.error ? data.error : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   const fetchKeys = async () => {
     if (!isAuthenticated) return;
     setLoading(true);
@@ -83,7 +95,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
         success("API Key Created", "Copy it now — it won't be shown again.");
         fetchKeys();
       } else {
-        error("Error", "Failed to create API key");
+        error("Error", await reasonFrom(res, "Failed to create API key"));
       }
     } catch {
       error("Error", "Failed to create API key");
@@ -106,6 +118,8 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
       if (res.ok) {
         success("Revoked", "API key has been revoked");
         fetchKeys();
+      } else {
+        error("Error", await reasonFrom(res, "Failed to revoke API key"));
       }
     } catch {
       error("Error", "Failed to revoke API key");
