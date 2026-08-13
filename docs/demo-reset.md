@@ -182,10 +182,17 @@ sudo systemctl daemon-reload
 
 The demo keeps running — removing the timer only stops it being reset.
 
-## Known gap
+## The gap this used to leave, now closed
 
-This bounds the damage; it does not prevent it. A visitor who changes the admin password
-still breaks the demo for up to 30 minutes. The durable fix is a demo/read-only mode in
-the server that rejects mutations of the admin account, which is a product change and a
-separate ticket. Do not close that gap by changing the demo credentials or putting the
-demo behind auth — being open is the point.
+This bounds damage; on its own it does not prevent it — a visitor who changed the admin
+password still broke the demo until the next reset. That hole is now closed separately by
+**`DEMO_MODE`** (HLCE-321), which makes the server refuse account changes outright:
+password changes, user create/delete, API key mint/revoke and MFA setup. See
+`server/demo-mode.js`.
+
+The two are complements, not alternatives. The guard stops the lockout; this reset still
+clears the junk that accumulates in a public demo and puts it back to a known state. Keep
+both.
+
+Neither is closed by changing the demo credentials or putting the demo behind auth —
+being open is the point.
