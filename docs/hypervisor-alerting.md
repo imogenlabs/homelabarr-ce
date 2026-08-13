@@ -16,7 +16,7 @@ A checker inside the homelab dies with the homelab.
 | Piece | Path on the host |
 |---|---|
 | Script | `/usr/local/bin/homelabarr-host-alert` |
-| Config (webhook) | `/etc/homelabarr/host-alert.env`, mode 600 |
+| Config (delivery) | `/etc/homelabarr/host-alert.env`, mode 600 |
 | State | `/var/lib/homelabarr/host-alert.state` |
 | Unit | `/etc/systemd/system/homelabarr-host-alert.service` |
 | Timer | `/etc/systemd/system/homelabarr-host-alert.timer`, every 5 min |
@@ -60,27 +60,45 @@ A notifier that quietly posts into the void is worse than no notifier. Five sepa
 silent failures were found on 2026-08-11, including a Discord webhook dead since February
 whose failure was swallowed by `>/dev/null`. So:
 
-- No webhook configured → exit **78** on **every** run, healthy or not, so the unit sits
-  in `systemctl list-units --failed` until it is fixed. This is checked up front on
+- No destination configured → exit **78** on **every** run, healthy or not, so the unit
+  sits in `systemctl list-units --failed` until it is fixed. This is checked up front on
   purpose: checking it only when there was something to send meant a healthy host exited
-  0 without ever touching the webhook, leaving an unconfigured notifier invisible until
-  the outage it was installed to report.
-- Webhook rejects (e.g. `404 Unknown Webhook`) → exit **1**, the response body is logged,
-  and **state is not recorded** so the next run retries instead of going quiet.
+  0 without ever touching the destination, leaving an unconfigured notifier invisible
+  until the outage it was installed to report.
+- A destination rejects the message (SMTP refuses, or Discord answers `404 Unknown
+  Webhook`) → exit **1**, the error and the undelivered alert are logged, and **state is
+  not recorded** so the next run retries instead of going quiet.
+- If more than one destination is configured, **every** one of them must accept the
+  message. A partial delivery still fails the unit — silently dropping one channel is
+  exactly how a dead webhook went unnoticed from February to August.
 
 State is only written after a delivery actually succeeded.
 
-## Configuring the webhook
+## How it delivers: email
+
+`/etc/homelabarr/host-alert.env` (mode 600, root-only) holds:
 
 ```bash
-ssh root@192.168.1.73
-printf 'WEBHOOK_URL=https://discord.com/api/webhooks/...\n' > /etc/homelabarr/host-alert.env
-chmod 600 /etc/homelabarr/host-alert.env
-systemctl start homelabarr-host-alert.service
-journalctl -u homelabarr-host-alert.service -n 20 --no-pager
+SMTP_URL='smtp://<user>:<app-password>@smtp.gmail.com:587'
+ALERT_EMAIL_TO='michael@mjashley.com'
 ```
 
-Until that URL is real, the unit fails every five minutes by design.
+Alerts arrive as mail in the inbox. **Discord was the original plan and it is still
+supported** — set `WEBHOOK_URL` and it will post there too — but Discord was the reason
+this alerted nobody for six weeks: it needed a webhook that had to be created by hand,
+and until that happened the unit just sat in `failed`. Mail needed no new account, no new
+credential and no setup: `SMTP_URL` is the identity the estate already sends mail with,
+copied from `/opt/eightly-updates/.env` on the VPS.
+
+Email also has a property a webhook does not: **you can prove it arrived.** A Discord
+webhook returning HTTP 204 tells you the request was accepted, not that anyone will ever
+see it. A message in the inbox is the delivery itself.
+
+`SMTP_URL` is parsed with `urllib.parse`, not `cut` — the username is percent-encoded
+(`michael%40mjashley.com`) and the password can contain URL-significant characters.
+`curl --ssl-reqd` forces STARTTLS, so the credential is never sent in the clear.
+
+Until a destination here is real, the unit fails every five minutes by design.
 
 ## Verifying it — fire it, do not read it
 
@@ -97,9 +115,21 @@ virsh domstate web-dev --reason        # expect: paused (user)
 /usr/local/bin/homelabarr-host-alert
 virsh resume web-dev
 virsh domstate web-dev --reason        # expect: running (unpaused)
+
+# Prove it still fails loudly when the destination is broken
+printf "SMTP_URL=smtp://u:p@127.0.0.1:9/\n" > /tmp/broken.env
+HOMELABARR_ALERT_ENV=/tmp/broken.env HOMELABARR_ALERT_STATE=/tmp/s DISK_THRESHOLD=50 \
+  /usr/local/bin/homelabarr-host-alert; echo $?   # expect 1, and /tmp/s must not exist
+
+# Prove an unconfigured host fails every run
+HOMELABARR_ALERT_ENV=/dev/null /usr/local/bin/homelabarr-host-alert; echo $?   # expect 78
 ```
 
-Use a dev domain (`web-dev`, `eightly-dev`) — never `ce-prod`.
+Use a dev domain (`web-dev`, `eightly-dev`) — never `ce-prod`. `web-dev` serves
+`dev.mjashley.com`; check it is back to 200 after resuming.
+
+**"Delivered by email" in the journal is not the test.** Open the inbox and find the
+message. Every silent failure this project has hit produced success-shaped output first.
 
 ## When an alert fires
 

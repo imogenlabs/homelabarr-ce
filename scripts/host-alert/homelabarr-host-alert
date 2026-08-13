@@ -9,9 +9,16 @@
 # this owns nothing of theirs and they own nothing of this.
 #
 # It is silent while healthy, alerts once when a condition starts, and says so
-# again when it clears. It does NOT swallow delivery failures: a webhook that
-# stopped working must make this unit fail visibly, because a notifier that
-# quietly posts into the void is worse than no notifier at all.
+# again when it clears. It does NOT swallow delivery failures: a destination
+# that stopped working must make this unit fail visibly, because a notifier
+# that quietly posts into the void is worse than no notifier at all.
+#
+# Delivery is by email, over the SMTP credential the estate already uses to
+# send mail. Discord was the original plan and is still supported, but it
+# needed a webhook that nobody had created — so for six weeks this alerted
+# nobody. Mail needs no new account, no new credential and no setup, and its
+# arrival can actually be verified in the inbox, which a webhook's HTTP 204
+# never proves.
 
 set -uo pipefail
 
@@ -19,20 +26,25 @@ ENV_FILE=${HOMELABARR_ALERT_ENV:-/etc/homelabarr/host-alert.env}
 STATE_FILE=${HOMELABARR_ALERT_STATE:-/var/lib/homelabarr/host-alert.state}
 DISK_THRESHOLD=${DISK_THRESHOLD:-85}
 MOUNT=${MOUNT:-/}
+RUNBOOK=${RUNBOOK:-https://github.com/imogenlabs/homelabarr-ce/blob/main/docs/hypervisor-alerting.md}
 
 # shellcheck source=/dev/null
 [ -r "$ENV_FILE" ] && . "$ENV_FILE"
 
 HOST=$(hostname)
 
+configured=()
+[ -n "${SMTP_URL:-}" ] && [[ "${SMTP_URL}" != *REPLACE_ME* ]] && configured+=(email)
+[ -n "${WEBHOOK_URL:-}" ] && [[ "${WEBHOOK_URL}" != *REPLACE_ME* ]] && configured+=(discord)
+
 # Checked up front, before anything else, and not only when there is something
 # to send. Validating it lazily meant a healthy host exited 0 without ever
-# touching the webhook, so an unconfigured notifier stayed invisible until the
+# touching a destination, so an unconfigured notifier stayed invisible until the
 # outage it was installed to report — which is the failure mode this whole
 # thing exists to prevent.
-if [ -z "${WEBHOOK_URL:-}" ] || [[ "$WEBHOOK_URL" == *REPLACE_ME* ]]; then
-  echo "No webhook configured in ${ENV_FILE}: this host has NO alerting." >&2
-  echo "Set WEBHOOK_URL to a Discord webhook, then: systemctl start homelabarr-host-alert.service" >&2
+if [ ${#configured[@]} -eq 0 ]; then
+  echo "No destination configured in ${ENV_FILE}: this host has NO alerting." >&2
+  echo "Set SMTP_URL (and ALERT_EMAIL_TO) or WEBHOOK_URL, then: systemctl start homelabarr-host-alert.service" >&2
   exit 78   # EX_CONFIG: fails every run, so the gap shows in systemctl list-units --failed
 fi
 
@@ -41,7 +53,7 @@ problems=()
 disk_pct=$(df --output=pcent "$MOUNT" | tail -1 | tr -dc '0-9')
 if [ -n "$disk_pct" ] && [ "$disk_pct" -ge "$DISK_THRESHOLD" ]; then
   avail=$(df -h --output=avail "$MOUNT" | tail -1 | tr -d ' ')
-  problems+=("disk:${disk_pct}|Root filesystem on \`${HOST}\` is ${disk_pct}% full (${avail} free, threshold ${DISK_THRESHOLD}%). This is how the July outage started: the disk filled, QEMU paused every guest with I/O errors, and the demo stayed dark for sixteen days.")
+  problems+=("disk:${disk_pct}|Root filesystem on ${HOST} is ${disk_pct}% full (${avail} free, threshold ${DISK_THRESHOLD}%). This is how the July outage started: the disk filled, QEMU paused every guest with I/O errors, and the demo stayed dark for sixteen days.")
 fi
 
 # --state-paused covers a deliberate suspend; "pmsuspended" and the I/O-error
@@ -49,7 +61,7 @@ fi
 while read -r domain; do
   [ -z "$domain" ] && continue
   reason=$(virsh domstate "$domain" --reason 2>/dev/null | head -1)
-  problems+=("paused:${domain}|Domain \`${domain}\` on \`${HOST}\` is ${reason:-paused}. It will answer no ping and no SSH, which looks identical to dead hardware — it is not. Check \`virsh domstate ${domain} --reason\` before touching anything.")
+  problems+=("paused:${domain}|Domain ${domain} on ${HOST} is ${reason:-paused}. It will answer no ping and no SSH, which looks identical to dead hardware — it is not. Run: virsh domstate ${domain} --reason, then virsh resume ${domain}.")
 done < <(virsh list --state-paused --name 2>/dev/null)
 
 current_keys=$(printf '%s\n' "${problems[@]+"${problems[@]}"}" | cut -d'|' -f1 | sort | tr '\n' ' ' | sed 's/ *$//')
@@ -61,27 +73,102 @@ if [ "$current_keys" = "$previous_keys" ]; then
 fi
 
 if [ -n "$current_keys" ]; then
-  body=":rotating_light: **${HOST}**"$'\n'
+  subject="[HomelabARR] ${HOST}: ${current_keys}"
+  body="Problem detected on ${HOST}:"$'\n'
   for p in "${problems[@]}"; do
     body+=$'\n'"- ${p#*|}"
   done
+  body+=$'\n\n'"Remediation steps: ${RUNBOOK}"
 else
-  body=":white_check_mark: **${HOST}** — cleared. Previously: ${previous_keys}"
+  subject="[HomelabARR] ${HOST}: cleared"
+  body="${HOST} is healthy again. Previously: ${previous_keys}"
 fi
 
-payload=$(BODY="$body" python3 -c 'import json,os; print(json.dumps({"content": os.environ["BODY"]}))')
-status=$(curl -sS -o /tmp/homelabarr-host-alert.resp -w '%{http_code}' \
-  -X POST -H 'Content-Type: application/json' \
-  --max-time 15 --retry 2 --retry-delay 3 \
-  -d "$payload" "$WEBHOOK_URL")
+# --- delivery ------------------------------------------------------------
+# Every destination that is configured must accept the message. A partial
+# delivery still exits non-zero: silently dropping one channel is how a dead
+# webhook went unnoticed from February to August.
 
-if [ "$status" != "204" ] && [ "$status" != "200" ]; then
-  echo "Discord rejected the alert: HTTP ${status} $(head -c 300 /tmp/homelabarr-host-alert.resp 2>/dev/null)" >&2
+deliver_email() {
+  local to creds host port user pass msg
+  to=${ALERT_EMAIL_TO:-michael@mjashley.com}
+
+  # python3 rather than shell string-splitting: the username is percent-encoded
+  # (michael%40mjashley.com) and the password may contain URL-significant
+  # characters, so it needs real URL parsing, not cut.
+  creds=$(SMTP_URL="$SMTP_URL" python3 -c '
+import os, sys
+from urllib.parse import urlsplit, unquote
+u = urlsplit(os.environ["SMTP_URL"])
+if not u.hostname or not u.username or not u.password:
+    sys.exit("SMTP_URL is missing host, username or password")
+print(u.hostname)
+print(u.port or (465 if u.scheme == "smtps" else 587))
+print(unquote(u.username))
+print(unquote(u.password))
+') || return 1
+  { read -r host; read -r port; read -r user; read -r pass; } <<< "$creds"
+
+  msg=$(mktemp) || return 1
+  {
+    printf 'From: HomelabARR host alert <%s>\n' "$user"
+    printf 'To: %s\n' "$to"
+    printf 'Subject: %s\n' "$subject"
+    printf 'Date: %s\n' "$(date -R)"
+    printf 'Message-ID: <%s.%s@%s>\n' "$(date +%s)" "$$" "$HOST"
+    printf 'Content-Type: text/plain; charset=utf-8\n'
+    printf '\n%s\n' "$body"
+  } > "$msg"
+
+  # --ssl-reqd forces STARTTLS: without it curl will happily fall back to
+  # plaintext and post the credential across the network.
+  if curl -sS --ssl-reqd --max-time 30 \
+      --url "smtp://${host}:${port}" \
+      --user "${user}:${pass}" \
+      --mail-from "$user" --mail-rcpt "$to" \
+      --upload-file "$msg" >/dev/null 2>"${msg}.err"; then
+    rm -f "$msg" "${msg}.err"
+    echo "Delivered by email to ${to}."
+    return 0
+  fi
+  echo "SMTP delivery to ${to} FAILED: $(head -c 300 "${msg}.err" 2>/dev/null)" >&2
+  rm -f "$msg" "${msg}.err"
+  return 1
+}
+
+deliver_discord() {
+  local payload status resp
+  payload=$(BODY=":rotating_light: **${HOST}**"$'\n\n'"${body}" python3 -c 'import json,os; print(json.dumps({"content": os.environ["BODY"]}))') || return 1
+  resp=$(mktemp)
+  status=$(curl -sS -o "$resp" -w '%{http_code}' \
+    -X POST -H 'Content-Type: application/json' \
+    --max-time 15 --retry 2 --retry-delay 3 \
+    -d "$payload" "$WEBHOOK_URL")
+  if [ "$status" = "204" ] || [ "$status" = "200" ]; then
+    rm -f "$resp"
+    echo "Delivered to Discord (HTTP ${status})."
+    return 0
+  fi
+  echo "Discord rejected the alert: HTTP ${status} $(head -c 300 "$resp" 2>/dev/null)" >&2
+  rm -f "$resp"
+  return 1
+}
+
+failed=0
+for channel in "${configured[@]}"; do
+  case "$channel" in
+    email)   deliver_email   || failed=1 ;;
+    discord) deliver_discord || failed=1 ;;
+  esac
+done
+
+if [ "$failed" -ne 0 ]; then
   echo "Undelivered alert was:" >&2
+  echo "$subject" >&2
   echo "$body" >&2
   exit 1   # do NOT record state — retry on the next run rather than go quiet
 fi
 
 mkdir -p "$(dirname "$STATE_FILE")"
 printf '%s' "$current_keys" > "$STATE_FILE"
-echo "Alert delivered (HTTP ${status}); state now: ${current_keys:-clear}"
+echo "State now: ${current_keys:-clear}"
