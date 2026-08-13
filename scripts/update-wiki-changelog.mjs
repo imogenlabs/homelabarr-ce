@@ -41,13 +41,33 @@ function die(why) {
 
 if (!TAG) die('RELEASE_TAG is empty — refusing to guess which release this is.');
 
-const body = BODY.trim();
-if (!body) {
+const raw = BODY.trim();
+if (!raw) {
   die(
     `the release-notes generator returned nothing for ${TAG}. ` +
       'This is exactly the failure that produced PR #458.'
   );
 }
+
+// Housekeeping PRs a reader does not care about. Filtered here rather than in
+// changelog-config.json because the generator's own ignore_labels only honours
+// real GitHub labels — an ignore label produced by label_extractor is not
+// consumed, which two CI runs confirmed ("Wrote 0 ignored pull requests down").
+// These PRs carry no labels at all, so the config cannot reach them.
+const NOISE = [/regenerate white-label audit/i];
+
+const body = (() => {
+  const kept = raw.split('\n').filter((l) => !NOISE.some((re) => re.test(l)));
+  // Dropping entries can leave a category heading with nothing under it.
+  const out = kept.filter((line, i) => {
+    if (!/^#{1,6}\s/.test(line)) return true;
+    const next = kept.slice(i + 1).find((l) => l.trim());
+    return Boolean(next) && !/^#{1,6}\s/.test(next);
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+})();
+
+if (!body) die(`every entry for ${TAG} was housekeeping noise — nothing worth publishing.`);
 
 // Strip the scaffolding the generator always emits — headings, bullets, blank
 // lines — and see whether any actual prose survives.

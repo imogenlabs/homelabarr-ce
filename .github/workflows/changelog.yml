@@ -48,6 +48,21 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    # Asked of the release itself rather than taken from the event, which carries no
+    # published_at on a manual run — a backfill would otherwise date every historical
+    # release as today.
+    - name: Resolve release date
+      id: reldate
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ inputs.to_tag || github.event.release.tag_name }}
+      run: |
+        set -uo pipefail
+        published=$(gh release view "$TAG" --json publishedAt --jq .publishedAt 2>/dev/null || true)
+        [ -z "$published" ] && published=$(git log -1 --format=%aI "$TAG" 2>/dev/null || true)
+        echo "date=$published" >> "$GITHUB_OUTPUT"
+        echo "Dating $TAG as ${published:-<unknown, will fall back to today>}"
+
     # Validates the generated notes and inserts them. Refuses to publish anything it
     # cannot vouch for, and cannot remove existing content. Values go through env
     # rather than ${{ }} interpolation so release text can never become shell.
@@ -55,7 +70,7 @@ jobs:
       env:
         CHANGELOG_BODY: ${{ steps.github_release.outputs.changelog }}
         RELEASE_TAG: ${{ inputs.to_tag || github.event.release.tag_name }}
-        RELEASE_DATE: ${{ github.event.release.published_at }}
+        RELEASE_DATE: ${{ steps.reldate.outputs.date }}
       run: node scripts/update-wiki-changelog.mjs
 
     - name: Create PR with changelog
