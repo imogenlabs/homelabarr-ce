@@ -125,6 +125,46 @@ describe('AC2 — GET /health (liveness, no auth)', () => {
   });
 });
 
+// HLCE-315: the frontend decides whether it may show seeded demo containers
+// from this flag. It previously guessed from window.location.hostname and got
+// it wrong for the demo's own hostname, silently, for the whole life of the
+// demo. The server is the only party that actually knows.
+describe('GET /health — demo flag (HLCE-315)', () => {
+  afterEach(() => { delete process.env.DEMO_MODE; });
+
+  it('reports demo:false on a normal install', async () => {
+    const { app } = buildApp();
+    const res = await request(app).get('/health');
+    expect(res.body.demo).toBe(false);
+  });
+
+  it('reports demo:true when DEMO_MODE is set', async () => {
+    process.env.DEMO_MODE = 'true';
+    const { app } = buildApp();
+    const res = await request(app).get('/health');
+    expect(res.body.demo).toBe(true);
+  });
+
+  it('is a real boolean, never a string, and needs no auth', async () => {
+    // The frontend compares with === true, so a truthy string would read as
+    // not-a-demo and reintroduce the empty dashboard.
+    process.env.DEMO_MODE = '1';
+    const { app } = buildApp();
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.demo).toBe(true);
+    expect(typeof res.body.demo).toBe('boolean');
+  });
+
+  it('stays false for values that do not explicitly enable demo mode', async () => {
+    for (const v of ['false', '0', 'yes', '']) {
+      process.env.DEMO_MODE = v;
+      const { app } = buildApp();
+      expect((await request(app).get('/health')).body.demo).toBe(false);
+    }
+  });
+});
+
 describe('AC2 — GET /health/detail (admin-only aggregate)', () => {
   it('rejects an unauthenticated request with 401 (real requireAuth)', async () => {
     const { app } = buildApp();
