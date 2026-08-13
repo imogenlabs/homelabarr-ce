@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-13 06:21 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-13 06:28 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -57,7 +57,7 @@
 | `server/progress-stream.test.js` | 114 | `      .mockReturnValue({ corsOrigin: ['https://ce-demo.homelabarr.com'] });` |
 | `server/progress-stream.test.js` | 118 | `    mgr.addClient('ok', ok, fakeReq({ origin: 'https://ce-demo.homelabarr.com' }));` |
 | `server/progress-stream.test.js` | 119 | `    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://ce-demo.homelabarr.com');` |
-| `server/routes/auth-admin.js` | 68 | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
+| `server/routes/auth-admin.js` | 69 | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
 | `server/routes/dangerous-ops.routes.test.js` | 347 | `    expect(nameArg).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/dangerous-ops.routes.test.js` | 361 | `    expect(res.body.containerName).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/deploy.js` | 48 | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
@@ -131,10 +131,11 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**38 references**
+**39 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
+| `.github/workflows/changelog.yml` | 4 | `# https://wiki.homelabarr.com/install/changelog/` |
 | `.github/workflows/compliance-binder.yml` | 33 | `          EVIDENCE_HOST: 'ce-demo.homelabarr.com'` |
 | `.github/workflows/compliance-evidence.yml` | 25 | `          EVIDENCE_HOST: ce-demo.homelabarr.com` |
 | `.github/workflows/dast-active.yml` | 22 | `  ZAP_TARGET: ${{ inputs.target \|\| 'https://ce-demo.homelabarr.com' }}` |
@@ -187,7 +188,7 @@
 
 ## Install & utility scripts
 
-**80 references**
+**79 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -241,11 +242,10 @@
 | `scripts/encrypt-db.sh` | 3 | `DB_PATH="${1:?usage: $0 <path/to/homelabarr.db>}"` |
 | `scripts/fix-storage-detection.sh` | 14 | `CONFIG_DIR="/opt/homelabarr/config"` |
 | `scripts/fix-storage-detection.sh` | 151 | `echo "  3. Check logs: docker logs homelabarr-api"` |
-| `scripts/host-alert/homelabarr-host-alert` | 18 | `ENV_FILE=${HOMELABARR_ALERT_ENV:-/etc/homelabarr/host-alert.env}` |
-| `scripts/host-alert/homelabarr-host-alert` | 19 | `STATE_FILE=${HOMELABARR_ALERT_STATE:-/var/lib/homelabarr/host-alert.state}` |
-| `scripts/host-alert/homelabarr-host-alert` | 35 | `  echo "Set WEBHOOK_URL to a Discord webhook, then: systemctl start homelabarr-host-alert.service" >&2` |
-| `scripts/host-alert/homelabarr-host-alert` | 73 | `status=$(curl -sS -o /tmp/homelabarr-host-alert.resp -w '%{http_code}' \` |
-| `scripts/host-alert/homelabarr-host-alert` | 79 | `  echo "Discord rejected the alert: HTTP ${status} $(head -c 300 /tmp/homelabarr-host-alert.resp 2>/dev/null)" >&2` |
+| `scripts/host-alert/homelabarr-host-alert` | 25 | `ENV_FILE=${HOMELABARR_ALERT_ENV:-/etc/homelabarr/host-alert.env}` |
+| `scripts/host-alert/homelabarr-host-alert` | 26 | `STATE_FILE=${HOMELABARR_ALERT_STATE:-/var/lib/homelabarr/host-alert.state}` |
+| `scripts/host-alert/homelabarr-host-alert` | 29 | `RUNBOOK=${RUNBOOK:-https://github.com/imogenlabs/homelabarr-ce/blob/main/docs/hypervisor-alerting.md}` |
+| `scripts/host-alert/homelabarr-host-alert` | 47 | `  echo "Set SMTP_URL (and ALERT_EMAIL_TO) or WEBHOOK_URL, then: systemctl start homelabarr-host-alert.service" >&2` |
 | `scripts/host-alert/homelabarr-host-alert.service` | 9 | `ExecStart=/usr/local/bin/homelabarr-host-alert` |
 | `scripts/host-alert/homelabarr-host-alert.timer` | 9 | `Unit=homelabarr-host-alert.service` |
 | `scripts/install-apparmor.sh` | 8 | `cat >/etc/apparmor.d/homelabarr-backend <<'EOF'` |
@@ -1460,17 +1460,17 @@
 | `docs/governance/github-security-settings.md` | 27 | `gh api repos/smashingtags/homelabarr-ce --jq '.security_and_analysis'` |
 | `docs/governance/github-security-settings.md` | 28 | `gh api repos/smashingtags/homelabarr-ce/private-vulnerability-reporting` |
 | `docs/hypervisor-alerting.md` | 18 | `\| Script \| '/usr/local/bin/homelabarr-host-alert' \|` |
-| `docs/hypervisor-alerting.md` | 19 | `\| Config (webhook) \| '/etc/homelabarr/host-alert.env', mode 600 \|` |
+| `docs/hypervisor-alerting.md` | 19 | `\| Config (delivery) \| '/etc/homelabarr/host-alert.env', mode 600 \|` |
 | `docs/hypervisor-alerting.md` | 20 | `\| State \| '/var/lib/homelabarr/host-alert.state' \|` |
 | `docs/hypervisor-alerting.md` | 21 | `\| Unit \| '/etc/systemd/system/homelabarr-host-alert.service' \|` |
 | `docs/hypervisor-alerting.md` | 22 | `\| Timer \| '/etc/systemd/system/homelabarr-host-alert.timer', every 5 min \|` |
-| `docs/hypervisor-alerting.md` | 77 | `printf 'WEBHOOK_URL=https://discord.com/api/webhooks/...\n' > /etc/homelabarr/host-alert.env` |
-| `docs/hypervisor-alerting.md` | 78 | `chmod 600 /etc/homelabarr/host-alert.env` |
-| `docs/hypervisor-alerting.md` | 79 | `systemctl start homelabarr-host-alert.service` |
-| `docs/hypervisor-alerting.md` | 80 | `journalctl -u homelabarr-host-alert.service -n 20 --no-pager` |
-| `docs/hypervisor-alerting.md` | 89 | `/usr/local/bin/homelabarr-host-alert; echo $?` |
-| `docs/hypervisor-alerting.md` | 92 | `DISK_THRESHOLD=50 /usr/local/bin/homelabarr-host-alert` |
-| `docs/hypervisor-alerting.md` | 97 | `/usr/local/bin/homelabarr-host-alert` |
+| `docs/hypervisor-alerting.md` | 79 | `'/etc/homelabarr/host-alert.env' (mode 600, root-only) holds:` |
+| `docs/hypervisor-alerting.md` | 107 | `/usr/local/bin/homelabarr-host-alert; echo $?` |
+| `docs/hypervisor-alerting.md` | 110 | `DISK_THRESHOLD=50 /usr/local/bin/homelabarr-host-alert` |
+| `docs/hypervisor-alerting.md` | 115 | `/usr/local/bin/homelabarr-host-alert` |
+| `docs/hypervisor-alerting.md` | 121 | `HOMELABARR_ALERT_ENV=/tmp/broken.env HOMELABARR_ALERT_STATE=/tmp/s DISK_THRESHOLD=50 \` |
+| `docs/hypervisor-alerting.md` | 122 | `  /usr/local/bin/homelabarr-host-alert; echo $?   # expect 1, and /tmp/s must not exist` |
+| `docs/hypervisor-alerting.md` | 125 | `HOMELABARR_ALERT_ENV=/dev/null /usr/local/bin/homelabarr-host-alert; echo $?   # expect 78` |
 | `docs/internal/OWNER-PUNCHLIST.md` | 1 | `# Owner Punch-List — homelabarr-ce` |
 | `docs/ir/02-on-call-and-contacts.md` | 5 | `Single operator: @smashingtags. No formal rotation.` |
 | `docs/ir/02-on-call-and-contacts.md` | 14 | `\| GitHub \| @smashingtags \| Image / repo intervention \|` |
