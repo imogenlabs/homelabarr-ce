@@ -48,7 +48,7 @@
     "helmet": "^8.3.0",
     "ipaddr.js": "^2.5.0",
     "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^1.30.0",
+    "lucide-react": "^1.31.0",
     "next-themes": "^0.4.6",
     "nodemailer": "^9.0.5",
     "otpauth": "^9.5.1",
