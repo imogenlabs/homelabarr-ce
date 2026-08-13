@@ -13,6 +13,10 @@
       "labels": ["docs", "documentation"]
     },
     {
+      "title": "## ⬆️ Dependencies",
+      "labels": ["dependencies"]
+    },
+    {
       "title": "## 🔧 Maintenance",
       "labels": ["refactor", "perf", "chore", "maintenance", "style", "test", "revert"]
     },
@@ -31,6 +35,7 @@
     "duplicate",
     "invalid"
   ],
+  "exclude_contributors": ["github-actions[bot]"],
   "sort": "ASC",
   "template": "${{CHANGELOG}}\n${{UNCATEGORIZED}}",
   "pr_template": "- ${{TITLE}} by @${{AUTHOR}} in #${{NUMBER}}",
@@ -56,6 +61,6 @@
     }
   ],
   "max_tags_to_fetch": 20,
-  "max_pull_requests": 200,
+  "max_pull_requests": 500,
   "max_back_track_time_days": 365
 }
