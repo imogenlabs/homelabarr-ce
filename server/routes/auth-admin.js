@@ -3,6 +3,7 @@ import express from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
+import { ipSubnetKey } from '../ratelimit.js';
 import {
   requireAuth,
   requireRole,
@@ -55,7 +56,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // R3: Forgot password — send reset email
-  router.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), demoGuard, async (req, res) => {
+  router.post('/auth/forgot-password', rateLimit({ windowMs: 60 * 60 * 1000, max: 5, keyGenerator: ipSubnetKey }), demoGuard, async (req, res) => {
     const { username } = req.body || {};
     const user = username ? findUserByUsername(username) : null;
     if (user?.email) {
@@ -75,7 +76,7 @@ export default function authAdminRoutes({ sendError, getRequestMeta, isDevelopme
   });
 
   // R3: Reset password — consume reset token and update password
-  router.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), demoGuard, async (req, res) => {
+  router.post('/auth/reset-password', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, keyGenerator: ipSubnetKey }), demoGuard, async (req, res) => {
     try {
       const { user_id, token, new_password } = req.body || {};
       if (!user_id || !token || !new_password) return res.status(400).json({ error: 'Missing fields' });
