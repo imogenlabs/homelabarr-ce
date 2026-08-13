@@ -2,31 +2,59 @@
   "categories": [
     {
       "title": "## 🚀 Features",
-      "labels": ["feat", "feature", "enhancement"]
+      "labels": [
+        "feat",
+        "feature",
+        "enhancement"
+      ]
     },
     {
       "title": "## 🐛 Bug Fixes",
-      "labels": ["fix", "bug", "bugfix"]
+      "labels": [
+        "fix",
+        "bug",
+        "bugfix"
+      ]
     },
     {
       "title": "## 📚 Documentation",
-      "labels": ["docs", "documentation"]
+      "labels": [
+        "docs",
+        "documentation"
+      ]
     },
     {
       "title": "## ⬆️ Dependencies",
-      "labels": ["dependencies"]
+      "labels": [
+        "dependencies"
+      ]
     },
     {
       "title": "## 🔧 Maintenance",
-      "labels": ["refactor", "perf", "chore", "maintenance", "style", "test", "revert"]
+      "labels": [
+        "refactor",
+        "perf",
+        "chore",
+        "maintenance",
+        "style",
+        "test",
+        "revert"
+      ]
     },
     {
       "title": "## 🏗️ Infrastructure",
-      "labels": ["ci", "cd", "build", "deploy"]
+      "labels": [
+        "ci",
+        "cd",
+        "build",
+        "deploy"
+      ]
     },
     {
       "title": "## 🔄 Changes",
-      "labels": ["changed"]
+      "labels": [
+        "changed"
+      ]
     }
   ],
   "ignore_labels": [
@@ -41,6 +69,12 @@
   "empty_template": "- No changes",
   "label_extractor": [
     {
+      "pattern": "^\\w+(\\(.+\\))?:?\\s*regenerate white-label audit.*",
+      "on_property": "title",
+      "method": "regexr",
+      "target": "ignore"
+    },
+    {
       "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?!?:.*",
       "on_property": "title",
       "method": "regexr",
@@ -51,12 +85,6 @@
       "on_property": "title",
       "method": "regexr",
       "target": "changed"
-    },
-    {
-      "pattern": "^\\w+(\\(.+\\))?:?\\s*regenerate white-label audit.*",
-      "on_property": "title",
-      "method": "regexr",
-      "target": "ignore"
     }
   ],
   "transformers": [
