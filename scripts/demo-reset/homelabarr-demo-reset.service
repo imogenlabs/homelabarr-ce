@@ -1,0 +1,29 @@
+[Unit]
+Description=Reset the HomelabARR public demo to its pristine state
+Documentation=https://mjashley.atlassian.net/browse/HLCE-320
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/homelabarr-demo-reset
+
+# This unit needs the Docker socket on a host that also runs production
+# websites, so it cannot be unprivileged. Everything it does NOT need is taken
+# away instead: it writes nothing to disk, gets no new privileges, and cannot
+# see the rest of the filesystem.
+NoNewPrivileges=true
+ProtectSystem=strict
+# The one exception to the read-only filesystem: fresh Docker volumes come back
+# root-owned and have to be handed to the uid the backend runs as. Scoped to the
+# volume tree and nothing else.
+ReadWritePaths=/var/lib/docker/volumes
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true

@@ -1,0 +1,19 @@
+[Unit]
+Description=Reset the HomelabARR public demo every 30 minutes
+Documentation=https://mjashley.atlassian.net/browse/HLCE-320
+
+[Timer]
+# Every 30 minutes, so the worst case for a visitor who changes the admin
+# password is half an hour of a broken demo rather than forever.
+#
+# Offset off the hour on purpose: the uptime check runs at */5, and the reset
+# blinks /api for a few seconds while the backend restarts. The check retries
+# three times before alerting, so it rides this out — the offset just keeps the
+# two from lining up habitually.
+OnCalendar=*-*-* *:07,37:00
+Persistent=true
+AccuracySec=30s
+Unit=homelabarr-demo-reset.service
+
+[Install]
+WantedBy=timers.target
