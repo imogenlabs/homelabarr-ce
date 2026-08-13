@@ -69,7 +69,7 @@
   "empty_template": "- No changes",
   "label_extractor": [
     {
-      "pattern": "^\\w+(\\(.+\\))?:?\\s*regenerate white-label audit.*",
+      "pattern": ".*white-label audit.*",
       "on_property": "title",
       "method": "regexr",
       "target": "ignore"
