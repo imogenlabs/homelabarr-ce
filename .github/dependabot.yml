@@ -1,16 +1,31 @@
+# Routine dependency updates must not cost anyone a decision.
+#
+# This file exists to keep the number of pull requests small and predictable;
+# .github/workflows/dependabot-auto-merge.yml then approves and merges the
+# routine ones on its own. The two are a pair — loosen the grouping here and you
+# put the noise straight back into somebody's inbox.
+#
+# Rules of thumb if you edit this:
+#   • Weekly, not daily. A daily cadence produced a PR most mornings.
+#   • Group hard. One PR for production, one for development, per ecosystem.
+#   • Majors are deliberately NOT grouped. They arrive on their own, get the
+#     major-update label, and are never merged automatically.
+#   • No `reviewers:` anywhere. Naming a reviewer is a notification, which is
+#     precisely what this is meant to stop.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 3
     groups:
       actions:
+        applies-to: version-updates
         patterns: ["*"]
-    labels: ["dependencies", "github-actions", "needs-triage"]
-    reviewers:
-      - "smashingtags"
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "github-actions"]
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
@@ -20,17 +35,22 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 5
     groups:
-      radix-ui:
-        patterns: ["@radix-ui/*"]
-      dev-tools:
+      # Two PRs a week for everything routine, instead of one per package.
+      production:
+        applies-to: version-updates
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      development:
+        applies-to: version-updates
         dependency-type: "development"
         patterns: ["*"]
-    labels: ["dependencies", "npm", "needs-triage"]
-    reviewers:
-      - "smashingtags"
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "npm"]
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
@@ -48,10 +68,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 2
-    labels: ["dependencies", "docker", "needs-triage"]
-    reviewers:
-      - "smashingtags"
+    groups:
+      docker:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "docker"]
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
