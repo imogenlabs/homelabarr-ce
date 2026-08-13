@@ -32,6 +32,8 @@ on: pull_request
 permissions:
   contents: write
   pull-requests: write
+  # Labels live on the issues API — without this, labelling a major fails.
+  issues: write
 
 jobs:
   automerge:
@@ -55,8 +57,24 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPS: ${{ steps.meta.outputs.dependency-names }}
         run: |
-          gh pr edit "$PR_URL" --add-label "major-update"
-          gh pr comment "$PR_URL" --body "Major version bump (\`${DEPS}\`) — left open on purpose. Routine patch and minor updates merge themselves; majors can change behaviour, so this one wants a person. Nothing is blocking: review and merge when you feel like it."
+          set -uo pipefail
+          # The label has to exist before it can be applied. The first real major
+          # to arrive found it missing, `gh pr edit` exited 1, and `bash -e` killed
+          # the step before it could leave its comment — so the PR was held
+          # correctly but silently. Create it idempotently instead of assuming.
+          gh label create major-update \
+            --color D93F0B \
+            --description "Major version bump — held for a human, never auto-merged" \
+            --force >/dev/null 2>&1 || echo "label already present"
+
+          # Comment once, not on every push to the branch.
+          if gh pr view "$PR_URL" --json labels --jq '.labels[].name' | grep -qx "major-update"; then
+            echo "Already held: ${DEPS}"
+            exit 0
+          fi
+
+          gh pr edit "$PR_URL" --add-label "major-update" || echo "could not label, continuing"
+          gh pr comment "$PR_URL" --body "Major version bump (\`${DEPS}\`) — left open on purpose. Routine patch and minor updates merge themselves; majors can change behaviour, so this one wants a person. Nothing is blocking: review and merge whenever suits."
           echo "Major update held: ${DEPS}"
 
       - name: Approve
