@@ -35,7 +35,6 @@
     "duplicate",
     "invalid"
   ],
-  "exclude_contributors": ["github-actions[bot]"],
   "sort": "ASC",
   "template": "${{CHANGELOG}}\n${{UNCATEGORIZED}}",
   "pr_template": "- ${{TITLE}} by @${{AUTHOR}} in #${{NUMBER}}",
@@ -52,6 +51,12 @@
       "on_property": "title",
       "method": "regexr",
       "target": "changed"
+    },
+    {
+      "pattern": "^\\w+(\\(.+\\))?:?\\s*regenerate white-label audit.*",
+      "on_property": "title",
+      "method": "regexr",
+      "target": "ignore"
     }
   ],
   "transformers": [
