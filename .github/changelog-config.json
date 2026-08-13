@@ -5,7 +5,7 @@
       "labels": ["feat", "feature", "enhancement"]
     },
     {
-      "title": "## 🐛 Bug Fixes", 
+      "title": "## 🐛 Bug Fixes",
       "labels": ["fix", "bug", "bugfix"]
     },
     {
@@ -14,11 +14,15 @@
     },
     {
       "title": "## 🔧 Maintenance",
-      "labels": ["refactor", "perf", "chore", "maintenance"]
+      "labels": ["refactor", "perf", "chore", "maintenance", "style", "test", "revert"]
     },
     {
       "title": "## 🏗️ Infrastructure",
       "labels": ["ci", "cd", "build", "deploy"]
+    },
+    {
+      "title": "## 🔄 Changes",
+      "labels": ["changed"]
     }
   ],
   "ignore_labels": [
@@ -28,46 +32,30 @@
     "invalid"
   ],
   "sort": "ASC",
-  "template": "${{CHANGELOG}}",
+  "template": "${{CHANGELOG}}\n${{UNCATEGORIZED}}",
   "pr_template": "- ${{TITLE}} by @${{AUTHOR}} in #${{NUMBER}}",
   "empty_template": "- No changes",
   "label_extractor": [
     {
-      "pattern": "^(feat|feature)(\\(.+\\))?:",
-      "target": "feat"
+      "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?!?:.*",
+      "on_property": "title",
+      "method": "regexr",
+      "target": "$1"
     },
     {
-      "pattern": "^(fix|bug)(\\(.+\\))?:",
-      "target": "fix"
-    },
-    {
-      "pattern": "^(docs?)(\\(.+\\))?:",
-      "target": "docs"
-    },
-    {
-      "pattern": "^(refactor|perf|chore)(\\(.+\\))?:",
-      "target": "refactor"
-    },
-    {
-      "pattern": "^(ci|cd|build)(\\(.+\\))?:",
-      "target": "ci"
+      "pattern": "^[A-Z]+-\\d+:.*",
+      "on_property": "title",
+      "method": "regexr",
+      "target": "changed"
     }
   ],
   "transformers": [
     {
-      "pattern": "^(feat|feature)(\\(.+\\))?:\\s*(.+)",
-      "target": "$3"
-    },
-    {
-      "pattern": "^(fix|bug)(\\(.+\\))?:\\s*(.+)",
-      "target": "$3"
-    },
-    {
-      "pattern": "^(docs?)(\\(.+\\))?:\\s*(.+)",
+      "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?!?:\\s*(.+)",
       "target": "$3"
     }
   ],
   "max_tags_to_fetch": 20,
-  "max_pull_requests": 50,
-  "max_back_track_time_days": 90
+  "max_pull_requests": 200,
+  "max_back_track_time_days": 365
 }
