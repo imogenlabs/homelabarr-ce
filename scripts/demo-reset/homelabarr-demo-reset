@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+# Restores demo.homelabarr.com to its pristine state.
+#
+# The demo is deliberately open: DEFAULT_ADMIN_PASSWORD is admin and the login
+# screen tells visitors to sign in with admin/admin. That is by design — it is
+# the front door for the Unraid Community Apps listing and it should cost a
+# visitor nothing to look around. The other half of that bargain is this script.
+# Nothing in the server stops a visitor changing the admin password:
+# /auth/change-password is behind requireAuth and nothing else. Without a reset,
+# the first person to change it locks everyone else out of the demo forever, and
+# the same goes for junk accounts and minted API keys.
+#
+# ── DANGER, READ BEFORE EDITING ──────────────────────────────────────────────
+# The demo shares the Compose project name "compose" with docker-compose.sites.yml
+# in the same directory, which runs homelabarr.com, mjashley.com, eightly,
+# imogenlabs, cooper-cross, agents, InvoiceNinja and Watchtower on this same host.
+# `docker compose down -v` or `--remove-orphans` in that project would take the
+# production websites and their data with it. So this script NEVER uses either.
+#
+# It cannot be made unprivileged — clearing a Docker volume needs Docker — so
+# instead the surface is constrained. Every object is named literally; nothing is
+# selected by wildcard, label or "all". Three interlocks refuse to proceed if
+# reality does not match those names:
+#
+#   1. the compose file must define exactly the two demo services, so pointing
+#      COMPOSE_FILE at sites.yml aborts instead of recreating production;
+#   2. a volume is removed only if its name is in the expected list AND no
+#      container outside the demo is attached to it;
+#   3. every non-demo container running before the reset must still be running
+#      after it, so collateral damage fails loudly instead of exiting 0.
+#
+# The frontend is deliberately left alone. It is stateless — all demo state lives
+# in the backend's three volumes — and recreating it would take the site fully
+# down for the ~45s the backend needs to report healthy, every cycle, which would
+# also trip the 5-minute uptime check. Only the backend is replaced, so the site
+# keeps serving HTML and only /api blinks for a few seconds.
+
+set -uo pipefail
+
+COMPOSE_FILE=${COMPOSE_FILE:-/opt/appdata/compose/docker-compose.homelabarr-demo.yml}
+
+# Pinned explicitly. Compose derives the project name from the compose file's
+# directory, so it is "compose" today — but if that ever drifted, `up` would
+# create a second set of volumes under a new prefix and quietly leave the ones
+# this script just cleared, resetting nothing.
+PROJECT=${PROJECT:-compose}
+
+BACKEND=homelabarr-demo-backend
+FRONTEND=homelabarr-demo-frontend
+DEMO_CONTAINERS=("$BACKEND" "$FRONTEND")
+DEMO_SERVICES=(homelabarr-demo-backend homelabarr-demo-frontend)
+VOLUMES=(
+  compose_homelabarr-demo-config
+  compose_homelabarr-demo-data
+  compose_homelabarr-demo-activity
+)
+
+HEALTH_URL=${HEALTH_URL:-https://demo.homelabarr.com/api/applications}
+EXPECT_APPS=${EXPECT_APPS:-117}
+HEALTH_TRIES=${HEALTH_TRIES:-30}
+
+ENV_FILE=${HOMELABARR_DEMO_RESET_ENV:-/etc/homelabarr/demo-reset.env}
+# shellcheck source=/dev/null
+[ -r "$ENV_FILE" ] && . "$ENV_FILE"
+
+# Every failure names the step that broke. A reset that exits 0 on a demo that
+# is still broken is worse than no reset at all — it is the silent-failure shape
+# this project has been bitten by repeatedly.
+die() {
+  local step="$1"
+  echo "demo reset FAILED at: ${step}" >&2
+
+  # Best effort. A webhook is optional here because the every-5-minute uptime
+  # check already alerts when the demo stops answering; this only makes the
+  # failures that leave the demo *up* (a refused interlock, a missing seed)
+  # visible too. Delivery problems are reported, never swallowed, and never
+  # allowed to mask the original failure.
+  local url
+  url="$(printf '%s' "${WEBHOOK_URL:-}" | tr -d '[:space:]')"
+  if [ -n "$url" ]; then
+    local payload code
+    payload=$(printf '{"content":"**demo reset FAILED** on %s at step: %s"}' \
+      "$(hostname)" "${step//\"/}")
+    code=$(curl -sS -m 20 -o /dev/null -w '%{http_code}' \
+      -X POST -H 'Content-Type: application/json' -d "$payload" "$url" || true)
+    case "${code:-000}" in
+      200|204) ;;
+      *) echo "warning: could not deliver the failure alert (HTTP ${code:-000})" >&2 ;;
+    esac
+  fi
+  exit 1
+}
+
+# ── interlock 1: the compose file is the demo's, and only the demo's ─────────
+[ -r "$COMPOSE_FILE" ] || die "compose file ${COMPOSE_FILE} is unreadable"
+
+services=$(docker compose -f "$COMPOSE_FILE" config --services 2>/dev/null | sort | tr '\n' ' ')
+services=${services% }
+expected=$(printf '%s\n' "${DEMO_SERVICES[@]}" | sort | tr '\n' ' ')
+expected=${expected% }
+[ "$services" = "$expected" ] \
+  || die "compose file defines '${services}', expected exactly '${expected}' — refusing to touch it"
+
+# ── interlock 2a: the volume names are the demo's ────────────────────────────
+for v in "${VOLUMES[@]}"; do
+  case "$v" in
+    compose_homelabarr-demo-*) ;;
+    *) die "refusing to remove unexpected volume '${v}'" ;;
+  esac
+done
+
+is_demo_container() {
+  local name="$1"
+  for c in "${DEMO_CONTAINERS[@]}"; do [ "$name" = "$c" ] && return 0; done
+  return 1
+}
+
+# Everything running on this host that is not the demo. Recorded before the
+# reset and compared after it.
+census() {
+  docker ps --format '{{.Names}}' \
+    | grep -vxF -e "$BACKEND" -e "$FRONTEND" \
+    | sort
+}
+
+before=$(census) || die "could not list running containers"
+[ -n "$before" ] || die "container census came back empty — docker is not answering properly"
+echo "== non-demo containers running before the reset: $(printf '%s\n' "$before" | wc -l | tr -d ' ')"
+
+echo "== replacing the demo backend =="
+docker rm -f "$BACKEND" >/dev/null 2>&1
+docker inspect "$BACKEND" >/dev/null 2>&1 && die "container ${BACKEND} could not be removed"
+
+echo "== clearing the demo volumes =="
+for v in "${VOLUMES[@]}"; do
+  # interlock 2b: the real protection. A name can be mistyped; an attachment
+  # cannot be faked. If anything outside the demo has this volume mounted, the
+  # name list is wrong and removing it would destroy someone else's data.
+  attached=$(docker ps -a --filter "volume=${v}" --format '{{.Names}}')
+  while IFS= read -r name; do
+    [ -z "$name" ] && continue
+    is_demo_container "$name" || die "volume ${v} is attached to non-demo container '${name}'"
+  done <<< "$attached"
+
+  docker volume rm "$v" >/dev/null 2>&1
+  docker volume inspect "$v" >/dev/null 2>&1 && die "volume ${v} survived removal"
+done
+
+# No `down`, no `-v`, no `--remove-orphans` anywhere below — see the header.
+# Every compose call is scoped by the compose file, which interlock 1 has
+# already proven is the demo's.
+compose() { docker compose -p "$PROJECT" -f "$COMPOSE_FILE" "$@"; }
+
+# `create` makes the container and the volumes without starting anything, which
+# is the only window in which the volumes can be fixed up before the backend
+# tries to use them.
+echo "== creating the demo backend and its volumes =="
+# stdout is noise, stderr is the reason it failed — never suppress the latter.
+compose create "$BACKEND" >/dev/null || die "compose create"
+
+# The image ships /app/data and /app/server/config owned by 1001, so Docker
+# seeds those fresh volumes with the right ownership. It has no
+# /app/server/activity-data at all, so Docker creates that one owned by root —
+# and the backend, which runs as 1001, dies with EACCES on its first audit
+# write. Worse, the uncaught-exception handler then crashes on its own audit
+# insert (NOT NULL constraint failed: audit_events.result), so the log blames
+# SQLite rather than the permission error.
+#
+# The demo could therefore never be rebuilt from empty volumes — this script
+# found that out the first time it ran. The real fix belongs in the image; until
+# it lands, make the fresh volumes usable by the user the container declares.
+owner=$(docker inspect -f '{{.Config.User}}' "$BACKEND" 2>/dev/null)
+[ -n "$owner" ] || die "could not read the uid the backend runs as"
+for v in "${VOLUMES[@]}"; do
+  mp=$(docker volume inspect -f '{{.Mountpoint}}' "$v" 2>/dev/null)
+  # chown -R on a path this script did not verify would be a very bad day.
+  case "$mp" in
+    /var/lib/docker/volumes/"$v"/_data) ;;
+    *) die "volume ${v} has an unexpected mountpoint '${mp}'" ;;
+  esac
+  chown "$owner" "$mp" || die "could not give ${v} to ${owner}"
+done
+
+echo "== starting the demo backend =="
+# --no-deps because the frontend is already running and declares
+# `depends_on: condition: service_healthy`. Without it, compose evaluates that
+# dependency against a backend that has only just started, finds it still in
+# `starting`, and exits non-zero with "dependency failed to start" — failing the
+# reset every single run while the demo was in fact coming up fine.
+compose up -d --no-deps "$BACKEND" || die "compose up backend"
+
+echo "== waiting for the backend to report healthy =="
+healthy=false
+for _ in $(seq 1 "$HEALTH_TRIES"); do
+  state=$(docker inspect -f '{{.State.Health.Status}}' "$BACKEND" 2>/dev/null)
+  [ "$state" = "healthy" ] && { healthy=true; break; }
+  # Crash-looping is terminal, not something waiting will fix.
+  restarts=$(docker inspect -f '{{.RestartCount}}' "$BACKEND" 2>/dev/null)
+  [ "${restarts:-0}" -gt 3 ] && die "the backend is crash-looping (${restarts} restarts) — check: docker logs ${BACKEND}"
+  sleep 5
+done
+[ "$healthy" = true ] || die "the backend never reported healthy within $((HEALTH_TRIES * 5))s"
+
+echo "== reconciling the rest of the stack =="
+# Now that the backend is healthy the frontend's dependency is satisfiable, so
+# this is a no-op when the frontend is already up and recreates it when it is not.
+compose up -d || die "compose up"
+
+echo "== waiting for the demo to serve the catalogue =="
+ok=false
+for _ in $(seq 1 "$HEALTH_TRIES"); do
+  body=$(curl -fsS --max-time 10 "$HEALTH_URL" 2>/dev/null)
+  if [ -n "$body" ]; then
+    # One sed rather than a grep|head|grep chain: `head` closing the pipe early
+    # is the same pipefail trap as above.
+    total=$(sed -n 's/.*"totalApps"[[:space:]]*:[[:space:]]*\([0-9]\{1,\}\).*/\1/p' <<< "$body")
+    [ "${total:-0}" = "$EXPECT_APPS" ] && { ok=true; break; }
+  fi
+  sleep 5
+done
+[ "$ok" = true ] || die "the demo did not serve ${EXPECT_APPS} apps within $((HEALTH_TRIES * 5))s"
+
+# Proves the default credentials are back WITHOUT logging in. This line is only
+# reachable when the user store is empty (server/auth.js initializeAuth), so it
+# is positive evidence that the store was wiped and reseeded from
+# DEFAULT_ADMIN_PASSWORD. Asserted, not merely noted: a reset that clears the
+# volumes but does not reseed leaves a demo nobody can sign into.
+echo "== confirming the default admin was reseeded =="
+# Captured into a variable and matched with a here-string on purpose. Piping
+# into `grep -q` looks equivalent and is not: grep exits at the first match,
+# `docker logs` takes SIGPIPE and returns 141, and `pipefail` reports the whole
+# pipeline as failed — so the check failed *because* it matched, and the reset
+# died at the last step every run.
+backend_log=$(docker logs "$BACKEND" 2>&1) || die "could not read the backend log"
+grep -qi 'default admin user' <<< "$backend_log" \
+  || die "the backend never logged the default admin seed — credentials may not be restored"
+
+# ── interlock 3: nothing else on this host was harmed ────────────────────────
+after=$(census) || die "could not list running containers after the reset"
+lost=$(comm -23 <(printf '%s\n' "$before") <(printf '%s\n' "$after"))
+[ -z "$lost" ] || die "collateral damage — these non-demo containers stopped: ${lost//$'\n'/, }"
+
+echo "demo reset OK — ${EXPECT_APPS} apps served, default credentials reseeded, $(printf '%s\n' "$after" | wc -l | tr -d ' ') non-demo containers untouched"
