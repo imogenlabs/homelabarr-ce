@@ -168,36 +168,72 @@ describe('apiFetch — 401 refresh interceptor', () => {
   });
 });
 
-describe('getContainers — demo fallback', () => {
-  // jsdom serves pages from http://localhost/ by default, so
-  // isDemoEnvironment() is already true (hostname === 'localhost').
+// HLCE-315. Whether the seeded container list may be substituted is decided by
+// the SERVER (`demo: true` on /health, set from DEMO_MODE), not by sniffing
+// window.location.hostname. The old predicate matched `dev.`/`staging.`/
+// `localhost` and never `demo.`/`ce-demo.`, so the live demo — the hostname
+// that actually mattered — always came back false and rendered empty.
+function healthResponse(demo: boolean) {
+  return mockResponse(200, { ok: true, state: 'ready', demo });
+}
 
-  it('returns the seeded demo containers when the fetch rejects (backend down)', async () => {
-    fetchMock.mockRejectedValueOnce(new Error('network down'));
-    const { getContainers } = await importApi();
-
-    const data = await getContainers();
-
-    expect(Array.isArray(data.containers)).toBe(true);
-    expect(data.containers.length).toBeGreaterThan(0);
-    // shape of a seeded container
-    const names = data.containers.map((c: { Names: string[] }) => c.Names[0]);
-    expect(names).toContain('/plex');
-    const plex = data.containers.find((c: { Names: string[] }) => c.Names[0] === '/plex');
-    expect(plex).toMatchObject({ Id: expect.any(String), State: 'running' });
-  });
-
-  it('returns demo containers when the backend responds with an empty list', async () => {
-    fetchMock.mockResolvedValueOnce(mockResponse(200, { containers: [] }));
+describe('getContainers — demo fallback (HLCE-315)', () => {
+  it('substitutes the seeded containers when the server says it is a demo and the list is empty', async () => {
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(200, { containers: [] }))
+      .mockResolvedValueOnce(healthResponse(true));
     const { getContainers } = await importApi();
 
     const data = await getContainers();
 
     expect(data.containers.length).toBeGreaterThan(0);
     expect(data.containers.map((c: { Names: string[] }) => c.Names[0])).toContain('/sonarr');
+    // The decision came from /health, not from the URL.
+    expect(fetchMock.mock.calls[1][0]).toContain('/health');
   });
 
-  it('returns the backend list unchanged when it has real containers', async () => {
+  it('substitutes the seeded containers when the request fails on a demo (backend down)', async () => {
+    fetchMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(healthResponse(true));
+    const { getContainers } = await importApi();
+
+    const data = await getContainers();
+
+    const names = data.containers.map((c: { Names: string[] }) => c.Names[0]);
+    expect(names).toContain('/plex');
+    const plex = data.containers.find((c: { Names: string[] }) => c.Names[0] === '/plex');
+    expect(plex).toMatchObject({ Id: expect.any(String), State: 'running' });
+  });
+
+  it('never fabricates containers on a real install with an empty list', async () => {
+    // The inverse of the reported bug, and a real defect of the old predicate:
+    // any install reached at localhost — every developer, and plenty of real
+    // self-hosted ones — had eight fake containers injected the moment Docker
+    // reported none. jsdom serves from http://localhost/, so the old hostname
+    // check would return true here.
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(200, { containers: [] }))
+      .mockResolvedValueOnce(healthResponse(false));
+    const { getContainers } = await importApi();
+
+    const data = await getContainers();
+
+    expect(data.containers).toEqual([]);
+  });
+
+  it('returns an empty list, not seed data, when /health cannot be reached', async () => {
+    // Fail closed: showing a real deployment invented containers is worse than
+    // showing the demo none.
+    fetchMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockRejectedValueOnce(new Error('network down'));
+    const { getContainers } = await importApi();
+
+    expect((await getContainers()).containers).toEqual([]);
+  });
+
+  it('returns the backend list unchanged when it has real containers, without asking /health', async () => {
     const real = [{ Id: 'real-1', Names: ['/whoami'], State: 'running' }];
     fetchMock.mockResolvedValueOnce(mockResponse(200, { containers: real }));
     const { getContainers } = await importApi();
@@ -205,6 +241,33 @@ describe('getContainers — demo fallback', () => {
     const data = await getContainers();
 
     expect(data.containers).toEqual(real);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks the server only once per page load and shares the answer', async () => {
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(200, { containers: [] }))
+      .mockResolvedValueOnce(healthResponse(true))
+      .mockResolvedValueOnce(mockResponse(200, { containers: [] }));
+    const { getContainers } = await importApi();
+
+    await getContainers();
+    await getContainers();
+
+    const healthCalls = fetchMock.mock.calls.filter((c) => String(c[0]).includes('/health'));
+    expect(healthCalls).toHaveLength(1);
+  });
+
+  it('treats a non-ok or non-boolean demo flag as not-a-demo', async () => {
+    for (const health of [mockResponse(500, {}), mockResponse(200, { demo: 'yes' }), mockResponse(200, {})]) {
+      vi.resetModules();
+      fetchMock.mockReset();
+      fetchMock
+        .mockResolvedValueOnce(mockResponse(200, { containers: [] }))
+        .mockResolvedValueOnce(health);
+      const { getContainers } = await importApi();
+      expect((await getContainers()).containers).toEqual([]);
+    }
   });
 
   it('requests the stats variant of the endpoint when includeStats is true', async () => {

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { isDemoMode } from '../demo-mode.js';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -12,6 +13,11 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
       ok: true,
       ts: Math.floor(Date.now() / 1000),
       state: 'ready',
+      // Whether this instance is the public demo. The frontend used to infer
+      // this from window.location.hostname, which silently stopped being true
+      // when the demo moved hosts (HLCE-315). The server is the only thing that
+      // actually knows, so it says so, on the one endpoint that needs no auth.
+      demo: isDemoMode(),
       process: {
         uptime_seconds: Math.floor(process.uptime()),
         ...counters,

@@ -145,23 +145,51 @@ export async function getContainers(includeStats = false) {
     const response = await apiFetch(path);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    if ((!data.containers || data.containers.length === 0) && isDemoEnvironment()) {
+    if ((!data.containers || data.containers.length === 0) && await isDemoInstance()) {
       return { ...data, containers: DEMO_CONTAINERS };
     }
     return data;
   } catch {
-    if (isDemoEnvironment()) {
+    if (await isDemoInstance()) {
       return { containers: DEMO_CONTAINERS };
     }
     return { containers: [] };
   }
 }
 
-function isDemoEnvironment(): boolean {
-  const host = window.location.hostname;
-  return host.includes('dev.') || host.includes('ce-dev.') ||
-         host.includes('staging.') || host.includes('ce-staging.') ||
-         host === 'localhost' || host === '127.0.0.1';
+// Is this instance the public demo, and therefore allowed to substitute the
+// seeded container list when it has none of its own?
+//
+// This used to guess from window.location.hostname, matching `dev.`, `staging.`
+// and `localhost`. Guessing was the bug (HLCE-315): the list never included
+// `demo.` or `ce-demo.`, so the actual demo — the first thing a prospective
+// user sees, linked straight from the Unraid Community Apps listing — rendered
+// an empty dashboard. Nothing failed loudly; the predicate simply returned
+// false forever, and it would have broken again the next time the demo moved.
+//
+// The server sets DEMO_MODE and is the only party that actually knows, so ask
+// it. That also fixes the inverse defect the hostname check had: a real install
+// reached at `localhost` — which is most of them, and every developer — got
+// eight fake containers injected the moment its own list was empty. Seed data
+// now requires a server that explicitly declares itself a demo.
+//
+// Cached as a promise: one answer per page load, and concurrent callers share
+// the same in-flight request rather than each firing their own.
+let demoInstance: Promise<boolean> | null = null;
+
+async function isDemoInstance(): Promise<boolean> {
+  demoInstance ??= (async () => {
+    try {
+      const response = await apiFetchRaw('/health');
+      if (!response.ok) return false;
+      return (await response.json())?.demo === true;
+    } catch {
+      // Unreachable or unparseable: assume a real install. Showing a real
+      // deployment fabricated containers is worse than showing the demo none.
+      return false;
+    }
+  })();
+  return demoInstance;
 }
 
 export async function getContainerStats(containerId: string) {
