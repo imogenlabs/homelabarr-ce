@@ -10,7 +10,7 @@ import { initializeActivityLog, logActivity } from './activity-logger.js';
 import { initAudit, audit, verifyChain } from './audit.js';
 import { maybeAlert, setAuditHook } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
-import { createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import { createLoginLimiter, createLockoutGuard, ipSubnetKey } from './ratelimit.js';
 import { createCrashHandlers } from './crash.js';
 import { attackTag } from './middleware/attackTag.js';
 import { mountHoney } from './routes/honey.js';
@@ -144,6 +144,7 @@ const globalRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
+  keyGenerator: ipSubnetKey,
   // Disabled only when explicitly opted in (E2E harness drives many requests from
   // a single IP). Never set in production.
   skip: () => process.env.RATE_LIMIT_DISABLED === 'true',
