@@ -35,8 +35,182 @@ env:
 permissions:
   contents: read
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Each architecture is built on a runner of that architecture. It used to build
+# linux/amd64 and linux/arm64 in a single step on amd64 runners, which meant
+# every arm64 layer ran under QEMU: `npm ci` and the native SQLite binding were
+# emulated instruction by instruction. A cold build took 2h17m (run 31657681373)
+# and held up a merged security fix. Warm cache hid it — a docs-only change
+# finished in 13 minutes, so nothing looked wrong until something touched the
+# frontend source.
+#
+# So: a matrix builds one platform per native runner, pushing by digest only,
+# and a merge job joins those digests into one multi-arch manifest with
+# `docker buildx imagetools create`. There is no QEMU anywhere.
+#
+# Things that must not regress, all learned the hard way:
+#   • The published tag stays a multi-arch manifest serving both platforms.
+#   • Images publish to BOTH GHCR and Docker Hub. Docker Hub is the dominant
+#     pull source (~34k pulls via the Unraid template). Never drop it.
+#   • cosign signs and verifies the FINAL manifest, not the per-arch pieces.
+#   • Never `docker tag` + push a buildx image: it silently drops the platform
+#     and produces a tag hosts cannot pull. Copy manifests with imagetools.
+# ─────────────────────────────────────────────────────────────────────────────
+
 jobs:
-  build-and-push:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            # GitHub-hosted ARM, free for public repos. Verified on this repo
+            # before this change landed: uname -m = aarch64, Hosted Compute
+            # Agent. The org's self-hosted runners are all X64 and are blocked
+            # from public repos by design (HLCE-203/204) — do not reach for them.
+            runner: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        token: ${{ secrets.GH_PAT }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
+
+    - name: Log in to Docker Hub
+      # Skipped on PRs (no push happens there); on push/dispatch a bad login
+      # must fail the job loudly rather than be swallowed and resurface as a
+      # cryptic "insufficient_scope" at the push step. (HLCE-293.)
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      run: |
+        echo "${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+    # Labels only here — tags are applied once, on the merged manifest.
+    - name: Extract metadata for frontend
+      id: meta-frontend
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}
+        labels: |
+          org.opencontainers.image.title=HomelabARR Frontend
+          org.opencontainers.image.description=React frontend for HomelabARR CE container management
+          org.opencontainers.image.vendor=HomelabARR CE
+          org.opencontainers.image.licenses=MIT
+
+    - name: Extract metadata for backend
+      id: meta-backend
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}
+        labels: |
+          org.opencontainers.image.title=HomelabARR Backend
+          org.opencontainers.image.description=Node.js backend with CE Bridge for HomelabARR container management
+          org.opencontainers.image.vendor=HomelabARR CE
+          org.opencontainers.image.licenses=MIT
+
+    - name: Build and push frontend by digest
+      id: build-frontend
+      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: ${{ matrix.platform }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        # Both registries in one push. The digest is the same in each, so the
+        # merge job can build a manifest for either from the same value.
+        outputs: ${{ github.event_name != 'pull_request' && github.event.inputs.push_images != 'false' && format('type=image,"name={0}/{1}/{2},{3}/{2}",push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.NAMESPACE, env.FRONTEND_IMAGE_NAME, env.DOCKERHUB_NAMESPACE) || '' }}
+        tags: ${{ github.event_name == 'pull_request' && format('{0}/{1}/{2}:pr-{3}', env.REGISTRY, env.NAMESPACE, env.FRONTEND_IMAGE_NAME, github.event.number) || '' }}
+        load: ${{ github.event_name == 'pull_request' }}
+        # Scoped per arch and per image, or the two architectures overwrite each
+        # other's cache and every build looks cold.
+        cache-from: type=gha,scope=${{ matrix.arch }}-frontend
+        cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope={0}-frontend', matrix.arch) || '' }}
+        # The weekly scheduled run builds from scratch so the Alpine-edge
+        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
+        no-cache: ${{ github.event_name == 'schedule' }}
+        provenance: ${{ github.event_name != 'pull_request' }}
+        sbom: ${{ github.event_name != 'pull_request' }}
+        build-args: |
+          NODE_ENV=production
+
+    - name: Build and push backend by digest
+      id: build-backend
+      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
+      with:
+        context: .
+        file: ./Dockerfile.backend
+        platforms: ${{ matrix.platform }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        outputs: ${{ github.event_name != 'pull_request' && github.event.inputs.push_images != 'false' && format('type=image,"name={0}/{1}/{2},{3}/{2}",push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.NAMESPACE, env.BACKEND_IMAGE_NAME, env.DOCKERHUB_NAMESPACE) || '' }}
+        tags: ${{ github.event_name == 'pull_request' && format('{0}/{1}/{2}:pr-{3}', env.REGISTRY, env.NAMESPACE, env.BACKEND_IMAGE_NAME, github.event.number) || '' }}
+        load: ${{ github.event_name == 'pull_request' }}
+        cache-from: type=gha,scope=${{ matrix.arch }}-backend
+        cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope={0}-backend', matrix.arch) || '' }}
+        no-cache: ${{ github.event_name == 'schedule' }}
+        provenance: ${{ github.event_name != 'pull_request' }}
+        sbom: ${{ github.event_name != 'pull_request' }}
+        build-args: |
+          NODE_ENV=production
+
+    - name: Export digests
+      if: github.event_name != 'pull_request' && github.event.inputs.push_images != 'false'
+      run: |
+        set -euo pipefail
+        mkdir -p /tmp/digests/frontend /tmp/digests/backend
+        fe='${{ steps.build-frontend.outputs.digest }}'
+        be='${{ steps.build-backend.outputs.digest }}'
+        # A missing digest here means nothing was pushed. Failing now beats a
+        # merge job that quietly builds a one-architecture manifest.
+        [ -n "$fe" ] || { echo "frontend digest is empty — nothing was pushed"; exit 1; }
+        [ -n "$be" ] || { echo "backend digest is empty — nothing was pushed"; exit 1; }
+        touch "/tmp/digests/frontend/${fe#sha256:}"
+        touch "/tmp/digests/backend/${be#sha256:}"
+        echo "frontend ${{ matrix.arch }}: $fe"
+        echo "backend  ${{ matrix.arch }}: $be"
+
+    - name: Upload digests
+      if: github.event_name != 'pull_request' && github.event.inputs.push_images != 'false'
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      with:
+        name: digests-${{ matrix.arch }}
+        path: /tmp/digests/*
+        if-no-files-found: error
+        retention-days: 1
+
+    - name: Test image functionality
+      if: github.event_name == 'pull_request' && matrix.arch == 'amd64'
+      run: |
+        echo "Testing frontend image..."
+        docker run --rm --detach --name test-frontend --publish 18080:8080 \
+          ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:pr-${{ github.event.number }}
+
+        sleep 10
+        curl -f http://localhost:18080/health || echo "Frontend health check failed (expected without backend)"
+        docker stop test-frontend
+        echo "Frontend image test completed"
+
+  merge:
+    name: Merge manifests, sign, scan
+    if: github.event_name != 'pull_request' && github.event.inputs.push_images != 'false'
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -53,22 +227,24 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
-      
+
     - name: Log in to Docker Hub
-      # Skipped on PRs (no push happens there); on push/dispatch a bad login
-      # must fail the job loudly rather than be swallowed and resurface as a
-      # cryptic "insufficient_scope" at the push step. (HLCE-293.)
-      if: github.event_name != 'pull_request'
       uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+
     - name: Log in to Container Registry
-      if: github.event_name != 'pull_request'
       run: |
         echo "${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-    
+
+    - name: Download digests
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+      with:
+        path: /tmp/digests
+        pattern: digests-*
+        merge-multiple: true
+
     - name: Extract metadata for frontend
       id: meta-frontend
       uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
@@ -83,11 +259,6 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
           type=raw,value=latest,enable={{is_default_branch}}
-        labels: |
-          org.opencontainers.image.title=HomelabARR Frontend
-          org.opencontainers.image.description=React frontend for HomelabARR CE container management
-          org.opencontainers.image.vendor=HomelabARR CE
-          org.opencontainers.image.licenses=MIT
 
     - name: Extract metadata for backend
       id: meta-backend
@@ -103,115 +274,128 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
           type=raw,value=latest,enable={{is_default_branch}}
-        labels: |
-          org.opencontainers.image.title=HomelabARR Backend
-          org.opencontainers.image.description=Node.js backend with CE Bridge for HomelabARR container management
-          org.opencontainers.image.vendor=HomelabARR CE
-          org.opencontainers.image.licenses=MIT
-          
-    - name: Build and push frontend image
-      id: build-frontend
-      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
-      with:
-        context: .
-        file: ./Dockerfile
-        platforms: ${{ github.event_name != 'pull_request' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-        push: ${{ github.event_name != 'pull_request' && (github.event.inputs.push_images != 'false') }}
-        load: ${{ github.event_name == 'pull_request' }}
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        labels: ${{ steps.meta-frontend.outputs.labels }}
-        cache-from: type=gha
-        cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max' || '' }}
-        # The weekly scheduled run builds from scratch so the Alpine-edge
-        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
-        no-cache: ${{ github.event_name == 'schedule' }}
-        provenance: ${{ github.event_name != 'pull_request' }}
-        sbom: ${{ github.event_name != 'pull_request' }}
-        build-args: |
-          NODE_ENV=production
 
-    - name: Build and push backend image
-      id: build-backend
-      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
-      with:
-        context: .
-        file: ./Dockerfile.backend
-        platforms: ${{ github.event_name != 'pull_request' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-        push: ${{ github.event_name != 'pull_request' && (github.event.inputs.push_images != 'false') }}
-        load: ${{ github.event_name == 'pull_request' }}
-        tags: ${{ steps.meta-backend.outputs.tags }}
-        labels: ${{ steps.meta-backend.outputs.labels }}
-        cache-from: type=gha
-        cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max' || '' }}
-        # The weekly scheduled run builds from scratch so the Alpine-edge
-        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
-        no-cache: ${{ github.event_name == 'schedule' }}
-        provenance: ${{ github.event_name != 'pull_request' }}
-        sbom: ${{ github.event_name != 'pull_request' }}
-        build-args: |
-          NODE_ENV=production
+    - name: Create multi-arch manifests
+      id: manifests
+      env:
+        FE_TAGS: ${{ steps.meta-frontend.outputs.tags }}
+        BE_TAGS: ${{ steps.meta-backend.outputs.tags }}
+        REGISTRY: ${{ env.REGISTRY }}
+      run: |
+        set -euo pipefail
+
+        # One manifest per registry, built from that registry's own per-arch
+        # digests (the content digest is identical in both). imagetools copies
+        # manifests server-side — `docker tag` here would silently drop the
+        # platform and publish a tag nobody can pull.
+        join() {
+          local image_dir="$1" ghcr_repo="$2" dh_repo="$3" tags="$4"
+          local digests=()
+          for f in /tmp/digests/"$image_dir"/*; do digests+=("$(basename "$f")"); done
+          echo "$image_dir digests: ${digests[*]}"
+          # Two architectures went in; two must come out.
+          [ "${#digests[@]}" -ge 2 ] || { echo "expected >=2 per-arch digests, got ${#digests[@]}"; exit 1; }
+
+          local ghcr_args=() dh_args=()
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            case "$tag" in
+              "$REGISTRY"/*) ghcr_args+=(-t "$tag") ;;
+              *) dh_args+=(-t "$tag") ;;
+            esac
+          done <<< "$tags"
+          [ "${#ghcr_args[@]}" -gt 0 ] || { echo "no GHCR tags resolved"; exit 1; }
+          [ "${#dh_args[@]}" -gt 0 ] || { echo "no Docker Hub tags resolved — Docker Hub is the dominant pull source, refusing to continue"; exit 1; }
+
+          local ghcr_src=() dh_src=()
+          for d in "${digests[@]}"; do
+            ghcr_src+=("${ghcr_repo}@sha256:${d}")
+            dh_src+=("${dh_repo}@sha256:${d}")
+          done
+
+          docker buildx imagetools create "${ghcr_args[@]}" "${ghcr_src[@]}"
+          docker buildx imagetools create "${dh_args[@]}" "${dh_src[@]}"
+        }
+
+        join frontend \
+          "${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}" \
+          "${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}" \
+          "$FE_TAGS"
+        join backend \
+          "${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}" \
+          "${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}" \
+          "$BE_TAGS"
+
+        # The digest of the merged manifest — this, not the per-arch pieces, is
+        # what gets signed and scanned.
+        fe_ref="$(head -1 <<< "$FE_TAGS")"
+        be_ref="$(head -1 <<< "$BE_TAGS")"
+        fe_digest="$(docker buildx imagetools inspect "$fe_ref" --format '{{json .Manifest}}' | jq -r .digest)"
+        be_digest="$(docker buildx imagetools inspect "$be_ref" --format '{{json .Manifest}}' | jq -r .digest)"
+        echo "frontend-digest=$fe_digest" >> "$GITHUB_OUTPUT"
+        echo "backend-digest=$be_digest" >> "$GITHUB_OUTPUT"
+        echo "frontend manifest: $fe_ref@$fe_digest"
+        echo "backend  manifest: $be_ref@$be_digest"
+
+    - name: Assert the manifests really serve both platforms
+      run: |
+        set -euo pipefail
+        # The whole point of the ticket. A manifest that lost an architecture
+        # must fail the build, not ship.
+        for ref in \
+          "${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}" \
+          "${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}" ; do
+          echo "── $ref"
+          platforms="$(docker buildx imagetools inspect "$ref" --format '{{json .Manifest}}' \
+            | jq -r '[.manifests[] | select(.platform.os == "linux" and (.platform.architecture | IN("amd64","arm64"))) | "\(.platform.os)/\(.platform.architecture)"] | sort | unique | join(",")')"
+          echo "   platforms: $platforms"
+          [ "$platforms" = "linux/amd64,linux/arm64" ] || { echo "   EXPECTED linux/amd64,linux/arm64"; exit 1; }
+        done
 
     - name: Install cosign
-      if: github.event_name != 'pull_request'
       uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
 
     - name: Sign frontend image
-      if: github.event_name != 'pull_request'
       env:
         COSIGN_EXPERIMENTAL: "1"
-      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}
 
     - name: Sign backend image
-      if: github.event_name != 'pull_request'
       env:
         COSIGN_EXPERIMENTAL: "1"
-      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
+      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}
 
     - name: Cosign verify freshly-pushed frontend
-      if: github.event_name != 'pull_request'
+      # The identity regexp matches any workflow in this repo, so splitting the
+      # build into two jobs of the same workflow file does not change it.
       run: |
         cosign verify \
           --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-          ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+          ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}
 
     - name: Cosign verify freshly-pushed backend
-      if: github.event_name != 'pull_request'
       run: |
         cosign verify \
           --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-          ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
-
-    - name: Comment on PR if cosign verify failed
-      if: failure() && github.event_name == 'pull_request'
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
-      with:
-        script: |
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            body: '**cosign verify failed** on the freshly-pushed image. See [PB-03](docs/ir/playbooks/PB-03-cosign-verify-fail.md) for incident response.',
-          });
+          ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}
 
     - name: Trivy scan frontend
-      if: github.event_name != 'pull_request'
       uses: aquasecurity/trivy-action@v0.36.0
       continue-on-error: true
       with:
-        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.build-frontend.outputs.digest }}
+        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}
         format: sarif
         output: trivy-frontend.sarif
         severity: CRITICAL,HIGH
         ignore-unfixed: true
 
     - name: Trivy scan backend
-      if: github.event_name != 'pull_request'
       uses: aquasecurity/trivy-action@v0.36.0
       continue-on-error: true
       with:
-        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.build-backend.outputs.digest }}
+        image-ref: ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}
         format: sarif
         output: trivy-backend.sarif
         severity: CRITICAL,HIGH
@@ -221,71 +405,65 @@ jobs:
       # Guard on the file existing: if the build/scan failed upstream the SARIF
       # is never written, and an unconditional upload errors with
       # "Path does not exist". (HLCE-293.)
-      if: always() && github.event_name != 'pull_request' && hashFiles('trivy-frontend.sarif') != ''
+      if: always() && hashFiles('trivy-frontend.sarif') != ''
       uses: github/codeql-action/upload-sarif@09dec6cc8c147fd5737df267d90a7d19cd5ff9ea  # v3
       with:
         sarif_file: trivy-frontend.sarif
         category: trivy-frontend
 
     - name: Upload Trivy SARIF (backend)
-      if: always() && github.event_name != 'pull_request' && hashFiles('trivy-backend.sarif') != ''
+      if: always() && hashFiles('trivy-backend.sarif') != ''
       uses: github/codeql-action/upload-sarif@09dec6cc8c147fd5737df267d90a7d19cd5ff9ea  # v3
       with:
         sarif_file: trivy-backend.sarif
         category: trivy-backend
 
-    - name: Test image functionality
-      if: github.event_name == 'pull_request'
-      run: |
-        echo "Testing frontend image..."
-        docker run --rm --detach --name test-frontend --publish 18080:8080 \
-          ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:pr-${{ github.event.number }}
-
-        sleep 10
-        curl -f http://localhost:18080/health || echo "Frontend health check failed (expected without backend)"
-        docker stop test-frontend
-        echo "Frontend image test completed"
-        
     - name: Update deployment manifest
       if: github.ref == 'refs/heads/main'
       run: |
         # Update homelabarr.yml with latest image tags
         sed -i 's|ghcr.io/.*/homelabarr-frontend:.*|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:latest|g' homelabarr.yml
         sed -i 's|ghcr.io/.*/homelabarr-backend:.*|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}:latest|g' homelabarr.yml
-        
+
         echo "Updated deployment manifest with latest images"
-        
+
     - name: Generate deployment summary
-      if: github.event_name != 'pull_request'
       run: |
-        echo "## 🐳 Docker Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Frontend Image" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.meta-frontend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Backend Image" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.meta-backend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🚀 Deployment" >> $GITHUB_STEP_SUMMARY
-        echo "Deploy using:" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-        echo "# Download deployment manifest" >> $GITHUB_STEP_SUMMARY
-        echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "# Configure environment" >> $GITHUB_STEP_SUMMARY
-        echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli" >> $GITHUB_STEP_SUMMARY
-        echo "export DOCKER_GID=\$(getent group docker | cut -d: -f3)" >> $GITHUB_STEP_SUMMARY
-        echo "export CORS_ORIGIN=https://your-domain.com" >> $GITHUB_STEP_SUMMARY
-        echo "export JWT_SECRET=\$(openssl rand -base64 32)" >> $GITHUB_STEP_SUMMARY
-        echo "export DEFAULT_ADMIN_PASSWORD=YourSecurePassword" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "# Deploy" >> $GITHUB_STEP_SUMMARY
-        echo "docker-compose -f homelabarr.yml up -d" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        {
+          echo "## 🐳 Docker Images Built and Pushed"
+          echo ""
+          echo "Built natively per architecture — no QEMU emulation."
+          echo ""
+          echo "### Frontend Image"
+          echo '```'
+          echo "${{ steps.meta-frontend.outputs.tags }}"
+          echo "digest: ${{ steps.manifests.outputs.frontend-digest }}"
+          echo '```'
+          echo ""
+          echo "### Backend Image"
+          echo '```'
+          echo "${{ steps.meta-backend.outputs.tags }}"
+          echo "digest: ${{ steps.manifests.outputs.backend-digest }}"
+          echo '```'
+          echo ""
+          echo "### 🚀 Deployment"
+          echo "Deploy using:"
+          echo '```bash'
+          echo "# Download deployment manifest"
+          echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml"
+          echo ""
+          echo "# Configure environment"
+          echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli"
+          echo "export DOCKER_GID=\$(getent group docker | cut -d: -f3)"
+          echo "export CORS_ORIGIN=https://your-domain.com"
+          echo "export JWT_SECRET=\$(openssl rand -base64 32)"
+          echo "export DEFAULT_ADMIN_PASSWORD=YourSecurePassword"
+          echo ""
+          echo "# Deploy"
+          echo "docker-compose -f homelabarr.yml up -d"
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
     - name: Notify Discord (HomelabARR CE release)
       # Only send pretty Discord card for tagged releases (e.g. v1.2.3)
       if: success() && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
