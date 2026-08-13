@@ -69,12 +69,6 @@
   "empty_template": "- No changes",
   "label_extractor": [
     {
-      "pattern": ".*white-label audit.*",
-      "on_property": "title",
-      "method": "regexr",
-      "target": "ignore"
-    },
-    {
       "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?!?:.*",
       "on_property": "title",
       "method": "regexr",
