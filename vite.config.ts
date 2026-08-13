@@ -141,10 +141,10 @@ export default defineConfig({
       // (898 tests). Floor raised with conservative headroom (statements/functions ~1 under
       // for CI under-instrumentation safety).
       thresholds: {
-        lines: 82,
-        statements: 81,
-        functions: 80,
-        branches: 74,
+        lines: 83,
+        statements: 82,
+        functions: 83,
+        branches: 75,
       },
     },
     // Two projects: backend (server/**) in node, frontend (src/**) in jsdom.

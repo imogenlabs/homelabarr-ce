@@ -14,6 +14,7 @@ import {
   loadSessions,
   invalidateSession,
 } from '../auth.js';
+import { demoGuard } from '../demo-mode.js';
 import {
   createSession,
   rotateRefresh,
@@ -185,7 +186,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
     });
   });
 
-  router.post('/auth/change-password', requireAuth, async (req, res) => {
+  router.post('/auth/change-password', requireAuth, demoGuard, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
 
@@ -335,7 +336,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
   });
 
   // R3: MFA setup — generate TOTP secret + QR code
-  router.post('/auth/mfa/setup', requireAuth, async (req, res) => {
+  router.post('/auth/mfa/setup', requireAuth, demoGuard, async (req, res) => {
     try {
       if (req.body && Object.keys(req.body).length > 0) {
         return res.status(400).json({ error: 'This endpoint does not accept a request body' });
@@ -351,7 +352,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
   });
 
   // R3: MFA verify — confirm TOTP code and enable MFA
-  router.post('/auth/mfa/verify', requireAuth, async (req, res) => {
+  router.post('/auth/mfa/verify', requireAuth, demoGuard, async (req, res) => {
     try {
       const { code } = req.body || {};
       if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) {
@@ -374,7 +375,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
   });
 
   // R3: MFA disable — requires password confirmation
-  router.post('/auth/mfa/disable', requireAuth, async (req, res) => {
+  router.post('/auth/mfa/disable', requireAuth, demoGuard, async (req, res) => {
     try {
       const { password } = req.body || {};
       if (typeof password !== 'string' || password.length === 0) {

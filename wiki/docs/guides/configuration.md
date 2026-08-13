@@ -27,6 +27,7 @@ Optional, but useful:
 | `TZ` | `UTC` | Your timezone (e.g., `America/New_York`, `Europe/London`) |
 | `AUTH_ENABLED` | `true` | Set to `false` to disable the login screen |
 | `AUDIT_ANCHOR_KEY` | falls back to `JWT_SECRET` | Signs the tamper-evident audit log's out-of-band chain-tip anchor. Leave unset to reuse `JWT_SECRET`; set a dedicated random value (`openssl rand -hex 32`) to keep audit integrity independent of JWT key rotation. |
+| `DEMO_MODE` | `false` | Only for a public demo where everyone shares one login. Set to `true` and the server refuses changes to accounts — password changes, creating or deleting users, minting or revoking API keys, and setting up or disabling MFA — so no visitor can lock everyone else out. Everything else, including the app catalog, containers and logs, works normally. Leave it unset on a real install. |
 
 !!! danger "Don't disable auth on a networked server"
     Setting `AUTH_ENABLED=false` removes the login screen and exposes all API endpoints — including container management and user administration — to anyone who can reach your server. Only use this in isolated local testing environments.
