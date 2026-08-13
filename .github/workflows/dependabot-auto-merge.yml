@@ -1,0 +1,83 @@
+# Approves and merges routine dependency bumps so nobody has to.
+#
+# This repo earns nothing and dependency PRs used to arrive most mornings. A
+# patch or minor bump that passes the required checks carries no decision worth
+# a human's attention, so it does not get one.
+#
+# What still reaches a person: majors. They are labelled and left open,
+# deliberately.
+#
+# ── The two things that make this actually work ─────────────────────────────
+#
+# 1. The token. Workflows triggered by Dependabot get a READ-ONLY GITHUB_TOKEN
+#    by default, which is the failure mode where everything looks configured and
+#    nothing ever merges. The `permissions:` block below is what elevates it,
+#    and repo + org both allow Actions to approve pull requests
+#    (can_approve_pull_request_reviews). This uses `pull_request` rather than
+#    `pull_request_target` on purpose: it never checks out or executes the PR's
+#    code, so there is nothing for a malicious bump to exploit.
+#
+# 2. The required status checks on main. `gh pr merge --auto` merges as soon as
+#    the branch is mergeable — if no checks are required, that means instantly,
+#    and CI becomes decoration. The required set is deliberately small and every
+#    member of it runs on every pull request without depending on any machine we
+#    own. See the ticket for why ce-dev smoke in particular is excluded.
+name: Dependabot auto-merge
+
+on: pull_request
+
+# The bot's own approval is what satisfies branch protection's one-review
+# requirement for these PRs. Human PRs still need a human review — this grants
+# nothing to anyone but Dependabot, because of the `if` on the job.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    name: Approve and merge routine bumps
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Grouped PRs report the highest change in the group. The groups in
+      # dependabot.yml are capped at minor, so a major can only ever arrive on
+      # its own.
+      - name: Hold majors for a human
+        if: steps.meta.outputs.update-type == 'version-update:semver-major'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPS: ${{ steps.meta.outputs.dependency-names }}
+        run: |
+          gh pr edit "$PR_URL" --add-label "major-update"
+          gh pr comment "$PR_URL" --body "Major version bump (\`${DEPS}\`) — left open on purpose. Routine patch and minor updates merge themselves; majors can change behaviour, so this one wants a person. Nothing is blocking: review and merge when you feel like it."
+          echo "Major update held: ${DEPS}"
+
+      - name: Approve
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Already-approved PRs (a re-run, or a push to the same branch) make
+          # `gh pr review --approve` fail; that must not stop the merge below.
+          gh pr review --approve "$PR_URL" \
+            --body "Routine ${{ steps.meta.outputs.update-type }} bump. Approved automatically; the required checks are what actually gate this." \
+            || echo "already approved, continuing"
+
+      - name: Enable auto-merge
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # --auto queues the merge behind the required checks rather than
+          # merging now. If a check fails, the PR simply stays open.
+          gh pr merge --auto --squash "$PR_URL"
+          echo "Auto-merge armed; it will land when the required checks pass."
