@@ -1,5 +1,16 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { db } from './db.js';
+
+// An IPv6 client is delegated a whole subnet, not one address, and can rotate
+// freely inside it. Keying a limiter on the exact address therefore handed an
+// attacker a fresh bucket on every request and made the login limit meaningless
+// over IPv6 (HLCE-307). ipKeyGenerator collapses an IPv6 address to its /56
+// prefix — the block an ISP hands a single subscriber — and returns IPv4
+// addresses untouched, so IPv4 stays bucketed per address exactly as before.
+// Use this for EVERY limiter key: a raw `req.ip` key is the bug.
+export function ipSubnetKey(req) {
+  return ipKeyGenerator(req.ip ?? '');
+}
 
 export class SqliteStore {
   constructor(windowMs) {
@@ -48,7 +59,7 @@ export function createLoginLimiter() {
     max: 25,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => 'login:' + req.ip,
+    keyGenerator: (req) => 'login:' + ipSubnetKey(req),
     store: new SqliteStore(15 * 60 * 1000),
     skipSuccessfulRequests: true,
     // Disabled only when explicitly opted in (E2E harness). Never set in production.

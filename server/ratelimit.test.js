@@ -347,3 +347,96 @@ describe('RATE_LIMIT_DISABLED escape hatch (AC5)', () => {
     expect(guard2.isLocked('carol')).toBe(true); // lockout survived
   });
 });
+
+// HLCE-307: the login limiter used to key on the exact client address
+// (`'login:' + req.ip`). An IPv6 client is delegated a whole subnet and can
+// rotate addresses inside it at will, so every attempt landed in a fresh
+// bucket and the 25-per-15-minutes limit never bit. These tests drive real
+// requests through the limiter from many source addresses.
+//
+// Source addresses are varied with X-Forwarded-For behind `trust proxy`, which
+// is how req.ip is populated on the real deployment (the app sits behind
+// Traefik). Without the fix, `ipv6Requests` below never sees a 429.
+function proxiedApp(limiter, statusFor) {
+  const app = express();
+  app.set('trust proxy', true);
+  app.post('/login', limiter, (_req, res) => res.status(statusFor()).json({}));
+  return app;
+}
+
+// Fires `count` failed logins, each from a different address produced by
+// `addressFor(i)`, and reports how many were rejected with a 429.
+async function attemptsFrom(app, count, addressFor) {
+  let blocked = 0;
+  for (let i = 0; i < count; i++) {
+    const r = await request(app).post('/login').set('X-Forwarded-For', addressFor(i));
+    if (r.status === 429) blocked++;
+  }
+  return blocked;
+}
+
+describe('IPv6 subnet bucketing (HLCE-307)', () => {
+  it('shares one bucket across addresses rotating within a single /64', async () => {
+    const { createLoginLimiter } = await loadRl();
+    const app = proxiedApp(createLoginLimiter(), () => 401);
+    const { db } = await import('./db.js');
+
+    // 40 attempts, every one from a DIFFERENT address inside 2001:db8:: — the
+    // exact rotation an attacker gets for free on IPv6. The limit is 25, so
+    // the last 15 must be rejected.
+    const blocked = await attemptsFrom(app, 40, (i) => `2001:db8::${(i + 1).toString(16)}`);
+    expect(blocked).toBe(15);
+
+    // ...and they landed in ONE bucket, not 40.
+    const keys = db.prepare('SELECT key FROM rate_buckets').all().map(r => r.key);
+    expect(keys).toEqual(['login:2001:db8::/56']);
+  });
+
+  it('keeps separate buckets for clients in different subnets', async () => {
+    const { createLoginLimiter } = await loadRl();
+    const app = proxiedApp(createLoginLimiter(), () => 401);
+    const { db } = await import('./db.js');
+
+    // One attacker burns their whole allowance...
+    expect(await attemptsFrom(app, 25, () => '2001:db8::1')).toBe(0);
+    // ...which must not touch an unrelated client in another subnet.
+    expect(await attemptsFrom(app, 1, () => '2001:db9::1')).toBe(0);
+
+    const keys = db.prepare('SELECT key FROM rate_buckets').all().map(r => r.key).sort();
+    expect(keys).toEqual(['login:2001:db8::/56', 'login:2001:db9::/56']);
+  });
+
+  it('leaves IPv4 bucketed per address, unchanged (25 per window)', async () => {
+    const { createLoginLimiter } = await loadRl();
+    const app = proxiedApp(createLoginLimiter(), () => 401);
+    const { db } = await import('./db.js');
+
+    // 30 attempts from one IPv4 address: 25 allowed, 5 blocked — the behaviour
+    // that shipped before this fix.
+    expect(await attemptsFrom(app, 30, () => '203.0.113.7')).toBe(5);
+    // A different IPv4 address is a different client and keeps its own bucket:
+    // no subnet aggregation is applied to IPv4.
+    expect(await attemptsFrom(app, 1, () => '203.0.113.8')).toBe(0);
+
+    const keys = db.prepare('SELECT key FROM rate_buckets').all().map(r => r.key).sort();
+    expect(keys).toEqual(['login:203.0.113.7', 'login:203.0.113.8']);
+  });
+});
+
+describe('ipSubnetKey (HLCE-307)', () => {
+  it('collapses IPv6 to its subnet, passes IPv4 through, and tolerates a missing ip', async () => {
+    const { ipSubnetKey } = await loadRl();
+    // Two addresses in one /64 (and a third in the same /56) collapse together.
+    expect(ipSubnetKey({ ip: '2001:db8::1' })).toBe('2001:db8::/56');
+    expect(ipSubnetKey({ ip: '2001:db8::dead:beef' })).toBe('2001:db8::/56');
+    expect(ipSubnetKey({ ip: '2001:db8:0:1::1' })).toBe('2001:db8::/56');
+    // A different subnet stays distinct.
+    expect(ipSubnetKey({ ip: '2001:db9::1' })).not.toBe('2001:db8::/56');
+    // IPv4 is untouched, including the IPv4-mapped IPv6 form Node hands us on
+    // a dual-stack socket.
+    expect(ipSubnetKey({ ip: '203.0.113.7' })).toBe('203.0.113.7');
+    expect(ipSubnetKey({ ip: '::ffff:203.0.113.7' })).toBe('203.0.113.7');
+    // req.ip is undefined when Express cannot determine it; key rather than throw.
+    expect(ipSubnetKey({})).toBe('');
+  });
+});
