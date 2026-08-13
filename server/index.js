@@ -11,6 +11,7 @@ import { initAudit, audit, verifyChain } from './audit.js';
 import { maybeAlert, setAuditHook } from './alert.js';
 import { logger as structuredLogger, requestContext } from './log.js';
 import { createLoginLimiter, createLockoutGuard } from './ratelimit.js';
+import { createCrashHandlers } from './crash.js';
 import { attackTag } from './middleware/attackTag.js';
 import { mountHoney } from './routes/honey.js';
 import { EnvironmentManager } from './environment-manager.js';
@@ -266,18 +267,19 @@ app.use((err, req, res, next) => {
 // in-process without binding a port, registering exit-on-exception handlers,
 // or calling process.exit() during config validation.
 if (process.env.NODE_ENV !== 'test') {
-process.on('unhandledRejection', (reason) => {
-  unhandledRejectionCount++;
-  structuredLogger.error('unhandled_rejection', { reason: String(reason).slice(0, 500) });
-  audit({ event: 'process.unhandled_rejection', actor: 'system', reason: String(reason).slice(0, 200) });
+// Handlers live in crash.js so the crash path can be tested with a failing
+// audit sink — the exact condition that made a crash report the wrong cause
+// (HLCE-312). Everything they touch is injected here.
+const crashHandlers = createCrashHandlers({
+  logger: structuredLogger,
+  audit,
+  exit: (code) => process.exit(code),
+  onUncaught: () => { uncaughtExceptionCount++; },
+  onUnhandled: () => { unhandledRejectionCount++; },
 });
 
-process.on('uncaughtException', (err) => {
-  uncaughtExceptionCount++;
-  structuredLogger.error('uncaught_exception', { message: err.message?.slice(0, 500) });
-  audit({ event: 'process.uncaught_exception', actor: 'system', message: err.message?.slice(0, 200) });
-  setTimeout(() => process.exit(1), 100);
-});
+process.on('unhandledRejection', crashHandlers.handleUnhandledRejection);
+process.on('uncaughtException', crashHandlers.handleUncaughtException);
 
 process.on('SIGTERM', () => { logger.info('SIGTERM received'); dockerManager.destroy(); process.exit(0); });
 process.on('SIGINT', () => { logger.info('SIGINT received'); dockerManager.destroy(); process.exit(0); });
