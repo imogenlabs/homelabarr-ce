@@ -1,6 +1,6 @@
 # GitHub Security Settings — Required Configuration
 
-These settings must be enabled at `Settings → Code security and analysis` for the `smashingtags/homelabarr-ce` repository.
+These settings must be enabled at `Settings → Code security and analysis` for the `imogenlabs/homelabarr-ce` repository.
 
 ## Required settings
 
@@ -24,8 +24,8 @@ These settings must be enabled at `Settings → Code security and analysis` for 
 The agent can check current state via the GitHub API:
 
 ```bash
-gh api repos/smashingtags/homelabarr-ce --jq '.security_and_analysis'
-gh api repos/smashingtags/homelabarr-ce/private-vulnerability-reporting
+gh api repos/imogenlabs/homelabarr-ce --jq '.security_and_analysis'
+gh api repos/imogenlabs/homelabarr-ce/private-vulnerability-reporting
 ```
 
 Enabling these settings requires repository admin access (owner-only).
