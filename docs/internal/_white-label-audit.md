@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-13 06:46 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-14 19:06 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -1566,9 +1566,9 @@
 | `docs/fail2ban/homelabarr-jail.conf` | 3 | `filter   = homelabarr` |
 | `docs/fail2ban/homelabarr-jail.conf` | 5 | `logpath  = /var/lib/docker/volumes/*homelabarr-activity*/_data/audit-*.jsonl` |
 | `docs/fail2ban/homelabarr-jail.conf` | 6 | `           /var/lib/docker/volumes/*homelabarr-activity*/_data/audit.jsonl` |
-| `docs/governance/github-security-settings.md` | 3 | `These settings must be enabled at 'Settings → Code security and analysis' for the 'smashingtags/homelabarr-ce' reposit` |
-| `docs/governance/github-security-settings.md` | 27 | `gh api repos/smashingtags/homelabarr-ce --jq '.security_and_analysis'` |
-| `docs/governance/github-security-settings.md` | 28 | `gh api repos/smashingtags/homelabarr-ce/private-vulnerability-reporting` |
+| `docs/governance/github-security-settings.md` | 3 | `These settings must be enabled at 'Settings → Code security and analysis' for the 'imogenlabs/homelabarr-ce' repositor` |
+| `docs/governance/github-security-settings.md` | 27 | `gh api repos/imogenlabs/homelabarr-ce --jq '.security_and_analysis'` |
+| `docs/governance/github-security-settings.md` | 28 | `gh api repos/imogenlabs/homelabarr-ce/private-vulnerability-reporting` |
 | `docs/hypervisor-alerting.md` | 18 | `\| Script \| '/usr/local/bin/homelabarr-host-alert' \|` |
 | `docs/hypervisor-alerting.md` | 19 | `\| Config (delivery) \| '/etc/homelabarr/host-alert.env', mode 600 \|` |
 | `docs/hypervisor-alerting.md` | 20 | `\| State \| '/var/lib/homelabarr/host-alert.state' \|` |
