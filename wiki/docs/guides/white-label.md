@@ -38,7 +38,7 @@ OLD_BRAND="HomelabARR"        # human-readable brand name
 NEW_NAME="myproject"          # your lowercase identifier
 NEW_BRAND="MyProject"         # your human-readable brand
 
-OLD_REPO="smashingtags/homelabarr-ce"
+OLD_REPO="imogenlabs/homelabarr-ce"
 NEW_REPO="yourorg/yourproject"
 
 OLD_DOMAIN="homelabarr.com"
