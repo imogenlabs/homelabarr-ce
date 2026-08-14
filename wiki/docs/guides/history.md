@@ -48,12 +48,12 @@ Sudobox was the right idea at the right time — but it never shipped. The commu
 
 HomelabARR CE is the GUI that actually shipped:
 
-- **A web GUI** — React-based dashboard with a 157+ app catalog. No more editing YAML files or running Ansible playbooks. Browse apps, click Deploy, watch it happen.
+- **A web GUI** — React-based dashboard with a 117+ app catalog. No more editing YAML files or running Ansible playbooks. Browse apps, click Deploy, watch it happen.
 - **A CLI menu system** — interactive terminal interface for users who prefer the command line.
 - **No plugin dependencies** — removed the `local-persist` volume plugin requirement. Everything works with standard Docker out of the box.
 - **Proper CI/CD** — GitHub Actions pipelines, automated Docker image builds, Dependabot updates, CodeQL security scanning.
 - **Comprehensive documentation** — full wiki with migration guides for every major platform (Saltbox, Cloudbox, PGBlitz, Dockserver).
-- **One-line install** — `sudo wget -qO- https://raw.githubusercontent.com/smashingtags/homelabarr-ce/main/install-remote.sh | sudo bash`
+- **One-line install** — `sudo wget -qO- https://raw.githubusercontent.com/imogenlabs/homelabarr-ce/main/install-remote.sh | sudo bash`
 
 CE is free, open source, and MIT licensed. It's the community edition — designed to be the easiest way to get a media server running. Built and maintained by one person from a server rack in Georgia.
 
