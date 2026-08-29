@@ -39,6 +39,9 @@
         "style",
         "test",
         "revert"
+      ],
+      "exclude_labels": [
+        "dependencies"
       ]
     },
     {
@@ -54,6 +57,13 @@
       "title": "## 🔄 Changes",
       "labels": [
         "changed"
+      ],
+      "rules": [
+        {
+          "pattern": "^[A-Z]+-\\d+:.*",
+          "on_property": "title",
+          "flags": "gu"
+        }
       ]
     }
   ],

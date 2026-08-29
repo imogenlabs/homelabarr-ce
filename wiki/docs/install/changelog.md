@@ -15,6 +15,40 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.4.0] - 2026-08-13
+
+### 📚 Documentation
+
+- changelog for v2.3.0 by @github-actions[bot] in #493
+
+### ⬆️ Dependencies
+
+- bump sonner from 2.0.7 to 2.0.8 by @dependabot[bot] in #468
+- bump the production group with 4 updates by @dependabot[bot] in #476
+- bump node-abi from 3.92.0 to 3.94.0 by @dependabot[bot] in #469
+- bump @testing-library/jest-dom from 7.0.0 to 7.0.1 in the development group by @dependabot[bot] in #480
+
+### 🔄 Changes
+
+- HLCE-313: alert externally when the demo or dev goes down by @smashingtags in #459
+- HLCE-313: surface why a Discord notification failed by @smashingtags in #460
+- HLCE-313: strip whitespace from the webhook secret before use by @smashingtags in #461
+- HLCE-313: fall back across webhooks so one dead URL cannot mute alerting by @smashingtags in #462
+- HLCE-317: move dev.homelabarr.com to the CE dev app by @smashingtags in #463
+- HLCE-318: alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466
+- HLCE-318: check the webhook up front so a missing one is not silent by @smashingtags in #467
+- HLCE-320: reset the public demo on a timer so a visitor cannot break it for good by @smashingtags in #471
+- HLCE-321: add a demo mode that refuses account changes by @smashingtags in #472
+- HLCE-322: build each architecture on its own runner instead of emulating arm64 by @smashingtags in #473
+- HLCE-323: merge routine dependency updates without a human touching them by @smashingtags in #474
+- HLCE-312: report the crash before trying to record it by @smashingtags in #479
+- HLCE-323: create the major-update label instead of assuming it exists by @smashingtags in #481
+- HLCE-307: bucket IPv6 login attempts by subnet instead of exact address by @smashingtags in #477
+- HLCE-315: let the server say it is a demo instead of guessing from the URL by @smashingtags in #485
+- HLCE-318: deliver hypervisor alerts by email so they reach someone by @smashingtags in #482
+- HLCE-316: stop the changelog workflow blanking the published wiki page by @smashingtags in #483
+- HLCE-316: make the changelog generator actually categorise this repo's PRs by @smashingtags in #486
+
 ## [v2.3.0] - 2026-08-12
 
 ### 🚀 Features
