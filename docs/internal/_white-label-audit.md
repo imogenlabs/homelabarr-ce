@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-29 19:04 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-29 19:14 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1558
+**Total brand references found:** 1565
 
 ---
 
@@ -385,7 +385,7 @@
 
 ## Wiki content
 
-**326 references**
+**333 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -465,141 +465,148 @@
 | `wiki/docs/index.md` | 88 | `- [GitHub](https://github.com/imogenlabs/homelabarr-ce)` |
 | `wiki/docs/index.md` | 89 | `- [Discord](https://discord.gg/Pc7mXX786x) — Get help, share your setup` |
 | `wiki/docs/index.md` | 90 | `- [Demo](https://ce-demo.homelabarr.com) — Try it live (login: admin/admin)` |
-| `wiki/docs/install/changelog.md` | 33 | `- HLCE-313: alert externally when the demo or dev goes down by @smashingtags in #459` |
-| `wiki/docs/install/changelog.md` | 34 | `- HLCE-313: surface why a Discord notification failed by @smashingtags in #460` |
-| `wiki/docs/install/changelog.md` | 35 | `- HLCE-313: strip whitespace from the webhook secret before use by @smashingtags in #461` |
-| `wiki/docs/install/changelog.md` | 36 | `- HLCE-313: fall back across webhooks so one dead URL cannot mute alerting by @smashingtags in #462` |
-| `wiki/docs/install/changelog.md` | 37 | `- HLCE-317: move dev.homelabarr.com to the CE dev app by @smashingtags in #463` |
-| `wiki/docs/install/changelog.md` | 38 | `- HLCE-318: alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
-| `wiki/docs/install/changelog.md` | 39 | `- HLCE-318: check the webhook up front so a missing one is not silent by @smashingtags in #467` |
-| `wiki/docs/install/changelog.md` | 40 | `- HLCE-320: reset the public demo on a timer so a visitor cannot break it for good by @smashingtags in #471` |
-| `wiki/docs/install/changelog.md` | 41 | `- HLCE-321: add a demo mode that refuses account changes by @smashingtags in #472` |
-| `wiki/docs/install/changelog.md` | 42 | `- HLCE-322: build each architecture on its own runner instead of emulating arm64 by @smashingtags in #473` |
-| `wiki/docs/install/changelog.md` | 43 | `- HLCE-323: merge routine dependency updates without a human touching them by @smashingtags in #474` |
-| `wiki/docs/install/changelog.md` | 44 | `- HLCE-312: report the crash before trying to record it by @smashingtags in #479` |
-| `wiki/docs/install/changelog.md` | 45 | `- HLCE-323: create the major-update label instead of assuming it exists by @smashingtags in #481` |
-| `wiki/docs/install/changelog.md` | 46 | `- HLCE-307: bucket IPv6 login attempts by subnet instead of exact address by @smashingtags in #477` |
-| `wiki/docs/install/changelog.md` | 47 | `- HLCE-315: let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
-| `wiki/docs/install/changelog.md` | 48 | `- HLCE-318: deliver hypervisor alerts by email so they reach someone by @smashingtags in #482` |
-| `wiki/docs/install/changelog.md` | 49 | `- HLCE-316: stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
-| `wiki/docs/install/changelog.md` | 50 | `- HLCE-316: make the changelog generator actually categorise this repo's PRs by @smashingtags in #486` |
-| `wiki/docs/install/changelog.md` | 56 | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
-| `wiki/docs/install/changelog.md` | 60 | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
-| `wiki/docs/install/changelog.md` | 61 | `- harden users.json loader + DialogDescription a11y by @smashingtags in #165` |
-| `wiki/docs/install/changelog.md` | 66 | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
-| `wiki/docs/install/changelog.md` | 67 | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
-| `wiki/docs/install/changelog.md` | 68 | `- flatten nav + move Discord/Discussions to header icons by @smashingtags in #160` |
-| `wiki/docs/install/changelog.md` | 69 | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
-| `wiki/docs/install/changelog.md` | 70 | `- fix broken README mascot image by @smashingtags in #163` |
-| `wiki/docs/install/changelog.md` | 123 | `- remove stale tracked files by @smashingtags in #150` |
-| `wiki/docs/install/changelog.md` | 124 | `- remove stale octopus favicons by @smashingtags in #153` |
-| `wiki/docs/install/changelog.md` | 125 | `- optimize app icons (PNG → WebP, 5.9MB → 1.2MB) by @smashingtags in #154` |
-| `wiki/docs/install/changelog.md` | 126 | `- remove unused react-query, bump shadcn (kills all npm deprecation warnings) by @smashingtags in #158` |
-| `wiki/docs/install/changelog.md` | 176 | `- bump Playwright workers from 1 to 4 by @smashingtags in #157` |
-| `wiki/docs/install/changelog.md` | 177 | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
-| `wiki/docs/install/changelog.md` | 179 | `- Add OWNER-PUNCHLIST for project management by @smashingtags in #203` |
-| `wiki/docs/install/changelog.md` | 180 | `- HLCE-182: revert cosign-installer to v3 (fix red build from #222) by @smashingtags in #228` |
-| `wiki/docs/install/changelog.md` | 181 | `- HLCE-182: fix cosign verify identity (org migration smashingtags->imogenlabs) by @smashingtags in #229` |
-| `wiki/docs/install/changelog.md` | 182 | `- HLCE-183: fix vitest e2e exclusion + drop deprecated tsconfig baseUrl by @smashingtags in #230` |
-| `wiki/docs/install/changelog.md` | 183 | `- HLCE-184: manualChunks function form for Vite 8/rolldown (unblocks #227) by @smashingtags in #231` |
-| `wiki/docs/install/changelog.md` | 184 | `- HLCE-185: run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
-| `wiki/docs/install/changelog.md` | 185 | `- HLCE-185: revert to GitHub-hosted (public repo = free minutes; self-hosted blocked for public) by @smashingtags in #23` |
-| `wiki/docs/install/changelog.md` | 186 | `- HLCE-186: fix backend crash loop (path-to-regexp override vs Express 5) by @smashingtags in #234` |
-| `wiki/docs/install/changelog.md` | 187 | `- HLCE-187: fix DAST Baseline duplicate-artifact 409 by @smashingtags in #236` |
-| `wiki/docs/install/changelog.md` | 188 | `- HLCE-188: TruffleHog (CI) + Betterleaks (pre-commit) — drop license-blocked gitleaks-action by @smashingtags in #237` |
-| `wiki/docs/install/changelog.md` | 189 | `- HLCE-189: fix compose-security-validation install (mkdir -p ~/.local/bin) by @smashingtags in #238` |
-| `wiki/docs/install/changelog.md` | 190 | `- HLCE-189: fix compose validation step (filter + --no-interpolate) + tubesync volume by @smashingtags in #239` |
-| `wiki/docs/install/changelog.md` | 191 | `- HLCE-189: validate compose templates as YAML+services (runner-stable) by @smashingtags in #240` |
-| `wiki/docs/install/changelog.md` | 192 | `- HLCE-190: scope docker vuln scan to own images + fix multi-run SARIF by @smashingtags in #241` |
-| `wiki/docs/install/changelog.md` | 193 | `- HLCE-191: rewrite E2E suite to run the real product locally by @smashingtags in #242` |
-| `wiki/docs/install/changelog.md` | 194 | `- Release dev → main: HLCE-191 E2E + INFRA-64/70 cleanup by @smashingtags in #243` |
-| `wiki/docs/install/changelog.md` | 195 | `- HLCE-192: stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
-| `wiki/docs/install/changelog.md` | 196 | `- Release dev → main: /auth/me reload fix, E2E on ce-dev, Dependabot unblock by @smashingtags in #248` |
-| `wiki/docs/install/changelog.md` | 197 | `- HLCE-199: React 18 → 19 upgrade (core bump + forwardRef modernization) by @smashingtags in #273` |
-| `wiki/docs/install/changelog.md` | 198 | `- HLCE-202: roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
-| `wiki/docs/install/changelog.md` | 199 | `- HLCE-202: roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
-| `wiki/docs/install/changelog.md` | 200 | `- HLCE-202: nodemailer 9 regression test + React 19 changelog by @smashingtags in #278` |
-| `wiki/docs/install/changelog.md` | 201 | `- HLCE-199: documentation sweep for React 19 upgrade by @smashingtags in #280` |
-| `wiki/docs/install/changelog.md` | 202 | `- HLCE-199: fix broken wiki links (strict mkdocs build passes) by @smashingtags in #282` |
-| `wiki/docs/install/changelog.md` | 203 | `- HLCE-194: migrate GHCR namespace + deploy wiring smashingtags → imogenlabs by @smashingtags in #285` |
-| `wiki/docs/install/changelog.md` | 204 | `- HLCE-195: build-push workflow manual-dispatch only (minutes out is permanent) by @smashingtags in #287` |
-| `wiki/docs/install/changelog.md` | 205 | `- HLCE-197: add CodeQL SAST workflow by @smashingtags in #288` |
-| `wiki/docs/install/changelog.md` | 206 | `- HLCE-199: pages.yml → ubuntu-latest (unblock wiki publish) by @smashingtags in #289` |
-| `wiki/docs/install/changelog.md` | 207 | `- HLCE-203: revert pages.yml to self-hosted (gitrunners fixed) by @smashingtags in #291` |
-| `wiki/docs/install/changelog.md` | 208 | `- HLCE-204: pages.yml on ubuntu-latest (public repo cannot use self-hosted runners) by @smashingtags in #293` |
-| `wiki/docs/install/changelog.md` | 209 | `- HLCE-210: test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
-| `wiki/docs/install/changelog.md` | 210 | `- HLCE-211: Unit/coverage CI gate on ubuntu-latest with ratcheting floor by @smashingtags in #295` |
-| `wiki/docs/install/changelog.md` | 211 | `- HLCE-212: Unit tests for auth core (JWT, bcrypt, API keys, secrets) by @smashingtags in #296` |
-| `wiki/docs/install/changelog.md` | 212 | `- HLCE-214: Unit tests for MFA (TOTP + backup codes) by @smashingtags in #297` |
-| `wiki/docs/install/changelog.md` | 213 | `- HLCE-209: CHANGELOG for Wave-2 auth + MFA tests (HLCE-212, HLCE-214) by @smashingtags in #298` |
-| `wiki/docs/install/changelog.md` | 214 | `- HLCE-215: tests for rate-limit & account lockout by @smashingtags in #299` |
-| `wiki/docs/install/changelog.md` | 215 | `- HLCE-216: supertest integration tests for auth HTTP routes by @smashingtags in #300` |
-| `wiki/docs/install/changelog.md` | 216 | `- HLCE-221: persistence-integrity tests (db / stars / activity / loggers) by @smashingtags in #301` |
-| `wiki/docs/install/changelog.md` | 217 | `- HLCE-217: audit hash-chain + secure-logging tests (audit/log/alert) by @smashingtags in #302` |
-| `wiki/docs/install/changelog.md` | 218 | `- HLCE-256: fix SQLCipher encryption-at-rest init (key before WAL) by @smashingtags in #303` |
-| `wiki/docs/install/changelog.md` | 219 | `- HLCE-219: docker-manager tests (mocked dockerode) by @smashingtags in #304` |
-| `wiki/docs/install/changelog.md` | 220 | `- HLCE-220: deploy/SSE + startup-guard + network tests by @smashingtags in #305` |
-| `wiki/docs/install/changelog.md` | 221 | `- HLCE-223: React contexts & hooks tests (AuthContext 100%) by @smashingtags in #306` |
-| `wiki/docs/install/changelog.md` | 222 | `- HLCE-225: high-value component tests (RTL) by @smashingtags in #307` |
-| `wiki/docs/install/changelog.md` | 223 | `- HLCE-228: Bug-lock regression — fix safeUrl / deployment.ts / cli-bridge appId by @smashingtags in #308` |
-| `wiki/docs/install/changelog.md` | 224 | `- HLCE-227: Security-invariant regression suite (permanent guardrails) by @smashingtags in #309` |
-| `wiki/docs/install/changelog.md` | 225 | `- HLCE-229: integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
-| `wiki/docs/install/changelog.md` | 226 | `- HLCE-259: fix SSE broadcast skipping a client after a failing one by @smashingtags in #311` |
-| `wiki/docs/install/changelog.md` | 227 | `- HLCE-255: make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
-| `wiki/docs/install/changelog.md` | 228 | `- HLCE-257: frame audit row_hash with JSON to close boundary-ambiguous tamper by @smashingtags in #313` |
-| `wiki/docs/install/changelog.md` | 229 | `- HLCE-258: probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
-| `wiki/docs/install/changelog.md` | 230 | `- HLCE-254: enforce react-hooks v7 rules as errors by @smashingtags in #315` |
-| `wiki/docs/install/changelog.md` | 231 | `- HLCE-226: Playwright E2E seeded target + critical journeys (and fix deploy 404) by @smashingtags in #316` |
-| `wiki/docs/install/changelog.md` | 232 | `- HLCE-260: README — E2E lanes + app count 117 by @smashingtags in #317` |
-| `wiki/docs/install/changelog.md` | 233 | `- HLCE-265: /health/detail 200→500 on internal error by @smashingtags in #318` |
-| `wiki/docs/install/changelog.md` | 234 | `- HLCE-266: validation path check case-insensitive on field key by @smashingtags in #319` |
-| `wiki/docs/install/changelog.md` | 235 | `- HLCE-268: unify password minimum length to 12 by @smashingtags in #320` |
-| `wiki/docs/install/changelog.md` | 236 | `- HLCE-267: validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
-| `wiki/docs/install/changelog.md` | 237 | `- HLCE-269: detect audit-log tail truncation (chain tip) by @smashingtags in #322` |
-| `wiki/docs/install/changelog.md` | 238 | `- HLCE-262: StrykerJS mutation-testing harness + scoped baseline by @smashingtags in #325` |
-| `wiki/docs/install/changelog.md` | 239 | `- HLCE-271: integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
-| `wiki/docs/install/changelog.md` | 240 | `- HLCE-272: frontend security-component tests + lib/api gaps (+ password-min fix) by @smashingtags in #327` |
-| `wiki/docs/install/changelog.md` | 241 | `- HLCE-273: deploy-execution + backend-branch coverage (+ dead-code removal) by @smashingtags in #328` |
-| `wiki/docs/install/changelog.md` | 242 | `- HLCE-274: E2E round 2 — failure/permission/account journeys + harden (+ mount-wizard stub, bug fix) by @smashingtags` |
-| `wiki/docs/install/changelog.md` | 243 | `- HLCE-275: make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
-| `wiki/docs/install/changelog.md` | 244 | `- HLCE-263: mutation pass on high-risk security modules (≥80% score) by @smashingtags in #332` |
-| `wiki/docs/install/changelog.md` | 245 | `- HLCE-264: nightly mutation-testing CI + per-module score ratchet by @smashingtags in #333` |
-| `wiki/docs/install/changelog.md` | 246 | `- HLCE-276: client port-conflict validation for text-typed catalog port fields by @smashingtags in #335` |
-| `wiki/docs/install/changelog.md` | 247 | `- HLCE-278: cover the remaining enhanced-mount route handlers by @smashingtags in #336` |
-| `wiki/docs/install/changelog.md` | 248 | `- HLCE-277: mutation pass on the dangerous-op routes (+ final coverage ratchet) by @smashingtags in #337` |
-| `wiki/docs/install/changelog.md` | 249 | `- HLCE-280: frontend security fixes (rclone XSS, credential log, port validation) by @smashingtags in #338` |
-| `wiki/docs/install/changelog.md` | 250 | `- HLCE-282: audit/log/alert/db hardening (redaction drift, SQLCipher, alert) by @smashingtags in #339` |
-| `wiki/docs/install/changelog.md` | 251 | `- HLCE-281: cli-bridge — stop process.env pollution + deployStandard hardening by @smashingtags in #340` |
-| `wiki/docs/install/changelog.md` | 252 | `- HLCE-283: mandatory CSRF token + route hardening (health path, dockerode stats) by @smashingtags in #341` |
-| `wiki/docs/install/changelog.md` | 253 | `- HLCE-285: harden auth routes — cli-mint jti-less+ttl, constant-time validatePassword, MFA invariant pins by @smashin` |
-| `wiki/docs/install/changelog.md` | 254 | `- HLCE-284: track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
-| `wiki/docs/install/changelog.md` | 255 | `- HLCE-279: ratchet coverage floor + consolidated remediation CHANGELOG by @smashingtags in #344` |
-| `wiki/docs/install/changelog.md` | 256 | `- HLCE-288: deploy.js outer catch is unreachable — trim dead branches + pin parser boundary by @smashingtags in #345` |
-| `wiki/docs/install/changelog.md` | 257 | `- HLCE-287: out-of-band HMAC-signed audit chain-tip anchor by @smashingtags in #346` |
-| `wiki/docs/install/changelog.md` | 258 | `- HLCE-286: CHANGELOG for audit anchor + deploy-catch cleanup by @smashingtags in #348` |
-| `wiki/docs/install/changelog.md` | 259 | `- HLCE-287: document AUDIT_ANCHOR_KEY + out-of-band audit anchor by @smashingtags in #349` |
-| `wiki/docs/install/changelog.md` | 260 | `- HLCE-291: resolve open code-scanning alerts by @smashingtags in #354` |
-| `wiki/docs/install/changelog.md` | 261 | `- HLCE-291: make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
-| `wiki/docs/install/changelog.md` | 262 | `- HLCE-290: restore Trivy default-branch reporting by @smashingtags in #353` |
-| `wiki/docs/install/changelog.md` | 263 | `- HLCE-290: patch npm-bundled undici (CVE-2026-12151) in backend image by @smashingtags in #365` |
-| `wiki/docs/install/changelog.md` | 264 | `- HLCE-290: fix undici patch — pack-and-replace npm's bundled copy by @smashingtags in #367` |
-| `wiki/docs/install/changelog.md` | 265 | `- HLCE-293: restore dual-registry auto-publish (Docker Hub regression fix) by @smashingtags in #368` |
-| `wiki/docs/install/changelog.md` | 266 | `- HLCE-295: smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
-| `wiki/docs/install/changelog.md` | 267 | `- HLCE-296: bump backend base + weekly no-cache rebuild (fix stale docker-cli CVE) by @smashingtags in #370` |
-| `wiki/docs/install/changelog.md` | 268 | `- HLCE-300: ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
-| `wiki/docs/install/changelog.md` | 269 | `- HLCE-302: resolve 4 open security alerts by @smashingtags in #418` |
-| `wiki/docs/install/changelog.md` | 270 | `- HLCE-305: consolidate four lock bumps and pin node to major 24 by @smashingtags in #437` |
-| `wiki/docs/install/changelog.md` | 271 | `- HLCE-304: remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
-| `wiki/docs/install/changelog.md` | 272 | `- HLCE-306: guard the native build and give the E2E lane real diagnostics by @smashingtags in #446` |
-| `wiki/docs/install/changelog.md` | 273 | `- HLCE-308: drop the unused better-sqlite3 dependency by @smashingtags in #454` |
-| `wiki/docs/install/changelog.md` | 274 | `- HLCE-309: release v2.3.0 by @smashingtags in #456` |
-| `wiki/docs/install/changelog.md` | 279 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
-| `wiki/docs/install/changelog.md` | 280 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
-| `wiki/docs/install/changelog.md` | 281 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
-| `wiki/docs/install/changelog.md` | 282 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
-| `wiki/docs/install/changelog.md` | 285 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
-| `wiki/docs/install/changelog.md` | 286 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
-| `wiki/docs/install/changelog.md` | 289 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
+| `wiki/docs/install/changelog.md` | 37 | `- HLCE-328: restore container log reads through the socket proxy by @smashingtags in #505` |
+| `wiki/docs/install/changelog.md` | 38 | `- HLCE-330: bring docker-build-push onto the artifact actions the rest of the repo uses by @smashingtags in #508` |
+| `wiki/docs/install/changelog.md` | 39 | `- HLCE-330: take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509` |
+| `wiki/docs/install/changelog.md` | 40 | `- HLCE-330: take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510` |
+| `wiki/docs/install/changelog.md` | 41 | `- HLCE-332: cover the audit anchor and get the mutation lane green by @smashingtags in #511` |
+| `wiki/docs/install/changelog.md` | 42 | `- HLCE-333: set the version to 2.5.0 by @smashingtags in #512` |
+| `wiki/docs/install/changelog.md` | 46 | `- Sync docs to imogenlabs org + current app count by @smashingtags in #495` |
+| `wiki/docs/install/changelog.md` | 63 | `- HLCE-313: alert externally when the demo or dev goes down by @smashingtags in #459` |
+| `wiki/docs/install/changelog.md` | 64 | `- HLCE-313: surface why a Discord notification failed by @smashingtags in #460` |
+| `wiki/docs/install/changelog.md` | 65 | `- HLCE-313: strip whitespace from the webhook secret before use by @smashingtags in #461` |
+| `wiki/docs/install/changelog.md` | 66 | `- HLCE-313: fall back across webhooks so one dead URL cannot mute alerting by @smashingtags in #462` |
+| `wiki/docs/install/changelog.md` | 67 | `- HLCE-317: move dev.homelabarr.com to the CE dev app by @smashingtags in #463` |
+| `wiki/docs/install/changelog.md` | 68 | `- HLCE-318: alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
+| `wiki/docs/install/changelog.md` | 69 | `- HLCE-318: check the webhook up front so a missing one is not silent by @smashingtags in #467` |
+| `wiki/docs/install/changelog.md` | 70 | `- HLCE-320: reset the public demo on a timer so a visitor cannot break it for good by @smashingtags in #471` |
+| `wiki/docs/install/changelog.md` | 71 | `- HLCE-321: add a demo mode that refuses account changes by @smashingtags in #472` |
+| `wiki/docs/install/changelog.md` | 72 | `- HLCE-322: build each architecture on its own runner instead of emulating arm64 by @smashingtags in #473` |
+| `wiki/docs/install/changelog.md` | 73 | `- HLCE-323: merge routine dependency updates without a human touching them by @smashingtags in #474` |
+| `wiki/docs/install/changelog.md` | 74 | `- HLCE-312: report the crash before trying to record it by @smashingtags in #479` |
+| `wiki/docs/install/changelog.md` | 75 | `- HLCE-323: create the major-update label instead of assuming it exists by @smashingtags in #481` |
+| `wiki/docs/install/changelog.md` | 76 | `- HLCE-307: bucket IPv6 login attempts by subnet instead of exact address by @smashingtags in #477` |
+| `wiki/docs/install/changelog.md` | 77 | `- HLCE-315: let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
+| `wiki/docs/install/changelog.md` | 78 | `- HLCE-318: deliver hypervisor alerts by email so they reach someone by @smashingtags in #482` |
+| `wiki/docs/install/changelog.md` | 79 | `- HLCE-316: stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
+| `wiki/docs/install/changelog.md` | 80 | `- HLCE-316: make the changelog generator actually categorise this repo's PRs by @smashingtags in #486` |
+| `wiki/docs/install/changelog.md` | 86 | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
+| `wiki/docs/install/changelog.md` | 90 | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
+| `wiki/docs/install/changelog.md` | 91 | `- harden users.json loader + DialogDescription a11y by @smashingtags in #165` |
+| `wiki/docs/install/changelog.md` | 96 | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
+| `wiki/docs/install/changelog.md` | 97 | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
+| `wiki/docs/install/changelog.md` | 98 | `- flatten nav + move Discord/Discussions to header icons by @smashingtags in #160` |
+| `wiki/docs/install/changelog.md` | 99 | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
+| `wiki/docs/install/changelog.md` | 100 | `- fix broken README mascot image by @smashingtags in #163` |
+| `wiki/docs/install/changelog.md` | 153 | `- remove stale tracked files by @smashingtags in #150` |
+| `wiki/docs/install/changelog.md` | 154 | `- remove stale octopus favicons by @smashingtags in #153` |
+| `wiki/docs/install/changelog.md` | 155 | `- optimize app icons (PNG → WebP, 5.9MB → 1.2MB) by @smashingtags in #154` |
+| `wiki/docs/install/changelog.md` | 156 | `- remove unused react-query, bump shadcn (kills all npm deprecation warnings) by @smashingtags in #158` |
+| `wiki/docs/install/changelog.md` | 206 | `- bump Playwright workers from 1 to 4 by @smashingtags in #157` |
+| `wiki/docs/install/changelog.md` | 207 | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
+| `wiki/docs/install/changelog.md` | 209 | `- Add OWNER-PUNCHLIST for project management by @smashingtags in #203` |
+| `wiki/docs/install/changelog.md` | 210 | `- HLCE-182: revert cosign-installer to v3 (fix red build from #222) by @smashingtags in #228` |
+| `wiki/docs/install/changelog.md` | 211 | `- HLCE-182: fix cosign verify identity (org migration smashingtags->imogenlabs) by @smashingtags in #229` |
+| `wiki/docs/install/changelog.md` | 212 | `- HLCE-183: fix vitest e2e exclusion + drop deprecated tsconfig baseUrl by @smashingtags in #230` |
+| `wiki/docs/install/changelog.md` | 213 | `- HLCE-184: manualChunks function form for Vite 8/rolldown (unblocks #227) by @smashingtags in #231` |
+| `wiki/docs/install/changelog.md` | 214 | `- HLCE-185: run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
+| `wiki/docs/install/changelog.md` | 215 | `- HLCE-185: revert to GitHub-hosted (public repo = free minutes; self-hosted blocked for public) by @smashingtags in #23` |
+| `wiki/docs/install/changelog.md` | 216 | `- HLCE-186: fix backend crash loop (path-to-regexp override vs Express 5) by @smashingtags in #234` |
+| `wiki/docs/install/changelog.md` | 217 | `- HLCE-187: fix DAST Baseline duplicate-artifact 409 by @smashingtags in #236` |
+| `wiki/docs/install/changelog.md` | 218 | `- HLCE-188: TruffleHog (CI) + Betterleaks (pre-commit) — drop license-blocked gitleaks-action by @smashingtags in #237` |
+| `wiki/docs/install/changelog.md` | 219 | `- HLCE-189: fix compose-security-validation install (mkdir -p ~/.local/bin) by @smashingtags in #238` |
+| `wiki/docs/install/changelog.md` | 220 | `- HLCE-189: fix compose validation step (filter + --no-interpolate) + tubesync volume by @smashingtags in #239` |
+| `wiki/docs/install/changelog.md` | 221 | `- HLCE-189: validate compose templates as YAML+services (runner-stable) by @smashingtags in #240` |
+| `wiki/docs/install/changelog.md` | 222 | `- HLCE-190: scope docker vuln scan to own images + fix multi-run SARIF by @smashingtags in #241` |
+| `wiki/docs/install/changelog.md` | 223 | `- HLCE-191: rewrite E2E suite to run the real product locally by @smashingtags in #242` |
+| `wiki/docs/install/changelog.md` | 224 | `- Release dev → main: HLCE-191 E2E + INFRA-64/70 cleanup by @smashingtags in #243` |
+| `wiki/docs/install/changelog.md` | 225 | `- HLCE-192: stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
+| `wiki/docs/install/changelog.md` | 226 | `- Release dev → main: /auth/me reload fix, E2E on ce-dev, Dependabot unblock by @smashingtags in #248` |
+| `wiki/docs/install/changelog.md` | 227 | `- HLCE-199: React 18 → 19 upgrade (core bump + forwardRef modernization) by @smashingtags in #273` |
+| `wiki/docs/install/changelog.md` | 228 | `- HLCE-202: roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
+| `wiki/docs/install/changelog.md` | 229 | `- HLCE-202: roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
+| `wiki/docs/install/changelog.md` | 230 | `- HLCE-202: nodemailer 9 regression test + React 19 changelog by @smashingtags in #278` |
+| `wiki/docs/install/changelog.md` | 231 | `- HLCE-199: documentation sweep for React 19 upgrade by @smashingtags in #280` |
+| `wiki/docs/install/changelog.md` | 232 | `- HLCE-199: fix broken wiki links (strict mkdocs build passes) by @smashingtags in #282` |
+| `wiki/docs/install/changelog.md` | 233 | `- HLCE-194: migrate GHCR namespace + deploy wiring smashingtags → imogenlabs by @smashingtags in #285` |
+| `wiki/docs/install/changelog.md` | 234 | `- HLCE-195: build-push workflow manual-dispatch only (minutes out is permanent) by @smashingtags in #287` |
+| `wiki/docs/install/changelog.md` | 235 | `- HLCE-197: add CodeQL SAST workflow by @smashingtags in #288` |
+| `wiki/docs/install/changelog.md` | 236 | `- HLCE-199: pages.yml → ubuntu-latest (unblock wiki publish) by @smashingtags in #289` |
+| `wiki/docs/install/changelog.md` | 237 | `- HLCE-203: revert pages.yml to self-hosted (gitrunners fixed) by @smashingtags in #291` |
+| `wiki/docs/install/changelog.md` | 238 | `- HLCE-204: pages.yml on ubuntu-latest (public repo cannot use self-hosted runners) by @smashingtags in #293` |
+| `wiki/docs/install/changelog.md` | 239 | `- HLCE-210: test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
+| `wiki/docs/install/changelog.md` | 240 | `- HLCE-211: Unit/coverage CI gate on ubuntu-latest with ratcheting floor by @smashingtags in #295` |
+| `wiki/docs/install/changelog.md` | 241 | `- HLCE-212: Unit tests for auth core (JWT, bcrypt, API keys, secrets) by @smashingtags in #296` |
+| `wiki/docs/install/changelog.md` | 242 | `- HLCE-214: Unit tests for MFA (TOTP + backup codes) by @smashingtags in #297` |
+| `wiki/docs/install/changelog.md` | 243 | `- HLCE-209: CHANGELOG for Wave-2 auth + MFA tests (HLCE-212, HLCE-214) by @smashingtags in #298` |
+| `wiki/docs/install/changelog.md` | 244 | `- HLCE-215: tests for rate-limit & account lockout by @smashingtags in #299` |
+| `wiki/docs/install/changelog.md` | 245 | `- HLCE-216: supertest integration tests for auth HTTP routes by @smashingtags in #300` |
+| `wiki/docs/install/changelog.md` | 246 | `- HLCE-221: persistence-integrity tests (db / stars / activity / loggers) by @smashingtags in #301` |
+| `wiki/docs/install/changelog.md` | 247 | `- HLCE-217: audit hash-chain + secure-logging tests (audit/log/alert) by @smashingtags in #302` |
+| `wiki/docs/install/changelog.md` | 248 | `- HLCE-256: fix SQLCipher encryption-at-rest init (key before WAL) by @smashingtags in #303` |
+| `wiki/docs/install/changelog.md` | 249 | `- HLCE-219: docker-manager tests (mocked dockerode) by @smashingtags in #304` |
+| `wiki/docs/install/changelog.md` | 250 | `- HLCE-220: deploy/SSE + startup-guard + network tests by @smashingtags in #305` |
+| `wiki/docs/install/changelog.md` | 251 | `- HLCE-223: React contexts & hooks tests (AuthContext 100%) by @smashingtags in #306` |
+| `wiki/docs/install/changelog.md` | 252 | `- HLCE-225: high-value component tests (RTL) by @smashingtags in #307` |
+| `wiki/docs/install/changelog.md` | 253 | `- HLCE-228: Bug-lock regression — fix safeUrl / deployment.ts / cli-bridge appId by @smashingtags in #308` |
+| `wiki/docs/install/changelog.md` | 254 | `- HLCE-227: Security-invariant regression suite (permanent guardrails) by @smashingtags in #309` |
+| `wiki/docs/install/changelog.md` | 255 | `- HLCE-229: integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
+| `wiki/docs/install/changelog.md` | 256 | `- HLCE-259: fix SSE broadcast skipping a client after a failing one by @smashingtags in #311` |
+| `wiki/docs/install/changelog.md` | 257 | `- HLCE-255: make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
+| `wiki/docs/install/changelog.md` | 258 | `- HLCE-257: frame audit row_hash with JSON to close boundary-ambiguous tamper by @smashingtags in #313` |
+| `wiki/docs/install/changelog.md` | 259 | `- HLCE-258: probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
+| `wiki/docs/install/changelog.md` | 260 | `- HLCE-254: enforce react-hooks v7 rules as errors by @smashingtags in #315` |
+| `wiki/docs/install/changelog.md` | 261 | `- HLCE-226: Playwright E2E seeded target + critical journeys (and fix deploy 404) by @smashingtags in #316` |
+| `wiki/docs/install/changelog.md` | 262 | `- HLCE-260: README — E2E lanes + app count 117 by @smashingtags in #317` |
+| `wiki/docs/install/changelog.md` | 263 | `- HLCE-265: /health/detail 200→500 on internal error by @smashingtags in #318` |
+| `wiki/docs/install/changelog.md` | 264 | `- HLCE-266: validation path check case-insensitive on field key by @smashingtags in #319` |
+| `wiki/docs/install/changelog.md` | 265 | `- HLCE-268: unify password minimum length to 12 by @smashingtags in #320` |
+| `wiki/docs/install/changelog.md` | 266 | `- HLCE-267: validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
+| `wiki/docs/install/changelog.md` | 267 | `- HLCE-269: detect audit-log tail truncation (chain tip) by @smashingtags in #322` |
+| `wiki/docs/install/changelog.md` | 268 | `- HLCE-262: StrykerJS mutation-testing harness + scoped baseline by @smashingtags in #325` |
+| `wiki/docs/install/changelog.md` | 269 | `- HLCE-271: integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 270 | `- HLCE-272: frontend security-component tests + lib/api gaps (+ password-min fix) by @smashingtags in #327` |
+| `wiki/docs/install/changelog.md` | 271 | `- HLCE-273: deploy-execution + backend-branch coverage (+ dead-code removal) by @smashingtags in #328` |
+| `wiki/docs/install/changelog.md` | 272 | `- HLCE-274: E2E round 2 — failure/permission/account journeys + harden (+ mount-wizard stub, bug fix) by @smashingtags` |
+| `wiki/docs/install/changelog.md` | 273 | `- HLCE-275: make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
+| `wiki/docs/install/changelog.md` | 274 | `- HLCE-263: mutation pass on high-risk security modules (≥80% score) by @smashingtags in #332` |
+| `wiki/docs/install/changelog.md` | 275 | `- HLCE-264: nightly mutation-testing CI + per-module score ratchet by @smashingtags in #333` |
+| `wiki/docs/install/changelog.md` | 276 | `- HLCE-276: client port-conflict validation for text-typed catalog port fields by @smashingtags in #335` |
+| `wiki/docs/install/changelog.md` | 277 | `- HLCE-278: cover the remaining enhanced-mount route handlers by @smashingtags in #336` |
+| `wiki/docs/install/changelog.md` | 278 | `- HLCE-277: mutation pass on the dangerous-op routes (+ final coverage ratchet) by @smashingtags in #337` |
+| `wiki/docs/install/changelog.md` | 279 | `- HLCE-280: frontend security fixes (rclone XSS, credential log, port validation) by @smashingtags in #338` |
+| `wiki/docs/install/changelog.md` | 280 | `- HLCE-282: audit/log/alert/db hardening (redaction drift, SQLCipher, alert) by @smashingtags in #339` |
+| `wiki/docs/install/changelog.md` | 281 | `- HLCE-281: cli-bridge — stop process.env pollution + deployStandard hardening by @smashingtags in #340` |
+| `wiki/docs/install/changelog.md` | 282 | `- HLCE-283: mandatory CSRF token + route hardening (health path, dockerode stats) by @smashingtags in #341` |
+| `wiki/docs/install/changelog.md` | 283 | `- HLCE-285: harden auth routes — cli-mint jti-less+ttl, constant-time validatePassword, MFA invariant pins by @smashin` |
+| `wiki/docs/install/changelog.md` | 284 | `- HLCE-284: track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
+| `wiki/docs/install/changelog.md` | 285 | `- HLCE-279: ratchet coverage floor + consolidated remediation CHANGELOG by @smashingtags in #344` |
+| `wiki/docs/install/changelog.md` | 286 | `- HLCE-288: deploy.js outer catch is unreachable — trim dead branches + pin parser boundary by @smashingtags in #345` |
+| `wiki/docs/install/changelog.md` | 287 | `- HLCE-287: out-of-band HMAC-signed audit chain-tip anchor by @smashingtags in #346` |
+| `wiki/docs/install/changelog.md` | 288 | `- HLCE-286: CHANGELOG for audit anchor + deploy-catch cleanup by @smashingtags in #348` |
+| `wiki/docs/install/changelog.md` | 289 | `- HLCE-287: document AUDIT_ANCHOR_KEY + out-of-band audit anchor by @smashingtags in #349` |
+| `wiki/docs/install/changelog.md` | 290 | `- HLCE-291: resolve open code-scanning alerts by @smashingtags in #354` |
+| `wiki/docs/install/changelog.md` | 291 | `- HLCE-291: make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
+| `wiki/docs/install/changelog.md` | 292 | `- HLCE-290: restore Trivy default-branch reporting by @smashingtags in #353` |
+| `wiki/docs/install/changelog.md` | 293 | `- HLCE-290: patch npm-bundled undici (CVE-2026-12151) in backend image by @smashingtags in #365` |
+| `wiki/docs/install/changelog.md` | 294 | `- HLCE-290: fix undici patch — pack-and-replace npm's bundled copy by @smashingtags in #367` |
+| `wiki/docs/install/changelog.md` | 295 | `- HLCE-293: restore dual-registry auto-publish (Docker Hub regression fix) by @smashingtags in #368` |
+| `wiki/docs/install/changelog.md` | 296 | `- HLCE-295: smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
+| `wiki/docs/install/changelog.md` | 297 | `- HLCE-296: bump backend base + weekly no-cache rebuild (fix stale docker-cli CVE) by @smashingtags in #370` |
+| `wiki/docs/install/changelog.md` | 298 | `- HLCE-300: ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
+| `wiki/docs/install/changelog.md` | 299 | `- HLCE-302: resolve 4 open security alerts by @smashingtags in #418` |
+| `wiki/docs/install/changelog.md` | 300 | `- HLCE-305: consolidate four lock bumps and pin node to major 24 by @smashingtags in #437` |
+| `wiki/docs/install/changelog.md` | 301 | `- HLCE-304: remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
+| `wiki/docs/install/changelog.md` | 302 | `- HLCE-306: guard the native build and give the E2E lane real diagnostics by @smashingtags in #446` |
+| `wiki/docs/install/changelog.md` | 303 | `- HLCE-308: drop the unused better-sqlite3 dependency by @smashingtags in #454` |
+| `wiki/docs/install/changelog.md` | 304 | `- HLCE-309: release v2.3.0 by @smashingtags in #456` |
+| `wiki/docs/install/changelog.md` | 309 | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
+| `wiki/docs/install/changelog.md` | 310 | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
+| `wiki/docs/install/changelog.md` | 311 | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
+| `wiki/docs/install/changelog.md` | 312 | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
+| `wiki/docs/install/changelog.md` | 315 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
+| `wiki/docs/install/changelog.md` | 316 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
+| `wiki/docs/install/changelog.md` | 319 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `wiki/mkdocs.yml` | 4 | `site_url: "https://wiki.homelabarr.com"` |
 | `wiki/mkdocs.yml` | 10 | `repo_url: https://github.com/imogenlabs/homelabarr-ce` |
 | `wiki/mkdocs.yml` | 11 | `edit_uri: https://github.com/imogenlabs/homelabarr-ce/edit/main/wiki/docs/` |
