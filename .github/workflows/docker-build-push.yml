@@ -12,6 +12,7 @@ on:
   # Weekly no-cache rebuild so security-sensitive layers (the Alpine-edge
   # docker-cli binary and the base image) can't silently freeze in the gha
   # build cache and keep shipping a stale, CVE-flagged binary. (HLCE-296.)
+  # Tag builds skip the cache too — see BUILD_NO_CACHE below. (HLCE-334.)
   schedule:
     - cron: '0 6 * * 1'
   workflow_dispatch:
@@ -20,6 +21,11 @@ on:
         description: 'Push images to registry'
         required: false
         default: 'true'
+        type: boolean
+      no_cache:
+        description: 'Build from scratch (use this to repair a release that shipped a stale package layer)'
+        required: false
+        default: false
         type: boolean
 
 env:
@@ -61,6 +67,17 @@ jobs:
   build:
     name: Build ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
+    # A release build must NEVER reuse a cached `apk upgrade` layer. That layer's
+    # hash doesn't change when upstream ships a security update, so BuildKit
+    # happily reuses a months-old one — and a version tag is immutable, so the
+    # stale packages are frozen into it for good. v2.5.0 published a backend with
+    # ten open OpenSSL CVEs, two of them HIGH, exactly this way, while the
+    # frontend from the same release came out clean only because an nginx bump
+    # happened to invalidate its cache (HLCE-334). The weekly rebuild refreshes
+    # `latest`; it can never repair a tag. So: schedule, any v* tag, or an
+    # explicit dispatch. Do not narrow this back to `schedule`.
+    env:
+      BUILD_NO_CACHE: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') || github.event.inputs.no_cache == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -143,9 +160,7 @@ jobs:
         # other's cache and every build looks cold.
         cache-from: type=gha,scope=${{ matrix.arch }}-frontend
         cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope={0}-frontend', matrix.arch) || '' }}
-        # The weekly scheduled run builds from scratch so the Alpine-edge
-        # docker-cli and base layers refresh instead of freezing. (HLCE-296.)
-        no-cache: ${{ github.event_name == 'schedule' }}
+        no-cache: ${{ env.BUILD_NO_CACHE == 'true' }}
         provenance: ${{ github.event_name != 'pull_request' }}
         sbom: ${{ github.event_name != 'pull_request' }}
         build-args: |
@@ -164,7 +179,7 @@ jobs:
         load: ${{ github.event_name == 'pull_request' }}
         cache-from: type=gha,scope=${{ matrix.arch }}-backend
         cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope={0}-backend', matrix.arch) || '' }}
-        no-cache: ${{ github.event_name == 'schedule' }}
+        no-cache: ${{ env.BUILD_NO_CACHE == 'true' }}
         provenance: ${{ github.event_name != 'pull_request' }}
         sbom: ${{ github.event_name != 'pull_request' }}
         build-args: |
