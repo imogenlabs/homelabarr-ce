@@ -98,7 +98,7 @@ parallel branch and are deferred to a later pass.
 | `server/secrets.js`   | 81.58% | **100.00%** | 95% | All mutants killed (lowercase Docker path, default `/run/secrets`, trailing-trim regex, `_FILE`-existence guard). |
 | `server/ratelimit.js` | 83.52% | **97.80%**  | 90% | 2 equivalent survivors: the limiter-config `windowMs` (the custom `SqliteStore` supplies its own `resetTime`, so the config window is inert). |
 | `server/mfa.js`       | 81.82% | **90.91%**  | 85% | 6 equivalent survivors (see below). |
-| `server/audit.js`     | 66.46% | **81.37%**  | 78% | Equivalent/masked survivors (see below). |
+| `server/audit.js`     | 66.46% | **84.77%**  | 82% | Raised in HLCE-332; equivalent/masked survivors (see below). |
 | `server/auth.js`      | 61.60% | **80.61%**  | 78% | 526 mutants; residual survivors are logger-message strings + defensive `!== -1` guards + a post-compare regex (see below). |
 
 These floors are **recorded only** — the build-breaking `thresholds.break`
@@ -124,9 +124,18 @@ inflate the score, HLCE-263 leaves these and documents them in the matching
   which the loop's guard skips).
 - **`audit.js`** — the `DailyRotateFile`/winston config (the file transport is
   mocked to a no-op), `hashAuditRow`'s private field fallbacks (used identically
-  by write + verify, so the round-trip can't observe them), the `id_gap` branch
-  (the `prev_hash` walk catches a gap first), and the equal-count / empty-with-tip
-  truncation clauses (masked by the leading `rows.length < tip.count` clause).
+  by write + verify, so the round-trip can't observe them), the equal-count /
+  empty-with-tip truncation clauses (masked by the leading `rows.length <
+  tip.count` clause), the `catch` in `hexEqual` (which returns `false` either
+  way), and `writeAnchor`'s `!tip` guard (the tip `SELECT` always returns a row
+  once a append has committed).
+  **Correction (HLCE-332):** the `id_gap` branch was listed here as equivalent
+  because "the `prev_hash` walk catches a gap first". That is only true for a
+  *deleted* row. The row hash does not cover the id, so **renumbering** a row
+  leaves both hash checks satisfied and `id_gap` is the only check that fires.
+  It is now covered by a test. An equivalence claim is a claim, and this one was
+  wrong for two months — prefer trying to kill a mutant over arguing it cannot
+  be killed.
 - **`auth.js`** — `logger.*('message')` argument strings (no code branches on log
   text), the post-`bcrypt.compare` cost regex / optional-chaining (runs only when
   the password is already a valid bcrypt hash, so `.match()` is never null), the
@@ -235,7 +244,7 @@ the job if any module is below its recorded floor**:
 | `secrets.js` | 95% |
 | `ratelimit.js` | 90% |
 | `mfa.js` | 85% |
-| `audit.js` | 78% |
+| `audit.js` | 82% |
 | `auth.js` | 78% |
 | `routes/containers.js` | 64% |
 | `routes/deploy.js` | 66% |

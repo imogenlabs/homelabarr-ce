@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import nodeCrypto from 'node:crypto';
 
 // initAudit() wires a winston DailyRotateFile transport whose async file writes
 // race the temp-dir cleanup (ENOENT) and leak handles. Replace it with a no-op
@@ -34,9 +35,12 @@ vi.mock('winston-daily-rotate-file', async () => {
 //   - audit.js:92  `if (auditLogger) ...` -> never-log: under the no-op transport
 //     the winston call has no observable side effect (the always-log mutant, which
 //     would dereference a null logger, IS killed by the no-init test below).
-//   - audit.js:107  the id_gap return branch: a non-contiguous id implies a
-//     deleted middle row, which the prev_hash chain check at line 102 already
-//     reports first, so the id_gap branch is unreachable as a sole cause.
+//   - audit.js:107  the id_gap return branch. WRONG, corrected in HLCE-332: that
+//     reasoning only holds for a DELETED row. The row hash does not cover the id,
+//     so RENUMBERING a row leaves both hash checks satisfied and id_gap is the
+//     only check that fires. It is now covered ('row ids stay contiguous' below).
+//     The claim stood unchallenged for two months; try to kill a mutant before
+//     arguing it cannot be killed.
 //   - audit.js:121-122  the equal-count / empty-with-tip truncation clauses: the
 //     leading `rows.length < tip.count` clause (line 120) already fires for every
 //     row-deletion scenario, masking these as a sole cause. They remain as
@@ -593,5 +597,163 @@ describe('out-of-band signed anchor (HLCE-287)', () => {
     audit.audit({ actor: 'u', event: 'b', result: 'ok' });
     fs.writeFileSync(anchorPath(), stale, 'utf8');
     expect(audit.verifyChain().kind).toBe('anchor_mismatch');
+  });
+});
+
+// HLCE-332. The anchor work in HLCE-287 added roughly 95 mutants to this module
+// and eight tests, which is why the nightly mutation lane went red on the day it
+// shipped (2026-06-22) and stayed red: the score fell from 81.37% to 75.20% while
+// the absolute kill count went UP. Nothing regressed — new code arrived
+// under-tested. These suites cover the anchor's signature comparator, its
+// field-by-field tip agreement, the prototype-pollution guard in redact(), and
+// the id-contiguity check, each of which had no test that could distinguish it
+// from a broken version.
+
+// signTip() is private, so the framing is mirrored here. It has to stay in step
+// with audit.js — a test that signed differently would pass for the wrong reason.
+function signTipLikeAudit({ last_row_id, last_row_hash, count }, secret) {
+  return nodeCrypto.createHmac('sha256', secret)
+    .update(JSON.stringify([last_row_id, last_row_hash, count]))
+    .digest('hex');
+}
+
+describe('anchor signature comparison (HLCE-332)', () => {
+  const KEY = 'anchor-secret-key-0123456789abcdef';
+  const anchorPath = () => path.join(process.env.AUDIT_DIR, 'chain-tip.anchor');
+
+  it('rejects a signature that decodes to the right bytes but is the wrong length', async () => {
+    process.env.AUDIT_ANCHOR_KEY = KEY;
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    // Buffer.from(str, 'hex') stops decoding at the first non-hex character, so
+    // "<valid sig>zz" decodes to exactly the same 32 bytes as the real one. Without
+    // the length check in hexEqual, timingSafeEqual would compare two identical
+    // buffers and ACCEPT a signature with attacker-appended trailing bytes.
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    const real = signTipLikeAudit(tip, KEY);
+    expect(Buffer.from(real + 'zz', 'hex').equals(Buffer.from(real, 'hex'))).toBe(true);
+
+    fs.writeFileSync(anchorPath(), JSON.stringify({ ...tip, sig: real + 'zz' }), 'utf8');
+    expect(audit.verifyChain()).toMatchObject({ ok: false, kind: 'anchor_unsigned' });
+  });
+
+  it('rejects a non-string signature that would otherwise compare equal', async () => {
+    process.env.AUDIT_ANCHOR_KEY = KEY;
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    // JSON lets sig be an array. Buffer.from(array) ignores the encoding argument
+    // and takes the numbers as bytes, so without the typeof guard an attacker
+    // could hand over the raw signature bytes and be believed.
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    const bytes = [...Buffer.from(signTipLikeAudit(tip, KEY), 'hex')];
+    fs.writeFileSync(anchorPath(), JSON.stringify({ ...tip, sig: bytes }), 'utf8');
+    expect(audit.verifyChain()).toMatchObject({ ok: false, kind: 'anchor_unsigned' });
+  });
+
+  it('rejects an anchor carrying no signature at all', async () => {
+    process.env.AUDIT_ANCHOR_KEY = KEY;
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    fs.writeFileSync(anchorPath(), JSON.stringify(tip), 'utf8');
+    expect(audit.verifyChain()).toMatchObject({ ok: false, kind: 'anchor_unsigned' });
+  });
+});
+
+describe('anchor agrees with the tip field by field (HLCE-332)', () => {
+  const KEY = 'anchor-secret-key-0123456789abcdef';
+  const anchorPath = () => path.join(process.env.AUDIT_DIR, 'chain-tip.anchor');
+
+  // Each case rewrites ONE field and re-signs, so the signature check passes and
+  // the failure can only come from that field's comparison. The existing
+  // stale-anchor test changes all three at once, which cannot tell them apart.
+  async function anchorWith(overrides) {
+    process.env.AUDIT_ANCHOR_KEY = KEY;
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'b', result: 'ok' });
+
+    const tip = db.prepare('SELECT last_row_id, last_row_hash, count FROM audit_chain_tip WHERE id = 1').get();
+    const forged = { ...tip, ...overrides };
+    fs.writeFileSync(anchorPath(), JSON.stringify({ ...forged, sig: signTipLikeAudit(forged, KEY) }), 'utf8');
+    return audit.verifyChain();
+  }
+
+  it('flags an anchor whose last_row_id alone disagrees', async () => {
+    expect(await anchorWith({ last_row_id: 99 })).toMatchObject({ ok: false, kind: 'anchor_mismatch' });
+  });
+
+  it('flags an anchor whose last_row_hash alone disagrees', async () => {
+    expect(await anchorWith({ last_row_hash: 'a'.repeat(64) })).toMatchObject({ ok: false, kind: 'anchor_mismatch' });
+  });
+
+  it('flags an anchor whose count alone disagrees', async () => {
+    const r = await anchorWith({ count: 7 });
+    expect(r).toMatchObject({ ok: false, kind: 'anchor_mismatch', anchorCount: 7, actualCount: 2 });
+  });
+
+  it('accepts an anchor that agrees on all three fields', async () => {
+    expect(await anchorWith({})).toEqual({ ok: true, rows: 2 });
+  });
+});
+
+describe('redact drops prototype-poisoning keys (HLCE-332)', () => {
+  // An object literal cannot hold a real own `__proto__` key, so the meta has to
+  // come through JSON.parse — which is how it arrives in production anyway.
+  async function storedMeta(rawJson) {
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'e', result: 'ok', meta: JSON.parse(rawJson) });
+    return db.prepare('SELECT meta_json FROM audit_events ORDER BY id DESC LIMIT 1').get().meta_json;
+  }
+
+  it('drops a __proto__ key from stored meta', async () => {
+    const meta = await storedMeta('{"__proto__":{"polluted":true},"keep":1}');
+    expect(meta).not.toContain('__proto__');
+    expect(JSON.parse(meta)).toEqual({ keep: 1 });
+    expect({}.polluted).toBeUndefined();
+  });
+
+  it('drops a constructor key from stored meta', async () => {
+    const meta = await storedMeta('{"constructor":{"bad":1},"keep":2}');
+    expect(meta).not.toContain('constructor');
+    expect(JSON.parse(meta)).toEqual({ keep: 2 });
+  });
+
+  it('drops a prototype key from stored meta', async () => {
+    const meta = await storedMeta('{"prototype":{"bad":1},"keep":3}');
+    expect(meta).not.toContain('prototype');
+    expect(JSON.parse(meta)).toEqual({ keep: 3 });
+  });
+
+  it('drops poisoning keys nested inside meta, not just at the top level', async () => {
+    const meta = await storedMeta('{"outer":{"__proto__":{"x":1},"inner":"kept"}}');
+    expect(meta).not.toContain('__proto__');
+    expect(JSON.parse(meta)).toEqual({ outer: { inner: 'kept' } });
+  });
+});
+
+describe('row ids stay contiguous (HLCE-332)', () => {
+  it('reports id_gap when ids jump but the hash chain is still intact', async () => {
+    const { audit, db } = await loadAudit();
+    audit.initAudit();
+    audit.audit({ actor: 'u', event: 'a', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'b', result: 'ok' });
+    audit.audit({ actor: 'u', event: 'c', result: 'ok' });
+
+    // The row hash covers ts/actor/ip/event/target/result/meta/prev_hash, NOT the
+    // id — so renumbering a row leaves both hash checks satisfied and only the
+    // contiguity assertion can catch it. That is the one path to this branch:
+    // deleting a middle row instead trips prev_hash first.
+    db.prepare('UPDATE audit_events SET id = 99 WHERE id = 3').run();
+
+    expect(audit.verifyChain()).toEqual({ ok: false, brokenAt: 99, kind: 'id_gap' });
   });
 });
