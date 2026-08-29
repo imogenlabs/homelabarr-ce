@@ -160,6 +160,7 @@ docker buildx imagetools inspect \
 - `DEFAULT_ADMIN_PASSWORD` set explicitly OR removed after first-boot bootstrap
 - `CORS_ORIGIN` pinned to the exact public origin (no wildcards)
 - Docker socket proxy (`socket-proxy` service) present with `EXEC=0, BUILD=0`
+- Socket proxy grants are the four the UI needs and no more: `ALLOW_START`, `ALLOW_STOP`, `ALLOW_RESTARTS`, `ALLOW_LOGS`. Leave `ALLOW_TOP`, `ALLOW_ARCHIVE`, `ALLOW_CHANGE` and `ALLOW_EXPORT` unset — the app never calls them
 - `docker inspect homelabarr-backend` shows `ReadonlyRootfs: true` and `CapDrop: [ALL]`
 - Images pinned to a tag AND sha256 digest in your compose file
 

@@ -141,7 +141,7 @@ Three containers. That's the whole stack.
 |---------|-------------|------|
 | **Frontend** | React dashboard served by nginx. What you see in your browser. | 8084 |
 | **Backend** | Reads app templates, talks to Docker via socket proxy, handles auth. Node.js + Express. | 8092 |
-| **Socket Proxy** | Mediates Docker API access. `EXEC=0`, `BUILD=0`, `cap_drop: ALL`, read-only. | internal |
+| **Socket Proxy** | Mediates Docker API access. `EXEC=0`, `BUILD=0`, `cap_drop: ALL`, read-only. Start/stop/restart and log reads are each an explicit grant. | internal |
 
 <p align="center">
     <img src="wiki/docs/img/diagrams/system-architecture.png" alt="System Architecture" width="700">
