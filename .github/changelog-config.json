@@ -65,6 +65,40 @@
           "flags": "gu"
         }
       ]
+    },
+    {
+      "title": "## 📦 Other",
+      "labels": [],
+      "exclude_labels": [
+        "bug",
+        "bugfix",
+        "build",
+        "cd",
+        "changed",
+        "chore",
+        "ci",
+        "dependencies",
+        "deploy",
+        "docs",
+        "documentation",
+        "enhancement",
+        "feat",
+        "feature",
+        "fix",
+        "maintenance",
+        "perf",
+        "refactor",
+        "revert",
+        "style",
+        "test"
+      ],
+      "rules": [
+        {
+          "pattern": "^(?![A-Z]+-\\d+:).*",
+          "on_property": "title",
+          "flags": "gu"
+        }
+      ]
     }
   ],
   "ignore_labels": [
