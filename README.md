@@ -1,4 +1,4 @@
-# HomelabARR CE
+# HomelabARR
 
 <p align="center">
     <a href="https://github.com/imogenlabs/homelabarr-ce">
