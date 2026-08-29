@@ -15,6 +15,36 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.5.0] - 2026-08-29
+
+### 📚 Documentation
+
+- changelog for v2.4.0 by @github-actions[bot] in #494
+
+### ⬆️ Dependencies
+
+- bump the actions group with 2 updates by @dependabot[bot] in #496
+- bump the development group with 12 updates by @dependabot[bot] in #497
+- bump eventsource-parser from 3.1.0 to 3.1.1 by @dependabot[bot] in #498
+- bump nginx from 1.31.3-alpine to 1.31.4-alpine in the docker group across 1 directory by @dependabot[bot] in #499
+- bump fast-uri from 3.1.5 to 3.1.6 by @dependabot[bot] in #503
+- bump the production group across 1 directory with 3 updates by @dependabot[bot] in #506
+- bump the actions group across 1 directory with 4 updates by @dependabot[bot] in #501
+- bump the development group across 1 directory with 33 updates by @dependabot[bot] in #507
+
+### 🔄 Changes
+
+- HLCE-328: restore container log reads through the socket proxy by @smashingtags in #505
+- HLCE-330: bring docker-build-push onto the artifact actions the rest of the repo uses by @smashingtags in #508
+- HLCE-330: take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509
+- HLCE-330: take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510
+- HLCE-332: cover the audit anchor and get the mutation lane green by @smashingtags in #511
+- HLCE-333: set the version to 2.5.0 by @smashingtags in #512
+
+### 📦 Other
+
+- Sync docs to imogenlabs org + current app count by @smashingtags in #495
+
 ## [v2.4.0] - 2026-08-13
 
 ### 📚 Documentation
