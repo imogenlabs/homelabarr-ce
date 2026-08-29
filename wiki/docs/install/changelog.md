@@ -15,6 +15,17 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.5.1] - 2026-08-29
+
+### 📚 Documentation
+
+- changelog for v2.5.0 by @github-actions[bot] in #513
+
+### 🔄 Changes
+
+- HLCE-334: never let a release build reuse a cached package layer by @smashingtags in #514
+- HLCE-334: set the version to 2.5.1 by @smashingtags in #515
+
 ## [v2.5.0] - 2026-08-29
 
 ### 📚 Documentation
