@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-29 19:14 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-29 21:23 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -143,19 +143,19 @@
 | `.github/workflows/dependency-staleness.yml` | 96 | `                  body: '**Staleness alert:** This ${b.cls} dependency PR has been open ${b.ageDays} days. ${b.status} p` |
 | `.github/workflows/deploy-drift.yml` | 19 | `            const LIVE_URL = 'https://demo.homelabarr.com/';` |
 | `.github/workflows/docker-build-push.yml` | 7 | `  # to BOTH GHCR (imogenlabs) and Docker Hub (smashingtags) — Docker Hub is the` |
-| `.github/workflows/docker-build-push.yml` | 28 | `  # Docker Hub namespace stays smashingtags: that's where the existing repos,` |
-| `.github/workflows/docker-build-push.yml` | 31 | `  DOCKERHUB_NAMESPACE: smashingtags` |
-| `.github/workflows/docker-build-push.yml` | 32 | `  FRONTEND_IMAGE_NAME: homelabarr-frontend` |
-| `.github/workflows/docker-build-push.yml` | 33 | `  BACKEND_IMAGE_NAME: homelabarr-backend` |
-| `.github/workflows/docker-build-push.yml` | 373 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
-| `.github/workflows/docker-build-push.yml` | 380 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
-| `.github/workflows/docker-build-push.yml` | 424 | `        # Update homelabarr.yml with latest image tags` |
-| `.github/workflows/docker-build-push.yml` | 425 | `        sed -i 's\|ghcr.io/.*/homelabarr-frontend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NA` |
-| `.github/workflows/docker-build-push.yml` | 426 | `        sed -i 's\|ghcr.io/.*/homelabarr-backend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME` |
-| `.github/workflows/docker-build-push.yml` | 453 | `          echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml"` |
-| `.github/workflows/docker-build-push.yml` | 456 | `          echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli"` |
-| `.github/workflows/docker-build-push.yml` | 463 | `          echo "docker-compose -f homelabarr.yml up -d"` |
-| `.github/workflows/docker-build-push.yml` | 482 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
+| `.github/workflows/docker-build-push.yml` | 34 | `  # Docker Hub namespace stays smashingtags: that's where the existing repos,` |
+| `.github/workflows/docker-build-push.yml` | 37 | `  DOCKERHUB_NAMESPACE: smashingtags` |
+| `.github/workflows/docker-build-push.yml` | 38 | `  FRONTEND_IMAGE_NAME: homelabarr-frontend` |
+| `.github/workflows/docker-build-push.yml` | 39 | `  BACKEND_IMAGE_NAME: homelabarr-backend` |
+| `.github/workflows/docker-build-push.yml` | 388 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
+| `.github/workflows/docker-build-push.yml` | 395 | `          --certificate-identity-regexp 'https://github.com/imogenlabs/homelabarr-ce/.github/workflows/' \` |
+| `.github/workflows/docker-build-push.yml` | 439 | `        # Update homelabarr.yml with latest image tags` |
+| `.github/workflows/docker-build-push.yml` | 440 | `        sed -i 's\|ghcr.io/.*/homelabarr-frontend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NA` |
+| `.github/workflows/docker-build-push.yml` | 441 | `        sed -i 's\|ghcr.io/.*/homelabarr-backend:.*\|${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME` |
+| `.github/workflows/docker-build-push.yml` | 468 | `          echo "curl -o homelabarr.yml https://raw.githubusercontent.com/${{ github.repository }}/main/homelabarr.yml"` |
+| `.github/workflows/docker-build-push.yml` | 471 | `          echo "export CLI_BRIDGE_HOST_PATH=/path/to/your/homelabarr-cli"` |
+| `.github/workflows/docker-build-push.yml` | 478 | `          echo "docker-compose -f homelabarr.yml up -d"` |
+| `.github/workflows/docker-build-push.yml` | 497 | `        payload="{\"embeds\":[{\"title\":\"HomelabARR CE $TAG Released\",\"author\":{\"name\":\"Imogen Labs\"},\"color\"` |
 | `.github/workflows/e2e-tests.yml` | 110 | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
 | `.github/workflows/pages.yml` | 22 | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 14 | `        default: 'https://ce-demo.homelabarr.com'` |
