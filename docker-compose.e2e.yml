@@ -20,7 +20,11 @@ services:
   # Docker socket proxy — allow-listed API only (no EXEC/BUILD), same posture as
   # production, but with START/STOP/RESTART enabled so the lifecycle journey works.
   socket-proxy:
-    image: lscr.io/linuxserver/socket-proxy:latest
+    # Pinned, deliberately. A floating :latest here let an upstream socket-proxy
+    # release turn this required check red on main for six days and block every
+    # open PR. Dependabot bumps the tag+digest, so the same upstream change now
+    # arrives as a PR that goes red instead of poisoning main.
+    image: lscr.io/linuxserver/socket-proxy:3.4.4@sha256:c0e905167a19a756f47e7fcf724ac08e47a883238ef2e1dfb1bd62e94d481ce5
     container_name: hlce-e2e-socket-proxy
     restart: unless-stopped
     environment:
@@ -37,6 +41,9 @@ services:
       - ALLOW_START=1
       - ALLOW_STOP=1
       - ALLOW_RESTARTS=1
+      # Container log reads are their own opt-in permission and default to off;
+      # without this the log-viewer journey sees a 403 and an empty dialog.
+      - ALLOW_LOGS=1
       - BUILD=0
       - COMMIT=0
       - EXEC=0

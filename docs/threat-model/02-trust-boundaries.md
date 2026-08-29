@@ -6,7 +6,7 @@
 
 3. **nginx → backend container** — HTTP over Docker bridge network. Auth: none (network isolation is the boundary). Controls: R4 internal network (`homelabarr-internal`), R9.6 route gating.
 
-4. **Backend → socket-proxy → Docker daemon** — HTTP/TCP over internal Docker network. Auth: none (endpoint allowlist on proxy). Controls: R4 socket proxy with EXEC=0/BUILD=0, R4 cap-drop ALL on backend.
+4. **Backend → socket-proxy → Docker daemon** — HTTP/TCP over internal Docker network. Auth: none (endpoint allowlist on proxy). Controls: R4 socket proxy with EXEC=0/BUILD=0 and a per-operation allowlist (`ALLOW_START`/`ALLOW_STOP`/`ALLOW_RESTARTS`/`ALLOW_LOGS` only), R4 cap-drop ALL on backend.
 
 5. **Backend → data volume (SQLCipher DB)** — Filesystem read/write. Auth: SQLCipher key from Docker secrets. Controls: R7 encryption at rest, R6 hash-chained audit log.
 

@@ -13,7 +13,7 @@ HomelabARR CE ships with a production-grade security envelope by default. This p
 - **CSRF protection:** double-submit cookie pattern with constant-time compare.
 - **API keys:** HMAC-SHA256 hashed before storage. `hlr_` prefix. Never stored in plaintext.
 - **Audit log:** hash-chained tamper-evident log with daily rotation. Every auth event, container action, and admin operation is recorded.
-- **Docker socket proxy:** backend never touches the Docker socket directly. A linuxserver socket-proxy sidecar with endpoint allowlist (EXEC=0, BUILD=0) mediates all Docker API access.
+- **Docker socket proxy:** backend never touches the Docker socket directly. A linuxserver socket-proxy sidecar with an endpoint allowlist mediates all Docker API access. `EXEC=0` and `BUILD=0` deny arbitrary command execution and image builds; `ALLOW_START`, `ALLOW_STOP`, `ALLOW_RESTARTS` and `ALLOW_LOGS` grant exactly the four container operations the dashboard offers. `ALLOW_LOGS` is read-only and covers only `GET /containers/{id}/logs` — without it the View Logs dialog opens empty.
 - **Container hardening:** `cap_drop: ALL`, `read_only: true`, `no-new-privileges`, memory/PID limits, AppArmor profile.
 - **Encryption at rest:** SQLCipher AES-256 on all databases. Key rotation scripts included.
 

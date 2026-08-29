@@ -85,6 +85,18 @@ export DOCKER_GID=YOUR_NUMBER
 docker compose -f homelabarr.yml up -d
 ```
 
+### "View Logs" opens an empty dialog
+
+Your socket proxy is denying the log read. Recent socket-proxy releases moved container log reads out of the general `CONTAINERS` permission into their own opt-in flag, which defaults to off, so `GET /containers/{id}/logs` comes back `403 Forbidden` and the viewer has nothing to show.
+
+Add `ALLOW_LOGS=1` to the `socket-proxy` service's `environment:` block and recreate it:
+
+```bash
+docker compose -f homelabarr.yml up -d --force-recreate socket-proxy
+```
+
+The shipped `homelabarr.yml` already sets it. This affects you only if you wrote your own compose file or run your own proxy.
+
 ### Running in a Proxmox LXC container
 
 Docker inside LXC needs AppArmor disabled at the Proxmox host level:
