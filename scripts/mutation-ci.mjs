@@ -24,7 +24,7 @@ const MODULES = [
   { name: "secrets", src: "server/secrets.js", test: "server/secrets.test.js", floor: 95 },
   { name: "ratelimit", src: "server/ratelimit.js", test: "server/ratelimit.test.js", floor: 90 },
   { name: "mfa", src: "server/mfa.js", test: "server/mfa.test.js", floor: 85 },
-  { name: "audit", src: "server/audit.js", test: "server/audit.test.js", floor: 78 },
+  { name: "audit", src: "server/audit.js", test: "server/audit.test.js", floor: 82 },
   { name: "auth", src: "server/auth.js", test: "server/auth.test.js", floor: 78 },
   // Dangerous-op route files (HLCE-277). All three share one integration test file
   // (dangerous-ops.routes.test.js). Many residual survivors are equivalent at the
