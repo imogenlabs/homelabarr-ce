@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-29 06:13 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-08-29 06:20 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1538
+**Total brand references found:** 1540
 
 ---
 
@@ -102,32 +102,32 @@
 | `homelabarr.yml` | 5 | `#   CORS_ORIGIN     — your public domain (e.g., https://homelabarr.example.com)` |
 | `homelabarr.yml` | 8 | `#   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)` |
 | `homelabarr.yml` | 12 | `#   docker compose -f homelabarr.yml up -d` |
-| `homelabarr.yml` | 37 | `    container_name: homelabarr-socket-proxy` |
-| `homelabarr.yml` | 78 | `      - homelabarr-internal` |
-| `homelabarr.yml` | 89 | `    image: ghcr.io/imogenlabs/homelabarr-frontend:latest` |
-| `homelabarr.yml` | 90 | `    container_name: homelabarr-frontend` |
-| `homelabarr.yml` | 99 | `      - homelabarr` |
-| `homelabarr.yml` | 103 | `      - apparmor=homelabarr-frontend` |
-| `homelabarr.yml` | 123 | `    image: ghcr.io/imogenlabs/homelabarr-backend:latest` |
-| `homelabarr.yml` | 124 | `    container_name: homelabarr-backend` |
-| `homelabarr.yml` | 133 | `      - CLI_BRIDGE_PATH=/homelabarr` |
-| `homelabarr.yml` | 147 | `      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro` |
-| `homelabarr.yml` | 148 | `      - homelabarr-data:/app/data` |
-| `homelabarr.yml` | 149 | `      - homelabarr-config:/app/server/config` |
-| `homelabarr.yml` | 150 | `      - homelabarr-activity:/app/server/activity-data` |
-| `homelabarr.yml` | 152 | `      - homelabarr` |
-| `homelabarr.yml` | 153 | `      - homelabarr-internal` |
-| `homelabarr.yml` | 157 | `      - apparmor=homelabarr-backend` |
-| `homelabarr.yml` | 183 | `  homelabarr:` |
-| `homelabarr.yml` | 184 | `    name: homelabarr` |
-| `homelabarr.yml` | 186 | `  homelabarr-internal:` |
-| `homelabarr.yml` | 187 | `    name: homelabarr-internal` |
-| `homelabarr.yml` | 192 | `  homelabarr-data:` |
-| `homelabarr.yml` | 193 | `    name: homelabarr-data` |
-| `homelabarr.yml` | 195 | `  homelabarr-config:` |
-| `homelabarr.yml` | 196 | `    name: homelabarr-config` |
-| `homelabarr.yml` | 198 | `  homelabarr-activity:` |
-| `homelabarr.yml` | 199 | `    name: homelabarr-activity` |
+| `homelabarr.yml` | 40 | `    container_name: homelabarr-socket-proxy` |
+| `homelabarr.yml` | 86 | `      - homelabarr-internal` |
+| `homelabarr.yml` | 97 | `    image: ghcr.io/imogenlabs/homelabarr-frontend:latest` |
+| `homelabarr.yml` | 98 | `    container_name: homelabarr-frontend` |
+| `homelabarr.yml` | 107 | `      - homelabarr` |
+| `homelabarr.yml` | 111 | `      - apparmor=homelabarr-frontend` |
+| `homelabarr.yml` | 131 | `    image: ghcr.io/imogenlabs/homelabarr-backend:latest` |
+| `homelabarr.yml` | 132 | `    container_name: homelabarr-backend` |
+| `homelabarr.yml` | 141 | `      - CLI_BRIDGE_PATH=/homelabarr` |
+| `homelabarr.yml` | 155 | `      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro` |
+| `homelabarr.yml` | 156 | `      - homelabarr-data:/app/data` |
+| `homelabarr.yml` | 157 | `      - homelabarr-config:/app/server/config` |
+| `homelabarr.yml` | 158 | `      - homelabarr-activity:/app/server/activity-data` |
+| `homelabarr.yml` | 160 | `      - homelabarr` |
+| `homelabarr.yml` | 161 | `      - homelabarr-internal` |
+| `homelabarr.yml` | 165 | `      - apparmor=homelabarr-backend` |
+| `homelabarr.yml` | 191 | `  homelabarr:` |
+| `homelabarr.yml` | 192 | `    name: homelabarr` |
+| `homelabarr.yml` | 194 | `  homelabarr-internal:` |
+| `homelabarr.yml` | 195 | `    name: homelabarr-internal` |
+| `homelabarr.yml` | 200 | `  homelabarr-data:` |
+| `homelabarr.yml` | 201 | `    name: homelabarr-data` |
+| `homelabarr.yml` | 203 | `  homelabarr-config:` |
+| `homelabarr.yml` | 204 | `    name: homelabarr-config` |
+| `homelabarr.yml` | 206 | `  homelabarr-activity:` |
+| `homelabarr.yml` | 207 | `    name: homelabarr-activity` |
 
 ## CI/CD workflows (`.github/workflows/`)
 
@@ -373,19 +373,19 @@
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
 | `SECURITY.md` | 146 | `  ghcr.io/imogenlabs/homelabarr-backend:<tag>` |
 | `SECURITY.md` | 153 | `  ghcr.io/imogenlabs/homelabarr-backend:<tag> \` |
-| `SECURITY.md` | 163 | `- 'docker inspect homelabarr-backend' shows 'ReadonlyRootfs: true' and 'CapDrop: [ALL]'` |
-| `SECURITY.md` | 207 | `Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/imogenlabs/homelabarr-ce/security` |
-| `SECURITY.md` | 218 | `We will not pursue legal action against good-faith security research that limits testing to ce-demo.homelabarr.com or yo` |
-| `SECURITY.md` | 223 | `Traefik, frontend, backend, and socket-proxy all on the same Docker host. The 'homelabarr-internal' bridge network is th` |
-| `SECURITY.md` | 240 | `git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce` |
-| `SECURITY.md` | 244 | `cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
-| `SECURITY.md` | 246 | `  ghcr.io/imogenlabs/homelabarr-backend:v2.3.0` |
-| `SECURITY.md` | 248 | `docker cp <backup.db> homelabarr-backend:/app/data/homelabarr.db` |
-| `SECURITY.md` | 273 | `- https://ce-demo.homelabarr.com/.well-known/security.txt (RFC 9116)` |
+| `SECURITY.md` | 164 | `- 'docker inspect homelabarr-backend' shows 'ReadonlyRootfs: true' and 'CapDrop: [ALL]'` |
+| `SECURITY.md` | 208 | `Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://github.com/imogenlabs/homelabarr-ce/security` |
+| `SECURITY.md` | 219 | `We will not pursue legal action against good-faith security research that limits testing to ce-demo.homelabarr.com or yo` |
+| `SECURITY.md` | 224 | `Traefik, frontend, backend, and socket-proxy all on the same Docker host. The 'homelabarr-internal' bridge network is th` |
+| `SECURITY.md` | 241 | `git clone https://github.com/imogenlabs/homelabarr-ce && cd homelabarr-ce` |
+| `SECURITY.md` | 245 | `cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
+| `SECURITY.md` | 247 | `  ghcr.io/imogenlabs/homelabarr-backend:v2.3.0` |
+| `SECURITY.md` | 249 | `docker cp <backup.db> homelabarr-backend:/app/data/homelabarr.db` |
+| `SECURITY.md` | 274 | `- https://ce-demo.homelabarr.com/.well-known/security.txt (RFC 9116)` |
 
 ## Wiki content
 
-**306 references**
+**308 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -414,14 +414,16 @@
 | `wiki/docs/guides/faq.md` | 48 | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
 | `wiki/docs/guides/faq.md` | 59 | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/faq.md` | 85 | `docker compose -f homelabarr.yml up -d` |
-| `wiki/docs/guides/faq.md` | 160 | `- **HomelabARR settings** (users, sessions): 'homelabarr-data' Docker volume` |
-| `wiki/docs/guides/faq.md` | 165 | `sudo tar -czf homelabarr-backup-$(date +%Y%m%d).tar.gz /opt/appdata/` |
-| `wiki/docs/guides/faq.md` | 171 | `docker compose -f homelabarr.yml pull` |
-| `wiki/docs/guides/faq.md` | 172 | `docker compose -f homelabarr.yml up -d` |
-| `wiki/docs/guides/faq.md` | 215 | `- **[Discord](https://discord.gg/Pc7mXX786x)** — fastest, someone's usually around — ask in #help` |
-| `wiki/docs/guides/faq.md` | 216 | `- **[GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)** — bug reports` |
-| `wiki/docs/guides/faq.md` | 217 | `- **[GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)** — questions and feature requests` |
-| `wiki/docs/guides/faq.md` | 218 | `- **[homelabarr.com](https://homelabarr.com)** — product page` |
+| `wiki/docs/guides/faq.md` | 95 | `docker compose -f homelabarr.yml up -d --force-recreate socket-proxy` |
+| `wiki/docs/guides/faq.md` | 98 | `The shipped 'homelabarr.yml' already sets it. This affects you only if you wrote your own compose file or run your own p` |
+| `wiki/docs/guides/faq.md` | 172 | `- **HomelabARR settings** (users, sessions): 'homelabarr-data' Docker volume` |
+| `wiki/docs/guides/faq.md` | 177 | `sudo tar -czf homelabarr-backup-$(date +%Y%m%d).tar.gz /opt/appdata/` |
+| `wiki/docs/guides/faq.md` | 183 | `docker compose -f homelabarr.yml pull` |
+| `wiki/docs/guides/faq.md` | 184 | `docker compose -f homelabarr.yml up -d` |
+| `wiki/docs/guides/faq.md` | 227 | `- **[Discord](https://discord.gg/Pc7mXX786x)** — fastest, someone's usually around — ask in #help` |
+| `wiki/docs/guides/faq.md` | 228 | `- **[GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)** — bug reports` |
+| `wiki/docs/guides/faq.md` | 229 | `- **[GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)** — questions and feature requests` |
+| `wiki/docs/guides/faq.md` | 230 | `- **[homelabarr.com](https://homelabarr.com)** — product page` |
 | `wiki/docs/guides/migration.md` | 27 | `    sudo tar czf /opt/homelabarr-backup-$(date +%Y%m%d).tar.gz /opt/appdata/` |
 | `wiki/docs/guides/migration.md` | 38 | `    ls -lh /opt/homelabarr-backup-*.tar.gz` |
 | `wiki/docs/guides/migration.md` | 49 | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
