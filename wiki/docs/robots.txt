@@ -1,0 +1,10 @@
+# wiki.homelabarr.com — documentation for HomelabARR Community Edition.
+#
+# SITE-239. MkDocs does not emit a robots.txt, and the server answers a missing
+# file with the 404 page at HTTP 200 — so a crawler asking for robots.txt was
+# handed HTML. Anything in docs/ is copied verbatim into the build, so this file
+# ships as itself.
+User-agent: *
+Allow: /
+
+Sitemap: https://wiki.homelabarr.com/sitemap.xml
