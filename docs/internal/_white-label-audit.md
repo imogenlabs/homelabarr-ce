@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-08-30 11:09 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-09-01 03:29 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1567
+**Total brand references found:** 1569
 
 ---
 
@@ -385,7 +385,7 @@
 
 ## Wiki content
 
-**335 references**
+**337 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -609,6 +609,8 @@
 | `wiki/docs/install/changelog.md` | 326 | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
 | `wiki/docs/install/changelog.md` | 327 | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
 | `wiki/docs/install/changelog.md` | 330 | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
+| `wiki/docs/robots.txt` | 1 | `# wiki.homelabarr.com — documentation for HomelabARR Community Edition.` |
+| `wiki/docs/robots.txt` | 10 | `Sitemap: https://wiki.homelabarr.com/sitemap.xml` |
 | `wiki/mkdocs.yml` | 4 | `site_url: "https://wiki.homelabarr.com"` |
 | `wiki/mkdocs.yml` | 10 | `repo_url: https://github.com/imogenlabs/homelabarr-ce` |
 | `wiki/mkdocs.yml` | 11 | `edit_uri: https://github.com/imogenlabs/homelabarr-ce/edit/main/wiki/docs/` |
