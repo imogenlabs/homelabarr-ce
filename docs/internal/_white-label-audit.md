@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-09-13 11:01 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-09-18 22:40 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1569
+**Total brand references found:** 1568
 
 ---
 
@@ -274,7 +274,7 @@
 
 ## Root documentation
 
-**104 references**
+**103 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -367,7 +367,6 @@
 | `README.md` | 283 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
 | `README.md` | 284 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
 | `README.md` | 285 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 295 | `    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292` |
 | `SECURITY.md` | 11 | `\| Latest release \| Yes — see [Releases](https://github.com/imogenlabs/homelabarr-ce/releases/latest) \|` |
 | `SECURITY.md` | 79 | `- Backend container runs as non-root user ('homelabarr:1001')` |
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
