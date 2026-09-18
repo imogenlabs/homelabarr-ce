@@ -288,33 +288,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
 ---
 
-## Contributors
-
-<table>
-<tr>
-    <td align="center"><a href="https://github.com/smashingtags"><img src="https://avatars.githubusercontent.com/u/48292010?v=4" width="50" style="border-radius:50%" /><br /><sub><b>smashingtags</b></sub></a></td>
-    <td align="center"><a href="https://github.com/fscorrupt"><img src="https://avatars.githubusercontent.com/u/45659314?v=4" width="50" style="border-radius:50%" /><br /><sub><b>FSCorrupt</b></sub></a></td>
-    <td align="center"><a href="https://github.com/drag0n141"><img src="https://avatars.githubusercontent.com/u/44865095?v=4" width="50" style="border-radius:50%" /><br /><sub><b>DrAg0n141</b></sub></a></td>
-    <td align="center"><a href="https://github.com/aelfa"><img src="https://avatars.githubusercontent.com/u/60222501?v=4" width="50" style="border-radius:50%" /><br /><sub><b>Aelfa</b></sub></a></td>
-    <td align="center"><a href="https://github.com/cyb3rgh05t"><img src="https://avatars.githubusercontent.com/u/5200101?v=4" width="50" style="border-radius:50%" /><br /><sub><b>cyb3rgh05t</b></sub></a></td>
-    <td align="center"><a href="https://github.com/justinglock40"><img src="https://avatars.githubusercontent.com/u/23133649?v=4" width="50" style="border-radius:50%" /><br /><sub><b>justinglock40</b></sub></a></td>
-    <td align="center"><a href="https://github.com/mrfret"><img src="https://avatars.githubusercontent.com/u/72273384?v=4" width="50" style="border-radius:50%" /><br /><sub><b>mrfret</b></sub></a></td>
-</tr>
-<tr>
-    <td align="center"><a href="https://github.com/dan3805"><img src="https://avatars.githubusercontent.com/u/35934387?v=4" width="50" style="border-radius:50%" /><br /><sub><b>DoCtEuR3805</b></sub></a></td>
-    <td align="center"><a href="https://github.com/brtbach"><img src="https://avatars.githubusercontent.com/u/24246495?v=4" width="50" style="border-radius:50%" /><br /><sub><b>brtbach</b></sub></a></td>
-    <td align="center"><a href="https://github.com/ramsaytc"><img src="https://avatars.githubusercontent.com/u/16809662?v=4" width="50" style="border-radius:50%" /><br /><sub><b>ramsaytc</b></sub></a></td>
-    <td align="center"><a href="https://github.com/Shayne55434"><img src="https://avatars.githubusercontent.com/u/37595910?v=4" width="50" style="border-radius:50%" /><br /><sub><b>Shayne</b></sub></a></td>
-    <td align="center"><a href="https://github.com/Nossersvinet"><img src="https://avatars.githubusercontent.com/u/83166809?v=4" width="50" style="border-radius:50%" /><br /><sub><b>Nossersvinet</b></sub></a></td>
-    <td align="center"><a href="https://github.com/ookla-ariel-ride"><img src="https://avatars.githubusercontent.com/u/42082417?v=4" width="50" style="border-radius:50%" /><br /><sub><b>Ookla, Ariel, Ride!</b></sub></a></td>
-</tr>
-<tr>
-    <td align="center"><a href="https://github.com/townsmcp"><img src="https://avatars.githubusercontent.com/u/14061617?v=4" width="50" style="border-radius:50%" /><br /><sub><b>James Townsend</b></sub></a></td>
-    <td align="center"><a href="https://github.com/red-daut"><img src="https://avatars.githubusercontent.com/u/78737369?v=4" width="50" style="border-radius:50%" /><br /><sub><b>Red Daut</b></sub></a></td>
-    <td align="center"><a href="https://github.com/DomesticWarlord"><img src="https://avatars.githubusercontent.com/u/57776315?v=4" width="50" style="border-radius:50%" /><br /><sub><b>DomesticWarlord</b></sub></a></td>
-</tr>
-</table>
-
 ## License
 
 [MIT](LICENSE) — do whatever you want with it.
