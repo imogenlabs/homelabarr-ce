@@ -1,7 +1,7 @@
 # HomelabARR Backend Docker Image
 # Optimized Node.js backend with CLI Bridge integration
 
-FROM node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f
+FROM node:24-alpine3.23@sha256:9ec4a2e289874ed0d722e1772ec2de45d2801541db8612f3638b26f128c69ac2
 
 # Update Alpine packages to pick up latest security patches
 RUN apk upgrade --no-cache
