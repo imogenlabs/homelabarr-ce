@@ -184,11 +184,11 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 1. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
 2. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/imogenlabs/homelabarr-backend:<tag>`
-3. **Start the stack:** `docker compose -f homelabarr.yml up -d`
-4. **Encrypt the database** (first install only): `make encrypt-db`
-5. **Verify health:** `curl -fsS https://<host>/api/health`
-6. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
-7. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
+3. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
+4. **Start the stack:** `docker compose -f homelabarr.yml up -d`
+5. **Encrypt the database** (first install only): `make encrypt-db`
+6. **Verify health:** `curl -fsS https://<host>/api/health`
+7. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
 8. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
 9. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
 
