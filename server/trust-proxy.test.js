@@ -33,6 +33,11 @@ const login = (app, forwarded) => request(app).post('/auth/login')
   .set('X-Forwarded-For', forwarded).send({});
 
 describe('backend proxy trust', () => {
+  it('does not copy a raw forwarded header into activity metadata', async () => {
+    const { getRequestMeta } = await loadApp(1);
+    expect(getRequestMeta({ ip: undefined, headers: { 'x-forwarded-for': '198.51.100.99' } }).ipAddress).toBe('');
+  });
+
   it('gives two clients behind the bundled nginx separate login buckets', async () => {
     const { app } = await loadApp();
     for (let i = 0; i < 25; i++) expect((await login(app, '203.0.113.10')).status).toBe(400);
