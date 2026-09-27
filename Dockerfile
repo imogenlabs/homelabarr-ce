@@ -32,7 +32,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 LABEL org.opencontainers.image.title="homelabarr-ce-frontend"
 LABEL org.opencontainers.image.description="React frontend for HomelabARR CE container management"
-LABEL org.opencontainers.image.url="https://ce-demo.homelabarr.com"
+LABEL org.opencontainers.image.url="https://demo.homelabarr.com"
 LABEL org.opencontainers.image.source="https://github.com/imogenlabs/homelabarr-ce"
 LABEL org.opencontainers.image.documentation="https://github.com/imogenlabs/homelabarr-ce/blob/main/README.md"
 LABEL org.opencontainers.image.licenses="MIT"

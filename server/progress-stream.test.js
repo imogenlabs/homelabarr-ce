@@ -111,12 +111,12 @@ describe('ProgressStreamManager SSE fan-out (AC1)', () => {
   // and never emits '*'.
   it('never sets a wildcard ACAO and reflects only an allowlisted origin', () => {
     vi.spyOn(EnvironmentManager, 'getConfiguration')
-      .mockReturnValue({ corsOrigin: ['https://ce-demo.homelabarr.com'] });
+      .mockReturnValue({ corsOrigin: ['https://demo.homelabarr.com'] });
     const mgr = new ProgressStreamManager();
 
     const ok = fakeRes();
-    mgr.addClient('ok', ok, fakeReq({ origin: 'https://ce-demo.homelabarr.com' }));
-    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://ce-demo.homelabarr.com');
+    mgr.addClient('ok', ok, fakeReq({ origin: 'https://demo.homelabarr.com' }));
+    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://demo.homelabarr.com');
     expect(ok.headers['Access-Control-Allow-Origin']).not.toBe('*');
     expect(ok.headers['Access-Control-Allow-Credentials']).toBe('true');
 

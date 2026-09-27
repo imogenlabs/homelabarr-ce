@@ -3,7 +3,7 @@
 | Risk | Why accepted/deferred | Owner decision | Compensating controls |
 |------|----------------------|----------------|----------------------|
 | Audit-log off-box destination undecided | Cost vs operational complexity | OUTSTANDING (owner pile since R7) | R6 hash chain detects in-host tampering |
-| Single-node demo, no multi-region failover | ce-demo is a demo, not prod | ACCEPTED | R8 backup + R12 restore drill |
+| Single-node demo, no multi-region failover | demo.homelabarr.com is a demo, not prod | ACCEPTED | R8 backup + R12 restore drill |
 | ASVS V1/V8/V10/V11/V12 coverage thin | Quarterly cadence; not all chapters apply | DEFERRED (R11.5 roadmap) | R11 compliance binder documents gap |
 | No production WAF beyond nginx + CF | Cloudflare handles L7 DDoS | ACCEPTED | CF rules + R1 nginx limits |
 | Passwords not checked against breach lists | Feature not implemented | DEFERRED | R3 bcrypt cost 12 + R6 lockout |

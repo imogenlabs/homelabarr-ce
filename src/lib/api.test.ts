@@ -171,7 +171,7 @@ describe('apiFetch — 401 refresh interceptor', () => {
 // HLCE-315. Whether the seeded container list may be substituted is decided by
 // the SERVER (`demo: true` on /health, set from DEMO_MODE), not by sniffing
 // window.location.hostname. The old predicate matched `dev.`/`staging.`/
-// `localhost` and never `demo.`/`ce-demo.`, so the live demo — the hostname
+// `localhost` and never `demo.`, so the live demo — the hostname
 // that actually mattered — always came back false and rendered empty.
 function healthResponse(demo: boolean) {
   return mockResponse(200, { ok: true, state: 'ready', demo });
