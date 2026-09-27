@@ -167,7 +167,7 @@ Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/a
 | **Encryption at rest** | SQLCipher AES-256 on all databases. Key rotation scripts included. |
 | **Audit log** | Hash-chained tamper-evident log with daily rotation |
 | **Headers** | CSP, HSTS (2yr + preload), COOP, CORP, Permissions-Policy, X-Frame-Options DENY |
-| **Scanning** | Trivy on every image push, Dependabot daily, gitleaks on every commit |
+| **Scanning** | Trivy on every image push and nightly, Dependabot weekly, secret scanning on every push (TruffleHog) and before every commit (Betterleaks) |
 | **Disclosure** | [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) (RFC 9116) |
 
 For the threat model (STRIDE analysis, trust boundaries, attack trees): [docs/threat-model/](docs/threat-model/README.md)
@@ -239,7 +239,7 @@ homelabarr-ce/
 
 ```bash
 npm install
-npm run dev          # Dashboard on :5173 + API on :8092
+npm run dev          # Dashboard on :5173 + API on :8092 (set PORT=8092 in .env; without it the API uses 30002)
 npm run build        # Production build
 npm test             # Watch-mode test runner (vitest)
 npm run test:run     # Run the suite once
@@ -267,7 +267,7 @@ docker compose -p hlce-e2e -f docker-compose.e2e.yml down -v
 
 The `Unit Tests` workflow (`.github/workflows/unit-tests.yml`) runs on every PR and on pushes to `main`/`dev`, on free hosted `ubuntu-latest`: `npm run lint`, `tsc --noEmit`, and `npm run test:coverage`, then uploads the coverage report as a build artifact. Coverage **thresholds live in `vite.config.ts`** (`test.coverage.thresholds`) and act as a floor — vitest fails the run if coverage drops below them.
 
-**Ratchet rule:** the floor only ever moves **up**, and only in the **same PR that adds the tests** backing the increase. Never lower a threshold to make a red build pass. This way coverage is a one-way ratchet as the test suite grows toward the Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209) targets (high-risk 80%+, medium 60%, overall 60%).
+**Ratchet rule:** the floor only ever moves **up**, and only in the **same PR that adds the tests** backing the increase. Never lower a threshold to make a red build pass. This way coverage is a one-way ratchet as the test suite grows toward the coverage targets (high-risk 80%+, medium 60%, overall 60%).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
