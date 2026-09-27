@@ -199,6 +199,7 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 | `JWT_SECRET` | **Yes** | Signs login sessions. Generate with `openssl rand -base64 32`. |
 | `DOCKER_GID` | **Yes** | Docker group ID on your host. |
 | `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. |
+| `TRUST_PROXY_HOPS` | Optional | How many proxies sit in front of the backend; 1 for the bundled setup, raise it only if you add your own reverse proxy in front. |
 | `DEFAULT_ADMIN_PASSWORD` | Optional | Default is `admin` — change it. |
 | `AUDIT_ANCHOR_KEY` | Optional | Signs the audit log's out-of-band tamper-evidence anchor. Falls back to `JWT_SECRET` if unset. |
 | `DEMO_MODE` | Optional | Off unless you set it to `true`. For public demos where everyone shares one login: refuses password changes, user management, API keys and MFA so no visitor can lock everyone else out. |

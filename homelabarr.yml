@@ -141,6 +141,7 @@ services:
       - CLI_BRIDGE_PATH=/homelabarr
       - CLI_INTEGRATION_ENABLED=true
       - AUTH_ENABLED=${AUTH_ENABLED:-true}
+      - TRUST_PROXY_HOPS=${TRUST_PROXY_HOPS:-1}
       - SECRET_ROOT=/run/secrets
       - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-15m}
       - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-14d}

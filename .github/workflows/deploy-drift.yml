@@ -19,12 +19,12 @@ jobs:
             const LIVE_URL = 'https://demo.homelabarr.com/';
             const THRESHOLD_MIN = 30;
 
-            const mainCommit = await github.rest.repos.getCommit({
+            const latestRelease = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'main',
             });
-            const mainDate = new Date(mainCommit.data.commit.committer.date);
+            const releaseDate = new Date(latestRelease.data.published_at);
+            const releaseTag = latestRelease.data.tag_name;
 
             let liveDate = null;
             try {
@@ -41,14 +41,14 @@ jobs:
               return;
             }
 
-            const driftMin = Math.round((mainDate - liveDate) / 60000);
+            const driftMin = Math.round((releaseDate - liveDate) / 60000);
 
-            const summary = `| Metric | Value |\n|---|---|\n| main HEAD | ${mainDate.toISOString()} |\n| Live last-modified | ${liveDate.toISOString()} |\n| Drift | ${driftMin} min |\n| Threshold | ${THRESHOLD_MIN} min |\n| Status | ${driftMin > THRESHOLD_MIN ? 'BREACH' : 'OK'} |`;
+            const summary = `| Metric | Value |\n|---|---|\n| Latest release | ${releaseTag} (${releaseDate.toISOString()}) |\n| Live last-modified | ${liveDate.toISOString()} |\n| Drift | ${driftMin} min |\n| Threshold | ${THRESHOLD_MIN} min |\n| Status | ${driftMin > THRESHOLD_MIN ? 'BREACH' : 'OK'} |`;
 
             await core.summary.addRaw(`## Deploy Drift Check\n\n${summary}`).write();
 
             if (driftMin > THRESHOLD_MIN) {
-              core.setFailed(`Deploy drift: live origin is ${driftMin} min behind main`);
+              core.setFailed(`Deploy drift: live origin is ${driftMin} min behind latest release ${releaseTag}`);
 
               const existing = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
@@ -61,8 +61,8 @@ jobs:
                 await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  title: `[DRIFT] Live origin is ${driftMin} min behind main`,
-                  body: `Deploy drift detected.\n\n${summary}\n\nRebuild and redeploy the VPS demo origin.`,
+                  title: `[DRIFT] Live origin is ${driftMin} min behind ${releaseTag}`,
+                  body: `Deploy drift detected for release ${releaseTag}.\n\n${summary}\n\nDeploy the pinned release digest on the VPS using /opt/appdata/compose/docker-compose.homelabarr-demo.yml.`,
                   labels: ['deploy-drift'],
                 });
               }
