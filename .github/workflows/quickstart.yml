@@ -1,0 +1,73 @@
+name: README quick start
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images from this checkout
+        run: |
+          docker build -f Dockerfile -t ghcr.io/imogenlabs/homelabarr-frontend:latest .
+          docker build -f Dockerfile.backend -t ghcr.io/imogenlabs/homelabarr-backend:latest .
+      - name: Extract and run README quick start
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          readme = Path('README.md').read_text()
+          section = re.search(r'^## (?:Quick start|Install It \(5 minutes\))\s*$([\s\S]*?)(?=^## |\Z)', readme, re.M | re.I)
+          if not section:
+              raise SystemExit('README quick start section not found')
+          block = re.search(r'^```bash\s*\n(.*?)^```', section.group(1), re.M | re.S)
+          if not block:
+              raise SystemExit('README quick start bash block not found')
+          commands = re.sub(r'^git clone .* /opt/homelabarr\s*\n', '', block.group(1), flags=re.M)
+          commands = re.sub(r'^cd /opt/homelabarr\s*\n', '', commands, flags=re.M)
+          Path('/tmp/readme-quickstart.sh').write_text('set -euo pipefail\n' + commands)
+          PY
+          bash /tmp/readme-quickstart.sh
+      - name: Wait for healthy containers and check login
+        shell: bash
+        run: |
+          deadline=$((SECONDS + 180))
+          while (( SECONDS < deadline )); do
+            frontend=$(docker inspect -f '{{.State.Health.Status}}' homelabarr-frontend 2>/dev/null || true)
+            backend=$(docker inspect -f '{{.State.Health.Status}}' homelabarr-backend 2>/dev/null || true)
+            if [[ "$frontend" == healthy && "$backend" == healthy ]]; then
+              break
+            fi
+            sleep 5
+          done
+          [[ "$frontend" == healthy && "$backend" == healthy ]] || {
+            docker compose -f homelabarr.yml ps
+            exit 1
+          }
+          curl -f http://localhost:8084/
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+
+          readme = Path('README.md').read_text()
+          section = re.search(r'^## (?:Quick start|Install It \(5 minutes\))\s*$([\s\S]*?)(?=^## |\Z)', readme, re.M | re.I)
+          match = re.search(r'Log in with `([^`]+)` / `([^`]+)`', section.group(1))
+          if not match:
+              raise SystemExit('README quick start login credentials not found')
+          Path('/tmp/readme-login.json').write_text(json.dumps({'username': match[1], 'password': match[2]}))
+          PY
+          status=$(curl -sS -o /tmp/readme-login-response -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/readme-login.json \
+            http://localhost:8084/api/auth/login)
+          echo "Login HTTP status: $status"
+          [[ "$status" =~ ^2[0-9][0-9]$ ]]
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose -f homelabarr.yml logs --tail=100
