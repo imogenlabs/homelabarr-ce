@@ -12,7 +12,8 @@ beforeEach(() => {
   process.env.JWT_SECRET = 'test-secret-key-that-is-definitely-long-enough';
   process.env.DB_PATH = ':memory:';
   process.env.DATA_DIR = tmp;
-  process.env.AUDIT_DIR = tmp;
+  process.env.AUDIT_DIR = path.join(os.tmpdir(), `hlce-proxy-audit-${process.pid}`);
+  fs.mkdirSync(process.env.AUDIT_DIR, { recursive: true });
   process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
 });
 
@@ -51,6 +52,9 @@ describe('backend proxy trust', () => {
       expect((await login(app, `198.51.100.${i + 1}, 203.0.113.10`)).status).toBe(400);
     }
     expect((await login(app, '198.51.100.200, 203.0.113.10')).status).toBe(429);
+    const { db } = await import('./db.js');
+    expect(db.prepare("SELECT key FROM rate_buckets WHERE key LIKE 'login:%'").all().map(row => row.key))
+      .toEqual(['login:203.0.113.10']);
   });
 
   it('resolves the client through three configured hops', async () => {
