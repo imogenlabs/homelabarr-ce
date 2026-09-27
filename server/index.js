@@ -33,7 +33,7 @@ import enhancedMountRoutes from './routes/enhanced-mount.js';
 
 function getRequestMeta(req) {
   return {
-    ipAddress: req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '',
+    ipAddress: req.ip || '',
     userAgent: req.headers['user-agent'] || ''
   };
 }
@@ -65,6 +65,7 @@ try {
 }
 
 const app = express();
+app.set('trust proxy', envConfig.trustProxyHops);
 app.disable('x-powered-by');
 app.use((req, res, next) => { res.removeHeader('Server'); next(); });
 
@@ -337,4 +338,4 @@ try {
 })();
 }
 
-export { app };
+export { app, getRequestMeta };

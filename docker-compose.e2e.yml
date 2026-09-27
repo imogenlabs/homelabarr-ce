@@ -78,6 +78,7 @@ services:
       - DOCKER_HOST=tcp://socket-proxy:2375
       - CLI_INTEGRATION_ENABLED=true
       - AUTH_ENABLED=true
+      - TRUST_PROXY_HOPS=${TRUST_PROXY_HOPS:-1}
       - BIND_ADDRESS=0.0.0.0
       # Throwaway test secrets via env (no secret files mounted → env fallback).
       - SECRET_ROOT=/nonexistent-secrets
