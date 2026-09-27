@@ -601,6 +601,38 @@ describe('password reset token storage', () => {
     // Clearing u1 leaves u2 intact.
     expect(auth.getResetTokenForUser('u2')).toEqual({ hash: 'hash-xyz', exp: 999 });
   });
+
+  it.each(['__proto__', 'constructor', 'prototype'])('rejects %s in save, get, and clear', async (userId) => {
+    const auth = await loadAuth();
+    const resetFile = path.join(tmp, 'resets.json');
+    const original = JSON.stringify({
+      [userId]: { hash: 'protected', exp: 1 },
+      safe: { hash: 'safe-hash', exp: 2 },
+    }, null, 2);
+    fs.writeFileSync(resetFile, original);
+
+    expect(auth.getResetTokenForUser(userId)).toBeNull();
+    auth.saveResetToken(userId, 'replacement', 3);
+    expect(fs.readFileSync(resetFile, 'utf8')).toBe(original);
+    auth.clearResetToken(userId);
+    expect(fs.readFileSync(resetFile, 'utf8')).toBe(original);
+    expect(auth.getResetTokenForUser('safe')).toEqual({ hash: 'safe-hash', exp: 2 });
+  });
+
+  it('reloads reset tokens from the existing plain JSON object format', async () => {
+    const auth = await loadAuth();
+    auth.saveResetToken('legacy-user', 'legacy-hash', 123456);
+
+    const resetFile = path.join(tmp, 'resets.json');
+    expect(fs.readFileSync(resetFile, 'utf8')).toBe(JSON.stringify({
+      'legacy-user': { hash: 'legacy-hash', exp: 123456 },
+    }, null, 2));
+
+    const reloaded = await loadAuth();
+    expect(reloaded.getResetTokenForUser('legacy-user')).toEqual({ hash: 'legacy-hash', exp: 123456 });
+    reloaded.clearResetToken('legacy-user');
+    expect(reloaded.getResetTokenForUser('legacy-user')).toBeNull();
+  });
 });
 
 describe('middleware edge paths', () => {
