@@ -17,9 +17,9 @@ Time-boxed: 5 minutes maximum. Blast radius: single container.
 
 ## Steady-state recovery check
 60s after fault clears:
-1. `curl -s https://ce-demo.homelabarr.com/api/health` returns `{"ok":true}`
+1. `curl -s https://dev.homelabarr.com/api/health` returns `{"ok":true}`
 2. `bash compliance/collect-evidence.sh` produces R6-audit-chain.txt with bad=0
-3. Honey probe `curl -s https://ce-demo.homelabarr.com/wp-login.php` returns 9-byte "Not Found"
+3. Honey probe `curl -s https://dev.homelabarr.com/wp-login.php` returns 9-byte "Not Found"
 
 ## Run log
 *To be filled after first execution.*
