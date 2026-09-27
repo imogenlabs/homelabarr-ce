@@ -10,6 +10,7 @@
 # Stable across runs and unrelated line shifts; portable to bash 3.2+.
 
 set -euo pipefail
+export LC_ALL=C
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_FILE="$REPO_ROOT/docs/internal/_white-label-audit.md"
@@ -40,7 +41,7 @@ PATTERN='[Hh]omelabarr|HOMELABARR|discord\.gg/Pc7mXX786x|reddit\.com/r/homelabar
 # Collect file:content matches. Line positions are deliberately omitted.
 git ls-files -- "${EXCLUDES[@]}" | while IFS= read -r f; do
   [ -f "$f" ] || continue
-  grep -HE "$PATTERN" "$f" 2>/dev/null || true
+  grep -IHE "$PATTERN" "$f" 2>/dev/null || true
 done > "$TMP_MATCHES"
 
 TOTAL=$(wc -l < "$TMP_MATCHES" | tr -d ' ')
@@ -100,8 +101,10 @@ render_section() {
     row="${row#* }"
     f="${row%%:*}"
     rest="${row#*:}"
-    # Escape pipes, trim to 120 chars, remove backticks to avoid breaking markdown
-    snippet=$(printf '%s\n' "$rest" | sed 's/|/\\|/g; s/`/'"'"'/g' | cut -c1-120)
+    # Escape pipes, trim to 120 bytes without splitting UTF-8, remove backticks.
+    snippet=$(printf '%s\n' "$rest" | sed 's/|/\\|/g; s/`/'"'"'/g' | cut -b1-120)
+    # BSD iconv returns 1 when it drops an incomplete final character.
+    snippet=$(printf '%s' "$snippet" | iconv -c -f UTF-8 -t UTF-8 2>/dev/null) || [ "$?" -eq 1 ]
     echo "| \`$f\` | $occurrences x | \`$snippet\` |"
   done
   echo ""
