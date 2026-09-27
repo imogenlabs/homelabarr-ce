@@ -72,6 +72,8 @@ profile homelabarr-frontend flags=(attach_disconnected,mediate_deleted) {
   /usr/share/nginx/** r,
   owner /var/cache/nginx/** rwk,
   owner /var/run/** rwk,
+  owner /run/** rwk,
+  owner @{PROC}/@{pid}/fd/* rw,
   owner /etc/nginx/conf.d/** rwk,
   /tmp/** rwk,
   deny mount,
