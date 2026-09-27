@@ -38,7 +38,7 @@ Report security issues privately:
 
 - **Email:** michael@mjashley.com
 - **GitHub:** [Security Advisories](https://github.com/imogenlabs/homelabarr-ce/security/advisories/new)
-- **Machine-readable:** [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) (RFC 9116)
+- **Machine-readable:** [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) (RFC 9116)
 
 Response SLA: acknowledge within 48 hours, fix critical within 72 hours.
 

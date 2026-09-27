@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-    <a href="https://ce-demo.homelabarr.com">
+    <a href="https://demo.homelabarr.com">
         <img src="https://img.shields.io/badge/Try_the_Demo-Live-brightgreen?logo=docker&logoColor=white" alt="CE Demo">
     </a>
     <a href="https://homelabarr.com">
@@ -67,7 +67,7 @@ Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're 
 
 ## Try It Right Now
 
-Don't want to install anything yet? [**Open the live demo →**](https://ce-demo.homelabarr.com)
+Don't want to install anything yet? [**Open the live demo →**](https://demo.homelabarr.com)
 
 Log in with `admin` / `admin`. Browse apps, click around. Nothing you do in the demo touches a real server.
 
@@ -166,7 +166,7 @@ Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/a
 | **Audit log** | Hash-chained tamper-evident log with daily rotation |
 | **Headers** | CSP, HSTS (2yr + preload), COOP, CORP, Permissions-Policy, X-Frame-Options DENY |
 | **Scanning** | Trivy on every image push, Dependabot daily, gitleaks on every commit |
-| **Disclosure** | [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) (RFC 9116) |
+| **Disclosure** | [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) (RFC 9116) |
 
 For the threat model (STRIDE analysis, trust boundaries, attack trees): [docs/threat-model/](docs/threat-model/README.md)
 For incident response (11 playbooks): [docs/ir/](docs/ir/README.md)
@@ -279,8 +279,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 |---|---|
 | **Website** | [homelabarr.com](https://homelabarr.com) |
 | **Docs** | [wiki.homelabarr.com](https://wiki.homelabarr.com) |
-| **Demo** | [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin |
-| **Security** | [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/security.txt) |
+| **Demo** | [demo.homelabarr.com](https://demo.homelabarr.com) — log in with admin / admin |
+| **Security** | [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) |
 | **Discord** | [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) |
 | **Reddit** | [r/homelabarr](https://www.reddit.com/r/homelabarr/) |
 | **Company** | [imogenlabs.ai](https://imogenlabs.ai) |

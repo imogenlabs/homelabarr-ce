@@ -16,7 +16,7 @@ Thanks for your interest in making HomelabARR better! Here's how we work.
 
 | Branch | Purpose | Live at | Stability |
 |--------|---------|---------|-----------|
-| `main` | Production — stable, released | [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) | Safe to run |
+| `main` | Production — stable, released | [demo.homelabarr.com](https://demo.homelabarr.com) | Safe to run |
 | `staging` | Release candidate — 1 week community soak | [ce-staging.homelabarr.com](https://ce-staging.homelabarr.com) | Should work, finding bugs |
 | `dev` | Active development — proposed changes | [ce-dev.homelabarr.com](https://ce-dev.homelabarr.com) | May break |
 | `feature/*` | Work in progress — individual changes | — | Experimental |

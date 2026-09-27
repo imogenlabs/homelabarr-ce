@@ -216,7 +216,7 @@ Email **michael@mjashley.com** or open a [GitHub Security Advisory](https://gith
 
 ### Safe Harbor
 
-We will not pursue legal action against good-faith security research that limits testing to ce-demo.homelabarr.com or your own self-hosted instance, avoids data destruction, and reports promptly.
+We will not pursue legal action against good-faith security research that limits testing to demo.homelabarr.com or your own self-hosted instance, avoids data destruction, and reports promptly.
 
 ## Deployment Topologies
 
@@ -271,7 +271,7 @@ Response SLO: acknowledge within 24 hours, status update within 7 days.
 ## Machine-readable disclosure contact
 
 A copy of this disclosure policy is available at:
-- https://ce-demo.homelabarr.com/.well-known/security.txt (RFC 9116)
+- https://demo.homelabarr.com/.well-known/security.txt (RFC 9116)
 
 ## Active Incident Response
 
