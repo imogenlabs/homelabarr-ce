@@ -51,7 +51,8 @@ jobs:
             sleep 5
           done
           [[ "$frontend" == healthy && "$backend" == healthy ]] || {
-            docker compose -f homelabarr.yml ps
+            echo "frontend=$frontend backend=$backend"
+            docker ps -a
             exit 1
           }
           curl -f http://localhost:8084/
@@ -74,6 +75,15 @@ jobs:
             http://localhost:8084/api/auth/login)
           echo "Login HTTP status: $status"
           [[ "$status" =~ ^2[0-9][0-9]$ ]]
+      # Plain docker, not compose: CORS_ORIGIN was exported inside the README
+      # step only, so compose refuses to interpolate here and would hide the logs.
       - name: Show container logs on failure
         if: failure()
-        run: docker compose -f homelabarr.yml logs --tail=100
+        run: |
+          docker ps -a
+          for c in homelabarr-backend homelabarr-frontend homelabarr-socket-proxy; do
+            echo "===== $c"
+            docker inspect -f '{{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{end}}' "$c" || true
+            docker inspect -f '{{if .State.Health}}{{range .State.Health.Log}}{{.Output}}{{end}}{{end}}' "$c" | tail -5 || true
+            docker logs --tail=80 "$c" 2>&1 || true
+          done
