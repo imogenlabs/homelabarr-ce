@@ -493,15 +493,19 @@ setInterval(() => {
 const RESET_FILE = path.join(CONFIG_DIR, 'resets.json');
 
 function loadResets() {
-  try { return JSON.parse(fs.readFileSync(RESET_FILE, 'utf8')); } catch { return {}; }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(RESET_FILE, 'utf8'));
+    return new Map(Object.entries(parsed));
+  } catch {
+    return new Map();
+  }
 }
-function saveResets(data) {
-  fs.writeFileSync(RESET_FILE, JSON.stringify(data, null, 2));
+function saveResets(resets) {
+  fs.writeFileSync(RESET_FILE, JSON.stringify(Object.fromEntries(resets), null, 2));
 }
 
-// userId comes from request bodies (reset flow), so reject the prototype-poisoning
-// keys before using it as a property name on the resets map. A real user id never
-// matches these, so this only blocks abuse.
+// userId comes from request bodies. Keep reserved property names out of the
+// persisted JSON object even though the in-memory store is a Map.
 function isSafeResetKey(userId) {
   return typeof userId === 'string' && userId !== '__proto__'
     && userId !== 'constructor' && userId !== 'prototype';
@@ -509,22 +513,22 @@ function isSafeResetKey(userId) {
 
 export function saveResetToken(userId, hash, exp) {
   if (!isSafeResetKey(userId)) return;
-  const all = loadResets();
-  all[userId] = { hash, exp };
-  saveResets(all);
+  const resets = loadResets();
+  resets.set(userId, { hash, exp });
+  saveResets(resets);
 }
 
 export function getResetTokenForUser(userId) {
   if (!isSafeResetKey(userId)) return null;
-  const all = loadResets();
-  return Object.hasOwn(all, userId) ? all[userId] : null;
+  const resets = loadResets();
+  return resets.get(userId) ?? null;
 }
 
 export function clearResetToken(userId) {
   if (!isSafeResetKey(userId)) return;
-  const all = loadResets();
-  delete all[userId];
-  saveResets(all);
+  const resets = loadResets();
+  resets.delete(userId);
+  saveResets(resets);
 }
 
 export { hasRole, ROLE_HIERARCHY };
