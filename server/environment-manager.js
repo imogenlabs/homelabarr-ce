@@ -1,5 +1,6 @@
 import os from 'os';
 import fs from 'fs';
+import { readSecretFresh } from './secrets.js';
 
 /**
  * Environment Detection and Configuration Manager
@@ -127,7 +128,7 @@ export class EnvironmentManager {
       
       // Authentication configuration
       authEnabled: process.env.AUTH_ENABLED !== 'false',
-      jwtSecret: process.env.JWT_SECRET,
+      jwtSecret: readSecretFresh('JWT_SECRET') || readSecretFresh('JWT_KEY_CURRENT'),
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
       
       // Logging configuration

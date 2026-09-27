@@ -77,6 +77,7 @@ RUN chmod +x server/start.sh
 RUN mkdir -p \
     server/templates \
     server/config \
+    server/activity-data \
     server/data \
     server/backups \
     /app/data \

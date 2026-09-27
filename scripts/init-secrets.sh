@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 umask 077
+command -v setfacl >/dev/null || { echo "Install the acl package (setfacl) before initializing secrets" >&2; exit 1; }
 mkdir -p ./secrets
 need() {
   local name="$1" gen="$2"
@@ -10,6 +11,7 @@ need() {
   else
     echo "exists ./secrets/$name (skipped)"
   fi
+  setfacl -m u:1001:r "./secrets/$name"
 }
 need jwt_key_current         'openssl rand -base64 48'
 need jwt_key_previous        'echo ""'
