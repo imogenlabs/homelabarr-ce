@@ -19,7 +19,7 @@ permissions:
   issues: write
 
 env:
-  ZAP_TARGET: ${{ inputs.target || 'https://ce-demo.homelabarr.com' }}
+  ZAP_TARGET: ${{ inputs.target || 'https://dev.homelabarr.com' }}
 
 jobs:
   zap-active:

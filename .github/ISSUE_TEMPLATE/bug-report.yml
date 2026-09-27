@@ -52,7 +52,7 @@ body:
     attributes:
       label: Which environment?
       options:
-        - ce-demo (production)
+        - demo (public)
         - ce-staging (staging)
         - ce-dev (development)
         - Self-hosted

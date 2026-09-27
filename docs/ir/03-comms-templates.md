@@ -2,7 +2,7 @@
 
 ## Investigating (within 15 min of P1/P2)
 
-> [<UTC time>] Investigating a potential issue with ce-demo. We have signal from <sensor>. Service may be degraded. Updates every 30 minutes.
+> [<UTC time>] Investigating a potential issue with the demo (demo.homelabarr.com). We have signal from <sensor>. Service may be degraded. Updates every 30 minutes.
 
 ## Mitigated
 

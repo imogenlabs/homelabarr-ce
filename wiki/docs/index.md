@@ -87,6 +87,6 @@ The majority of our app catalog uses [LinuxServer.io](https://linuxserver.io) co
 - [HomelabARR](https://homelabarr.com) — Product home
 - [GitHub](https://github.com/imogenlabs/homelabarr-ce)
 - [Discord](https://discord.gg/Pc7mXX786x) — Get help, share your setup
-- [Demo](https://ce-demo.homelabarr.com) — Try it live (login: admin/admin)
+- [Demo](https://demo.homelabarr.com) — Try it live (login: admin/admin)
 - [Imogen Labs](https://imogenlabs.ai) — Built by Imogen Labs
 - [Developer](https://mjashley.com)
