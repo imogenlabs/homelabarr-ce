@@ -57,7 +57,7 @@ Instead, please report security issues privately:
 - **Password hashing:** bcrypt cost 12 via `bcryptjs` (pure-JS for portability). This is ~10x slower than native `bcrypt` but avoids native compilation requirements. The work factor of 12 meets OWASP 2025 ASVS L2 requirements.
 - **Password storage:** transparent rehash-on-login for legacy hashes
 - **Password reset:** 30-minute single-use 256-bit token, SHA-256 hashed at rest, all sessions revoked on success
-- **Account lockout:** 5 failures / 15min per IP+username; email notification to victim on threshold
+- **Account lockout:** 15 failed logins lock that username for 30 minutes (HTTP 423); a `login.locked` alert goes to the operator's alert webhook when one is configured. Separately, each client address is limited to 25 login attempts per 15 minutes.
 - **API keys:** HMAC-SHA256 hashed before storage (never stored in plaintext); `hlr_` prefix; validated via `Authorization: Bearer hlr_...` header (mobile/CLI)
 - `JWT_SECRET` is **required** (minimum 32 characters) — the server refuses to start without it
 - **JWT key rotation:** dual-key support — after rotation, tokens signed with the previous key are accepted for up to 24 hours (configurable via `PREVIOUS_KEY_MAX_AGE_SEC`). Keys are read fresh on each request; no restart needed after rotation.
