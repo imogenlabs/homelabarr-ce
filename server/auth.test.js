@@ -1149,6 +1149,15 @@ describe('initializeAuth admin seeding (HLCE-263)', () => {
       delete process.env.DEFAULT_ADMIN_PASSWORD;
     }
   });
+
+  it('seeds the admin from the mounted default password secret', async () => {
+    const auth = await loadAuth();
+    fs.mkdirSync(path.join(tmp, 'no-secrets'));
+    fs.writeFileSync(path.join(tmp, 'no-secrets', 'default_admin_password'), 'generated-secret-password\n');
+    await auth.initializeAuth();
+    expect(await auth.validatePassword('admin', 'generated-secret-password')).toMatchObject({ username: 'admin' });
+    expect(await auth.validatePassword('admin', 'admin')).toBeNull();
+  });
 });
 
 describe('middleware header branches (HLCE-263)', () => {

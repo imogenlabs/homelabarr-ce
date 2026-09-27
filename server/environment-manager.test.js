@@ -1,10 +1,13 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 // HLCE-220: startup security guard + CORS policy. EnvironmentManager caches its
 // config behind a private #initialized flag, so each case resets modules and
 // re-imports with fresh env. #validateCritical calls process.exit(1), which is
 // spied so a "fatal" case is observable instead of killing the worker.
-const ENV_KEYS = ['NODE_ENV', 'JWT_SECRET', 'AUTH_ENABLED', 'BIND_ADDRESS', 'CORS_ORIGIN'];
+const ENV_KEYS = ['NODE_ENV', 'JWT_SECRET', 'AUTH_ENABLED', 'BIND_ADDRESS', 'CORS_ORIGIN', 'SECRET_ROOT'];
 
 async function loadEnvMgr(env = {}) {
   vi.resetModules();
@@ -27,6 +30,20 @@ function allowOrigin(corsOptions, origin) {
 }
 
 describe('#validateCritical startup guard (AC3)', () => {
+  it('accepts the mounted JWT key without a JWT_SECRET environment variable', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hlce-secrets-'));
+    fs.writeFileSync(path.join(root, 'jwt_key_current'), 'x'.repeat(40));
+    try {
+      const exit = vi.spyOn(process, 'exit').mockImplementation(() => {});
+      const EM = await loadEnvMgr({ NODE_ENV: 'production', SECRET_ROOT: root, CORS_ORIGIN: 'http://localhost:8084' });
+      expect(EM.getConfiguration().jwtSecret).toBe('x'.repeat(40));
+      expect(EM.validateConfiguration().isValid).toBe(true);
+      expect(exit).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('exits when JWT_SECRET is under 32 characters', async () => {
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});

@@ -389,8 +389,7 @@ export async function initializeAuth() {
   if (users.length === 0) {
     logger.info('No users found, creating default admin user');
     
-    // Create default admin with password 'admin' (should be changed immediately)
-    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin';
+    const defaultPassword = readSecretFresh('DEFAULT_ADMIN_PASSWORD') || 'admin';
     
     try {
       await createUser({

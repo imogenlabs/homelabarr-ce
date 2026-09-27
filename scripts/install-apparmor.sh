@@ -10,10 +10,30 @@ cat >/etc/apparmor.d/homelabarr-backend <<'EOF'
 profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
   #include <abstractions/nameservice>
+  network,
+  /usr/bin/dumb-init ix,
+  /bin/bash ix,
+  /bin/sh ix,
+  /bin/busybox rix,
+  /app/server/start.sh r,
+  /dev/tty rw,
+  @{PROC}/@{pid}/cgroup r,
+  /proc/version_signature r,
+  /usr/bin/docker mrix,
+  /sys/fs/cgroup/** r,
+  @{PROC}/@{pid}/mountinfo r,
+  @{PROC}/@{pid}/stat r,
+  /usr/bin/timeout ix,
+  /usr/bin/sleep ix,
+  /usr/bin/id ix,
+  /usr/bin/mkdir ix,
+  /usr/bin/chown ix,
+  /usr/bin/curl ix,
   /usr/local/bin/node rmix,
-  /usr/local/bin/npm rmix,
+  /usr/local/lib/** mr,
+  /lib/** mr,
   /app/ r,
-  /app/** r,
+  /app/** mr,
   owner /app/data/** rwk,
   owner /app/server/config/** rwk,
   owner /app/server/activity-data/** rwk,
@@ -29,12 +49,42 @@ profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {
 }
 EOF
 apparmor_parser -r /etc/apparmor.d/homelabarr-backend
+cat >/etc/apparmor.d/homelabarr-frontend <<'EOF'
+#include <tunables/global>
+profile homelabarr-frontend flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  network,
+  /usr/bin/dumb-init ix,
+  /bin/sh ix,
+  /bin/busybox rix,
+  /docker-entrypoint.sh r,
+  /docker-entrypoint.d/** r,
+  /dev/tty rw,
+  @{PROC}/@{pid}/cgroup r,
+  /proc/version_signature r,
+  /usr/bin/envsubst ix,
+  /usr/sbin/nginx ix,
+  /docker-entrypoint.sh ix,
+  /usr/lib/nginx/** mr,
+  /lib/** mr,
+  /etc/nginx/** r,
+  /usr/share/nginx/** r,
+  owner /var/cache/nginx/** rwk,
+  owner /var/run/** rwk,
+  owner /run/** rwk,
+  owner @{PROC}/@{pid}/fd/* rw,
+  owner /etc/nginx/conf.d/** rwk,
+  /tmp/** rwk,
+  deny mount,
+  deny ptrace,
+}
+EOF
+apparmor_parser -r /etc/apparmor.d/homelabarr-frontend
 aa-status | grep homelabarr-backend || echo "Profile loaded"
-echo "AppArmor profile installed: homelabarr-backend"
+echo "AppArmor profiles installed: homelabarr-backend, homelabarr-frontend"
 
 # Switch to enforce mode
-aa-enforce /etc/apparmor.d/homelabarr-backend
-aa-enforce /etc/apparmor.d/homelabarr-frontend 2>/dev/null || true
 systemctl reload apparmor 2>/dev/null || true
 
 if ! aa-status 2>/dev/null | grep -E 'homelabarr-(backend|frontend)' | grep -q 'enforce'; then
