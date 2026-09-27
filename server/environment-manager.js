@@ -91,6 +91,11 @@ export class EnvironmentManager {
       }
       console.warn('WARNING: Authentication disabled. Backend bound to loopback only.');
     }
+
+    if (!Number.isSafeInteger(config.trustProxyHops) || config.trustProxyHops < 0) {
+      console.error('FATAL: TRUST_PROXY_HOPS must be a non-negative integer.');
+      process.exit(1);
+    }
   }
 
   /**
@@ -110,6 +115,8 @@ export class EnvironmentManager {
       // Server configuration
       port: parseInt(process.env.PORT) || 30002,
       bindAddress: this.#getBindAddress(environment),
+      trustProxyHops: /^(0|[1-9][0-9]*)$/.test(process.env.TRUST_PROXY_HOPS ?? '1')
+        ? Number(process.env.TRUST_PROXY_HOPS ?? '1') : NaN,
       
       // CORS configuration
       corsOrigin: this.#getCorsOrigin(environment),
