@@ -28,10 +28,10 @@ If the vulnerability is actively exploited in the wild (KEV list or credible rep
 1. Merge the dependabot PR (or cherry-pick the fix if the PR has conflicts)
 2. Rebuild and push images through CI
 3. Verify cosign signature on new image
-4. Deploy to ce-dev, run pentest atomics, then promote to ce-demo
+4. Deploy to ce-dev, run pentest atomics, then promote to the demo (demo.homelabarr.com, on the VPS)
 
 ## Recovery
-1. Confirm new image is running on ce-demo: `docker inspect homelabarr-demo-backend --format '{{.Config.Image}}'`
+1. Confirm new image is running on the demo (VPS): `docker inspect homelabarr-demo-backend --format '{{.Config.Image}}'`
 2. Run `compliance/collect-evidence.sh` to refresh evidence snapshots
 3. Close the incident issue with resolution summary
 
