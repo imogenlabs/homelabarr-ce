@@ -7,7 +7,7 @@
 # Run on every push to main by .github/workflows/whitelabel-audit.yml,
 # which auto-commits the result.
 #
-# Designed to be idempotent and portable (bash 3.2+).
+# Stable across runs and unrelated line shifts; portable to bash 3.2+.
 
 set -euo pipefail
 
@@ -37,10 +37,10 @@ EXCLUDES=(
 # Pattern: any case variant of homelabarr, plus known URLs/handles.
 PATTERN='[Hh]omelabarr|HOMELABARR|discord\.gg/Pc7mXX786x|reddit\.com/r/homelabarr|ko-fi\.com/homelabarr|smashingtags'
 
-# Collect file:line:content matches
+# Collect file:content matches. Line positions are deliberately omitted.
 git ls-files -- "${EXCLUDES[@]}" | while IFS= read -r f; do
   [ -f "$f" ] || continue
-  grep -HnE "$PATTERN" "$f" 2>/dev/null || true
+  grep -HE "$PATTERN" "$f" 2>/dev/null || true
 done > "$TMP_MATCHES"
 
 TOTAL=$(wc -l < "$TMP_MATCHES" | tr -d ' ')
@@ -91,18 +91,18 @@ render_section() {
   echo ""
   echo "**$count references**"
   echo ""
-  echo '| File | Line | Match |'
-  echo '| ---- | ---- | ----- |'
-  echo "$content" | while IFS= read -r row; do
+  echo '| File | Count | Match |'
+  echo '| ---- | ----- | ----- |'
+  printf '%s\n' "$content" | LC_ALL=C sort | uniq -c | sed 's/^ *//' | while IFS= read -r row; do
     [ -z "$row" ] && continue
-    local f ln rest snippet
+    local f occurrences rest snippet
+    occurrences="${row%% *}"
+    row="${row#* }"
     f="${row%%:*}"
-    row="${row#*:}"
-    ln="${row%%:*}"
     rest="${row#*:}"
     # Escape pipes, trim to 120 chars, remove backticks to avoid breaking markdown
-    snippet=$(echo "$rest" | sed 's/|/\\|/g; s/`/'"'"'/g' | cut -c1-120)
-    echo "| \`$f\` | $ln | \`$snippet\` |"
+    snippet=$(printf '%s\n' "$rest" | sed 's/|/\\|/g; s/`/'"'"'/g' | cut -c1-120)
+    echo "| \`$f\` | $occurrences x | \`$snippet\` |"
   done
   echo ""
 }
@@ -112,7 +112,7 @@ render_section() {
   cat <<EOF
 # White-Label Audit (auto-generated)
 
-> **Generated:** $(date -u '+%Y-%m-%d %H:%M UTC') · **Source:** \`scripts/generate-whitelabel-audit.sh\`
+> **Source:** \`scripts/generate-whitelabel-audit.sh\`
 >
 > This file is regenerated automatically on every push to \`main\`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -139,7 +139,8 @@ EOF
 
 ## How to use this
 
-Every row is a place a fork/rebrand would need to inspect. Most can be handled by the
+Every row is distinct matched text in a file; the count shows repeated lines.
+Most references can be handled by the
 `sed` recipes in the [White-Label & Forking guide](white-label.md#the-5-minute-starter);
 the rest are one-off edits (meta tags, scripts, URLs).
 
