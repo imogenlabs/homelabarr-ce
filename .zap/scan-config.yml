@@ -2,23 +2,23 @@
 context:
   name: homelabarr-ce
   urls:
-    - https://ce-demo.homelabarr.com
+    - https://dev.homelabarr.com
 
   includePaths:
-    - https://ce-demo.homelabarr.com/.*
+    - https://dev.homelabarr.com/.*
 
   excludePaths:
-    - https://ce-demo.homelabarr.com/assets/.*
-    - https://ce-demo.homelabarr.com/fonts/.*
-    - https://ce-demo.homelabarr.com/icons/.*
-    - https://ce-demo.homelabarr.com/favicon\.svg
-    - https://ce-demo.homelabarr.com/robots\.txt
-    - https://ce-demo.homelabarr.com/sitemap\.xml
-    - https://ce-demo.homelabarr.com/\.well-known/.*
+    - https://dev.homelabarr.com/assets/.*
+    - https://dev.homelabarr.com/fonts/.*
+    - https://dev.homelabarr.com/icons/.*
+    - https://dev.homelabarr.com/favicon\.svg
+    - https://dev.homelabarr.com/robots\.txt
+    - https://dev.homelabarr.com/sitemap\.xml
+    - https://dev.homelabarr.com/\.well-known/.*
 
   authentication:
     method: json
-    loginUrl: https://ce-demo.homelabarr.com/api/auth/login
+    loginUrl: https://dev.homelabarr.com/api/auth/login
     loginRequestData: '{"username":"{%username%}","password":"{%password%}"}'
     tokenExtract: '$.token'
     tokenHeader: 'Authorization: Bearer {%token%}'

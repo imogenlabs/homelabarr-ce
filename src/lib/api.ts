@@ -162,7 +162,7 @@ export async function getContainers(includeStats = false) {
 //
 // This used to guess from window.location.hostname, matching `dev.`, `staging.`
 // and `localhost`. Guessing was the bug (HLCE-315): the list never included
-// `demo.` or `ce-demo.`, so the actual demo — the first thing a prospective
+// `demo.`, so the actual demo — the first thing a prospective
 // user sees, linked straight from the Unraid Community Apps listing — rendered
 // an empty dashboard. Nothing failed loudly; the predicate simply returned
 // false forever, and it would have broken again the next time the demo moved.

@@ -7,7 +7,7 @@ OUT=compliance/evidence
 mkdir -p "$OUT"
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 HEAD=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-HOST="${EVIDENCE_HOST:-ce-demo.homelabarr.com}"
+HOST="${EVIDENCE_HOST:-dev.homelabarr.com}"
 BACKEND="${EVIDENCE_BACKEND:-homelabarr-demo-backend}"
 
 hdr() { echo "# $1"; echo "# timestamp=$TS git=$HEAD"; echo; }

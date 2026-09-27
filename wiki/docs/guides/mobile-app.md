@@ -83,7 +83,7 @@ The app validates the URL, checks the connection, and loads your dashboard.
 
 Don't have a CE server yet? Connect to the live demo:
 
-- **URL:** `https://ce-demo.homelabarr.com`
+- **URL:** `https://demo.homelabarr.com`
 - **Login:** `admin` / `admin`
 
 Browse all 100+ apps (deploys are disabled on the demo server).

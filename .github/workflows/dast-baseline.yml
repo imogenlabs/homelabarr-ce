@@ -25,7 +25,7 @@ jobs:
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
-          target: 'https://ce-demo.homelabarr.com'
+          target: 'https://dev.homelabarr.com'
           rules_file_name: '.zap/rules.tsv'
           fail_action: false
           cmd_options: '-a -j'
