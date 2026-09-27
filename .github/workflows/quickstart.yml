@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Install secret file ACL support
+        run: sudo apt-get update && sudo apt-get install -y acl
       - name: Build images from this checkout
         run: |
           docker build -f Dockerfile -t ghcr.io/imogenlabs/homelabarr-frontend:latest .
@@ -60,10 +62,11 @@ jobs:
 
           readme = Path('README.md').read_text()
           section = re.search(r'^## (?:Quick start|Install It \(5 minutes\))\s*$([\s\S]*?)(?=^## |\Z)', readme, re.M | re.I)
-          match = re.search(r'Log in with `([^`]+)` / `([^`]+)`', section.group(1))
+          match = re.search(r'Log in as `([^`]+)` with the password printed by `scripts/init-secrets.sh`', section.group(1))
           if not match:
-              raise SystemExit('README quick start login credentials not found')
-          Path('/tmp/readme-login.json').write_text(json.dumps({'username': match[1], 'password': match[2]}))
+            raise SystemExit('README quick start login credentials not found')
+          password = Path('secrets/default_admin_password').read_text().strip()
+          Path('/tmp/readme-login.json').write_text(json.dumps({'username': match[1], 'password': password}))
           PY
           status=$(curl -sS -o /tmp/readme-login-response -w '%{http_code}' \
             -H 'Content-Type: application/json' \

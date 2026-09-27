@@ -75,25 +75,27 @@ Log in with `admin` / `admin`. Browse apps, click around. Nothing you do in the 
 
 ## Install It (5 minutes)
 
-You need a Linux machine with Docker installed.
+You need a Linux machine with Docker and `setfacl` (the `acl` package) installed.
 
 ```bash
 # 1. Clone
 git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
-# 2. Set three things
-export JWT_SECRET=$(openssl rand -base64 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
+# 2. Create the secrets (the initial admin password is printed)
+bash scripts/init-secrets.sh
+
+# 3. Set the dashboard URL
 export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
 
-# 3. Start it
+# 4. Install the profiles on AppArmor hosts, then start
+sudo bash scripts/install-apparmor.sh
 docker compose -f homelabarr.yml up -d
 ```
 
-Open `http://your-server-ip:8084`. Log in with `admin` / `admin`. **Change the password immediately.**
+Open `http://your-server-ip:8084`. Log in as `admin` with the password printed by `scripts/init-secrets.sh` (also saved in `./secrets/default_admin_password`). **Change the password immediately.**
 
-> **For a permanent setup**, move those exports into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
+> **For a permanent setup**, move `CORS_ORIGIN` into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
 
 > **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first.
 
@@ -172,7 +174,7 @@ For the threat model (STRIDE analysis, trust boundaries, attack trees): [docs/th
 For incident response (11 playbooks): [docs/ir/](docs/ir/README.md)
 For compliance posture (CIS Docker, NIST CSF, OWASP ASVS L2): [compliance/](compliance/)
 
-**`JWT_SECRET` is required** (minimum 32 characters) — the server will not start without it. Generate one with `openssl rand -base64 32`.
+**A JWT signing key is required** (minimum 32 characters) — `scripts/init-secrets.sh` creates it in `./secrets/jwt_key_current`.
 
 Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECURITY.md).
 
@@ -196,14 +198,11 @@ Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECU
 
 | Setting | Required | What it does |
 |---------|----------|-------------|
-| `JWT_SECRET` | **Yes** | Signs login sessions. Generate with `openssl rand -base64 32`. |
-| `DOCKER_GID` | **Yes** | Docker group ID on your host. |
 | `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. |
 | `TRUST_PROXY_HOPS` | Optional | How many proxies sit in front of the backend; 1 for the bundled setup, raise it only if you add your own reverse proxy in front. |
-| `DEFAULT_ADMIN_PASSWORD` | Optional | Default is `admin` — change it. |
-| `AUDIT_ANCHOR_KEY` | Optional | Signs the audit log's out-of-band tamper-evidence anchor. Falls back to `JWT_SECRET` if unset. |
-| `DEMO_MODE` | Optional | Off unless you set it to `true`. For public demos where everyone shares one login: refuses password changes, user management, API keys and MFA so no visitor can lock everyone else out. |
-| `TZ` | Optional | Your timezone. Defaults to `America/New_York`. |
+| `AUTH_ENABLED` | Optional | Authentication is enabled by default. |
+| `CLI_BRIDGE_HOST_PATH` | Optional | Host path mounted for CLI integration; defaults to `/opt/homelabarr`. |
+| `FRONTEND_PORT` | Optional | Dashboard port; defaults to `8084`. |
 
 All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)
 
