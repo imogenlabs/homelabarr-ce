@@ -1,6 +1,6 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-09-27 04:38 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-09-27 04:49 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
@@ -111,23 +111,23 @@
 | `homelabarr.yml` | 131 | `    image: ghcr.io/imogenlabs/homelabarr-backend:latest` |
 | `homelabarr.yml` | 132 | `    container_name: homelabarr-backend` |
 | `homelabarr.yml` | 141 | `      - CLI_BRIDGE_PATH=/homelabarr` |
-| `homelabarr.yml` | 155 | `      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro` |
-| `homelabarr.yml` | 156 | `      - homelabarr-data:/app/data` |
-| `homelabarr.yml` | 157 | `      - homelabarr-config:/app/server/config` |
-| `homelabarr.yml` | 158 | `      - homelabarr-activity:/app/server/activity-data` |
-| `homelabarr.yml` | 160 | `      - homelabarr` |
-| `homelabarr.yml` | 161 | `      - homelabarr-internal` |
-| `homelabarr.yml` | 165 | `      - apparmor=homelabarr-backend` |
-| `homelabarr.yml` | 191 | `  homelabarr:` |
-| `homelabarr.yml` | 192 | `    name: homelabarr` |
-| `homelabarr.yml` | 194 | `  homelabarr-internal:` |
-| `homelabarr.yml` | 195 | `    name: homelabarr-internal` |
-| `homelabarr.yml` | 200 | `  homelabarr-data:` |
-| `homelabarr.yml` | 201 | `    name: homelabarr-data` |
-| `homelabarr.yml` | 203 | `  homelabarr-config:` |
-| `homelabarr.yml` | 204 | `    name: homelabarr-config` |
-| `homelabarr.yml` | 206 | `  homelabarr-activity:` |
-| `homelabarr.yml` | 207 | `    name: homelabarr-activity` |
+| `homelabarr.yml` | 156 | `      - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro` |
+| `homelabarr.yml` | 157 | `      - homelabarr-data:/app/data` |
+| `homelabarr.yml` | 158 | `      - homelabarr-config:/app/server/config` |
+| `homelabarr.yml` | 159 | `      - homelabarr-activity:/app/server/activity-data` |
+| `homelabarr.yml` | 161 | `      - homelabarr` |
+| `homelabarr.yml` | 162 | `      - homelabarr-internal` |
+| `homelabarr.yml` | 166 | `      - apparmor=homelabarr-backend` |
+| `homelabarr.yml` | 192 | `  homelabarr:` |
+| `homelabarr.yml` | 193 | `    name: homelabarr` |
+| `homelabarr.yml` | 195 | `  homelabarr-internal:` |
+| `homelabarr.yml` | 196 | `    name: homelabarr-internal` |
+| `homelabarr.yml` | 201 | `  homelabarr-data:` |
+| `homelabarr.yml` | 202 | `    name: homelabarr-data` |
+| `homelabarr.yml` | 204 | `  homelabarr-config:` |
+| `homelabarr.yml` | 205 | `    name: homelabarr-config` |
+| `homelabarr.yml` | 207 | `  homelabarr-activity:` |
+| `homelabarr.yml` | 208 | `    name: homelabarr-activity` |
 
 ## CI/CD workflows (`.github/workflows/`)
 
@@ -358,16 +358,16 @@
 | `README.md` | 169 | `\| **Disclosure** \| [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known` |
 | `README.md` | 184 | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-` |
 | `README.md` | 185 | `3. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
-| `README.md` | 207 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
-| `README.md` | 214 | `homelabarr-ce/` |
-| `README.md` | 228 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
-| `README.md` | 232 | `├── homelabarr.yml    # Production Docker Compose` |
-| `README.md` | 280 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 281 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 282 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 283 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
-| `README.md` | 284 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 285 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
+| `README.md` | 208 | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
+| `README.md` | 215 | `homelabarr-ce/` |
+| `README.md` | 229 | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
+| `README.md` | 233 | `├── homelabarr.yml    # Production Docker Compose` |
+| `README.md` | 281 | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
+| `README.md` | 282 | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
+| `README.md` | 283 | `\| **Demo** \| [ce-demo.homelabarr.com](https://ce-demo.homelabarr.com) — log in with admin / admin \|` |
+| `README.md` | 284 | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://ce-demo.homelabarr.com/.well-known/` |
+| `README.md` | 285 | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
+| `README.md` | 286 | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
 | `SECURITY.md` | 11 | `\| Latest release \| Yes — see [Releases](https://github.com/imogenlabs/homelabarr-ce/releases/latest) \|` |
 | `SECURITY.md` | 79 | `- Backend container runs as non-root user ('homelabarr:1001')` |
 | `SECURITY.md` | 144 | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
