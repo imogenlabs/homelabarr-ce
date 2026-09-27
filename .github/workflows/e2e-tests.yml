@@ -88,9 +88,6 @@ jobs:
   # so it does not gate merges — it's a smoke signal only.
   smoke:
     name: E2E (ce-dev smoke)
-    concurrency:
-      group: ce-dev-target
-      cancel-in-progress: false
     timeout-minutes: 15
     runs-on: ubuntu-latest
     continue-on-error: true
