@@ -1,12 +1,12 @@
 # White-Label Audit (auto-generated)
 
-> **Generated:** 2026-09-27 04:30 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
+> **Generated:** 2026-09-27 04:32 UTC · **Source:** `scripts/generate-whitelabel-audit.sh`
 >
 > This file is regenerated automatically on every push to `main`.
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1568
+**Total brand references found:** 1569
 
 ---
 
@@ -131,7 +131,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**39 references**
+**40 references**
 
 | File | Line | Match |
 | ---- | ---- | ----- |
@@ -142,6 +142,7 @@
 | `.github/workflows/dast-baseline.yml` | 28 | `          target: 'https://ce-demo.homelabarr.com'` |
 | `.github/workflows/dependency-staleness.yml` | 96 | `                  body: '**Staleness alert:** This ${b.cls} dependency PR has been open ${b.ageDays} days. ${b.status} p` |
 | `.github/workflows/deploy-drift.yml` | 19 | `            const LIVE_URL = 'https://demo.homelabarr.com/';` |
+| `.github/workflows/deploy-drift.yml` | 65 | `                  body: 'Deploy drift detected for release ${releaseTag}.\n\n${summary}\n\nDeploy the pinned release dig` |
 | `.github/workflows/docker-build-push.yml` | 7 | `  # to BOTH GHCR (imogenlabs) and Docker Hub (smashingtags) — Docker Hub is the` |
 | `.github/workflows/docker-build-push.yml` | 34 | `  # Docker Hub namespace stays smashingtags: that's where the existing repos,` |
 | `.github/workflows/docker-build-push.yml` | 37 | `  DOCKERHUB_NAMESPACE: smashingtags` |
