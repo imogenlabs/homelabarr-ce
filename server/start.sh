@@ -1,17 +1,32 @@
 #!/bin/sh
 
-# Startup script for HomelabARR backend with Docker socket validation
+# Startup script for HomelabARR backend with Docker endpoint validation
 echo "🚀 Starting HomelabARR backend..."
 
-# Function to check if Docker socket is accessible
-check_docker_socket() {
-    if [ -S "/var/run/docker.sock" ]; then
-        echo "✅ Docker socket found at /var/run/docker.sock"
-        return 0
-    else
-        echo "❌ Docker socket not found or not accessible"
-        return 1
-    fi
+# Check the endpoint configured for the Docker CLI before starting.
+check_docker_endpoint() {
+    case "${DOCKER_HOST:-unix:///var/run/docker.sock}" in
+        unix://*)
+            socket=${DOCKER_HOST:-unix:///var/run/docker.sock}
+            socket=${socket#unix://}
+            if [ -S "$socket" ]; then
+                echo "✅ Docker socket found at $socket"
+                return 0
+            fi
+            ;;
+        tcp://*)
+            if timeout 10 docker version >/dev/null 2>&1; then
+                echo "✅ Docker endpoint reachable at $DOCKER_HOST"
+                return 0
+            fi
+            ;;
+        *)
+            echo "❌ Unsupported DOCKER_HOST: $DOCKER_HOST"
+            return 1
+            ;;
+    esac
+    echo "❌ Docker endpoint not available: ${DOCKER_HOST:-unix:///var/run/docker.sock}"
+    return 1
 }
 
 # Function to test Docker connection
@@ -32,21 +47,21 @@ test_docker_connection() {
 if [ "$REQUIRE_DOCKER" = "false" ]; then
     echo "ℹ️  REQUIRE_DOCKER=false — skipping Docker socket check (browse mode)"
 else
-    echo "⏳ Waiting for Docker socket..."
+    echo "⏳ Waiting for Docker endpoint..."
     RETRY_COUNT=0
     MAX_RETRIES=30
 
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        if check_docker_socket; then
+        if check_docker_endpoint; then
             break
         fi
         RETRY_COUNT=$((RETRY_COUNT + 1))
-        echo "⏳ Waiting for Docker socket... (attempt $RETRY_COUNT/$MAX_RETRIES)"
+        echo "⏳ Waiting for Docker endpoint... (attempt $RETRY_COUNT/$MAX_RETRIES)"
         sleep 2
     done
 
     if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-        echo "❌ Docker socket not available after $MAX_RETRIES attempts"
+        echo "❌ Docker endpoint not available after $MAX_RETRIES attempts"
         echo "🔧 Continuing anyway - Docker connection will be handled by the application"
     fi
 
