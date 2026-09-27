@@ -14,6 +14,11 @@ profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {
   /usr/bin/dumb-init ix,
   /bin/bash ix,
   /bin/sh ix,
+  /bin/busybox rix,
+  /app/server/start.sh r,
+  /dev/tty rw,
+  @{PROC}/@{pid}/cgroup r,
+  /proc/version_signature r,
   /usr/bin/docker ix,
   /usr/bin/timeout ix,
   /usr/bin/sleep ix,
@@ -22,7 +27,8 @@ profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {
   /usr/bin/chown ix,
   /usr/bin/curl ix,
   /usr/local/bin/node rmix,
-  /usr/local/bin/npm rmix,
+  /usr/local/lib/** mr,
+  /lib/** mr,
   /app/ r,
   /app/** mr,
   owner /app/data/** rwk,
@@ -48,14 +54,22 @@ profile homelabarr-frontend flags=(attach_disconnected,mediate_deleted) {
   network,
   /usr/bin/dumb-init ix,
   /bin/sh ix,
+  /bin/busybox rix,
+  /docker-entrypoint.sh r,
+  /docker-entrypoint.d/** r,
+  /dev/tty rw,
+  @{PROC}/@{pid}/cgroup r,
+  /proc/version_signature r,
   /usr/bin/envsubst ix,
   /usr/sbin/nginx ix,
   /docker-entrypoint.sh ix,
+  /usr/lib/nginx/** mr,
+  /lib/** mr,
   /etc/nginx/** r,
   /usr/share/nginx/** r,
-  /var/cache/nginx/** rwk,
-  /var/run/** rwk,
-  /etc/nginx/conf.d/** rwk,
+  owner /var/cache/nginx/** rwk,
+  owner /var/run/** rwk,
+  owner /etc/nginx/conf.d/** rwk,
   /tmp/** rwk,
   deny mount,
   deny ptrace,
@@ -63,7 +77,7 @@ profile homelabarr-frontend flags=(attach_disconnected,mediate_deleted) {
 EOF
 apparmor_parser -r /etc/apparmor.d/homelabarr-frontend
 aa-status | grep homelabarr-backend || echo "Profile loaded"
-echo "AppArmor profile installed: homelabarr-backend"
+echo "AppArmor profiles installed: homelabarr-backend, homelabarr-frontend"
 
 # Switch to enforce mode
 systemctl reload apparmor 2>/dev/null || true
