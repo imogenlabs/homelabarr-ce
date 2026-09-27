@@ -11,7 +11,7 @@ import path from 'node:path';
 // time, not at import), so a test can flip it between requests against the same
 // running app. That is the whole point of these tests: the SAME app must behave
 // two different ways, and the "off" way must be indistinguishable from before.
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hlce-demomode-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'demo-mode-'));
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'x'.repeat(40);
 process.env.DB_PATH = ':memory:';

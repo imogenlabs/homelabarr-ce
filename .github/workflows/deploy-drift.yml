@@ -62,7 +62,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   title: `[DRIFT] Live origin is ${driftMin} min behind main`,
-                  body: `Deploy drift detected.\n\n${summary}\n\nRebuild and force-pull on ce-prod (192.168.1.231).`,
+                  body: `Deploy drift detected.\n\n${summary}\n\nRebuild and redeploy the VPS demo origin.`,
                   labels: ['deploy-drift'],
                 });
               }
