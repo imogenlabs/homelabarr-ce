@@ -97,7 +97,7 @@ services:
     image: ghcr.io/imogenlabs/homelabarr-frontend:latest
     container_name: homelabarr-frontend
     restart: unless-stopped
-    user: "101:101"
+    user: "1001:1001"  # the image's own homelabarr user; it owns /etc/nginx and the entrypoint
     environment:
       - BACKEND_URL=http://backend:8092
       - LOG_LEVEL=${LOG_LEVEL:-warn}
@@ -112,10 +112,10 @@ services:
       - no-new-privileges:true
     read_only: true
     tmpfs:
-      - /var/cache/nginx:rw,noexec,nosuid,nodev,size=32m
-      - /var/run:rw,noexec,nosuid,nodev,size=2m
-      - /etc/nginx/conf.d:rw,noexec,nosuid,nodev,size=1m
-      - /tmp:rw,noexec,nosuid,nodev,size=8m
+      - /var/cache/nginx:rw,noexec,nosuid,nodev,size=32m,uid=1001,gid=1001
+      - /var/run:rw,noexec,nosuid,nodev,size=2m,uid=1001,gid=1001
+      - /etc/nginx/conf.d:rw,noexec,nosuid,nodev,size=1m,uid=1001,gid=1001
+      - /tmp:rw,noexec,nosuid,nodev,size=8m,uid=1001,gid=1001
     pids_limit: 128
     mem_limit: 128m
     healthcheck:
