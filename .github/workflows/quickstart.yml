@@ -87,3 +87,5 @@ jobs:
             docker inspect -f '{{if .State.Health}}{{range .State.Health.Log}}{{.Output}}{{end}}{{end}}' "$c" | tail -5 || true
             docker logs --tail=80 "$c" 2>&1 || true
           done
+          echo "===== AppArmor denials (kernel log)"
+          sudo dmesg | grep -E 'apparmor="DENIED"' | grep -E 'profile="homelabarr-' | sed -E 's/.*(operation="[^"]*").*(profile="[^"]*").*(name="[^"]*").*(requested_mask="[^"]*").*/\1 \2 \3 \4/' | sort | uniq -c | sort -rn | head -60 || true
