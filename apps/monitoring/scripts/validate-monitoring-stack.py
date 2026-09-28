@@ -5,12 +5,9 @@ Validates end-to-end connectivity between Prometheus, Loki, and Grafana
 """
 
 import requests
-import json
 import time
 import sys
-import subprocess
-from typing import Dict, List, Tuple, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class MonitoringStackValidator:
     def __init__(self, 
@@ -78,8 +75,11 @@ class MonitoringStackValidator:
             response = requests.get(f"{self.prometheus_url}/api/v1/status/config", timeout=5)
             if response.status_code == 200:
                 config = response.json()
-                self.print_test("Configuration Access", "PASS", f"Config loaded successfully")
-                success_count += 1
+                if config.get('status') == 'success' and config.get('data', {}).get('yaml') is not None:
+                    self.print_test("Configuration Access", "PASS", "Config loaded successfully")
+                    success_count += 1
+                else:
+                    self.print_test("Configuration Access", "FAIL", config.get('error', 'Invalid config response'))
             else:
                 self.print_test("Configuration Access", "FAIL", f"HTTP {response.status_code}")
         except Exception as e:
@@ -393,14 +393,15 @@ class MonitoringStackValidator:
             self.print_test("Container Metrics Collection", "FAIL", str(e))
             return False
     
-    def generate_summary_report(self):
+    def generate_summary_report(self, container_metrics_ok: bool):
         """Generate and display summary report"""
         self.print_header("MONITORING STACK SUMMARY")
         
         # Overall health assessment
-        healthy_services = sum(1 for service in self.results.values() if service['status'] == 'healthy')
-        total_services = len(self.results)
-        overall_health = "HEALTHY" if healthy_services >= 3 else "DEGRADED" if healthy_services >= 2 else "UNHEALTHY"
+        healthy_core_services = sum(1 for service in self.results.values() if service['status'] == 'healthy')
+        healthy_services = healthy_core_services + int(container_metrics_ok)
+        total_services = len(self.results) + 1
+        overall_health = "HEALTHY" if healthy_core_services >= 3 and container_metrics_ok else "DEGRADED" if healthy_core_services >= 2 else "UNHEALTHY"
         
         health_icon = "✅" if overall_health == "HEALTHY" else "⚠️" if overall_health == "DEGRADED" else "❌"
         print(f"{health_icon} Overall Status: {overall_health} ({healthy_services}/{total_services} services healthy)")
@@ -412,6 +413,9 @@ class MonitoringStackValidator:
             tests = service_data.get('tests', 0)
             status_icon = "✅" if status == "healthy" else "❌"
             print(f"   {status_icon} {service_name.title():<15} {status.upper():<10} ({tests} tests)")
+        metrics_status = "HEALTHY" if container_metrics_ok else "UNHEALTHY"
+        metrics_icon = "✅" if container_metrics_ok else "❌"
+        print(f"   {metrics_icon} {'Container Metrics':<15} {metrics_status:<10} (1 test)")
         
         # Recommendations
         print(f"\n💡 Recommendations:")
@@ -427,6 +431,9 @@ class MonitoringStackValidator:
         
         if self.results['integration']['status'] != 'healthy':
             print("   🔧 Test data source connectivity from Grafana admin panel")
+
+        if not container_metrics_ok:
+            print("   🔧 Check container metrics collection")
         
         if overall_health == "HEALTHY":
             print("   🎉 Monitoring stack is fully operational!")
@@ -440,16 +447,16 @@ class MonitoringStackValidator:
         print(f"⏰ Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         # Run all tests
-        prometheus_ok = self.test_prometheus()
-        loki_ok = self.test_loki()
-        grafana_ok = self.test_grafana()
-        integration_ok = self.test_data_source_connectivity()
+        self.test_prometheus()
+        self.test_loki()
+        self.test_grafana()
+        self.test_data_source_connectivity()
         
         # Additional tests
         container_metrics_ok = self.test_container_metrics()
         
         # Generate summary
-        stack_healthy = self.generate_summary_report()
+        stack_healthy = self.generate_summary_report(container_metrics_ok)
         
         print(f"\n🏁 Validation Complete")
         return stack_healthy

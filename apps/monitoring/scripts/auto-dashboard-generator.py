@@ -6,7 +6,6 @@ Automatically creates Grafana dashboards for installed applications
 
 import json
 import os
-import sys
 import subprocess
 import requests
 from datetime import datetime
