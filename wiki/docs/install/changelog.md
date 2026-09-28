@@ -17,8 +17,48 @@ Latest releases and what changed in each.
 
 ## [v2.5.2] - 2026-09-28
 
+### 📚 Documentation
+
+- changelog for v2.5.1 by @github-actions[bot] in #516
+
+### ⬆️ Dependencies
+
+- bump node from `d32cdf6` to `e67514e` by @dependabot[bot] in #517
+- bump the production group with 3 updates by @dependabot[bot] in #518
+- bump mikepenz/release-changelog-builder-action from 6.2.3 to 6.3.0 in the actions group by @dependabot[bot] in #519
+- bump the development group with 21 updates by @dependabot[bot] in #520
+- bump protobufjs from 7.6.5 to 7.6.6 by @dependabot[bot] in #521
+- bump js-yaml from 4.3.1 to 4.3.2 by @dependabot[bot] in #522
+- bump nginx from 1.31.4-alpine to 1.31.5-alpine in the docker group by @dependabot[bot] in #524
+- bump the production group with 6 updates by @dependabot[bot] in #525
+- bump actions/deploy-pages from 5.0.0 to 5.0.1 in the actions group by @dependabot[bot] in #526
+- bump the development group with 34 updates by @dependabot[bot] in #527
+- bump fast-uri from 3.1.6 to 3.1.7 by @dependabot[bot] in #529
+- bump undici from 7.29.0 to 7.29.1 by @dependabot[bot] in #531
+- bump nodemailer from 9.0.6 to 9.1.1 by @dependabot[bot] in #534
+- bump node from `e67514e` to `50c8e8c` by @dependabot[bot] in #535
+- bump the production group with 7 updates by @dependabot[bot] in #536
+- bump the actions group with 2 updates by @dependabot[bot] in #537
+- bump node from `50c8e8c` to `ebfe2f9` by @dependabot[bot] in #541
+- bump nginx from 1.31.5-alpine to 1.31.6-alpine in the docker group by @dependabot[bot] in #540
+- bump the actions group with 5 updates by @dependabot[bot] in #542
+- bump the development group across 1 directory with 34 updates by @dependabot[bot] in #543
+- bump nodemailer from 9.1.1 to 10.0.10 by @dependabot[bot] in #539
+
 ### 🔄 Changes
 
+- SITE-239: give wiki.homelabarr.com a robots.txt by @smashingtags in #523
+- HLCE-342: measure demo drift against the latest release, not main by @smashingtags in #544
+- HLCE-338: raise the qs override to 6.16.0 by @smashingtags in #545
+- HLCE-347: rate-limit each client, not the proxy in front of the backend by @smashingtags in #549
+- HLCE-339: move vitest, coverage-v8 and ui to 5 together by @smashingtags in #547
+- HLCE-348: an unanswered probe is unchecked, not failed by @smashingtags in #548
+- HLCE-346: one demo — point every link at demo.homelabarr.com by @smashingtags in #546
+- HLCE-349: commit the white-label audit only when a brand mention changes by @smashingtags in #550
+- HLCE-344: make the README quick start actually start HomelabARR CE by @smashingtags in #551
+- HLCE-343: README and SECURITY say what the code does by @smashingtags in #552
+- HLCE-350: hold password-reset tokens in a Map by @smashingtags in #553
+- HLCE-351: make the white-label audit identical on Mac and Linux by @smashingtags in #554
 - HLCE-353: v2.5.2 by @smashingtags in #555
 
 ## [v2.5.1] - 2026-08-29
