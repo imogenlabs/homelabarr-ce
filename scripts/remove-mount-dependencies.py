@@ -4,9 +4,8 @@ Remove all mount-related dependencies from HomelabARR YAML files
 This ensures containers can start independently without waiting for mount services
 """
 
-import os
+import sys
 import yaml
-import re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -34,7 +33,6 @@ class MountDependencyRemover:
                 deps = data['depends_on']
                 if isinstance(deps, list):
                     # List format: depends_on: [mount, mount-enhanced, etc]
-                    original_deps = deps.copy()
                     mount_related = [d for d in deps if 'mount' in d.lower() or 'unionfs' in d.lower()]
                     if mount_related:
                         # Remove mount-related dependencies
@@ -87,9 +85,6 @@ class MountDependencyRemover:
             mount_deps = self.check_mount_dependency(data)
             
             if mount_deps:
-                # Save the original for comparison
-                original_content = content
-                
                 # Write the modified YAML back
                 with open(file_path, 'w', encoding='utf-8') as f:
                     yaml.dump(data, f, default_flow_style=False, sort_keys=False, 
@@ -197,8 +192,8 @@ class MountDependencyRemover:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     if 'unionfs:/mnt' in f.read():
                         unionfs_count += 1
-            except:
-                pass
+            except (OSError, UnicodeError) as e:
+                print(f"[WARNING] Could not inspect {file_path} for unionfs mounts: {e}")
                 
         print(f"Files with 'unionfs:/mnt' volume mounts: {unionfs_count}")
         print("Note: These are NOT dependencies and don't prevent container startup.")
@@ -210,7 +205,7 @@ if __name__ == "__main__":
     
     if not apps_dir.exists():
         print(f"Error: Apps directory not found at {apps_dir}")
-        exit(1)
+        sys.exit(1)
         
     remover = MountDependencyRemover(apps_dir)
     remover.run()
