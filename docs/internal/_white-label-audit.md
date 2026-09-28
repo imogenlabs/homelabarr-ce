@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1583
+**Total brand references found:** 1596
 
 ---
 
@@ -392,7 +392,7 @@
 
 ## Wiki content
 
-**337 references**
+**350 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -595,8 +595,21 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-333: set the version to 2.5.0 by @smashingtags in #512` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-334: never let a release build reuse a cached package layer by @smashingtags in #514` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-334: set the version to 2.5.1 by @smashingtags in #515` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-338: raise the qs override to 6.16.0 by @smashingtags in #545` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-339: move vitest, coverage-v8 and ui to 5 together by @smashingtags in #547` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-342: measure demo drift against the latest release, not main by @smashingtags in #544` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-343: README and SECURITY say what the code does by @smashingtags in #552` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-344: make the README quick start actually start HomelabARR CE by @smashingtags in #551` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-346: one demo — point every link at demo.homelabarr.com by @smashingtags in #546` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-347: rate-limit each client, not the proxy in front of the backend by @smashingtags in #549` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-348: an unanswered probe is unchecked, not failed by @smashingtags in #548` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-349: commit the white-label audit only when a brand mention changes by @smashingtags in #550` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-350: hold password-reset tokens in a Map by @smashingtags in #553` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-351: make the white-label audit identical on Mac and Linux by @smashingtags in #554` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-353: v2.5.2 by @smashingtags in #555` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: /auth/me reload fix, E2E on ce-dev, Dependabot unblock by @smashingtags in #248` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: HLCE-191 E2E + INFRA-64/70 cleanup by @smashingtags in #243` |
+| `wiki/docs/install/changelog.md` | 1 x | `- SITE-239: give wiki.homelabarr.com a robots.txt by @smashingtags in #523` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Sync docs to imogenlabs org + current app count by @smashingtags in #495` |
 | `wiki/docs/install/changelog.md` | 1 x | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
 | `wiki/docs/install/changelog.md` | 1 x | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
