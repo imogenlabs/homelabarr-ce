@@ -15,6 +15,12 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.5.2] - 2026-09-28
+
+### 🔄 Changes
+
+- HLCE-353: v2.5.2 by @smashingtags in #555
+
 ## [v2.5.1] - 2026-08-29
 
 ### 📚 Documentation
