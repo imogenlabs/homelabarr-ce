@@ -1,10 +1,10 @@
 name: CodeQL
 
-# Static analysis (SAST) for JS/TS. Clears OSSF Scorecard SAST alert (#85).
-# NOTE: GitHub Actions minutes are out and not being restored, so this will not
-# run on hosted runners today — it is correctly configured for when a runner
-# exists (HLCE-195/HLCE-197). Run manually via the "Run workflow" button if a
-# self-hosted runner is added.
+# Static analysis (SAST) for everything this repo ships or runs: the app
+# (JS/TS), its Python scripts, and the GitHub Actions workflows themselves.
+# Runs on hosted ubuntu-latest (public repo, free minutes). GitHub's default
+# CodeQL setup is off; this workflow is the only CodeQL configuration, and
+# each language uploads its own /language:<name> category (HLCE-354).
 
 on:
   push:
@@ -20,8 +20,12 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze (javascript-typescript)
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python, actions]
     permissions:
       security-events: write
       contents: read
@@ -34,7 +38,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@1c5b675653bb5c22dbe9b12b556ec555138e09fd  # v4
         with:
-          languages: javascript-typescript
+          languages: ${{ matrix.language }}
           build-mode: none
           queries: security-and-quality
           config-file: ./.github/codeql/codeql-config.yml
@@ -42,4 +46,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd  # v4
         with:
-          category: "/language:javascript-typescript"
+          category: "/language:${{ matrix.language }}"
