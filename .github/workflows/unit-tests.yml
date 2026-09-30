@@ -39,6 +39,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # EOS-2459: not every runner has wget, so a workflow that calls it passes
+      # or fails by which machine drew the job. The scripts need only python3.
+      - name: Workflows never download with wget
+        run: python3 scripts/check-no-wget.py
+      - name: That wget gate can actually fire
+        run: python3 scripts/check-no-wget.py --self-test
+
       - name: Lint
         run: npm run lint
 
