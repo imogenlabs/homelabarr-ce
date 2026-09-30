@@ -92,7 +92,7 @@ jobs:
           echo "Installing ShellCheck and other security tools..."
           # Download ShellCheck binary directly
           SHELLCHECK_VERSION="0.10.0"
-          wget -q https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz
+          curl -fsSLO https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz
           tar -xf shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz
           mkdir -p $HOME/.local/bin
           mv shellcheck-v${SHELLCHECK_VERSION}/shellcheck $HOME/.local/bin/
@@ -172,7 +172,7 @@ jobs:
             # Download docker-compose binary
             COMPOSE_VERSION="2.36.2"
             mkdir -p "$HOME/.local/bin"
-            wget -q https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64 -O $HOME/.local/bin/docker-compose
+            curl -fsSL -o $HOME/.local/bin/docker-compose https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64
             chmod +x $HOME/.local/bin/docker-compose
             export PATH="$HOME/.local/bin:$PATH"
             echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -267,7 +267,7 @@ jobs:
           echo "Installing Trivy vulnerability scanner..."
           # Download trivy binary directly without requiring sudo
           TRIVY_VERSION="0.69.3"
-          wget -q https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+          curl -fsSLO https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
           tar zxf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
           chmod +x trivy
           # Move to user's local bin or use from current directory
