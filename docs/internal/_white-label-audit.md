@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1596
+**Total brand references found:** 1597
 
 ---
 
@@ -742,7 +742,7 @@
 
 ## Other
 
-**911 references**
+**912 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -798,6 +798,7 @@
 | `apps/downloads/sabnzbd.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:sabnzbd\|ghcr.io/imogenlabs/homelabarr-mod-sabnzbd:v1.0.0"` |
 | `apps/media-management/bazarr.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:bazarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/lidarr.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:lidarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
+| `apps/media-management/movviz.yml` | 1 x | `      - "com.homelabarr.description=Self-hosted media command centre: discovery, requests, movie and TV automation, a bu` |
 | `apps/media-management/radarr.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:radarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/readarr.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:readarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
 | `apps/media-management/sonarr.yml` | 1 x | `      - "DOCKER_MODS=ghcr.io/themepark-dev/theme.park:sonarr\|ghcr.io/imogenlabs/homelabarr-mod-healthcheck:v1.0.0"` |
