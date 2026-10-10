@@ -1,0 +1,64 @@
+---
+services:
+  movviz:
+    hostname: "movviz"
+    container_name: "movviz"
+    environment:
+      - "PGID=${ID}"
+      - "PUID=${ID}"
+      - "TZ=${TZ}"
+      - "MOVVIZ_WEB_PORT=9810"
+      - "MOVVIZ_ENGINE_PORT=9820"
+      - "MOVVIZ_RESOLVER_PORT=9830"
+      # The peer ports are advertised to the swarm, so each must equal the
+      # host port published for it below. Change them together.
+      - "MOVVIZ_TORRENT_PORT=55000"
+      - "MOVVIZ_TORRENT_PORT_SERIES=55001"
+    image: "dj41ph4/movviz:latest"
+    restart: "${RESTARTAPP}"
+    networks:
+      - ${DOCKERNETWORK}
+    security_opt:
+      - "${SECURITYOPS}:${SECURITYOPSSET}"
+    # 9820 (download engine) and 9830 (Cloudflare resolver) stay inside the
+    # container: the browser only reaches them through the web app on 9810.
+    ports:
+      - "9810:9810"
+      - "55000:55000/tcp"
+      - "55000:55000/udp"
+      - "55001:55001/tcp"
+      - "55001:55001/udp"
+    volumes:
+      - "${APPFOLDER}/movviz:/config:rw"
+      # One media root: torrents and the library share this volume, so an
+      # import is a move, not a copy.
+      - "unionfs:/data"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9810/api/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "com.homelabarr.description=Self-hosted media command centre: discovery, requests, movie and TV automation, a built-in BitTorrent engine, import, library and playback"
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "dockupdater.enable=true"
+      - "traefik.http.routers.movviz-rtr.entrypoints=https"
+      - "traefik.http.routers.movviz-rtr.rule=Host(`movviz.${DOMAIN}`)"
+      - "traefik.http.routers.movviz-rtr.tls=true"
+      - "traefik.http.routers.movviz-rtr.tls.certresolver=dns-cloudflare"
+      - "traefik.http.routers.movviz-rtr.middlewares=chain-authelia@file"
+      - "traefik.http.routers.movviz-rtr.service=movviz-svc"
+      - "traefik.http.services.movviz-svc.loadbalancer.server.port=9810"
+networks:
+  proxy:
+    driver: bridge
+    external: true
+volumes:
+  unionfs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt

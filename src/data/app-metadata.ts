@@ -58,6 +58,7 @@ export const APP_ICON_MAP: Record<string, LucideIcon> = {
   // Media Management
   'sonarr': Tv2,
   'radarr': Film,
+  'movviz': Film,
   'lidarr': MusicIcon,
   'readarr': Book,
   'bazarr': FileText,
