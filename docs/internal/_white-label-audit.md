@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1597
+**Total brand references found:** 1598
 
 ---
 
@@ -742,7 +742,7 @@
 
 ## Other
 
-**912 references**
+**913 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -1574,10 +1574,11 @@
 | `docs/governance/github-security-settings.md` | 1 x | `These settings must be enabled at 'Settings → Code security and analysis' for the 'imogenlabs/homelabarr-ce' repositor` |
 | `docs/governance/github-security-settings.md` | 1 x | `gh api repos/imogenlabs/homelabarr-ce --jq '.security_and_analysis'` |
 | `docs/governance/github-security-settings.md` | 1 x | `gh api repos/imogenlabs/homelabarr-ce/private-vulnerability-reporting` |
+| `docs/hypervisor-alerting.md` | 1 x | `  /usr/local/bin/homelabarr-host-alert; echo $?   # expect "Delivered by email", exit 0` |
 | `docs/hypervisor-alerting.md` | 1 x | `  /usr/local/bin/homelabarr-host-alert; echo $?   # expect 1, and /tmp/s must not exist` |
 | `docs/hypervisor-alerting.md` | 1 x | `/usr/local/bin/homelabarr-host-alert` |
 | `docs/hypervisor-alerting.md` | 1 x | `/usr/local/bin/homelabarr-host-alert; echo $?` |
-| `docs/hypervisor-alerting.md` | 1 x | `DISK_THRESHOLD=50 /usr/local/bin/homelabarr-host-alert` |
+| `docs/hypervisor-alerting.md` | 1 x | `DISK_THRESHOLD=5 HOMELABARR_ALERT_STATE=/tmp/host-alert-test.state \` |
 | `docs/hypervisor-alerting.md` | 1 x | `HOMELABARR_ALERT_ENV=/dev/null /usr/local/bin/homelabarr-host-alert; echo $?   # expect 78` |
 | `docs/hypervisor-alerting.md` | 1 x | `HOMELABARR_ALERT_ENV=/tmp/broken.env HOMELABARR_ALERT_STATE=/tmp/s DISK_THRESHOLD=50 \` |
 | `docs/hypervisor-alerting.md` | 1 x | `'/etc/homelabarr/host-alert.env' (mode 600, root-only) holds:` |
