@@ -79,16 +79,26 @@ State is only written after a delivery actually succeeded.
 `/etc/homelabarr/host-alert.env` (mode 600, root-only) holds:
 
 ```bash
-SMTP_URL='smtp://<user>:<app-password>@smtp.gmail.com:587'
+# The estate's sender since 2026-09-18 (EOS-2278): Resend, from a verified eight.ly address.
+SMTP_URL='smtps://resend:<resend-api-key>@smtp.resend.com:2465'
+MAIL_FROM='alerts@eight.ly'
 ALERT_EMAIL_TO='michael@mjashley.com'
 ```
+
+`smtps://` is TLS from the first byte; `smtp://` uses STARTTLS and refuses to go on
+without it. `MAIL_FROM` is the sender address; leave it out and the login is used,
+which suits a Gmail account but not Resend, whose login is the word `resend`.
+
+**The Gmail app password this was first set up with is dead** (`curl: (67) Login
+denied`, seen 2026-09-27; the licence server hit the same wall and moved to Resend under
+EOS-2278). The last alert that reached the inbox was 2026-08-19.
 
 Alerts arrive as mail in the inbox. **Discord was the original plan and it is still
 supported** — set `WEBHOOK_URL` and it will post there too — but Discord was the reason
 this alerted nobody for six weeks: it needed a webhook that had to be created by hand,
 and until that happened the unit just sat in `failed`. Mail needed no new account, no new
 credential and no setup: `SMTP_URL` is the identity the estate already sends mail with,
-copied from `/opt/eightly-updates/.env` on the VPS.
+copied from `/opt/eightly-updates/.env` on the VPS (with its `MAIL_FROM`).
 
 Email also has a property a webhook does not: **you can prove it arrived.** A Discord
 webhook returning HTTP 204 tells you the request was accepted, not that anyone will ever
@@ -103,11 +113,16 @@ Until a destination here is real, the unit fails every five minutes by design.
 ## Verifying it — fire it, do not read it
 
 ```bash
-# Healthy: silent, exit 0
+# Healthy: silent, exit 0. This proves NOTHING about delivery: with nothing new to
+# report the script exits before it opens a connection, so a dead credential looks
+# exactly like a working one here.
 /usr/local/bin/homelabarr-host-alert; echo $?
 
-# Force the disk rule without filling the disk
-DISK_THRESHOLD=50 /usr/local/bin/homelabarr-host-alert
+# Send a real test mail. Set the threshold below today's usage (`df -h /`) and use a
+# throwaway state file so the timer's next run does not send a "cleared" mail too.
+DISK_THRESHOLD=5 HOMELABARR_ALERT_STATE=/tmp/host-alert-test.state \
+  /usr/local/bin/homelabarr-host-alert; echo $?   # expect "Delivered by email", exit 0
+rm -f /tmp/host-alert-test.state
 
 # Prove paused-domain detection against a real pause
 virsh suspend web-dev

@@ -90,7 +90,7 @@ fi
 # webhook went unnoticed from February to August.
 
 deliver_email() {
-  local to creds host port user pass msg
+  local to creds scheme host port user pass from msg
   to=${ALERT_EMAIL_TO:-michael@mjashley.com}
 
   # python3 rather than shell string-splitting: the username is percent-encoded
@@ -102,16 +102,22 @@ from urllib.parse import urlsplit, unquote
 u = urlsplit(os.environ["SMTP_URL"])
 if not u.hostname or not u.username or not u.password:
     sys.exit("SMTP_URL is missing host, username or password")
+print("smtps" if u.scheme == "smtps" else "smtp")
 print(u.hostname)
 print(u.port or (465 if u.scheme == "smtps" else 587))
 print(unquote(u.username))
 print(unquote(u.password))
 ') || return 1
-  { read -r host; read -r port; read -r user; read -r pass; } <<< "$creds"
+  { read -r scheme; read -r host; read -r port; read -r user; read -r pass; } <<< "$creds"
+
+  # A relay such as Resend logs in as "resend" and only accepts mail from a
+  # verified domain, so the sender cannot always be the login. MAIL_FROM sets it;
+  # without it the login is used, which is what a Gmail account wants.
+  from=${MAIL_FROM:-$user}
 
   msg=$(mktemp) || return 1
   {
-    printf 'From: HomelabARR host alert <%s>\n' "$user"
+    printf 'From: HomelabARR host alert <%s>\n' "$from"
     printf 'To: %s\n' "$to"
     printf 'Subject: %s\n' "$subject"
     printf 'Date: %s\n' "$(date -R)"
@@ -120,12 +126,13 @@ print(unquote(u.password))
     printf '\n%s\n' "$body"
   } > "$msg"
 
+  # smtps:// is TLS from the first byte (465, Resend's 2465). For smtp://,
   # --ssl-reqd forces STARTTLS: without it curl will happily fall back to
   # plaintext and post the credential across the network.
   if curl -sS --ssl-reqd --max-time 30 \
-      --url "smtp://${host}:${port}" \
+      --url "${scheme}://${host}:${port}" \
       --user "${user}:${pass}" \
-      --mail-from "$user" --mail-rcpt "$to" \
+      --mail-from "$from" --mail-rcpt "$to" \
       --upload-file "$msg" >/dev/null 2>"${msg}.err"; then
     rm -f "$msg" "${msg}.err"
     echo "Delivered by email to ${to}."
