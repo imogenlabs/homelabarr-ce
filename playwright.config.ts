@@ -20,7 +20,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'github' : 'html',
+  // CI also writes the html report: both E2E jobs upload playwright-report/, and with
+  // `github` alone that folder never existed, so a failed run kept no trace or
+  // screenshot (HLCE-356, run 36756732200: "No files were found").
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
   timeout: 30_000,
 
   use: {
