@@ -1,0 +1,59 @@
+# EOS-2718: record each published release in Jira.
+#
+# keen release sync makes the Jira version named as the tag (released, dated,
+# linked to this GitHub release), adds it as a Fix Version on every HLCE issue
+# the release is the first to contain (never replacing one), and turns the
+# unreleased "next" version into the tag. It is safe to re-run.
+#
+# It needs three repository secrets: JIRA_BASE_URL, JIRA_USER, JIRA_API_TOKEN.
+# Without them this job fails and says CANNOT RECORD, with the command to run
+# by hand from a machine where keen is configured.
+name: Jira release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to record
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  jira:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      JIRA_PP_CLI_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_CLOUD_PLATFORM_USERNAME: ${{ secrets.JIRA_USER }}
+      JIRA_CLOUD_PLATFORM_PASSWORD: ${{ secrets.JIRA_API_TOKEN }}
+    steps:
+      - name: Jira credentials are present
+        run: |
+          if [ -z "$JIRA_PP_CLI_BASE_URL" ] || [ -z "$JIRA_CLOUD_PLATFORM_USERNAME" ] || [ -z "$JIRA_CLOUD_PLATFORM_PASSWORD" ]; then
+            echo "::error::CANNOT RECORD $TAG in Jira: this repository has no JIRA_BASE_URL / JIRA_USER / JIRA_API_TOKEN secrets. Run by hand: keen release sync --repo-path . --project HLCE --tag $TAG --head origin/main"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: imogenlabs/keen
+          path: .keen-src
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: .keen-src/go.mod
+          cache: false
+      - name: Build keen
+        run: cd .keen-src && go build -o "$RUNNER_TEMP/keen" ./cmd/keen
+      - name: Record ${{ env.TAG }} in Jira
+        run: >-
+          "$RUNNER_TEMP/keen" release sync --repo-path . --project HLCE
+          --tag "$TAG" --head origin/main --github-repo imogenlabs/homelabarr-ce
+
