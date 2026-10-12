@@ -1,18 +1,22 @@
-# EOS-2718: record each published release in Jira.
+# EOS-2718: record each release in Jira.
 #
 # keen release sync makes the Jira version named as the tag (released, dated,
-# linked to this GitHub release), adds it as a Fix Version on every HLCE issue
+# linked to the GitHub release), adds it as a Fix Version on every HLCE issue
 # the release is the first to contain (never replacing one), and turns the
 # unreleased "next" version into the tag. It is safe to re-run.
 #
+# It runs on the tag push, not on release.published: a release published with
+# the workflow's own GITHUB_TOKEN starts no other workflow.
+#
 # It needs three repository secrets: JIRA_BASE_URL, JIRA_USER, JIRA_API_TOKEN.
 # Without them this job fails and says CANNOT RECORD, with the command to run
-# by hand from a machine where keen is configured.
+# by hand from a machine where keen is configured. The secrets are given only
+# to the two steps that use them, never to a third-party action.
 name: Jira release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
   workflow_dispatch:
     inputs:
       tag:
@@ -25,16 +29,18 @@ permissions:
 jobs:
   jira:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
     env:
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
-      JIRA_PP_CLI_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-      JIRA_CLOUD_PLATFORM_USERNAME: ${{ secrets.JIRA_USER }}
-      JIRA_CLOUD_PLATFORM_PASSWORD: ${{ secrets.JIRA_API_TOKEN }}
+      TAG: ${{ inputs.tag || github.ref_name }}
+      # keen at a reviewed commit that has `release sync`; move it deliberately.
+      KEEN_REF: d6d6688e36e7d45cf659ae21d9e3343ffbc4670a
     steps:
       - name: Jira credentials are present
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          if [ -z "$JIRA_PP_CLI_BASE_URL" ] || [ -z "$JIRA_CLOUD_PLATFORM_USERNAME" ] || [ -z "$JIRA_CLOUD_PLATFORM_PASSWORD" ]; then
+          if [ -z "$JIRA_BASE_URL" ] || [ -z "$JIRA_USER" ] || [ -z "$JIRA_API_TOKEN" ]; then
             echo "::error::CANNOT RECORD $TAG in Jira: this repository has no JIRA_BASE_URL / JIRA_USER / JIRA_API_TOKEN secrets. Run by hand: keen release sync --repo-path . --project HLCE --tag $TAG --head origin/main"
             exit 1
           fi
@@ -45,14 +51,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           repository: imogenlabs/keen
+          ref: ${{ env.KEEN_REF }}
           path: .keen-src
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: .keen-src/go.mod
           cache: false
       - name: Build keen
         run: cd .keen-src && go build -o "$RUNNER_TEMP/keen" ./cmd/keen
       - name: Record ${{ env.TAG }} in Jira
+        env:
+          JIRA_PP_CLI_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_CLOUD_PLATFORM_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_CLOUD_PLATFORM_USERNAME: ${{ secrets.JIRA_USER }}
+          JIRA_CLOUD_PLATFORM_PASSWORD: ${{ secrets.JIRA_API_TOKEN }}
         run: >-
           "$RUNNER_TEMP/keen" release sync --repo-path . --project HLCE
           --tag "$TAG" --head origin/main --github-repo imogenlabs/homelabarr-ce
