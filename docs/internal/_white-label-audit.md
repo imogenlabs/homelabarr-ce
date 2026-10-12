@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1598
+**Total brand references found:** 1600
 
 ---
 
@@ -129,7 +129,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**48 references**
+**50 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -155,6 +155,8 @@
 | `.github/workflows/docker-build-push.yml` | 1 x | `  DOCKERHUB_NAMESPACE: smashingtags` |
 | `.github/workflows/docker-build-push.yml` | 1 x | `  FRONTEND_IMAGE_NAME: homelabarr-frontend` |
 | `.github/workflows/e2e-tests.yml` | 1 x | `          TEST_BASE_URL: https://ce-dev.homelabarr.com` |
+| `.github/workflows/jira-release.yml` | 1 x | `            echo "Not recorded in Jira here (no Jira secrets in this repository). Whoever cut the release runs: \'keen r` |
+| `.github/workflows/jira-release.yml` | 1 x | `          --tag "$TAG" --head origin/main --github-repo imogenlabs/homelabarr-ce` |
 | `.github/workflows/pages.yml` | 1 x | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 1 x | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://dev.homelabarr.com' }}` |
 | `.github/workflows/pentest.yml` | 1 x | `        default: 'https://dev.homelabarr.com'` |
