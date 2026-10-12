@@ -1,0 +1,79 @@
+# EOS-2718: record each release in Jira.
+#
+# keen release sync makes the Jira version named as the tag (released, dated,
+# linked to the GitHub release), adds it as a Fix Version on every HLCE issue
+# the release is the first to contain (never replacing one), and turns the
+# unreleased "next" version into the tag. It is safe to re-run.
+#
+# It runs on the tag push, not on release.published: a release published with
+# the workflow's own GITHUB_TOKEN starts no other workflow.
+#
+# No Jira token is kept in GitHub, so normally this job records nothing,
+# passes, and its summary names the keen command whoever cut the release runs.
+# If JIRA_BASE_URL, JIRA_USER and JIRA_API_TOKEN secrets ever exist, it records
+# the release itself; they reach only the two steps that use them.
+name: Jira release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to record
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  jira:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      # keen at a reviewed commit that has `release sync`; move it deliberately.
+      KEEN_REF: e86cab3394afcb86799bc5d48e33b54ca39b7be1
+    steps:
+      - name: Jira credentials are present
+        id: creds
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          if [ -z "$JIRA_BASE_URL" ] || [ -z "$JIRA_USER" ] || [ -z "$JIRA_API_TOKEN" ]; then
+            echo "have=false" >> "$GITHUB_OUTPUT"
+            echo "Not recorded in Jira here (no Jira secrets in this repository). Whoever cut the release runs: \`keen release sync --repo-path <checkout of imogenlabs/homelabarr-ce> --project HLCE --tag $TAG --head origin/main\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "have=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.creds.outputs.have == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - if: steps.creds.outputs.have == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: imogenlabs/keen
+          ref: ${{ env.KEEN_REF }}
+          path: .keen-src
+      - if: steps.creds.outputs.have == 'true'
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: .keen-src/go.mod
+          cache: false
+      - name: Build keen
+        if: steps.creds.outputs.have == 'true'
+        run: cd .keen-src && go build -o "$RUNNER_TEMP/keen" ./cmd/keen
+      - name: Record ${{ env.TAG }} in Jira
+        if: steps.creds.outputs.have == 'true'
+        env:
+          JIRA_PP_CLI_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_CLOUD_PLATFORM_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_CLOUD_PLATFORM_USERNAME: ${{ secrets.JIRA_USER }}
+          JIRA_CLOUD_PLATFORM_PASSWORD: ${{ secrets.JIRA_API_TOKEN }}
+        run: >-
+          "$RUNNER_TEMP/keen" release sync --repo-path . --project HLCE
+          --tag "$TAG" --head origin/main --github-repo imogenlabs/homelabarr-ce
+
