@@ -32,7 +32,7 @@ jobs:
     env:
       TAG: ${{ inputs.tag || github.ref_name }}
       # keen at a reviewed commit that has `release sync`; move it deliberately.
-      KEEN_REF: d6d6688e36e7d45cf659ae21d9e3343ffbc4670a
+      KEEN_REF: e86cab3394afcb86799bc5d48e33b54ca39b7be1
     steps:
       - name: Jira credentials are present
         env:
