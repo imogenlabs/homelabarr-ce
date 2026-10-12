@@ -273,6 +273,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
 
 ---
 
+## Releases in Jira
+
+Whoever cuts a release records it in Jira with `keen release sync --repo-path . --project HLCE --tag <tag> --head origin/main` (EOS-2718).
+
 ## Links
 
 | | |
