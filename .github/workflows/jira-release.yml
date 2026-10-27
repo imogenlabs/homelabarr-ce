@@ -1,4 +1,4 @@
-# EOS-2718: record each release in Jira.
+# Record each release in Jira.
 #
 # keen release sync makes the Jira version named as the tag (released, dated,
 # linked to the GitHub release), adds it as a Fix Version on every HLCE issue
@@ -32,7 +32,7 @@ jobs:
     env:
       TAG: ${{ inputs.tag || github.ref_name }}
       # keen at a reviewed commit that has `release sync`; move it deliberately.
-      KEEN_REF: e86cab3394afcb86799bc5d48e33b54ca39b7be1
+      KEEN_REF: 200398da3a62bd66cdb11f3e5eb181cd39c7a465  # keen v1.1.0
     steps:
       - name: Jira credentials are present
         id: creds
