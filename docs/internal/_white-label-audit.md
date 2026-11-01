@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1600
+**Total brand references found:** 1601
 
 ---
 
@@ -744,7 +744,7 @@
 
 ## Other
 
-**913 references**
+**914 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -1583,6 +1583,7 @@
 | `docs/hypervisor-alerting.md` | 1 x | `DISK_THRESHOLD=5 HOMELABARR_ALERT_STATE=/tmp/host-alert-test.state \` |
 | `docs/hypervisor-alerting.md` | 1 x | `HOMELABARR_ALERT_ENV=/dev/null /usr/local/bin/homelabarr-host-alert; echo $?   # expect 78` |
 | `docs/hypervisor-alerting.md` | 1 x | `HOMELABARR_ALERT_ENV=/tmp/broken.env HOMELABARR_ALERT_STATE=/tmp/s DISK_THRESHOLD=50 \` |
+| `docs/hypervisor-alerting.md` | 1 x | `To see what it would watch: 'DISK_THRESHOLD=1 HOMELABARR_ALERT_STATE=/tmp/s /usr/local/bin/homelabarr-host-alert'` |
 | `docs/hypervisor-alerting.md` | 1 x | `'/etc/homelabarr/host-alert.env' (mode 600, root-only) holds:` |
 | `docs/hypervisor-alerting.md` | 1 x | `\| Config (delivery) \| '/etc/homelabarr/host-alert.env', mode 600 \|` |
 | `docs/hypervisor-alerting.md` | 1 x | `\| Script \| '/usr/local/bin/homelabarr-host-alert' \|` |
