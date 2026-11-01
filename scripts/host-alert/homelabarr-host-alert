@@ -25,7 +25,8 @@ set -uo pipefail
 ENV_FILE=${HOMELABARR_ALERT_ENV:-/etc/homelabarr/host-alert.env}
 STATE_FILE=${HOMELABARR_ALERT_STATE:-/var/lib/homelabarr/host-alert.state}
 DISK_THRESHOLD=${DISK_THRESHOLD:-85}
-MOUNT=${MOUNT:-/}
+# Set MOUNT to check one filesystem only; empty means find them (see below).
+MOUNT=${MOUNT:-}
 RUNBOOK=${RUNBOOK:-https://github.com/imogenlabs/homelabarr-ce/blob/main/docs/hypervisor-alerting.md}
 
 # shellcheck source=/dev/null
@@ -50,11 +51,32 @@ fi
 
 problems=()
 
-disk_pct=$(df --output=pcent "$MOUNT" | tail -1 | tr -dc '0-9')
-if [ -n "$disk_pct" ] && [ "$disk_pct" -ge "$DISK_THRESHOLD" ]; then
-  avail=$(df -h --output=avail "$MOUNT" | tail -1 | tr -d ' ')
-  problems+=("disk:${disk_pct}|Root filesystem on ${HOST} is ${disk_pct}% full (${avail} free, threshold ${DISK_THRESHOLD}%). This is how the July outage started: the disk filled, QEMU paused every guest with I/O errors, and the demo stayed dark for sixteen days.")
+# Watch / plus whichever filesystems hold the guests' disks and the containers'
+# root filesystems, found from the guests themselves each run. A fixed list
+# drifted once already: the VMs moved to /tank and this kept watching only /.
+watched_paths() {
+  echo /
+  local domain
+  while read -r domain; do
+    [ -n "$domain" ] && virsh domblklist "$domain" --details 2>/dev/null | awk '$1 == "file" && $2 == "disk" {print $4}'
+  done < <(virsh list --all --name 2>/dev/null)
+  sed -n 's/^lxc\.rootfs\.path *= *\(dir:\)\{0,1\}//p' /var/lib/lxc/*/config 2>/dev/null
+}
+
+if [ -n "$MOUNT" ]; then
+  mounts=$MOUNT
+else
+  mounts=$(watched_paths | while read -r path; do [ -e "$path" ] && df --output=target "$path" | tail -1; done | sort -u)
 fi
+
+while read -r mount; do
+  [ -z "$mount" ] && continue
+  disk_pct=$(df --output=pcent "$mount" | tail -1 | tr -dc '0-9')
+  if [ -n "$disk_pct" ] && [ "$disk_pct" -ge "$DISK_THRESHOLD" ]; then
+    avail=$(df -h --output=avail "$mount" | tail -1 | tr -d ' ')
+    problems+=("disk:${mount}:${disk_pct}|The ${mount} filesystem on ${HOST} is ${disk_pct}% full (${avail} free, threshold ${DISK_THRESHOLD}%). This is how the July outage started: the disk filled, QEMU paused every guest with I/O errors, and the demo stayed dark for sixteen days.")
+  fi
+done <<< "$mounts"
 
 # --state-paused covers a deliberate suspend; "pmsuspended" and the I/O-error
 # pause both surface through domstate, so ask for the reason too.

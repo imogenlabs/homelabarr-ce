@@ -48,8 +48,17 @@ issue, not this one, but do not mistake its presence for coverage.
 
 | Condition | Threshold | Why |
 |---|---|---|
-| Root filesystem usage | `>= 85%` | The July outage started here. `ce-prod.qcow2` is 61G and grows. |
+| Usage of every filesystem that holds guests | `>= 85%` | The July outage started here: the disk under the VMs filled. |
 | Paused libvirt domains | any | A paused domain is indistinguishable from a dead box until you ask for the reason. |
+
+The filesystems are found on every run, not listed: `/`, plus the filesystem under each VM
+disk (`virsh domblklist`) and under each LXC container's root filesystem
+(`lxc.rootfs.path`). On .73 that is `/`, `/tank` and the three runner datasets
+`/tank/eightly/lxc/eightly-ci-{1,2,3}/rootfs` (100G quota each since 2026-11-01). The alert
+names the filesystem. Set `MOUNT=/some/path` to check one filesystem only.
+
+To see what it would watch: `DISK_THRESHOLD=1 HOMELABARR_ALERT_STATE=/tmp/s /usr/local/bin/homelabarr-host-alert`
+sends a test alert listing every watched filesystem; delete `/tmp/s` afterwards.
 
 It is **silent while healthy**. It alerts once when a condition starts and once more when
 it clears — it does not re-post every five minutes.
