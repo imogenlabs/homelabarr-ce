@@ -73,6 +73,12 @@ function parseLocationBlocks(src) {
   return blocks;
 }
 
+// Prefer an exact matcher: `includes('/')` alone would match `/icons/` first
+// and never look at the SPA `/` block.
+function findBlock(blocks, matcher) {
+  return blocks.find((b) => b.matcher === matcher) || blocks.find((b) => b.matcher.includes(matcher));
+}
+
 function headersAddedIn(body) {
   const added = new Set();
   const re = /add_header\s+([A-Za-z0-9-]+)\b/g;
@@ -82,7 +88,9 @@ function headersAddedIn(body) {
 }
 
 describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () => {
-  const src = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+  // Drop full-line comments first: the template's own comments mention
+  // "location block", which the parser would otherwise read as a block start.
+  const src = fs.readFileSync(TEMPLATE_PATH, 'utf8').replace(/^\s*#.*$/gm, '');
   const blocks = parseLocationBlocks(src);
 
   it('parses at least the known content-serving location blocks', () => {
@@ -100,7 +108,7 @@ describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () =>
   describe.each(CONTENT_SERVING_BLOCKS)(
     'content-serving location matching %s re-emits the full security-header set',
     (matcher) => {
-      const block = blocks.find((b) => b.matcher.includes(matcher));
+      const block = findBlock(blocks, matcher);
       const added = block ? headersAddedIn(block.body) : new Set();
 
       // It must add headers at all (otherwise the test is asserting nothing).
@@ -125,7 +133,7 @@ describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () =>
   // ships a STRICT SUBSET of the security set (catches a header being half-removed).
   it('no content-serving block ships a partial subset of the security set', () => {
     for (const matcher of CONTENT_SERVING_BLOCKS) {
-      const block = blocks.find((b) => b.matcher.includes(matcher));
+      const block = findBlock(blocks, matcher);
       const added = headersAddedIn(block.body);
       const present = SECURITY_HEADERS.filter((h) => added.has(h));
       // present must be ALL of them, never a strict subset.
@@ -152,7 +160,7 @@ describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () =>
     const PARTIAL_BLOCKS = ['/robots.txt', '/humans.txt', '^~ /.well-known/', '/analytics.js'];
 
     it.each(PARTIAL_BLOCKS)('block %s carries at least the minimal hardening subset', (matcher) => {
-      const block = blocks.find((b) => b.matcher.includes(matcher));
+      const block = findBlock(blocks, matcher);
       if (!block) return; // matcher variants; the ones present are asserted
       const added = headersAddedIn(block.body);
       for (const h of MINIMAL_SUBSET) {

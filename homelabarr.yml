@@ -7,6 +7,9 @@
 # OPTIONAL (defaults shown):
 #   CLI_BRIDGE_HOST_PATH  — path to your HomelabARR CLI installation (default: /opt/homelabarr)
 #   FRONTEND_PORT         — host port for the dashboard (default: 8084)
+#   ALLOW_PLAIN_HTTP      — set to true ONLY if you open the dashboard at plain
+#                           http://<ip>:<port> with no HTTPS proxy in front.
+#                           Turns off Secure cookies and HSTS (default: false)
 #
 # Usage:
 #   docker compose -f homelabarr.yml up -d
@@ -101,6 +104,7 @@ services:
     environment:
       - BACKEND_URL=http://backend:8092
       - LOG_LEVEL=${LOG_LEVEL:-warn}
+      - ALLOW_PLAIN_HTTP=${ALLOW_PLAIN_HTTP:-false}
     ports:
       - "${FRONTEND_PORT:-8084}:8080"
     networks:
@@ -152,6 +156,7 @@ services:
       - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
       - ALERT_EVENTS=${ALERT_EVENTS:-login.locked,audit.chain.broken,session.refresh.fail}
       - AUDIT_STRICT=${AUDIT_STRICT:-0}
+      - ALLOW_PLAIN_HTTP=${ALLOW_PLAIN_HTTP:-false}
     volumes:
       - ${CLI_BRIDGE_HOST_PATH:-/opt/homelabarr}:/homelabarr:ro
       - homelabarr-data:/app/data

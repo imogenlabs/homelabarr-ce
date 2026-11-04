@@ -54,33 +54,45 @@ This downloads the entire repo — including all 100+ app templates — to `/opt
 cd /opt/homelabarr
 ```
 
-### Step 3: Set up your environment
+### Step 3: Create the secrets
 
-You need to set three variables before starting. Copy and paste this entire block:
+HomelabARR reads its signing keys and the first admin password from files in `./secrets/`. Create them before anything else:
 
 ```bash
-export JWT_SECRET=$(openssl rand -hex 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
+bash scripts/init-secrets.sh
+```
+
+It prints the **initial admin password** at the end. Keep it handy for Step 6. (It's also saved in `./secrets/default_admin_password`.)
+
+!!! warning "Don't skip this step"
+    Without `./secrets/`, `docker compose up` stops right away with `bind source path does not exist: .../secrets/jwt_key_previous`. If you see that, run `bash scripts/init-secrets.sh` and start again.
+
+The script needs `setfacl`. If it says to install the `acl` package, run `sudo apt-get install -y acl` (Debian/Ubuntu) and try again.
+
+### Step 4: Set your dashboard address and start HomelabARR
+
+```bash
 export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+export ALLOW_PLAIN_HTTP=true
 ```
 
 !!! warning "Replace YOUR-SERVER-IP — both times"
-    Change `YOUR-SERVER-IP` to your actual server's IP address in the `CORS_ORIGIN` line, and again when you open the dashboard in Step 5. For example: `http://192.0.2.100:8084`
+    Change `YOUR-SERVER-IP` to your server's IP address in the `CORS_ORIGIN` line, and again when you open the dashboard in Step 5. For example: `http://192.0.2.100:8084`
 
     Don't know your server's IP? Run `hostname -I` and use the first address shown.
 
 What these do:
 
-- **JWT_SECRET** — a random secret key that signs your login sessions. Keep it private and don't commit it to version control.
-- **DOCKER_GID** — the group ID that can talk to Docker on your server. This number varies by system.
-- **CORS_ORIGIN** — tells the backend to accept requests from your browser. Must match exactly how you access the dashboard.
+- **CORS_ORIGIN** tells the backend which address your browser uses. It must match exactly: same `http`/`https`, IP or hostname, and port.
+- **ALLOW_PLAIN_HTTP** lets you log in at a plain `http://` address. Without it, the login cookie is HTTPS-only and the browser throws it away, so you land back on the login screen. Only use it on a network you trust. If you put HomelabARR behind an HTTPS reverse proxy (Traefik, Caddy, Nginx Proxy Manager), leave it out and set `CORS_ORIGIN` to your `https://` address.
 
 !!! tip "Persist with a .env file"
-    These `export` commands only last until you close your terminal. To make them permanent, create a `.env` file — see the [Configuration guide](configuration.md) for details.
+    These `export` commands only last until you close your terminal. To make them permanent, put them in a `.env` file next to `homelabarr.yml`. See the [Configuration guide](configuration.md) for details.
 
-### Step 4: Start HomelabARR
+On hosts with AppArmor (Ubuntu, Debian, Proxmox), install the HomelabARR profiles first, then start:
 
 ```bash
+sudo bash scripts/install-apparmor.sh
 docker compose -f homelabarr.yml up -d
 ```
 
@@ -101,12 +113,12 @@ You should see the HomelabARR dashboard with 100+ apps ready to deploy.
 Click **Sign In** in the top right corner.
 
 - **Username:** `admin`
-- **Password:** `admin`
+- **Password:** the one `scripts/init-secrets.sh` printed in Step 3 (also in `./secrets/default_admin_password`)
 
 ![Login Modal](../img/screenshots/dark-login-modal.png)
 
 !!! danger "Change this now"
-    The default admin/admin credentials are well-known. Anyone on your network can log in until you change them. After signing in, click your username in the top right and update your password before doing anything else.
+    The initial password sits in a file on your server. After signing in, click your username in the top right and set a new password before doing anything else.
 
 ### Step 7: Deploy your first app
 
@@ -176,17 +188,28 @@ export CORS_ORIGIN=http://192.0.2.100:8084
 docker compose -f homelabarr.yml up -d
 ```
 
-### Containers won't deploy — "Docker socket" error
+### I log in, then land straight back on the login screen
 
-Make sure `DOCKER_GID` is set correctly:
+Your browser is on a plain `http://` address, but the login cookie is HTTPS-only, so the browser discards it. Either serve the dashboard over HTTPS, or (on a trusted LAN) allow plain HTTP and restart:
 
 ```bash
-# Check your Docker group ID:
-getent group docker | cut -d: -f3
-
-# Then set it and restart:
-export DOCKER_GID=YOUR_NUMBER_HERE
+export ALLOW_PLAIN_HTTP=true
 docker compose -f homelabarr.yml up -d
+```
+
+The backend log says so too: look for `Login from a plain-HTTP page` in `docker logs homelabarr-backend`.
+
+### `docker compose up` fails with "bind source path does not exist: .../secrets/..."
+
+The secret files haven't been created yet. Run `bash scripts/init-secrets.sh` from `/opt/homelabarr`, then start again.
+
+### Containers won't deploy — Docker connection error
+
+The backend talks to Docker through the bundled `socket-proxy` container at `tcp://socket-proxy:2375`, so the backend itself doesn't need the Docker socket. Check that the proxy is healthy:
+
+```bash
+docker ps --filter name=homelabarr-socket-proxy
+docker logs homelabarr-socket-proxy
 ```
 
 ### Permission denied on `/opt/appdata`

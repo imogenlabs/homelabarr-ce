@@ -49,12 +49,15 @@ Don't stop your old containers yet. Install CE alongside them first so you can v
 git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
-# Set required environment variables
-export JWT_SECRET=$(openssl rand -base64 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
+# Create the secrets (prints the initial admin password)
+bash scripts/init-secrets.sh
+
+# Set the dashboard address (plain http:// needs ALLOW_PLAIN_HTTP=true)
 export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
+export ALLOW_PLAIN_HTTP=true
 
 # Start the CE dashboard
+sudo bash scripts/install-apparmor.sh   # AppArmor hosts only
 docker compose -f homelabarr.yml up -d
 ```
 

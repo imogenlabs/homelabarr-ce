@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 🐛 Fixes from the first-install reports
+- **Login works over plain HTTP** ([#622](https://github.com/imogenlabs/homelabarr-ce/issues/622)): the README install opens the dashboard at `http://<ip>:8084`, but production always marked the login cookies `Secure`, so browsers dropped them and users looped back to the login screen. Safari also showed a blank page because the CSP `upgrade-insecure-requests` directive rewrote asset requests to `https://`. New opt-in **`ALLOW_PLAIN_HTTP=true`** drops the `Secure` flag, HSTS, and `upgrade-insecure-requests` for LAN-only installs. HTTPS remains the default. The backend now logs a clear hint when it sees a login from an `http://` page with Secure cookies.
+- **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki install guides skipped `bash scripts/init-secrets.sh`, so `docker compose up` failed on missing secret files. They also still said to log in with `admin`/`admin` and to set `JWT_SECRET`/`DOCKER_GID`, which the shipped compose no longer uses. All updated, with troubleshooting entries for both errors.
+- **No false "Docker socket not found" warning** ([#621](https://github.com/imogenlabs/homelabarr-ce/issues/621)): with the bundled socket-proxy (`DOCKER_HOST=tcp://socket-proxy:2375`) the startup validators still looked for `/var/run/docker.sock` and flagged `tcp:` as an uncommon protocol. Container management was working; the warnings were wrong. Startup now reports the TCP endpoint.
+- **No `users.json is not an array` warning on first boot** ([#623](https://github.com/imogenlabs/homelabarr-ce/issues/623)): `server/start.sh` seeded `users.json` and `api-keys.json` with `{}` instead of `[]`. Fixed, and an existing empty `{}` file is treated as an empty store without a warning.
+- **No localhost health-check warning in containers** ([#624](https://github.com/imogenlabs/homelabarr-ce/issues/624)): the default `healthCheck.external` URL now uses the `backend` service name inside containers.
+
+### ✅ Tests & CI
+- The README quick-start CI now checks that the login cookie is usable over plain HTTP and that `/api/auth/me` succeeds with it. It previously checked only for a 200 from login, which is why #622 got through.
+- Fixed a gap in the nginx security-header regression test: it matched the `/` location with `includes('/')`, which hit `/icons/` first, so the SPA `/` block was never checked. Added a regression test that locks the HSTS/CSP defaults behind `ALLOW_PLAIN_HTTP`.
+- The E2E stack now uses `ALLOW_PLAIN_HTTP=true` instead of a `sed` that stripped the CSP directive.
+
 ## [v2.3.0] - August 11, 2026
 
 ### 🚨 Critical — the backend image could not open its database

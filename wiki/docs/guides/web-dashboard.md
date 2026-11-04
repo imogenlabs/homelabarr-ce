@@ -99,10 +99,10 @@ Click **Sign In** in the top right.
 
 ![Login Modal](../img/screenshots/dark-login-modal.png)
 
-Default credentials: **admin / admin**
+First login: **admin**, with the password `scripts/init-secrets.sh` printed during setup (also saved in `./secrets/default_admin_password`).
 
 !!! danger "Change this before anything else"
-    Click your username in the top right after signing in and set a real password. Anyone on your local network can log in with admin/admin until you do.
+    Click your username in the top right after signing in and set a new password.
 
 ### API Keys
 

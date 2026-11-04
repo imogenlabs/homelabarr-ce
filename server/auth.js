@@ -70,6 +70,11 @@ export function loadUsers() {
     // the default-admin seeder never runs because `users.length === 0` is false
     // for non-arrays.
     if (!Array.isArray(parsed)) {
+      // Older start.sh versions seeded users.json with `{}`. That empty object
+      // means "no users yet", not corruption, so don't warn about it (#623).
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length === 0) {
+        return [];
+      }
       logger.warn(`users.json is not an array (got ${typeof parsed}) — ignoring and returning []`);
       return [];
     }
