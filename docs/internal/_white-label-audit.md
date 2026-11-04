@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1619
+**Total brand references found:** 1623
 
 ---
 
@@ -383,7 +383,7 @@
 
 ## Wiki content
 
-**379 references**
+**383 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -564,6 +564,8 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
+| `wiki/docs/install/changelog.md` | 1 x | `- list Movviz in the v2.6.0 changelog by @smashingtags in #634` |
+| `wiki/docs/install/changelog.md` | 1 x | `- log the Docker endpoint the backend really uses by @smashingtags in #635` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
@@ -600,6 +602,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- record releases with keen v1.7.0 by @smashingtags in #609` |
 | `wiki/docs/install/changelog.md` | 1 x | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.3.0 by @smashingtags in #456` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.1 by @smashingtags in #637` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -627,6 +630,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.1 by @smashingtags in #515` |
 | `wiki/docs/install/changelog.md` | 1 x | `- smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
 | `wiki/docs/install/changelog.md` | 1 x | `- stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
+| `wiki/docs/install/changelog.md` | 1 x | `- start on root-owned appdata by taking ownership and dropping to uid 1001 by @smashingtags in #636` |
 | `wiki/docs/install/changelog.md` | 1 x | `- stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
 | `wiki/docs/install/changelog.md` | 1 x | `- strip whitespace from the webhook secret before use by @smashingtags in #461` |
 | `wiki/docs/install/changelog.md` | 1 x | `- supertest integration tests for auth HTTP routes by @smashingtags in #300` |
