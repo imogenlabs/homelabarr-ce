@@ -13,8 +13,8 @@ Whether you just bought your first server or you've been running a homelab for y
 !!! info "What you need to get started"
     A Linux server with Docker installed. That's it. If you don't have Docker yet, the [Quick Start guide](guides/quick-start.md) covers it in the first step.
 
-!!! danger "Default credentials"
-    The default login is **admin / admin**. Change your password immediately after setup — the dashboard is open to anyone on your network until you do.
+!!! danger "Change the admin password"
+    `scripts/init-secrets.sh` prints a random password for `admin` (also saved in `secrets/default_admin_password`). Change it right after your first login.
 
 ![Dashboard](img/screenshots/dark-dashboard.png)
 
