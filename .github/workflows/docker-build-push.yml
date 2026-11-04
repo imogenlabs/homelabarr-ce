@@ -370,15 +370,34 @@ jobs:
     - name: Install cosign
       uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
 
+    # Retry the whole sign, not just the upload: on 2026-11-04 Rekor stored the
+    # entry, the reply was lost, and cosign's own retry got 409 "an equivalent
+    # entry already exists", so :latest shipped unsigned (HLCE-361). A fresh
+    # attempt gets a fresh certificate and cannot collide; a real failure still
+    # fails after the third try.
     - name: Sign frontend image
       env:
         COSIGN_EXPERIMENTAL: "1"
-      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}
+        REF: ghcr.io/${{ env.NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}@${{ steps.manifests.outputs.frontend-digest }}
+      run: |
+        for attempt in 1 2 3; do
+          cosign sign --yes "$REF" && exit 0
+          echo "::warning::cosign sign attempt $attempt failed"
+          sleep $((attempt * 15))
+        done
+        exit 1
 
     - name: Sign backend image
       env:
         COSIGN_EXPERIMENTAL: "1"
-      run: cosign sign --yes ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}
+        REF: ghcr.io/${{ env.NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}@${{ steps.manifests.outputs.backend-digest }}
+      run: |
+        for attempt in 1 2 3; do
+          cosign sign --yes "$REF" && exit 0
+          echo "::warning::cosign sign attempt $attempt failed"
+          sleep $((attempt * 15))
+        done
+        exit 1
 
     - name: Cosign verify freshly-pushed frontend
       # The identity regexp matches any workflow in this repo, so splitting the
