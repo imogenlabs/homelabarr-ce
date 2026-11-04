@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1644
+**Total brand references found:** 1619
 
 ---
 
@@ -289,7 +289,7 @@
 
 ## Root documentation
 
-**112 references**
+**87 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -345,52 +345,27 @@
 | `CHANGELOG.md` | 1 x | `- **react-hooks v7 architectural rules enforced as errors** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-` |
 | `CHANGELOG.md` | 1 x | `- **shadcn/ui modernization**: converted all 83 'React.forwardRef' wrappers across 16 'src/components/ui/*' components t` |
 | `CHANGELOG.md` | 1 x | `If you pulled a 'homelabarr-backend' image built between **26 July and 10 August 2026**, it crash-looped on startup and ` |
-| `CONTRIBUTING.md` | 1 x | `- **Discord**: [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x)` |
-| `CONTRIBUTING.md` | 1 x | `- **Discussions**: [GitHub Discussions](https://github.com/imogenlabs/homelabarr-ce/discussions)` |
-| `CONTRIBUTING.md` | 1 x | `- **Ko-fi**: [ko-fi.com/homelabarr](https://ko-fi.com/homelabarr)` |
-| `CONTRIBUTING.md` | 1 x | `- **Reddit**: [r/homelabarr](https://reddit.com/r/homelabarr)` |
-| `CONTRIBUTING.md` | 1 x | `- Open a [GitHub Issue](https://github.com/imogenlabs/homelabarr-ce/issues)` |
-| `CONTRIBUTING.md` | 1 x | `- Or drop it in [#help](https://discord.gg/Pc7mXX786x) on Discord` |
-| `CONTRIBUTING.md` | 1 x | `1. **Ideas start in Discord** — Drop suggestions in [#feature-requests](https://discord.gg/Pc7mXX786x) or open a [GitH` |
-| `CONTRIBUTING.md` | 1 x | `\| 'dev' \| Active development — proposed changes \| [ce-dev.homelabarr.com](https://ce-dev.homelabarr.com) \| May bre` |
-| `CONTRIBUTING.md` | 1 x | `\| 'main' \| Production — stable, released \| [demo.homelabarr.com](https://demo.homelabarr.com) \| Safe to run \|` |
-| `CONTRIBUTING.md` | 1 x | `\| 'staging' \| Release candidate — 1 week community soak \| [ce-staging.homelabarr.com](https://ce-staging.homelabarr` |
-| `README.md` | 1 x | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Do` |
-| `README.md` | 1 x | `        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Secur` |
-| `README.md` | 1 x | `        <img src="https://img.shields.io/badge/Reddit-r/homelabarr-FF4500?logo=reddit&logoColor=white" alt="Reddit">` |
-| `README.md` | 1 x | `        <img src="https://img.shields.io/badge/Website-homelabarr.com-FF8C1A?logo=firefox&logoColor=white" alt="HomelabA` |
-| `README.md` | 1 x | `        <img src="https://img.shields.io/github/v/release/imogenlabs/homelabarr-ce?label=Release&logo=github" alt="Relea` |
-| `README.md` | 1 x | `    <a href="https://demo.homelabarr.com">` |
-| `README.md` | 1 x | `    <a href="https://discord.gg/Pc7mXX786x">` |
+| `CONTRIBUTING.md` | 1 x | `- **Bugs:** open an [issue](https://github.com/imogenlabs/homelabarr-ce/issues) with your Docker version, OS, and the st` |
+| `CONTRIBUTING.md` | 1 x | `- **Ideas:** post in [#feature-requests](https://discord.gg/Pc7mXX786x) on Discord or start a [Discussion](https://githu` |
+| `CONTRIBUTING.md` | 1 x | `4. 'main' is deployed to [dev.homelabarr.com](https://dev.homelabarr.com) through the 'dev' branch. Releases are tagged ` |
+| `CONTRIBUTING.md` | 1 x | `[Discord](https://discord.gg/Pc7mXX786x) · [r/homelabarr](https://reddit.com/r/homelabarr) · [Discussions](https://git` |
+| `README.md` | 1 x | `    <a href="https://demo.homelabarr.com"><img src="https://img.shields.io/badge/Try_the_Demo-Live-brightgreen?logo=dock` |
+| `README.md` | 1 x | `    <a href="https://discord.gg/Pc7mXX786x"><img src="https://img.shields.io/discord/1334411584927301682?label=Discord&l` |
 | `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce">` |
-| `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml">` |
-| `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml">` |
-| `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce/blob/main/LICENSE">` |
-| `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest">` |
-| `README.md` | 1 x | `    <a href="https://homelabarr.com">` |
-| `README.md` | 1 x | `    <a href="https://wiki.homelabarr.com">` |
-| `README.md` | 1 x | `    <a href="https://www.reddit.com/r/homelabarr/">` |
-| `README.md` | 1 x | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-` |
-| `README.md` | 1 x | `4. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
-| `README.md` | 1 x | `> **For a permanent setup**, move 'CORS_ORIGIN' (and 'ALLOW_PLAIN_HTTP', if you use it) into a '.env' file. See the [con` |
-| `README.md` | 1 x | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
-| `README.md` | 1 x | `Don't want to install anything yet? [**Open the live demo →**](https://demo.homelabarr.com)` |
-| `README.md` | 1 x | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
-| `README.md` | 1 x | `Want to build from source? See the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
+| `README.md` | 1 x | `    <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest"><img src="https://img.shields.io/github/v/rele` |
+| `README.md` | 1 x | `    <a href="https://wiki.homelabarr.com"><img src="https://img.shields.io/badge/Docs-Wiki-blue?logo=readthedocs&logoCol` |
+| `README.md` | 1 x | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
+| `README.md` | 1 x | `  ghcr.io/imogenlabs/homelabarr-backend:latest` |
+| `README.md` | 1 x | `**Try it first:** the [live demo](https://demo.homelabarr.com) logs in with 'admin' / 'admin' and resets every 30 minute` |
+| `README.md` | 1 x | `- **Keep the settings:** put 'CORS_ORIGIN' (and 'ALLOW_PLAIN_HTTP') in a '.env' file next to 'homelabarr.yml'.` |
+| `README.md` | 1 x | `- **Update:** 'docker compose -f homelabarr.yml pull && docker compose -f homelabarr.yml up -d'` |
+| `README.md` | 1 x | `All settings: [configuration](https://wiki.homelabarr.com/guides/configuration/).` |
+| `README.md` | 1 x | `Details: [architecture](https://wiki.homelabarr.com/guides/architecture/).` |
+| `README.md` | 1 x | `More options and building from source: [install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
+| `README.md` | 1 x | `[Website](https://homelabarr.com) · [Docs](https://wiki.homelabarr.com) · [Discord](https://discord.gg/Pc7mXX786x) · ` |
 | `README.md` | 1 x | `cd /opt/homelabarr` |
 | `README.md` | 1 x | `docker compose -f homelabarr.yml up -d` |
 | `README.md` | 1 x | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
-| `README.md` | 1 x | `homelabarr-ce/` |
-| `README.md` | 1 x | `\| **Demo** \| [demo.homelabarr.com](https://demo.homelabarr.com) — log in with admin / admin \|` |
-| `README.md` | 1 x | `\| **Disclosure** \| [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/se` |
-| `README.md` | 1 x | `\| **Discord** \| [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) \|` |
-| `README.md` | 1 x | `\| **Docs** \| [wiki.homelabarr.com](https://wiki.homelabarr.com) \|` |
-| `README.md` | 1 x | `\| **Reddit** \| [r/homelabarr](https://www.reddit.com/r/homelabarr/) \|` |
-| `README.md` | 1 x | `\| **Security** \| [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/sec` |
-| `README.md` | 1 x | `\| **Website** \| [homelabarr.com](https://homelabarr.com) \|` |
-| `README.md` | 1 x | `\| 'CLI_BRIDGE_HOST_PATH' \| Optional \| Host path mounted for CLI integration; defaults to '/opt/homelabarr'. \|` |
-| `README.md` | 1 x | `├── homelabarr.yml    # Production Docker Compose` |
-| `README.md` | 1 x | `├── wiki/             # Source for wiki.homelabarr.com (MkDocs)` |
 | `SECURITY.md` | 1 x | `  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \` |
 | `SECURITY.md` | 1 x | `  ghcr.io/imogenlabs/homelabarr-backend:<tag>` |
 | `SECURITY.md` | 1 x | `  ghcr.io/imogenlabs/homelabarr-backend:<tag> \` |
@@ -501,173 +476,173 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `wiki/docs/install/changelog.md` | 1 x | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
 | `wiki/docs/install/changelog.md` | 1 x | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
+| `wiki/docs/install/changelog.md` | 1 x | `- /health/detail 200→500 on internal error by @smashingtags in #318` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Add OWNER-PUNCHLIST for project management by @smashingtags in #203` |
-| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2459: download with curl; not every runner has wget by @smashingtags in #566` |
-| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2619: add Movviz by @smashingtags in #574` |
-| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2718: record each published release in Jira by @smashingtags in #577` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Bug-lock regression — fix safeUrl / deployment.ts / cli-bridge appId by @smashingtags in #308` |
+| `wiki/docs/install/changelog.md` | 1 x | `- CHANGELOG for Wave-2 auth + MFA tests by @smashingtags in #298` |
+| `wiki/docs/install/changelog.md` | 1 x | `- CHANGELOG for audit anchor + deploy-catch cleanup by @smashingtags in #348` |
+| `wiki/docs/install/changelog.md` | 1 x | `- E2E round 2 — failure/permission/account journeys + harden (+ mount-wizard stub, bug fix) by @smashingtags in #329` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Fix first-install bugs (#620–#624) and clear lint warnings by @smashingtags in #626` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-182: fix cosign verify identity (org migration smashingtags->imogenlabs) by @smashingtags in #229` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-182: revert cosign-installer to v3 (fix red build from #222) by @smashingtags in #228` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-183: fix vitest e2e exclusion + drop deprecated tsconfig baseUrl by @smashingtags in #230` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-184: manualChunks function form for Vite 8/rolldown (unblocks #227) by @smashingtags in #231` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-185: revert to GitHub-hosted (public repo = free minutes; self-hosted blocked for public) by @smashingtags in #23` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-185: run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-186: fix backend crash loop (path-to-regexp override vs Express 5) by @smashingtags in #234` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-187: fix DAST Baseline duplicate-artifact 409 by @smashingtags in #236` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-188: TruffleHog (CI) + Betterleaks (pre-commit) — drop license-blocked gitleaks-action by @smashingtags in #237` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-189: fix compose validation step (filter + --no-interpolate) + tubesync volume by @smashingtags in #239` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-189: fix compose-security-validation install (mkdir -p ~/.local/bin) by @smashingtags in #238` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-189: validate compose templates as YAML+services (runner-stable) by @smashingtags in #240` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-190: scope docker vuln scan to own images + fix multi-run SARIF by @smashingtags in #241` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-191: rewrite E2E suite to run the real product locally by @smashingtags in #242` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-192: stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-194: migrate GHCR namespace + deploy wiring smashingtags → imogenlabs by @smashingtags in #285` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-195: build-push workflow manual-dispatch only (minutes out is permanent) by @smashingtags in #287` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-197: add CodeQL SAST workflow by @smashingtags in #288` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-199: React 18 → 19 upgrade (core bump + forwardRef modernization) by @smashingtags in #273` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-199: documentation sweep for React 19 upgrade by @smashingtags in #280` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-199: fix broken wiki links (strict mkdocs build passes) by @smashingtags in #282` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-199: pages.yml → ubuntu-latest (unblock wiki publish) by @smashingtags in #289` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-202: nodemailer 9 regression test + React 19 changelog by @smashingtags in #278` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-202: roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-202: roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-203: revert pages.yml to self-hosted (gitrunners fixed) by @smashingtags in #291` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-204: pages.yml on ubuntu-latest (public repo cannot use self-hosted runners) by @smashingtags in #293` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-209: CHANGELOG for Wave-2 auth + MFA tests (HLCE-212, HLCE-214) by @smashingtags in #298` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-210: test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-211: Unit/coverage CI gate on ubuntu-latest with ratcheting floor by @smashingtags in #295` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-212: Unit tests for auth core (JWT, bcrypt, API keys, secrets) by @smashingtags in #296` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-214: Unit tests for MFA (TOTP + backup codes) by @smashingtags in #297` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-215: tests for rate-limit & account lockout by @smashingtags in #299` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-216: supertest integration tests for auth HTTP routes by @smashingtags in #300` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-217: audit hash-chain + secure-logging tests (audit/log/alert) by @smashingtags in #302` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-219: docker-manager tests (mocked dockerode) by @smashingtags in #304` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-220: deploy/SSE + startup-guard + network tests by @smashingtags in #305` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-221: persistence-integrity tests (db / stars / activity / loggers) by @smashingtags in #301` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-223: React contexts & hooks tests (AuthContext 100%) by @smashingtags in #306` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-225: high-value component tests (RTL) by @smashingtags in #307` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-226: Playwright E2E seeded target + critical journeys (and fix deploy 404) by @smashingtags in #316` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-227: Security-invariant regression suite (permanent guardrails) by @smashingtags in #309` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-228: Bug-lock regression — fix safeUrl / deployment.ts / cli-bridge appId by @smashingtags in #308` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-229: integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-254: enforce react-hooks v7 rules as errors by @smashingtags in #315` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-255: make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-256: fix SQLCipher encryption-at-rest init (key before WAL) by @smashingtags in #303` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-257: frame audit row_hash with JSON to close boundary-ambiguous tamper by @smashingtags in #313` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-258: probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-259: fix SSE broadcast skipping a client after a failing one by @smashingtags in #311` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-260: README — E2E lanes + app count 117 by @smashingtags in #317` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-262: StrykerJS mutation-testing harness + scoped baseline by @smashingtags in #325` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-263: mutation pass on high-risk security modules (≥80% score) by @smashingtags in #332` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-264: nightly mutation-testing CI + per-module score ratchet by @smashingtags in #333` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-265: /health/detail 200→500 on internal error by @smashingtags in #318` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-266: validation path check case-insensitive on field key by @smashingtags in #319` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-267: validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-268: unify password minimum length to 12 by @smashingtags in #320` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-269: detect audit-log tail truncation (chain tip) by @smashingtags in #322` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-271: integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-272: frontend security-component tests + lib/api gaps (+ password-min fix) by @smashingtags in #327` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-273: deploy-execution + backend-branch coverage (+ dead-code removal) by @smashingtags in #328` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-274: E2E round 2 — failure/permission/account journeys + harden (+ mount-wizard stub, bug fix) by @smashingtags` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-275: make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-276: client port-conflict validation for text-typed catalog port fields by @smashingtags in #335` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-277: mutation pass on the dangerous-op routes (+ final coverage ratchet) by @smashingtags in #337` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-278: cover the remaining enhanced-mount route handlers by @smashingtags in #336` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-279: ratchet coverage floor + consolidated remediation CHANGELOG by @smashingtags in #344` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-280: frontend security fixes (rclone XSS, credential log, port validation) by @smashingtags in #338` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-281: cli-bridge — stop process.env pollution + deployStandard hardening by @smashingtags in #340` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-282: audit/log/alert/db hardening (redaction drift, SQLCipher, alert) by @smashingtags in #339` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-283: mandatory CSRF token + route hardening (health path, dockerode stats) by @smashingtags in #341` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-284: track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-285: harden auth routes — cli-mint jti-less+ttl, constant-time validatePassword, MFA invariant pins by @smashin` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-286: CHANGELOG for audit anchor + deploy-catch cleanup by @smashingtags in #348` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-287: document AUDIT_ANCHOR_KEY + out-of-band audit anchor by @smashingtags in #349` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-287: out-of-band HMAC-signed audit chain-tip anchor by @smashingtags in #346` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-288: deploy.js outer catch is unreachable — trim dead branches + pin parser boundary by @smashingtags in #345` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-290: fix undici patch — pack-and-replace npm's bundled copy by @smashingtags in #367` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-290: patch npm-bundled undici (CVE-2026-12151) in backend image by @smashingtags in #365` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-290: restore Trivy default-branch reporting by @smashingtags in #353` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-291: make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-291: resolve open code-scanning alerts by @smashingtags in #354` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-293: restore dual-registry auto-publish (Docker Hub regression fix) by @smashingtags in #368` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-295: smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-296: bump backend base + weekly no-cache rebuild (fix stale docker-cli CVE) by @smashingtags in #370` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-300: ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-302: resolve 4 open security alerts by @smashingtags in #418` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-304: remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-305: consolidate four lock bumps and pin node to major 24 by @smashingtags in #437` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-306: guard the native build and give the E2E lane real diagnostics by @smashingtags in #446` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-307: bucket IPv6 login attempts by subnet instead of exact address by @smashingtags in #477` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-308: drop the unused better-sqlite3 dependency by @smashingtags in #454` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-309: release v2.3.0 by @smashingtags in #456` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-312: report the crash before trying to record it by @smashingtags in #479` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-313: alert externally when the demo or dev goes down by @smashingtags in #459` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-313: fall back across webhooks so one dead URL cannot mute alerting by @smashingtags in #462` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-313: strip whitespace from the webhook secret before use by @smashingtags in #461` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-313: surface why a Discord notification failed by @smashingtags in #460` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-315: let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-316: make the changelog generator actually categorise this repo's PRs by @smashingtags in #486` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-316: stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-317: move dev.homelabarr.com to the CE dev app by @smashingtags in #463` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-318: alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-318: check the webhook up front so a missing one is not silent by @smashingtags in #467` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-318: deliver hypervisor alerts by email so they reach someone by @smashingtags in #482` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-320: reset the public demo on a timer so a visitor cannot break it for good by @smashingtags in #471` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-321: add a demo mode that refuses account changes by @smashingtags in #472` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-322: build each architecture on its own runner instead of emulating arm64 by @smashingtags in #473` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-323: create the major-update label instead of assuming it exists by @smashingtags in #481` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-323: merge routine dependency updates without a human touching them by @smashingtags in #474` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-328: restore container log reads through the socket proxy by @smashingtags in #505` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-330: bring docker-build-push onto the artifact actions the rest of the repo uses by @smashingtags in #508` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-330: take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-330: take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-332: cover the audit anchor and get the mutation lane green by @smashingtags in #511` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-333: set the version to 2.5.0 by @smashingtags in #512` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-334: never let a release build reuse a cached package layer by @smashingtags in #514` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-334: set the version to 2.5.1 by @smashingtags in #515` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-338: raise the qs override to 6.16.0 by @smashingtags in #545` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-339: move vitest, coverage-v8 and ui to 5 together by @smashingtags in #547` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-342: measure demo drift against the latest release, not main by @smashingtags in #544` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-343: README and SECURITY say what the code does by @smashingtags in #552` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-344: make the README quick start actually start HomelabARR CE by @smashingtags in #551` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-345: send host alerts through the estate's Resend sender by @smashingtags in #575` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-346: one demo — point every link at demo.homelabarr.com by @smashingtags in #546` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-347: rate-limit each client, not the proxy in front of the backend by @smashingtags in #549` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-348: an unanswered probe is unchecked, not failed by @smashingtags in #548` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-349: commit the white-label audit only when a brand mention changes by @smashingtags in #550` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-350: hold password-reset tokens in a Map by @smashingtags in #553` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-351: make the white-label audit identical on Mac and Linux by @smashingtags in #554` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-353: v2.5.2 by @smashingtags in #555` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-354: fix the 22 alerts from the first Python and Actions scans by @smashingtags in #558` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-354: scan Python and the Actions workflows with CodeQL again by @smashingtags in #557` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-356: make the icon smoke check say what it saw, and keep the report by @smashingtags in #576` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-359 drop the stale admin/admin warning from the wiki home page by @smashingtags in #629` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-360 clear the dev-dependency audit findings by @smashingtags in #630` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-361 retry image signing so a lost Rekor reply cannot ship an unsigned image by @smashingtags in #631` |
-| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-362 finish the v2.6.0 changelog and fill in v2.4.0 to v2.5.2 by @smashingtags in #632` |
-| `wiki/docs/install/changelog.md` | 1 x | `- KEEN-62 pin keen 1.9.0 for release sync by @smashingtags in #628` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Playwright E2E seeded target + critical journeys (and fix deploy 404) by @smashingtags in #316` |
+| `wiki/docs/install/changelog.md` | 1 x | `- README and SECURITY say what the code does by @smashingtags in #552` |
+| `wiki/docs/install/changelog.md` | 1 x | `- README — E2E lanes + app count 117 by @smashingtags in #317` |
+| `wiki/docs/install/changelog.md` | 1 x | `- React 18 → 19 upgrade (core bump + forwardRef modernization) by @smashingtags in #273` |
+| `wiki/docs/install/changelog.md` | 1 x | `- React contexts & hooks tests (AuthContext 100%) by @smashingtags in #306` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: /auth/me reload fix, E2E on ce-dev, Dependabot unblock by @smashingtags in #248` |
-| `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: HLCE-191 E2E + INFRA-64/70 cleanup by @smashingtags in #243` |
-| `wiki/docs/install/changelog.md` | 1 x | `- SITE-239: give wiki.homelabarr.com a robots.txt by @smashingtags in #523` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: E2E and cleanup by @smashingtags in #243` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Security-invariant regression suite (permanent guardrails) by @smashingtags in #309` |
+| `wiki/docs/install/changelog.md` | 1 x | `- StrykerJS mutation-testing harness + scoped baseline by @smashingtags in #325` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Sync docs to imogenlabs org + current app count by @smashingtags in #495` |
+| `wiki/docs/install/changelog.md` | 1 x | `- TruffleHog (CI) + Betterleaks (pre-commit) — drop license-blocked gitleaks-action by @smashingtags in #237` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Unit tests for MFA (TOTP + backup codes) by @smashingtags in #297` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Unit tests for auth core (JWT, bcrypt, API keys, secrets) by @smashingtags in #296` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Unit/coverage CI gate on ubuntu-latest with ratcheting floor by @smashingtags in #295` |
+| `wiki/docs/install/changelog.md` | 1 x | `- add CodeQL SAST workflow by @smashingtags in #288` |
+| `wiki/docs/install/changelog.md` | 1 x | `- add Movviz by @smashingtags in #574` |
 | `wiki/docs/install/changelog.md` | 1 x | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
+| `wiki/docs/install/changelog.md` | 1 x | `- add a demo mode that refuses account changes by @smashingtags in #472` |
+| `wiki/docs/install/changelog.md` | 1 x | `- alert externally when the demo or dev goes down by @smashingtags in #459` |
+| `wiki/docs/install/changelog.md` | 1 x | `- alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
+| `wiki/docs/install/changelog.md` | 1 x | `- an unanswered probe is unchecked, not failed by @smashingtags in #548` |
+| `wiki/docs/install/changelog.md` | 1 x | `- audit hash-chain + secure-logging tests (audit/log/alert) by @smashingtags in #302` |
+| `wiki/docs/install/changelog.md` | 1 x | `- audit/log/alert/db hardening (redaction drift, SQLCipher, alert) by @smashingtags in #339` |
 | `wiki/docs/install/changelog.md` | 1 x | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
+| `wiki/docs/install/changelog.md` | 1 x | `- bring docker-build-push onto the artifact actions the rest of the repo uses by @smashingtags in #508` |
+| `wiki/docs/install/changelog.md` | 1 x | `- bucket IPv6 login attempts by subnet instead of exact address by @smashingtags in #477` |
+| `wiki/docs/install/changelog.md` | 1 x | `- build each architecture on its own runner instead of emulating arm64 by @smashingtags in #473` |
 | `wiki/docs/install/changelog.md` | 1 x | `- build keen v1.2.2 for Jira release sync by @smashingtags in #606` |
 | `wiki/docs/install/changelog.md` | 1 x | `- build keen v1.3.0 for Jira release sync by @smashingtags in #607` |
+| `wiki/docs/install/changelog.md` | 1 x | `- build-push workflow manual-dispatch only (minutes out is permanent) by @smashingtags in #287` |
 | `wiki/docs/install/changelog.md` | 1 x | `- bump Playwright workers from 1 to 4 by @smashingtags in #157` |
+| `wiki/docs/install/changelog.md` | 1 x | `- bump backend base + weekly no-cache rebuild (fix stale docker-cli CVE) by @smashingtags in #370` |
+| `wiki/docs/install/changelog.md` | 1 x | `- check the webhook up front so a missing one is not silent by @smashingtags in #467` |
+| `wiki/docs/install/changelog.md` | 1 x | `- clear the dev-dependency audit findings by @smashingtags in #630` |
+| `wiki/docs/install/changelog.md` | 1 x | `- cli-bridge — stop process.env pollution + deployStandard hardening by @smashingtags in #340` |
+| `wiki/docs/install/changelog.md` | 1 x | `- client port-conflict validation for text-typed catalog port fields by @smashingtags in #335` |
+| `wiki/docs/install/changelog.md` | 1 x | `- commit the white-label audit only when a brand mention changes by @smashingtags in #550` |
+| `wiki/docs/install/changelog.md` | 1 x | `- consolidate four lock bumps and pin node to major 24 by @smashingtags in #437` |
+| `wiki/docs/install/changelog.md` | 1 x | `- cover the audit anchor and get the mutation lane green by @smashingtags in #511` |
+| `wiki/docs/install/changelog.md` | 1 x | `- cover the remaining enhanced-mount route handlers by @smashingtags in #336` |
+| `wiki/docs/install/changelog.md` | 1 x | `- create the major-update label instead of assuming it exists by @smashingtags in #481` |
+| `wiki/docs/install/changelog.md` | 1 x | `- deliver hypervisor alerts by email so they reach someone by @smashingtags in #482` |
+| `wiki/docs/install/changelog.md` | 1 x | `- deploy-execution + backend-branch coverage (+ dead-code removal) by @smashingtags in #328` |
+| `wiki/docs/install/changelog.md` | 1 x | `- deploy.js outer catch is unreachable — trim dead branches + pin parser boundary by @smashingtags in #345` |
+| `wiki/docs/install/changelog.md` | 1 x | `- deploy/SSE + startup-guard + network tests by @smashingtags in #305` |
+| `wiki/docs/install/changelog.md` | 1 x | `- detect audit-log tail truncation (chain tip) by @smashingtags in #322` |
+| `wiki/docs/install/changelog.md` | 1 x | `- docker-manager tests (mocked dockerode) by @smashingtags in #304` |
+| `wiki/docs/install/changelog.md` | 1 x | `- document AUDIT_ANCHOR_KEY + out-of-band audit anchor by @smashingtags in #349` |
+| `wiki/docs/install/changelog.md` | 1 x | `- documentation sweep for React 19 upgrade by @smashingtags in #280` |
+| `wiki/docs/install/changelog.md` | 1 x | `- download with curl; not every runner has wget by @smashingtags in #566` |
+| `wiki/docs/install/changelog.md` | 1 x | `- drop the stale admin/admin warning from the wiki home page by @smashingtags in #629` |
+| `wiki/docs/install/changelog.md` | 1 x | `- drop the unused better-sqlite3 dependency by @smashingtags in #454` |
+| `wiki/docs/install/changelog.md` | 1 x | `- enforce react-hooks v7 rules as errors by @smashingtags in #315` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fall back across webhooks so one dead URL cannot mute alerting by @smashingtags in #462` |
+| `wiki/docs/install/changelog.md` | 1 x | `- finish the v2.6.0 changelog and fill in v2.4.0 to v2.5.2 by @smashingtags in #632` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix DAST Baseline duplicate-artifact 409 by @smashingtags in #236` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix SQLCipher encryption-at-rest init (key before WAL) by @smashingtags in #303` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix SSE broadcast skipping a client after a failing one by @smashingtags in #311` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix backend crash loop (path-to-regexp override vs Express 5) by @smashingtags in #234` |
 | `wiki/docs/install/changelog.md` | 1 x | `- fix broken README mascot image by @smashingtags in #163` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix broken wiki links (strict mkdocs build passes) by @smashingtags in #282` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix compose validation step (filter + --no-interpolate) + tubesync volume by @smashingtags in #239` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix compose-security-validation install (mkdir -p ~/.local/bin) by @smashingtags in #238` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix cosign verify identity (org migration smashingtags->imogenlabs) by @smashingtags in #229` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix the 22 alerts from the first Python and Actions scans by @smashingtags in #558` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix undici patch — pack-and-replace npm's bundled copy by @smashingtags in #367` |
+| `wiki/docs/install/changelog.md` | 1 x | `- fix vitest e2e exclusion + drop deprecated tsconfig baseUrl by @smashingtags in #230` |
 | `wiki/docs/install/changelog.md` | 1 x | `- flatten nav + move Discord/Discussions to header icons by @smashingtags in #160` |
+| `wiki/docs/install/changelog.md` | 1 x | `- frame audit row_hash with JSON to close boundary-ambiguous tamper by @smashingtags in #313` |
+| `wiki/docs/install/changelog.md` | 1 x | `- frontend security fixes (rclone XSS, credential log, port validation) by @smashingtags in #338` |
+| `wiki/docs/install/changelog.md` | 1 x | `- frontend security-component tests + lib/api gaps (+ password-min fix) by @smashingtags in #327` |
+| `wiki/docs/install/changelog.md` | 1 x | `- give wiki.homelabarr.com a robots.txt by @smashingtags in #523` |
+| `wiki/docs/install/changelog.md` | 1 x | `- guard the native build and give the E2E lane real diagnostics by @smashingtags in #446` |
+| `wiki/docs/install/changelog.md` | 1 x | `- harden auth routes — cli-mint jti-less+ttl, constant-time validatePassword, MFA invariant pins by @smashingtags in #` |
 | `wiki/docs/install/changelog.md` | 1 x | `- harden users.json loader + DialogDescription a11y by @smashingtags in #165` |
+| `wiki/docs/install/changelog.md` | 1 x | `- high-value component tests (RTL) by @smashingtags in #307` |
+| `wiki/docs/install/changelog.md` | 1 x | `- hold password-reset tokens in a Map by @smashingtags in #553` |
+| `wiki/docs/install/changelog.md` | 1 x | `- ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
+| `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
+| `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 1 x | `- let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make the README quick start actually start HomelabARR CE by @smashingtags in #551` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make the changelog generator actually categorise this repo's PRs by @smashingtags in #486` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make the icon smoke check say what it saw, and keep the report by @smashingtags in #576` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make the white-label audit identical on Mac and Linux by @smashingtags in #554` |
+| `wiki/docs/install/changelog.md` | 1 x | `- mandatory CSRF token + route hardening (health path, dockerode stats) by @smashingtags in #341` |
+| `wiki/docs/install/changelog.md` | 1 x | `- manualChunks function form for Vite 8/rolldown (unblocks #227) by @smashingtags in #231` |
+| `wiki/docs/install/changelog.md` | 1 x | `- measure demo drift against the latest release, not main by @smashingtags in #544` |
+| `wiki/docs/install/changelog.md` | 1 x | `- merge routine dependency updates without a human touching them by @smashingtags in #474` |
+| `wiki/docs/install/changelog.md` | 1 x | `- migrate GHCR namespace + deploy wiring smashingtags → imogenlabs by @smashingtags in #285` |
+| `wiki/docs/install/changelog.md` | 1 x | `- move dev.homelabarr.com to the CE dev app by @smashingtags in #463` |
+| `wiki/docs/install/changelog.md` | 1 x | `- move vitest, coverage-v8 and ui to 5 together by @smashingtags in #547` |
+| `wiki/docs/install/changelog.md` | 1 x | `- mutation pass on high-risk security modules (≥80% score) by @smashingtags in #332` |
+| `wiki/docs/install/changelog.md` | 1 x | `- mutation pass on the dangerous-op routes (+ final coverage ratchet) by @smashingtags in #337` |
+| `wiki/docs/install/changelog.md` | 1 x | `- never let a release build reuse a cached package layer by @smashingtags in #514` |
+| `wiki/docs/install/changelog.md` | 1 x | `- nightly mutation-testing CI + per-module score ratchet by @smashingtags in #333` |
+| `wiki/docs/install/changelog.md` | 1 x | `- nodemailer 9 regression test + React 19 changelog by @smashingtags in #278` |
+| `wiki/docs/install/changelog.md` | 1 x | `- one demo — point every link at demo.homelabarr.com by @smashingtags in #546` |
 | `wiki/docs/install/changelog.md` | 1 x | `- optimize app icons (PNG → WebP, 5.9MB → 1.2MB) by @smashingtags in #154` |
+| `wiki/docs/install/changelog.md` | 1 x | `- out-of-band HMAC-signed audit chain-tip anchor by @smashingtags in #346` |
+| `wiki/docs/install/changelog.md` | 1 x | `- pages.yml on ubuntu-latest (public repo cannot use self-hosted runners) by @smashingtags in #293` |
+| `wiki/docs/install/changelog.md` | 1 x | `- pages.yml → ubuntu-latest (unblock wiki publish) by @smashingtags in #289` |
+| `wiki/docs/install/changelog.md` | 1 x | `- patch npm-bundled undici (CVE-2026-12151) in backend image by @smashingtags in #365` |
+| `wiki/docs/install/changelog.md` | 1 x | `- persistence-integrity tests (db / stars / activity / loggers) by @smashingtags in #301` |
+| `wiki/docs/install/changelog.md` | 1 x | `- pin keen 1.9.0 for release sync by @smashingtags in #628` |
 | `wiki/docs/install/changelog.md` | 1 x | `- pin the current keen release for release sync by @smashingtags in #625` |
+| `wiki/docs/install/changelog.md` | 1 x | `- probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
+| `wiki/docs/install/changelog.md` | 1 x | `- raise the qs override to 6.16.0 by @smashingtags in #545` |
+| `wiki/docs/install/changelog.md` | 1 x | `- ratchet coverage floor + consolidated remediation CHANGELOG by @smashingtags in #344` |
+| `wiki/docs/install/changelog.md` | 1 x | `- rate-limit each client, not the proxy in front of the backend by @smashingtags in #549` |
+| `wiki/docs/install/changelog.md` | 1 x | `- record each published release in Jira by @smashingtags in #577` |
 | `wiki/docs/install/changelog.md` | 1 x | `- record releases with keen v1.7.0 by @smashingtags in #609` |
 | `wiki/docs/install/changelog.md` | 1 x | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.3.0 by @smashingtags in #456` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
+| `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale tracked files by @smashingtags in #150` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove unused react-query, bump shadcn (kills all npm deprecation warnings) by @smashingtags in #158` |
+| `wiki/docs/install/changelog.md` | 1 x | `- report the crash before trying to record it by @smashingtags in #479` |
+| `wiki/docs/install/changelog.md` | 1 x | `- reset the public demo on a timer so a visitor cannot break it for good by @smashingtags in #471` |
+| `wiki/docs/install/changelog.md` | 1 x | `- resolve 4 open security alerts by @smashingtags in #418` |
+| `wiki/docs/install/changelog.md` | 1 x | `- resolve open code-scanning alerts by @smashingtags in #354` |
+| `wiki/docs/install/changelog.md` | 1 x | `- restore Trivy default-branch reporting by @smashingtags in #353` |
+| `wiki/docs/install/changelog.md` | 1 x | `- restore container log reads through the socket proxy by @smashingtags in #505` |
+| `wiki/docs/install/changelog.md` | 1 x | `- restore dual-registry auto-publish (Docker Hub regression fix) by @smashingtags in #368` |
+| `wiki/docs/install/changelog.md` | 1 x | `- retry image signing so a lost Rekor reply cannot ship an unsigned image by @smashingtags in #631` |
+| `wiki/docs/install/changelog.md` | 1 x | `- revert cosign-installer to v3 (fix red build from #222) by @smashingtags in #228` |
+| `wiki/docs/install/changelog.md` | 1 x | `- revert pages.yml to self-hosted (gitrunners fixed) by @smashingtags in #291` |
+| `wiki/docs/install/changelog.md` | 1 x | `- revert to GitHub-hosted (public repo = free minutes; self-hosted blocked for public) by @smashingtags in #233` |
+| `wiki/docs/install/changelog.md` | 1 x | `- rewrite E2E suite to run the real product locally by @smashingtags in #242` |
+| `wiki/docs/install/changelog.md` | 1 x | `- roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
+| `wiki/docs/install/changelog.md` | 1 x | `- roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
+| `wiki/docs/install/changelog.md` | 1 x | `- run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
+| `wiki/docs/install/changelog.md` | 1 x | `- scan Python and the Actions workflows with CodeQL again by @smashingtags in #557` |
+| `wiki/docs/install/changelog.md` | 1 x | `- scope docker vuln scan to own images + fix multi-run SARIF by @smashingtags in #241` |
+| `wiki/docs/install/changelog.md` | 1 x | `- send host alerts through the estate's Resend sender by @smashingtags in #575` |
+| `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.0 by @smashingtags in #512` |
+| `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.1 by @smashingtags in #515` |
+| `wiki/docs/install/changelog.md` | 1 x | `- smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
+| `wiki/docs/install/changelog.md` | 1 x | `- stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
+| `wiki/docs/install/changelog.md` | 1 x | `- stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
+| `wiki/docs/install/changelog.md` | 1 x | `- strip whitespace from the webhook secret before use by @smashingtags in #461` |
+| `wiki/docs/install/changelog.md` | 1 x | `- supertest integration tests for auth HTTP routes by @smashingtags in #300` |
+| `wiki/docs/install/changelog.md` | 1 x | `- surface why a Discord notification failed by @smashingtags in #460` |
 | `wiki/docs/install/changelog.md` | 1 x | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
+| `wiki/docs/install/changelog.md` | 1 x | `- take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509` |
+| `wiki/docs/install/changelog.md` | 1 x | `- take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510` |
+| `wiki/docs/install/changelog.md` | 1 x | `- test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
+| `wiki/docs/install/changelog.md` | 1 x | `- tests for rate-limit & account lockout by @smashingtags in #299` |
+| `wiki/docs/install/changelog.md` | 1 x | `- track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
+| `wiki/docs/install/changelog.md` | 1 x | `- unify password minimum length to 12 by @smashingtags in #320` |
+| `wiki/docs/install/changelog.md` | 1 x | `- v2.5.2 by @smashingtags in #555` |
 | `wiki/docs/install/changelog.md` | 1 x | `- v2.6.0 by @smashingtags in #627` |
+| `wiki/docs/install/changelog.md` | 1 x | `- validate compose templates as YAML+services (runner-stable) by @smashingtags in #240` |
+| `wiki/docs/install/changelog.md` | 1 x | `- validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
+| `wiki/docs/install/changelog.md` | 1 x | `- validation path check case-insensitive on field key by @smashingtags in #319` |
 | `wiki/docs/install/changelog.md` | 1 x | `- watch every filesystem that holds guests in the host alert by @smashingtags in #608` |
 | `wiki/docs/install/changelog.md` | 1 x | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
 | `wiki/docs/robots.txt` | 1 x | `# wiki.homelabarr.com — documentation for HomelabARR Community Edition.` |
