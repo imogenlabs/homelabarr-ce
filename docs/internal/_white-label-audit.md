@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1641
+**Total brand references found:** 1644
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**26 references**
+**28 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -60,11 +60,13 @@
 | `server/progress-stream.test.js` | 1 x | `    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://demo.homelabarr.com');` |
 | `server/progress-stream.test.js` | 1 x | `    mgr.addClient('ok', ok, fakeReq({ origin: 'https://demo.homelabarr.com' }));` |
 | `server/regression/plain-http-switch.regression.test.js` | 1 x | `    const compose = fs.readFileSync(path.join(root, 'homelabarr.yml'), 'utf8');` |
+| `server/regression/root-start.regression.test.js` | 1 x | `    const mounted = [...read('homelabarr.yml').matchAll(/^\s+- homelabarr-[a-z]+:(\/app\/[^\s:]+)/gm)]` |
+| `server/regression/root-start.regression.test.js` | 1 x | `  it('fixes ownership of every data volume homelabarr.yml mounts into the backend', () => {` |
+| `server/regression/root-start.regression.test.js` | 1 x | `// else runs, and the folders it fixes are the ones homelabarr.yml mounts.` |
 | `server/routes/auth-admin.js` | 1 x | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(nameArg).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(res.body.containerName).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/deploy.js` | 1 x | `          const containerName = 'homelabarr-${appId}-${Date.now()}';` |
-| `server/start.sh` | 1 x | `# Fix ownership if running as homelabarr but files are root-owned (bind mount)` |
 
 ## Docker (`Dockerfile*`, `homelabarr.yml`)
 
@@ -287,7 +289,7 @@
 
 ## Root documentation
 
-**111 references**
+**112 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -333,6 +335,7 @@
 | `CHANGELOG.md` | 1 x | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
 | `CHANGELOG.md` | 1 x | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
 | `CHANGELOG.md` | 1 x | `- **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki ins` |
+| `CHANGELOG.md` | 1 x | `- **The log names the Docker endpoint it really uses** ([HLCE-364](https://mjashley.atlassian.net/browse/HLCE-364)): wit` |
 | `CHANGELOG.md` | 1 x | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
 | `CHANGELOG.md` | 1 x | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `CHANGELOG.md` | 1 x | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
