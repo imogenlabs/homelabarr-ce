@@ -15,6 +15,22 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.1] - 2026-11-04
+
+### 🐛 Bug Fixes
+
+- HLCE-364 log the Docker endpoint the backend really uses by @smashingtags in #635
+- HLCE-363 start on root-owned appdata by taking ownership and dropping to uid 1001 by @smashingtags in #636
+
+### 📚 Documentation
+
+- changelog for v2.6.0 by @github-actions[bot] in #633
+- HLCE-362 list Movviz in the v2.6.0 changelog by @smashingtags in #634
+
+### 🔧 Maintenance
+
+- HLCE-364 release v2.6.1 by @smashingtags in #637
+
 ## [v2.6.0] - 2026-11-04
 
 ### 🐛 Bug Fixes
