@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1640
+**Total brand references found:** 1641
 
 ---
 
@@ -287,7 +287,7 @@
 
 ## Root documentation
 
-**110 references**
+**111 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -316,6 +316,7 @@
 | `CHANGELOG.md` | 1 x | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
 | `CHANGELOG.md` | 1 x | `- **Login works over plain HTTP** ([#622](https://github.com/imogenlabs/homelabarr-ce/issues/622)): the README install o` |
 | `CHANGELOG.md` | 1 x | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
+| `CHANGELOG.md` | 1 x | `- **Movviz** in the catalog under Media Management ([#573](https://github.com/imogenlabs/homelabarr-ce/issues/573)).` |
 | `CHANGELOG.md` | 1 x | `- **Mutation pass on the high-risk security core** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE-261), HLC` |
 | `CHANGELOG.md` | 1 x | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
 | `CHANGELOG.md` | 1 x | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
