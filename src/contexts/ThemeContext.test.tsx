@@ -8,7 +8,8 @@ vi.mock("../lib/theme", () => ({
   setTheme: vi.fn(),
 }));
 
-import { ThemeProvider, useTheme } from "./ThemeContext";
+import { useTheme } from "./ThemeContext";
+import { ThemeProvider } from "./ThemeProvider";
 import { getTheme, setTheme } from "../lib/theme";
 
 const mockGetTheme = vi.mocked(getTheme);

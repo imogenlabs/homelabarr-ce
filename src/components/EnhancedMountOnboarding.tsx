@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -60,50 +60,42 @@ export const EnhancedMountOnboarding: React.FC<Props> = ({ isOpen, onClose, onPr
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [userAcknowledged, setUserAcknowledged] = useState(false);
 
-  const checkPrerequisites = async () => {
-    // Check for Traefik container
+  const checkPrerequisites = useCallback(async () => {
     try {
       const response = await fetch('/api/containers');
       const data = await response.json();
-      
+
       if (data.success && data.containers) {
-        const updatedPrereqs = [...prerequisites];
-        
-        // Check for Traefik
-        const traefikFound = data.containers.some((container: DockerContainerSummary) =>
-          container.Names.some((name: string) => name.toLowerCase().includes('traefik'))
+        const running = (needle: string) => data.containers.some((container: DockerContainerSummary) =>
+          container.Names.some((name: string) => name.toLowerCase().includes(needle))
         );
-        
-        const traefikIndex = updatedPrereqs.findIndex(p => p.name.includes('Traefik'));
-        if (traefikIndex !== -1) {
-          updatedPrereqs[traefikIndex].status = traefikFound ? 'passed' : 'failed';
-        }
-        
-        // Check for Authelia
-        const autheliaFound = data.containers.some((container: DockerContainerSummary) =>
-          container.Names.some((name: string) => name.toLowerCase().includes('authelia'))
-        );
-        
-        const autheliaIndex = updatedPrereqs.findIndex(p => p.name.includes('Authelia'));
-        if (autheliaIndex !== -1) {
-          updatedPrereqs[autheliaIndex].status = autheliaFound ? 'passed' : 'failed';
-        }
-        
-        setPrerequisites(updatedPrereqs);
+        const traefikFound = running('traefik');
+        const autheliaFound = running('authelia');
+
+        // Only the first Traefik / Authelia entry is updated, as before.
+        setPrerequisites(prev => {
+          const traefikIndex = prev.findIndex(p => p.name.includes('Traefik'));
+          const autheliaIndex = prev.findIndex(p => p.name.includes('Authelia'));
+          return prev.map((p, i) => {
+            if (i === traefikIndex) return { ...p, status: traefikFound ? 'passed' : 'failed' };
+            if (i === autheliaIndex) return { ...p, status: autheliaFound ? 'passed' : 'failed' };
+            return p;
+          });
+        });
       }
     } catch (error) {
       console.error('Failed to check prerequisites:', error);
       // Set all to unknown on error
       setPrerequisites(prev => prev.map(p => ({ ...p, status: 'unknown' })));
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- async prerequisite check; setState runs after await, not synchronously
       checkPrerequisites();
     }
-  }, [isOpen]);
+  }, [isOpen, checkPrerequisites]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

@@ -66,93 +66,96 @@ export function DeploymentProgressModal({
   const eventSourceRef = useRef<EventSource | null>(null);
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
-  const generateClientId = () => {
-    return `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  };
-
-  const subscribeToDeployment = async (cId: string) => {
-    setClientId(cId);
-
-    try {
-      const csrfToken = document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
-      const response = await fetch(`/api/stream/deployments/${deploymentId}/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-Token': csrfToken,
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ clientId: cId }),
-      });
-
-      if (response.ok) {
-        console.log('✅ Subscribed to deployment:', deploymentId);
-      } else {
-        console.error('❌ Failed to subscribe to deployment');
-      }
-    } catch (error) {
-      console.error('❌ Error subscribing to deployment:', error);
-    }
-  };
-
-  const handleDeploymentStep = (data: DeploymentStepEvent) => {
-    const step: DeploymentStep = {
-      step: data.step,
-      status: data.status,
-      message: data.message,
-      details: data.details,
-      timestamp: data.timestamp
-    };
-
-    setSteps(prev => {
-      const existingIndex = prev.findIndex(s => s.step === data.step);
-      if (existingIndex >= 0) {
-        // Update existing step
-        const updated = [...prev];
-        updated[existingIndex] = step;
-        return updated;
-      } else {
-        // Add new step
-        return [...prev, step];
-      }
-    });
-
-    if (data.status === 'started' || data.status === 'progress') {
-      setCurrentStep(data.step);
-    }
-  };
-
-  const handleCommandOutput = (data: CommandOutputEvent) => {
-    const out = data.output;
-    if (out && out.trim()) {
-      setLogs(prev => [...prev, `${data.type === 'stderr' ? '[ERROR]' : '[INFO]'} ${out.trim()}`]);
-    }
-  };
-
-  const handleDeploymentComplete = (data: DeploymentCompleteEvent) => {
-    setIsComplete(true);
-    setIsSuccess(data.success);
-    setCurrentStep('');
-
-    if (onComplete) {
-      onComplete(data.success, data.summary);
-    }
-  };
-
-  const handleError = (data: DeploymentErrorEvent) => {
-    setError(data.error);
-    setIsComplete(true);
-    setIsSuccess(false);
-    setCurrentStep('');
-
-    if (onComplete) {
-      onComplete(false, { error: data.error });
-    }
-  };
+  // The parent usually passes a new onComplete on every render. Read it through
+  // a ref so the progress stream below isn't torn down and reopened each time.
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (!deploymentId) return;
+
+    const generateClientId = () => {
+      return `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    };
+
+    const subscribeToDeployment = async (cId: string) => {
+      setClientId(cId);
+
+      try {
+        const csrfToken = document.cookie.match(/(?:^|; )hl_csrf=([^;]+)/)?.[1] || '';
+        const response = await fetch(`/api/stream/deployments/${deploymentId}/subscribe`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': csrfToken,
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ clientId: cId }),
+        });
+
+        if (response.ok) {
+          console.log('✅ Subscribed to deployment:', deploymentId);
+        } else {
+          console.error('❌ Failed to subscribe to deployment');
+        }
+      } catch (error) {
+        console.error('❌ Error subscribing to deployment:', error);
+      }
+    };
+
+    const handleDeploymentStep = (data: DeploymentStepEvent) => {
+      const step: DeploymentStep = {
+        step: data.step,
+        status: data.status,
+        message: data.message,
+        details: data.details,
+        timestamp: data.timestamp
+      };
+
+      setSteps(prev => {
+        const existingIndex = prev.findIndex(s => s.step === data.step);
+        if (existingIndex >= 0) {
+          // Update existing step
+          const updated = [...prev];
+          updated[existingIndex] = step;
+          return updated;
+        } else {
+          // Add new step
+          return [...prev, step];
+        }
+      });
+
+      if (data.status === 'started' || data.status === 'progress') {
+        setCurrentStep(data.step);
+      }
+    };
+
+    const handleCommandOutput = (data: CommandOutputEvent) => {
+      const out = data.output;
+      if (out && out.trim()) {
+        setLogs(prev => [...prev, `${data.type === 'stderr' ? '[ERROR]' : '[INFO]'} ${out.trim()}`]);
+      }
+    };
+
+    const handleDeploymentComplete = (data: DeploymentCompleteEvent) => {
+      setIsComplete(true);
+      setIsSuccess(data.success);
+      setCurrentStep('');
+
+      onCompleteRef.current?.(data.success, data.summary);
+    };
+
+    const handleError = (data: DeploymentErrorEvent) => {
+      setError(data.error);
+      setIsComplete(true);
+      setIsSuccess(false);
+      setCurrentStep('');
+
+      onCompleteRef.current?.(false, { error: data.error });
+    };
 
     // Set up Server-Sent Events connection
     const eventSource = new EventSource('/api/stream/progress');

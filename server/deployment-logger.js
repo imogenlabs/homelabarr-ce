@@ -75,7 +75,6 @@ export class DeploymentLogger {
     // Strip CR/LF first (this is what prevents forged/split log lines), then any
     // other C0/DEL control chars. The explicit [\r\n] replace is the form CodeQL
     // recognizes as a js/log-injection sanitizer.
-    // eslint-disable-next-line no-control-regex
     return String(value).replace(/[\r\n]+/g, ' ').replace(/[\x00-\x1f\x7f]/g, ' ');
   }
 

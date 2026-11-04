@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getContainerLogs } from "../lib/api";
 import { Terminal } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       const logData = await getContainerLogs(containerId);
       setLogs(logData);
@@ -25,7 +25,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [containerId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch on mount/poll; setState resolves after await, not during render
@@ -37,7 +37,7 @@ export function LogViewer({ containerId, onClose }: LogViewerProps) {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [containerId, autoRefresh]);
+  }, [fetchLogs, autoRefresh]);
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
