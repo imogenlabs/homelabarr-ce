@@ -3,6 +3,28 @@
 # Startup script for HomelabARR backend with Docker endpoint validation
 echo "🚀 Starting HomelabARR backend..."
 
+DATA_DIRS="/app/data /app/server/config /app/server/activity-data"
+
+# Started as root (the Unraid template passes --user 0:0): bind-mounted appdata
+# folders arrive root-owned, and the backend runs as uid 1001, so it could not
+# write its config or open its database (HLCE-363). Take ownership of the data
+# folders, then drop to 1001 for everything else. Compose already runs as 1001
+# and never enters this branch.
+if [ "$(id -u)" = "0" ]; then
+  for dir in $DATA_DIRS; do
+    mkdir -p "$dir"
+    [ "$(stat -c %u "$dir")" = "1001" ] || chown -R 1001:1001 "$dir"
+  done
+  exec su-exec 1001:1001 sh "$0" "$@"
+fi
+
+for dir in $DATA_DIRS; do
+  if [ -d "$dir" ] && [ ! -w "$dir" ]; then
+    echo "❌ $dir is not writable by uid $(id -u). Give the host folder to 1001 (chown -R 1001:1001 <folder>),"
+    echo "   or start the container as root (--user 0:0) and it will fix ownership itself."
+  fi
+done
+
 # Check the endpoint configured for the Docker CLI before starting.
 check_docker_endpoint() {
     case "${DOCKER_HOST:-unix:///var/run/docker.sock}" in
@@ -82,10 +104,6 @@ seed_config_file() {
 seed_config_file users.json '[]'
 seed_config_file api-keys.json '[]'
 seed_config_file stars.json '{}'
-# Fix ownership if running as homelabarr but files are root-owned (bind mount)
-if [ "$(id -u)" = "1001" ]; then
-  chown -R 1001:1001 "$CONFIG_DIR" 2>/dev/null || true
-fi
 
 # Start the Node.js application
 echo "🎯 Starting Node.js application..."

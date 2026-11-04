@@ -20,7 +20,8 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repo
     bash \
     curl \
     jq \
-    shadow && \
+    shadow \
+    su-exec && \
     sed -i '$ d' /etc/apk/repositories
 
 # Create homelabarr user
