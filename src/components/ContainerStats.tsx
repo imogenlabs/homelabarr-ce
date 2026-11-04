@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Cpu, HardDrive, Network, Clock } from 'lucide-react';
 
 interface ContainerStatsProps {
@@ -58,10 +58,10 @@ function getUptimeLabel(seconds: number): string {
 }
 
 function useStatsHistory() {
-  const updateHistory = (stats: ContainerStatsProps['stats']) => {
+  const updateHistory = useCallback((stats: ContainerStatsProps['stats']) => {
     // History tracking — will be implemented with charts in a future update
     void stats;
-  };
+  }, []);
   return { updateHistory };
 }
 
@@ -70,7 +70,7 @@ export function ContainerStats({ stats }: ContainerStatsProps) {
 
   useEffect(() => {
     updateHistory(stats);
-  }, [stats]);
+  }, [stats, updateHistory]);
 
   const totalNetwork = Object.values(stats.network).reduce(
     (acc, { rx_bytes, tx_bytes }) => ({

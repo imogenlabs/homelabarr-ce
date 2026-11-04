@@ -12,7 +12,8 @@ vi.mock("sonner", () => ({
   },
 }));
 
-import { NotificationProvider, useNotifications } from "./NotificationContext";
+import { useNotifications } from "./NotificationContext";
+import { NotificationProvider } from "./NotificationProvider";
 import { toast } from "sonner";
 
 const mockToast = vi.mocked(toast);

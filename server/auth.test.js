@@ -575,6 +575,28 @@ describe('initializeAuth + user loaders', () => {
     expect(auth.loadUsers()).toEqual([]);
   });
 
+  // #623: older start.sh seeded users.json with `{}`. That's an empty store, not
+  // corruption — return [] and seed the admin without a warning.
+  it('loadUsers treats the legacy `{}` seed as an empty store, without warning', async () => {
+    const auth = await loadAuth();
+    const { logger } = await import('./log.js');
+    const warn = vi.spyOn(logger, 'warn');
+    fs.writeFileSync(path.join(tmp, 'users.json'), '{}');
+    expect(auth.loadUsers()).toEqual([]);
+    await auth.initializeAuth();
+    expect(auth.loadUsers()).toHaveLength(1);
+    expect(warn.mock.calls.flat().join(' ')).not.toMatch(/not an array/);
+  });
+
+  it('loadUsers still warns about a non-empty, non-array users.json', async () => {
+    const auth = await loadAuth();
+    const { logger } = await import('./log.js');
+    const warn = vi.spyOn(logger, 'warn');
+    fs.writeFileSync(path.join(tmp, 'users.json'), JSON.stringify({ not: 'an array' }));
+    auth.loadUsers();
+    expect(warn.mock.calls.flat().join(' ')).toMatch(/not an array/);
+  });
+
   it('findUserByUsername / findUserById locate seeded users', async () => {
     const auth = await loadAuth();
     const user = await auth.createUser({ username: 'alice', password: 'pw' });

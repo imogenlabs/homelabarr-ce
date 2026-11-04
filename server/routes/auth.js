@@ -39,9 +39,22 @@ import {
 import { audit } from '../audit.js';
 import { maybeAlert } from '../alert.js';
 import { logActivity } from '../activity-logger.js';
+import { useSecureCookies } from '../transport-security.js';
 
 export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lockout, logger }) {
   const router = Router();
+
+  // A browser on an http:// page silently drops Secure cookies, so the login
+  // "succeeds" and the next request is a 401 (#622). The Origin header tells us
+  // what the browser is on even behind a proxy chain; say so once in the logs.
+  let warnedPlainHttp = false;
+  function warnIfSecureCookiesOverHttp(req) {
+    if (warnedPlainHttp || !useSecureCookies()) return;
+    if (!String(req.headers.origin || '').startsWith('http://')) return;
+    warnedPlainHttp = true;
+    logger.warn('Login from a plain-HTTP page, but session cookies are marked Secure and the browser will drop them. '
+      + 'Serve HomelabARR over HTTPS, or set ALLOW_PLAIN_HTTP=true for a LAN-only install.', { origin: req.headers.origin });
+  }
 
   // Authentication routes (C-8: login rate limited)
   router.post('/auth/login', loginLimiter, async (req, res) => {
@@ -76,11 +89,12 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
 
       // No MFA — issue session + refresh cookies
       const { password: _, ...safeUser } = result.user;
+      warnIfSecureCookiesOverHttp(req);
       logger.info(`User ${result.user.username} logged in from ${req.ip}`);
 
       res.cookie('hl_session', result.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: useSecureCookies(),
         sameSite: 'strict',
         path: '/',
         maxAge: 15 * 60 * 1000,
@@ -88,7 +102,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       if (result.refresh && result.jti) {
         res.cookie('hl_refresh', result.refresh + '.' + result.jti, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: useSecureCookies(),
           sameSite: 'strict',
           path: '/api/auth/refresh',
           maxAge: 14 * 24 * 60 * 60 * 1000,
@@ -97,7 +111,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       const csrfToken = crypto.randomBytes(32).toString('hex');
       res.cookie('hl_csrf', csrfToken, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure: useSecureCookies(),
         sameSite: 'strict',
         path: '/',
         maxAge: 14 * 24 * 60 * 60 * 1000,
@@ -253,11 +267,12 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       const { jti, refresh } = createSession({ userId, userAgent: req.headers['user-agent'], ip: req.ip });
       const token = generateToken(user, jti);
       const { password: pw, ...safeUser } = user;
+      warnIfSecureCookiesOverHttp(req);
 
-      res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
-      res.cookie('hl_refresh', refresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+      res.cookie('hl_session', token, { httpOnly: true, secure: useSecureCookies(), sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+      res.cookie('hl_refresh', refresh + '.' + jti, { httpOnly: true, secure: useSecureCookies(), sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
       const csrfToken = crypto.randomBytes(32).toString('hex');
-      res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+      res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: useSecureCookies(), sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
       res.json({ success: true, user: safeUser });
     } catch (error) {
       sendError(res, 500, 'MFA login failed', error);
@@ -287,8 +302,8 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       if (!user) return res.status(401).json({ error: 'User not found' });
 
       const token = generateToken(user, jti);
-      res.cookie('hl_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
-      res.cookie('hl_refresh', newRefresh + '.' + jti, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
+      res.cookie('hl_session', token, { httpOnly: true, secure: useSecureCookies(), sameSite: 'strict', path: '/', maxAge: 15 * 60 * 1000 });
+      res.cookie('hl_refresh', newRefresh + '.' + jti, { httpOnly: true, secure: useSecureCookies(), sameSite: 'strict', path: '/api/auth/refresh', maxAge: 14 * 24 * 60 * 60 * 1000 });
       res.json({ success: true });
     } catch (error) {
       sendError(res, 500, 'Token refresh failed', error);
@@ -367,7 +382,7 @@ export default function authRoutes({ sendError, getRequestMeta, loginLimiter, lo
       saveMfaForUser(userId, { secret: pending.secret, backupHashes, enabledAt: Date.now() });
       clearPendingMfa(userId);
       const csrfToken = crypto.randomBytes(32).toString('hex');
-      res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
+      res.cookie('hl_csrf', csrfToken, { httpOnly: false, secure: useSecureCookies(), sameSite: 'strict', path: '/', maxAge: 14 * 24 * 60 * 60 * 1000 });
       res.json({ enabled: true, backup_codes: backup });
     } catch (error) {
       sendError(res, 500, 'MFA verification failed', error);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -19,6 +19,7 @@ process.env.AUDIT_DIR = path.join(tmp, 'audit');
 process.env.SECRET_ROOT = path.join(tmp, 'no-secrets');
 process.env.BCRYPT_COST = '4';
 process.env.RATE_LIMIT_DISABLED = 'true'; // skip the global + login limiters
+process.env.CORS_ORIGIN = 'http://localhost:8084'; // lets a test send an http:// Origin
 delete process.env.SMTP_HOST; // email.js falls back to a no-op stub transporter
 
 let request, app, auth, mfaMod;
@@ -93,6 +94,37 @@ describe('POST /auth/login — cookies & failure modes (AC1)', () => {
     expect(csrf.attrs.httponly).toBeUndefined(); // readable by JS (double-submit)
     expect(csrf.attrs.samesite).toBe('Strict');
     expect(csrf.attrs.path).toBe('/');
+  });
+
+  // #622: Secure is the production default; ALLOW_PLAIN_HTTP=true drops it so
+  // a dashboard opened at plain http://<ip> can keep its session.
+  it('marks cookies Secure in production unless ALLOW_PLAIN_HTTP=true', async () => {
+    const saved = { NODE_ENV: process.env.NODE_ENV, ALLOW_PLAIN_HTTP: process.env.ALLOW_PLAIN_HTTP };
+    try {
+      process.env.NODE_ENV = 'production';
+      delete process.env.ALLOW_PLAIN_HTTP;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const res = await request(app).post('/auth/login')
+        .set('Origin', 'http://localhost:8084').send({ username: 'alice', password: 'alicepass' });
+      expect(res.status).toBe(200);
+      let set = res.headers['set-cookie'] || [];
+      for (const name of ['hl_session', 'hl_refresh', 'hl_csrf']) {
+        expect(parseCookie(set, name).attrs.secure).toBe(true);
+      }
+      // A login from an http:// page with Secure cookies logs one clear hint.
+      expect(warn.mock.calls.flat().join(' ')).toMatch(/plain-HTTP page.*ALLOW_PLAIN_HTTP=true/);
+      warn.mockRestore();
+
+      process.env.ALLOW_PLAIN_HTTP = 'true';
+      ({ set } = await login('alice', 'alicepass'));
+      for (const name of ['hl_session', 'hl_refresh', 'hl_csrf']) {
+        expect(parseCookie(set, name).attrs.secure).toBeUndefined();
+      }
+    } finally {
+      process.env.NODE_ENV = saved.NODE_ENV;
+      if (saved.ALLOW_PLAIN_HTTP === undefined) delete process.env.ALLOW_PLAIN_HTTP;
+      else process.env.ALLOW_PLAIN_HTTP = saved.ALLOW_PLAIN_HTTP;
+    }
   });
 
   it('missing credentials → 400', async () => {

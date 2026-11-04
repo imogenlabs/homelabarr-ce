@@ -1,33 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Theme, getTheme, setTheme as applyTheme } from '../lib/theme';
+import { createContext, useContext } from 'react';
+import type { Theme } from '../lib/theme';
 
-interface ThemeContextType {
+// The provider lives in ThemeProvider.tsx so this file exports no components
+// and Fast Refresh keeps working for both.
+
+export interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
+export const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
   toggleTheme: () => {},
 });
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getTheme);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
 
 export function useTheme() {
   return useContext(ThemeContext);

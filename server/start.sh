@@ -72,9 +72,16 @@ fi
 echo "📁 Checking config directory..."
 CONFIG_DIR="server/config"
 mkdir -p "$CONFIG_DIR"
-for f in users.json api-keys.json stars.json; do
-  [ ! -f "$CONFIG_DIR/$f" ] && echo '{}' > "$CONFIG_DIR/$f" && echo "  Created $CONFIG_DIR/$f"
-done
+# users.json and api-keys.json hold lists; stars.json maps user id -> app ids.
+# Seeding a list file with {} made the backend warn on first boot (#623).
+seed_config_file() {
+  if [ ! -f "$CONFIG_DIR/$1" ]; then
+    echo "$2" > "$CONFIG_DIR/$1" && echo "  Created $CONFIG_DIR/$1"
+  fi
+}
+seed_config_file users.json '[]'
+seed_config_file api-keys.json '[]'
+seed_config_file stars.json '{}'
 # Fix ownership if running as homelabarr but files are root-owned (bind mount)
 if [ "$(id -u)" = "1001" ]; then
   chown -R 1001:1001 "$CONFIG_DIR" 2>/dev/null || true

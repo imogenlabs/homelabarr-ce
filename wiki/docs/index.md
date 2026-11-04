@@ -13,8 +13,8 @@ Whether you just bought your first server or you've been running a homelab for y
 !!! info "What you need to get started"
     A Linux server with Docker installed. That's it. If you don't have Docker yet, the [Quick Start guide](guides/quick-start.md) covers it in the first step.
 
-!!! danger "Default credentials"
-    The default login is **admin / admin**. Change your password immediately after setup — the dashboard is open to anyone on your network until you do.
+!!! danger "Change the admin password"
+    `scripts/init-secrets.sh` prints a random password for `admin` (also saved in `secrets/default_admin_password`). Change it right after your first login.
 
 ![Dashboard](img/screenshots/dark-dashboard.png)
 
@@ -25,16 +25,19 @@ Whether you just bought your first server or you've been running a homelab for y
 git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
-# 2. Set required variables
-export JWT_SECRET=$(openssl rand -hex 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
-export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+# 2. Create the secrets (prints the initial admin password)
+bash scripts/init-secrets.sh
 
-# 3. Start HomelabARR
+# 3. Set the dashboard address (plain http:// needs ALLOW_PLAIN_HTTP=true)
+export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+export ALLOW_PLAIN_HTTP=true
+
+# 4. Start HomelabARR
+sudo bash scripts/install-apparmor.sh   # AppArmor hosts only
 docker compose -f homelabarr.yml up -d
 ```
 
-Open **http://YOUR-SERVER-IP:8084** and log in with `admin` / `admin` — then **change your password right away**.
+Open **http://YOUR-SERVER-IP:8084** and log in as `admin` with the password `scripts/init-secrets.sh` printed. Then **change your password right away**.
 
 → [Full Quick Start Guide](guides/quick-start.md){ .md-button .md-button--primary }
 

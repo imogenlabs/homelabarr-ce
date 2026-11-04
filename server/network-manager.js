@@ -158,6 +158,9 @@ export class NetworkManager {
       serviceUrls.frontend = process.env.FRONTEND_URL || 'http://frontend:5173';
       serviceUrls.backend = process.env.BACKEND_URL || `http://backend:${config.port}`;
       serviceUrls.database = process.env.DATABASE_URL || 'sqlite:///app/data/homelabarr.db';
+      // localhost inside a container is the container itself, which the URL
+      // validator rightly flags. Use the service name instead (#624).
+      serviceUrls.healthCheck.external = process.env.EXTERNAL_HEALTH_URL || `${serviceUrls.backend}/health`;
     }
 
     return serviceUrls;
@@ -220,6 +223,13 @@ export class NetworkManager {
     const errors = [];
     const warnings = [];
 
+    // Docker reached over the network (e.g. DOCKER_HOST=tcp://socket-proxy:2375
+    // in homelabarr.yml). There is no local socket file to check, and the
+    // start script already waits for the endpoint to answer (#621).
+    if (this.usesRemoteDockerHost()) {
+      return { errors, warnings };
+    }
+
     try {
       if (config.platform !== 'windows') {
         // Unix-like systems: check if socket file exists and is accessible
@@ -247,6 +257,23 @@ export class NetworkManager {
     }
 
     return { errors, warnings };
+  }
+
+  /**
+   * True when DOCKER_HOST points at a network endpoint instead of a local socket.
+   * @returns {boolean}
+   */
+  static usesRemoteDockerHost() {
+    return EnvironmentManager.usesRemoteDockerHost();
+  }
+
+  /**
+   * Human-readable Docker endpoint for startup logs: DOCKER_HOST when it is a
+   * network endpoint, otherwise the local socket path.
+   * @returns {string}
+   */
+  static getDockerEndpointLabel() {
+    return this.usesRemoteDockerHost() ? process.env.DOCKER_HOST : this.getConfiguration().dockerSocket;
   }
 
   /**
@@ -382,7 +409,7 @@ export class NetworkManager {
       }
 
       // Validate protocol
-      if (!['http:', 'https:', 'unix:', 'npipe:', 'sqlite:', 'redis:'].includes(parsedUrl.protocol)) {
+      if (!['http:', 'https:', 'tcp:', 'unix:', 'npipe:', 'sqlite:', 'redis:'].includes(parsedUrl.protocol)) {
         warnings.push(`Service '${serviceName}' uses uncommon protocol: ${parsedUrl.protocol}`);
       }
 

@@ -16,6 +16,7 @@ import { attackTag } from './middleware/attackTag.js';
 import { mountHoney } from './routes/honey.js';
 import { EnvironmentManager } from './environment-manager.js';
 import { NetworkManager } from './network-manager.js';
+import { allowPlainHttp } from './transport-security.js';
 import { DeploymentLogger } from './deployment-logger.js';
 import { CLIBridge } from './cli-bridge.js';
 import { progressStream, StreamingCLIBridge } from './progress-stream.js';
@@ -119,6 +120,8 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginResourcePolicy: { policy: 'same-site' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // ALLOW_PLAIN_HTTP=true is a LAN-only install with no TLS anywhere (#622).
+  ...(allowPlainHttp() ? { strictTransportSecurity: false } : {}),
 }));
 app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
@@ -318,7 +321,10 @@ try {
       DeploymentLogger.logStartupInfo();
       DeploymentLogger.logConfigurationSummary();
       logger.info(`HomelabARR backend running on ${BIND_ADDRESS}:${PORT}`);
-      logger.info(`Auth: ${authEnabled ? 'enabled' : 'disabled'} | Docker: ${networkConfig.dockerSocket}`);
+      logger.info(`Auth: ${authEnabled ? 'enabled' : 'disabled'} | Docker: ${NetworkManager.getDockerEndpointLabel()}`);
+      if (allowPlainHttp()) {
+        logger.warn('ALLOW_PLAIN_HTTP=true: session cookies are not marked Secure and HSTS is off. Only use this on a trusted LAN.');
+      }
     });
 
     server.on('error', (error) => {
