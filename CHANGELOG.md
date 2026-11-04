@@ -11,6 +11,9 @@
 - **No `users.json is not an array` warning on first boot** ([#623](https://github.com/imogenlabs/homelabarr-ce/issues/623)): `server/start.sh` seeded `users.json` and `api-keys.json` with `{}` instead of `[]`. Fixed, and an existing empty `{}` file is treated as an empty store without a warning.
 - **No localhost health-check warning in containers** ([#624](https://github.com/imogenlabs/homelabarr-ce/issues/624)): the default `healthCheck.external` URL now uses the `backend` service name inside containers.
 
+### ✨ New app
+- **Movviz** in the catalog under Media Management ([#573](https://github.com/imogenlabs/homelabarr-ce/issues/573)).
+
 ### ✅ Tests & CI
 - The README quick-start CI now checks that the login cookie is usable over plain HTTP and that `/api/auth/me` succeeds with it. It previously checked only for a 200 from login, which is why #622 got through.
 - Fixed a gap in the nginx security-header regression test: it matched the `/` location with `includes('/')`, which hit `/icons/` first, so the SPA `/` block was never checked. Added a regression test that locks the HSTS/CSP defaults behind `ALLOW_PLAIN_HTTP`.
