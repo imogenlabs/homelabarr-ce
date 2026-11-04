@@ -72,6 +72,24 @@ export class EnvironmentManager {
     return /^(tcp|https?):\/\//i.test(process.env.DOCKER_HOST || '');
   }
 
+  /**
+   * The Docker endpoint the backend really talks to, for logs and diagnostics.
+   * The configured socket path is only a default: with the bundled
+   * socket-proxy the backend uses DOCKER_HOST over TCP, and logging the
+   * socket path there sent users hunting for a missing socket (#621).
+   * @param {string} [platform]
+   * @returns {{endpoint: string, type: 'tcp'|'named_pipe'|'unix_socket'}}
+   */
+  static getDockerEndpoint(platform = this.detectPlatform()) {
+    if (this.usesRemoteDockerHost()) {
+      return { endpoint: process.env.DOCKER_HOST, type: 'tcp' };
+    }
+    return {
+      endpoint: this.#getDockerSocketPath(platform),
+      type: platform === 'windows' ? 'named_pipe' : 'unix_socket',
+    };
+  }
+
   static getConfiguration() {
     if (!this.#initialized) {
       this.#config = this.#buildConfiguration();
@@ -315,9 +333,7 @@ export class EnvironmentManager {
     }
     
     // Docker configuration
-    console.log(this.usesRemoteDockerHost()
-      ? `🐳 Docker Host: ${process.env.DOCKER_HOST}`
-      : `🐳 Docker Socket: ${config.dockerSocket}`);
+    console.log(`🐳 Docker: ${this.getDockerEndpoint(config.platform).endpoint}`);
     if (config.dockerGid) {
       console.log(`👥 Docker GID: ${config.dockerGid}`);
     }

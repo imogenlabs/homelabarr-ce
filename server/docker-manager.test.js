@@ -223,6 +223,17 @@ describe('inspection helpers (AC1/AC5 coverage)', () => {
     expect(() => m.logConnectionStats()).not.toThrow();
   });
 
+  it('reports the socket-proxy endpoint, not a unix socket, when DOCKER_HOST is tcp (HLCE-364)', () => {
+    process.env.DOCKER_HOST = 'tcp://socket-proxy:2375';
+    const m = makeManager();
+    expect(m.config.endpoint).toBe('tcp://socket-proxy:2375');
+    expect(m.getDockerSocketType()).toBe('tcp');
+    const details = m.getPlatformDetails();
+    expect(details.dockerSocketType).toBe('tcp');
+    expect(details.endpoint).toBe('tcp://socket-proxy:2375');
+    expect(details).not.toHaveProperty('expectedSocketPath');
+  });
+
   it('platform detail helpers reflect linux vs windows', () => {
     const m = makeManager();
     m.config.platform = 'linux';
