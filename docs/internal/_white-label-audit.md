@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1601
+**Total brand references found:** 1620
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**22 references**
+**26 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -48,14 +48,18 @@
 | `server/cli-bridge.js` | 1 x | `      ARIA_RPC_SECRET: 'homelabarr',` |
 | `server/db.js` | 1 x | `const DB_PATH = process.env.DB_PATH \|\| path.join(process.env.DATA_DIR \|\| path.join(process.cwd(), 'data'), 'homelaba` |
 | `server/email.test.js` | 1 x | `      from: 'noreply@homelabarr.com',` |
+| `server/environment-manager.test.js` | 1 x | `// #621: with DOCKER_HOST=tcp://socket-proxy:2375 (homelabarr.yml) there is no` |
 | `server/log.js` | 1 x | `  defaultMeta: { service: 'homelabarr-backend' },` |
 | `server/mfa.test.js` | 2 x | `    const totp = mfa.newTotp('alice@homelabarr');` |
 | `server/mfa.test.js` | 1 x | `    expect(totp.label).toBe('alice@homelabarr');` |
 | `server/network-manager.js` | 1 x | `                'sqlite://./data/homelabarr.db',` |
 | `server/network-manager.js` | 1 x | `      serviceUrls.database = process.env.DATABASE_URL \|\| 'sqlite:///app/data/homelabarr.db';` |
+| `server/network-manager.js` | 1 x | `    // in homelabarr.yml). There is no local socket file to check, and the` |
+| `server/network-manager.test.js` | 1 x | `// #621: homelabarr.yml reaches Docker over TCP through socket-proxy. There is no` |
 | `server/progress-stream.test.js` | 1 x | `      .mockReturnValue({ corsOrigin: ['https://demo.homelabarr.com'] });` |
 | `server/progress-stream.test.js` | 1 x | `    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://demo.homelabarr.com');` |
 | `server/progress-stream.test.js` | 1 x | `    mgr.addClient('ok', ok, fakeReq({ origin: 'https://demo.homelabarr.com' }));` |
+| `server/regression/plain-http-switch.regression.test.js` | 1 x | `    const compose = fs.readFileSync(path.join(root, 'homelabarr.yml'), 'utf8');` |
 | `server/routes/auth-admin.js` | 1 x | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(nameArg).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(res.body.containerName).toMatch(/^homelabarr-it-tools-\d+$/);` |
@@ -283,7 +287,7 @@
 
 ## Root documentation
 
-**104 references**
+**109 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -309,10 +313,14 @@
 | `CHANGELOG.md` | 1 x | `- **Frontend security-component tests + lib/api gap-fills + a password-policy fix** (Epic [HLCE-270](https://mjashley.at` |
 | `CHANGELOG.md` | 1 x | `- **High-value component tests (RTL)** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-225, [#307` |
 | `CHANGELOG.md` | 1 x | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
+| `CHANGELOG.md` | 1 x | `- **Login works over plain HTTP** ([#622](https://github.com/imogenlabs/homelabarr-ce/issues/622)): the README install o` |
 | `CHANGELOG.md` | 1 x | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
 | `CHANGELOG.md` | 1 x | `- **Mutation pass on the high-risk security core** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE-261), HLC` |
 | `CHANGELOG.md` | 1 x | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
 | `CHANGELOG.md` | 1 x | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
+| `CHANGELOG.md` | 1 x | `- **No 'users.json is not an array' warning on first boot** ([#623](https://github.com/imogenlabs/homelabarr-ce/issues/6` |
+| `CHANGELOG.md` | 1 x | `- **No false "Docker socket not found" warning** ([#621](https://github.com/imogenlabs/homelabarr-ce/issues/621)): with ` |
+| `CHANGELOG.md` | 1 x | `- **No localhost health-check warning in containers** ([#624](https://github.com/imogenlabs/homelabarr-ce/issues/624)): ` |
 | `CHANGELOG.md` | 1 x | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
 | `CHANGELOG.md` | 1 x | `- **Persistence-integrity tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-221, [#301](htt` |
 | `CHANGELOG.md` | 1 x | `- **Playwright E2E: seeded container target + critical-journey suite** (Epic [HLCE-209](https://mjashley.atlassian.net/b` |
@@ -322,6 +330,7 @@
 | `CHANGELOG.md` | 1 x | `- **Read-only template volumes**: Temp deploy YAMLs now write to 'server/data/' instead of next to the source YAML, so d` |
 | `CHANGELOG.md` | 1 x | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
 | `CHANGELOG.md` | 1 x | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
+| `CHANGELOG.md` | 1 x | `- **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki ins` |
 | `CHANGELOG.md` | 1 x | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
 | `CHANGELOG.md` | 1 x | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
 | `CHANGELOG.md` | 1 x | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
@@ -358,7 +367,7 @@
 | `README.md` | 1 x | `    <a href="https://www.reddit.com/r/homelabarr/">` |
 | `README.md` | 1 x | `2. **Verify image signatures:** 'cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-` |
 | `README.md` | 1 x | `4. **Start the stack:** 'docker compose -f homelabarr.yml up -d'` |
-| `README.md` | 1 x | `> **For a permanent setup**, move 'CORS_ORIGIN' into a '.env' file. See the [configuration docs](https://wiki.homelabarr` |
+| `README.md` | 1 x | `> **For a permanent setup**, move 'CORS_ORIGIN' (and 'ALLOW_PLAIN_HTTP', if you use it) into a '.env' file. See the [con` |
 | `README.md` | 1 x | `All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)` |
 | `README.md` | 1 x | `Don't want to install anything yet? [**Open the live demo →**](https://demo.homelabarr.com)` |
 | `README.md` | 1 x | `Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)` |
@@ -394,7 +403,7 @@
 
 ## Wiki content
 
-**350 references**
+**360 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -410,8 +419,11 @@
 | `wiki/docs/guides/configuration.md` | 1 x | `- 'homelabarr-data' — app data and logs` |
 | `wiki/docs/guides/configuration.md` | 1 x | `All auth data is stored in '/app/server/config/' inside the backend container, persisted by the 'homelabarr-config' volu` |
 | `wiki/docs/guides/configuration.md` | 1 x | `Instead of typing 'export' commands every time — which only last until you close your terminal — save your settings ` |
+| `wiki/docs/guides/configuration.md` | 1 x | `You don't need 'JWT_SECRET' or 'DOCKER_GID' with the shipped 'homelabarr.yml'. The JWT key comes from './secrets/jwt_key` |
 | `wiki/docs/guides/configuration.md` | 1 x | `docker compose -f homelabarr.yml --env-file .env up -d` |
+| `wiki/docs/guides/configuration.md` | 1 x | `\| './secrets/' files \| The JWT signing keys, the initial admin password, and the database key are read from files, not` |
 | `wiki/docs/guides/configuration.md` | 1 x | `\| 'CLI_BRIDGE_HOST_PATH' \| '/opt/homelabarr' \| Path to the repo with app templates (must contain 'apps/') \|` |
+| `wiki/docs/guides/configuration.md` | 1 x | `\| 'CORS_ORIGIN' \| The exact address you open the dashboard at, e.g. 'http://192.0.2.100:8084' or 'https://homelabarr.e` |
 | `wiki/docs/guides/contributing.md` | 1 x | `**☕ [Support on Ko-fi](https://ko-fi.com/homelabarr)** - Help fund development time, infrastructure costs, and project` |
 | `wiki/docs/guides/contributing.md` | 1 x | `- **Discord**: [HomelabARR Community](https://discord.gg/Pc7mXX786x)` |
 | `wiki/docs/guides/contributing.md` | 1 x | `- Report issues through [GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)` |
@@ -425,7 +437,9 @@
 | `wiki/docs/guides/faq.md` | 1 x | `- **[GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)** — bug reports` |
 | `wiki/docs/guides/faq.md` | 1 x | `- **[homelabarr.com](https://homelabarr.com)** — product page` |
 | `wiki/docs/guides/faq.md` | 1 x | `CE (Community Edition) is 100% free and open source under the MIT license. There's also a paid [HomelabARR Mobile](https` |
+| `wiki/docs/guides/faq.md` | 1 x | `Run 'bash scripts/init-secrets.sh' in '/opt/homelabarr' first. It creates the secret files the stack mounts, and prints ` |
 | `wiki/docs/guides/faq.md` | 1 x | `The shipped 'homelabarr.yml' already sets it. This affects you only if you wrote your own compose file or run your own p` |
+| `wiki/docs/guides/faq.md` | 1 x | `The shipped 'homelabarr.yml' reaches Docker through the 'socket-proxy' container at 'tcp://socket-proxy:2375'; the backe` |
 | `wiki/docs/guides/faq.md` | 1 x | `docker compose -f homelabarr.yml pull` |
 | `wiki/docs/guides/faq.md` | 3 x | `docker compose -f homelabarr.yml up -d` |
 | `wiki/docs/guides/faq.md` | 1 x | `docker compose -f homelabarr.yml up -d --force-recreate socket-proxy` |
@@ -444,12 +458,17 @@
 | `wiki/docs/guides/mobile-app.md` | 1 x | `\| **Build from source** \| Always free \| [github.com/imogenlabs/homelabarr-mobile](https://github.com/imogenlabs/homel` |
 | `wiki/docs/guides/mobile-app.md` | 1 x | `\| Cloudflare Tunnel \| 'https://homelabarr.yourdomain.com' \|` |
 | `wiki/docs/guides/mobile-app.md` | 1 x | `\| Traefik + domain \| 'https://homelabarr.yourdomain.com' \|` |
+| `wiki/docs/guides/quick-start.md` | 1 x | `    These 'export' commands only last until you close your terminal. To make them permanent, put them in a '.env' file n` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `    You can [review the script](https://github.com/imogenlabs/homelabarr-ce/blob/main/install-remote.sh) before running ` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `2. Clone the repo to '/opt/homelabarr'` |
+| `wiki/docs/guides/quick-start.md` | 1 x | `The backend log says so too: look for 'Login from a plain-HTTP page' in 'docker logs homelabarr-backend'.` |
+| `wiki/docs/guides/quick-start.md` | 1 x | `The secret files haven't been created yet. Run 'bash scripts/init-secrets.sh' from '/opt/homelabarr', then start again.` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `This downloads the entire repo — including all 100+ app templates — to '/opt/homelabarr'. The 'apps/' folder inside ` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `cd /opt/homelabarr` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `curl -fsSL https://raw.githubusercontent.com/imogenlabs/homelabarr-ce/main/install-remote.sh \| sudo bash` |
 | `wiki/docs/guides/quick-start.md` | 3 x | `docker compose -f homelabarr.yml up -d` |
+| `wiki/docs/guides/quick-start.md` | 1 x | `docker logs homelabarr-socket-proxy` |
+| `wiki/docs/guides/quick-start.md` | 1 x | `docker ps --filter name=homelabarr-socket-proxy` |
 | `wiki/docs/guides/quick-start.md` | 1 x | `git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr` |
 | `wiki/docs/guides/security.md` | 1 x | `- **Audit trail:** [docs/audit/](https://github.com/imogenlabs/homelabarr-ce/tree/main/docs/audit) — 18 rounds, 201+ f` |
 | `wiki/docs/guides/security.md` | 1 x | `- **Compliance posture:** [compliance/](https://github.com/imogenlabs/homelabarr-ce/tree/main/compliance) — CIS Docker` |
