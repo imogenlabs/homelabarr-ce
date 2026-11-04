@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v2.6.1] - November 4, 2026
+
 ### 🐛 Fixes
 - **The backend starts on root-owned appdata folders** ([HLCE-363](https://mjashley.atlassian.net/browse/HLCE-363)): Unraid and other hosts create bind-mounted folders as root, and the backend (uid 1001) could not write its config or open its database, so it exited on first start. Started as root (`--user 0:0`), it now takes ownership of its three data folders and drops to uid 1001 before doing anything else. Compose installs already run as 1001 and are unchanged. A folder it cannot write is now named in the log with the fix.
 - **The log names the Docker endpoint it really uses** ([HLCE-364](https://mjashley.atlassian.net/browse/HLCE-364)): with the bundled socket-proxy the startup log still said `Docker Socket: /var/run/docker.sock` and `unix_socket`, which is what sent [#621](https://github.com/imogenlabs/homelabarr-ce/issues/621) looking for a missing socket. It now says `tcp://socket-proxy:2375`.
