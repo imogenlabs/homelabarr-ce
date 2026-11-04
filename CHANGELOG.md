@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v2.6.0] - November 4, 2026
+
 ### 🐛 Fixes from the first-install reports
 - **Login works over plain HTTP** ([#622](https://github.com/imogenlabs/homelabarr-ce/issues/622)): the README install opens the dashboard at `http://<ip>:8084`, but production always marked the login cookies `Secure`, so browsers dropped them and users looped back to the login screen. Safari also showed a blank page because the CSP `upgrade-insecure-requests` directive rewrote asset requests to `https://`. New opt-in **`ALLOW_PLAIN_HTTP=true`** drops the `Secure` flag, HSTS, and `upgrade-insecure-requests` for LAN-only installs. HTTPS remains the default. The backend now logs a clear hint when it sees a login from an `http://` page with Secure cookies.
 - **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki install guides skipped `bash scripts/init-secrets.sh`, so `docker compose up` failed on missing secret files. They also still said to log in with `admin`/`admin` and to set `JWT_SECRET`/`DOCKER_GID`, which the shipped compose no longer uses. All updated, with troubleshooting entries for both errors.
