@@ -15,6 +15,86 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.0] - 2026-11-04
+
+### 🐛 Bug Fixes
+
+- watch every filesystem that holds guests in the host alert by @smashingtags in #608
+- HLCE-361 retry image signing so a lost Rekor reply cannot ship an unsigned image by @smashingtags in #631
+
+### 📚 Documentation
+
+- changelog for v2.5.2 by @github-actions[bot] in #556
+- HLCE-359 drop the stale admin/admin warning from the wiki home page by @smashingtags in #629
+- HLCE-362 finish the v2.6.0 changelog and fill in v2.4.0 to v2.5.2 by @smashingtags in #632
+
+### ⬆️ Dependencies
+
+- bump the production group with 8 updates by @dependabot[bot] in #559
+- bump the actions group with 2 updates by @dependabot[bot] in #560
+- bump the development group with 23 updates by @dependabot[bot] in #561
+- bump fast-uri from 3.1.7 to 3.1.8 by @dependabot[bot] in #562
+- bump obug from 2.1.4 to 2.2.1 by @dependabot[bot] in #563
+- bump undici from 7.29.0 to 7.30.0 by @dependabot[bot] in #564
+- bump nanoid from 3.3.18 to 3.3.19 by @dependabot[bot] in #565
+- bump nginx from `adad2ae` to `df221db` by @dependabot[bot] in #568
+- bump the production group with 8 updates by @dependabot[bot] in #569
+- bump mikepenz/release-changelog-builder-action from 6.3.0 to 6.4.0 in the actions group by @dependabot[bot] in #570
+- bump the development group with 28 updates by @dependabot[bot] in #571
+- bump nanoid from 3.3.19 to 3.3.20 by @dependabot[bot] in #572
+- bump the actions group with 5 updates by @dependabot[bot] in #579
+- bump shell-quote and concurrently by @dependabot[bot] in #581
+- bump @babel/helpers from 7.29.7 to 7.29.10 by @dependabot[bot] in #583
+- bump @babel/traverse from 7.29.8 to 7.29.10 by @dependabot[bot] in #584
+- bump @babel/runtime from 7.29.7 to 7.29.10 by @dependabot[bot] in #585
+- bump the development group across 1 directory with 35 updates by @dependabot[bot] in #586
+- bump nginx from 1.31.6-alpine to 1.31.7-alpine in the docker group by @dependabot[bot] in #588
+- bump node from `ebfe2f9` to `44fce69` by @dependabot[bot] in #589
+- bump the development group with 16 updates by @dependabot[bot] in #591
+- bump the actions group with 4 updates by @dependabot[bot] in #592
+- bump nginx from 1.31.7-alpine to 1.31.8-alpine in the docker group by @dependabot[bot] in #594
+- bump the actions group with 4 updates by @dependabot[bot] in #596
+- bump nodemailer from 10.0.13 to 10.1.4 by @dependabot[bot] in #598
+- bump fast-uri from 3.1.8 to 3.1.9 by @dependabot[bot] in #599
+- bump ip-address from 10.7.3 to 10.7.5 by @dependabot[bot] in #600
+- bump body-parser from 2.3.0 to 2.4.0 by @dependabot[bot] in #601
+- bump node from `44fce69` to `06d7adf` by @dependabot[bot] in #595
+- bump @babel/parser from 7.29.9 to 7.29.11 by @dependabot[bot] in #602
+- bump qs from 6.16.0 to 6.17.1 by @dependabot[bot] in #610
+- bump systeminformation from 5.33.15 to 5.33.19 by @dependabot[bot] in #611
+- bump nginx from `1ef7ca9` to `785835e` by @dependabot[bot] in #614
+- bump node from `06d7adf` to `8a32c8c` by @dependabot[bot] in #613
+- bump the development group with 27 updates by @dependabot[bot] in #616
+- bump the production group across 1 directory with 51 updates by @dependabot[bot] in #619
+- bump actions/setup-go from 5.6.0 to 7.0.0 by @dependabot[bot] in #580
+
+### 🔧 Maintenance
+
+- v2.6.0 by @smashingtags in #627
+- HLCE-360 clear the dev-dependency audit findings by @smashingtags in #630
+
+### 🏗️ Infrastructure
+
+- build keen v1.2.2 for Jira release sync by @smashingtags in #606
+- build keen v1.3.0 for Jira release sync by @smashingtags in #607
+- record releases with keen v1.7.0 by @smashingtags in #609
+- pin the current keen release for release sync by @smashingtags in #625
+- KEEN-62 pin keen 1.9.0 for release sync by @smashingtags in #628
+
+### 🔄 Changes
+
+- HLCE-354: scan Python and the Actions workflows with CodeQL again by @smashingtags in #557
+- HLCE-354: fix the 22 alerts from the first Python and Actions scans by @smashingtags in #558
+- EOS-2459: download with curl; not every runner has wget by @smashingtags in #566
+- EOS-2619: add Movviz by @smashingtags in #574
+- HLCE-356: make the icon smoke check say what it saw, and keep the report by @smashingtags in #576
+- HLCE-345: send host alerts through the estate's Resend sender by @smashingtags in #575
+- EOS-2718: record each published release in Jira by @smashingtags in #577
+
+### 📦 Other
+
+- Fix first-install bugs (#620–#624) and clear lint warnings by @smashingtags in #626
+
 ## [v2.5.2] - 2026-09-28
 
 ### 📚 Documentation
