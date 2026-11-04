@@ -4,14 +4,16 @@ HomelabARR uses environment variables to control how it runs. Set them before st
 
 ---
 
-## Required Variables
+## Required Setup
 
-These two are required. Without them, things break:
+Two things are required. Without them, the stack won't start:
 
-| Variable | What it does | How to set it |
-|----------|-------------|---------------|
-| `JWT_SECRET` | Signs your login sessions — keep this private and never commit it to version control | `export JWT_SECRET=$(openssl rand -hex 32)` |
-| `DOCKER_GID` | Tells the container which group can talk to Docker | `export DOCKER_GID=$(getent group docker \| cut -d: -f3)` |
+| What | Why | How |
+|------|-----|-----|
+| `./secrets/` files | The JWT signing keys, the initial admin password, and the database key are read from files, not environment variables | `bash scripts/init-secrets.sh` (run once, from `/opt/homelabarr`) |
+| `CORS_ORIGIN` | The exact address you open the dashboard at, e.g. `http://192.0.2.100:8084` or `https://homelabarr.example.com` | `export CORS_ORIGIN=http://YOUR-SERVER-IP:8084` |
+
+You don't need `JWT_SECRET` or `DOCKER_GID` with the shipped `homelabarr.yml`. The JWT key comes from `./secrets/jwt_key_current`, and the backend reaches Docker through the bundled socket proxy.
 
 ---
 
@@ -21,7 +23,7 @@ Optional, but useful:
 
 | Variable | Default | What it does |
 |----------|---------|-------------|
-| `CORS_ORIGIN` | — | The URL you use to open the dashboard (e.g., `http://192.0.2.100:8084`). Set this if you get CORS errors after logging in. |
+| `ALLOW_PLAIN_HTTP` | `false` | Set to `true` only if you open the dashboard at a plain `http://` address with no HTTPS proxy in front. It drops the `Secure` flag from login cookies (otherwise the browser discards them and you can't stay logged in), and turns off HSTS and the CSP `upgrade-insecure-requests` directive. Use it on a trusted LAN only. |
 | `FRONTEND_PORT` | `8084` | Port for the web dashboard |
 | `BACKEND_PORT` | `8092` | Port for the API server |
 | `TZ` | `UTC` | Your timezone (e.g., `America/New_York`, `Europe/London`) |
@@ -64,21 +66,19 @@ Rarely needed, but here if you need them:
 Instead of typing `export` commands every time — which only last until you close your terminal — save your settings in a `.env` file next to your `homelabarr.yml`:
 
 ```bash
-# Required
-JWT_SECRET=paste-a-long-random-string-here
-DOCKER_GID=999
+# Required (secrets live in ./secrets/, created by scripts/init-secrets.sh)
+CORS_ORIGIN=http://192.0.2.100:8084
+
+# Only for a plain http:// address with no HTTPS proxy in front
+ALLOW_PLAIN_HTTP=true
 
 # Recommended
-CORS_ORIGIN=http://192.0.2.100:8084
 TZ=America/New_York
 APPFOLDER=/opt/appdata
 ```
 
-!!! tip "Get your DOCKER_GID"
-    Run `getent group docker | cut -d: -f3` on your server. It prints a number like `999` or `998`. Use that.
-
 !!! warning "Keep .env out of git"
-    Add `.env` to your `.gitignore`. It contains your JWT_SECRET and other sensitive values. Use `.env.example` with placeholder values if you want to template it:
+    Add `.env` to your `.gitignore`. Keep `./secrets/` out of git as well; it holds your signing keys and admin password. Use `.env.example` with placeholder values if you want to template it:
     
     ```bash
     cp .env .env.example

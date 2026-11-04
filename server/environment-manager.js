@@ -63,6 +63,15 @@ export class EnvironmentManager {
    * Get the comprehensive environment configuration
    * @returns {EnvironmentConfig} The complete configuration object
    */
+  /**
+   * True when DOCKER_HOST points at a network endpoint (e.g. the bundled
+   * socket-proxy at tcp://socket-proxy:2375) rather than a local socket.
+   * @returns {boolean}
+   */
+  static usesRemoteDockerHost() {
+    return /^(tcp|https?):\/\//i.test(process.env.DOCKER_HOST || '');
+  }
+
   static getConfiguration() {
     if (!this.#initialized) {
       this.#config = this.#buildConfiguration();
@@ -244,7 +253,8 @@ export class EnvironmentManager {
     }
 
     // Validate Docker configuration
-    if (config.platform === 'linux' && !config.dockerGid) {
+    const remoteDockerHost = this.usesRemoteDockerHost();
+    if (config.platform === 'linux' && !config.dockerGid && !remoteDockerHost) {
       warnings.push('DOCKER_GID not set - may cause permission issues with Docker socket');
     }
 
@@ -255,7 +265,7 @@ export class EnvironmentManager {
 
     // Validate Docker socket accessibility
     try {
-      if (config.platform !== 'windows' && !fs.existsSync(config.dockerSocket)) {
+      if (config.platform !== 'windows' && !remoteDockerHost && !fs.existsSync(config.dockerSocket)) {
         warnings.push(`Docker socket not found at ${config.dockerSocket}`);
       }
     } catch (error) {
@@ -305,7 +315,9 @@ export class EnvironmentManager {
     }
     
     // Docker configuration
-    console.log(`🐳 Docker Socket: ${config.dockerSocket}`);
+    console.log(this.usesRemoteDockerHost()
+      ? `🐳 Docker Host: ${process.env.DOCKER_HOST}`
+      : `🐳 Docker Socket: ${config.dockerSocket}`);
     if (config.dockerGid) {
       console.log(`👥 Docker GID: ${config.dockerGid}`);
     }

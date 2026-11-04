@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Key, Copy, Check, Trash2, Plus, Loader2, Smartphone, AlertTriangle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -47,7 +47,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
     }
   };
 
-  const fetchKeys = async () => {
+  const fetchKeys = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
@@ -64,7 +64,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, error]);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,7 +73,7 @@ export function ApiKeysModal({ isOpen, onClose }: ApiKeysModalProps) {
       setNewKey(null);
       setShowCreate(false);
     }
-  }, [isOpen]);
+  }, [isOpen, fetchKeys]);
 
   const createKey = async () => {
     if (!isAuthenticated) return;

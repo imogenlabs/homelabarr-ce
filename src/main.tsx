@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { NotificationProvider } from "./contexts/NotificationContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { NotificationProvider } from "./contexts/NotificationProvider";
+import { AuthProvider } from "./contexts/AuthProvider";
+import { ThemeProvider } from "./contexts/ThemeProvider";
 import App from "./App.tsx";
 import "./index.css";
 import { getTheme, setTheme } from "./lib/theme";

@@ -75,15 +75,24 @@ Change the port in your `.env` file:
 FRONTEND_PORT=8085
 ```
 
-### Docker socket permission denied
+### I log in and land straight back on the login screen
 
-`DOCKER_GID` must match your server's Docker group ID:
+You're on a plain `http://` address and the login cookie is HTTPS-only, so the browser drops it. Serve the dashboard over HTTPS, or on a trusted LAN set `ALLOW_PLAIN_HTTP=true` and restart:
 
 ```bash
-getent group docker | cut -d: -f3  # Find your GID
-export DOCKER_GID=YOUR_NUMBER
+export ALLOW_PLAIN_HTTP=true
 docker compose -f homelabarr.yml up -d
 ```
+
+Safari can also show a blank page in this situation, for the same reason.
+
+### `docker compose up` says "bind source path does not exist: .../secrets/..."
+
+Run `bash scripts/init-secrets.sh` in `/opt/homelabarr` first. It creates the secret files the stack mounts, and prints the initial admin password.
+
+### Docker connection errors
+
+The shipped `homelabarr.yml` reaches Docker through the `socket-proxy` container at `tcp://socket-proxy:2375`; the backend doesn't mount the Docker socket itself. Check `docker logs homelabarr-socket-proxy` and that the proxy container is healthy.
 
 ### "View Logs" opens an empty dialog
 
@@ -141,9 +150,9 @@ docker compose -f apps/media-servers/plex.yml --env-file .env up -d
 
 ## Security
 
-### The default login is admin/admin — is that safe?
+### What's the first login?
 
-No. Change it immediately after setup. Anyone on your local network can log in until you do. Click your username in the top right after signing in to update your password.
+Username `admin`, with the random password `scripts/init-secrets.sh` printed during setup (it's also in `./secrets/default_admin_password`). Change it right after your first login: click your username in the top right. The public demo is the only place that uses `admin` / `admin`.
 
 ### Should I expose HomelabARR to the internet?
 

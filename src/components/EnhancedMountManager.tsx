@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Cloud, 
   DollarSign, 
@@ -49,7 +49,7 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
   const [authWizardOpen, setAuthWizardOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-  const fetchEnhancedMountStats = async () => {
+  const fetchEnhancedMountStats = useCallback(async () => {
     try {
       // Call the backend API which proxies to the container
       const response = await fetch(`/api/enhanced-mount/${containerId}/status`);
@@ -92,14 +92,14 @@ export const EnhancedMountManager: React.FC<Props> = ({ containerId, containerNa
     } finally {
       setLoading(false);
     }
-  };
+  }, [containerId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch-on-mount; setState runs after await, not synchronously
     fetchEnhancedMountStats();
     const interval = setInterval(fetchEnhancedMountStats, 30000); // Update every 30s
     return () => clearInterval(interval);
-  }, [containerId]);
+  }, [fetchEnhancedMountStats]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

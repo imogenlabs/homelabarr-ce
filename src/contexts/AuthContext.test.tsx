@@ -12,7 +12,8 @@ vi.mock("../lib/api", () => ({
   apiFetchRaw: vi.fn(),
 }));
 
-import { AuthProvider, useAuth } from "./AuthContext";
+import { useAuth } from "./AuthContext";
+import { AuthProvider } from "./AuthProvider";
 import { apiFetch, apiFetchRaw } from "../lib/api";
 
 const mockApiFetch = vi.mocked(apiFetch);

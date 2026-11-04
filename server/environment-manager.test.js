@@ -7,7 +7,8 @@ import path from 'node:path';
 // config behind a private #initialized flag, so each case resets modules and
 // re-imports with fresh env. #validateCritical calls process.exit(1), which is
 // spied so a "fatal" case is observable instead of killing the worker.
-const ENV_KEYS = ['NODE_ENV', 'JWT_SECRET', 'AUTH_ENABLED', 'BIND_ADDRESS', 'CORS_ORIGIN', 'SECRET_ROOT'];
+const ENV_KEYS = ['NODE_ENV', 'JWT_SECRET', 'AUTH_ENABLED', 'BIND_ADDRESS', 'CORS_ORIGIN', 'SECRET_ROOT',
+  'DOCKER_HOST', 'DOCKER_SOCKET', 'DOCKER_GID'];
 
 async function loadEnvMgr(env = {}) {
   vi.resetModules();
@@ -149,5 +150,29 @@ describe('getCorsOptions policy (AC4)', () => {
     expect(await allowOrigin(opts, 'https://app.example.com')).toBe(true);
     expect(await allowOrigin(opts, 'http://192.168.1.20:3000')).toBe(false); // deny-by-default
     expect(await allowOrigin(opts, 'http://evil.example.com')).toBe(false);
+  });
+});
+
+// #621: with DOCKER_HOST=tcp://socket-proxy:2375 (homelabarr.yml) there is no
+// local socket and no docker group to match, so neither should be warned about.
+describe('remote DOCKER_HOST validation', () => {
+  it('skips socket and DOCKER_GID warnings for a tcp:// DOCKER_HOST', async () => {
+    vi.spyOn(process, 'exit').mockImplementation(() => {});
+    const EM = await loadEnvMgr({
+      NODE_ENV: 'development', JWT_SECRET: 'x'.repeat(40),
+      DOCKER_HOST: 'tcp://socket-proxy:2375', DOCKER_SOCKET: '/nonexistent/docker.sock',
+    });
+    expect(EM.usesRemoteDockerHost()).toBe(true);
+    const { warnings } = EM.validateConfiguration();
+    expect(warnings.join('\n')).not.toMatch(/Docker socket not found|DOCKER_GID/);
+  });
+
+  it('keeps the socket warning for a local socket', async () => {
+    vi.spyOn(process, 'exit').mockImplementation(() => {});
+    const EM = await loadEnvMgr({
+      NODE_ENV: 'development', JWT_SECRET: 'x'.repeat(40), DOCKER_SOCKET: '/nonexistent/docker.sock',
+    });
+    expect(EM.usesRemoteDockerHost()).toBe(false);
+    expect(EM.validateConfiguration().warnings.join('\n')).toMatch(/Docker socket not found/);
   });
 });

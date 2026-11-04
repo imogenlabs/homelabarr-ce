@@ -283,7 +283,7 @@ export default function App() {
     if (activeCategory === 'deployed' && deployedApps.length === 0) {
       info('No Deployed Apps', 'Deploy some applications to see them here. Browse the categories above to get started!');
     }
-  }, [activeCategory, deployedApps.length]);
+  }, [activeCategory, deployedApps.length, info]);
 
   const handleDeploy = async (appId: string, config: Record<string, string>, mode: DeploymentMode) => {
     info('Deployment Started', `Deploying ${appId} via HomelabARR CLI...`);

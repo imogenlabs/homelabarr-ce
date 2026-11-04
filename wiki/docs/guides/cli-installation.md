@@ -45,10 +45,12 @@ Already installed via CLI and want the dashboard too?
 ```bash
 cd /opt/homelabarr
 
-export JWT_SECRET=$(openssl rand -hex 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
-export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+bash scripts/init-secrets.sh            # prints the initial admin password
 
+export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+export ALLOW_PLAIN_HTTP=true            # only for a plain http:// address
+
+sudo bash scripts/install-apparmor.sh   # AppArmor hosts only
 docker compose -f homelabarr.yml up -d
 ```
 

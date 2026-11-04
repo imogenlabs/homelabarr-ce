@@ -70,11 +70,26 @@ jobs:
           Path('/tmp/readme-login.json').write_text(json.dumps({'username': match[1], 'password': password}))
           PY
           status=$(curl -sS -o /tmp/readme-login-response -w '%{http_code}' \
+            -D /tmp/readme-login-headers -c /tmp/readme-cookies \
             -H 'Content-Type: application/json' \
             --data-binary @/tmp/readme-login.json \
             http://localhost:8084/api/auth/login)
           echo "Login HTTP status: $status"
           [[ "$status" =~ ^2[0-9][0-9]$ ]]
+          # The README opens the dashboard over plain HTTP. A browser drops a
+          # Secure cookie on an http:// page, so a 200 from login alone is not
+          # enough: the session cookie must be usable on the next request (#622).
+          if grep -i '^set-cookie: hl_session=' /tmp/readme-login-headers | grep -qi '; *secure'; then
+            echo "hl_session is marked Secure on a plain-HTTP install; browsers will drop it"
+            exit 1
+          fi
+          if curl -sSI http://localhost:8084/ | grep -i '^content-security-policy:' | grep -q 'upgrade-insecure-requests'; then
+            echo "CSP upgrade-insecure-requests is on for a plain-HTTP install; browsers will fail to load assets"
+            exit 1
+          fi
+          me=$(curl -sS -o /dev/null -w '%{http_code}' -b /tmp/readme-cookies http://localhost:8084/api/auth/me)
+          echo "/api/auth/me with the login cookie: $me"
+          [[ "$me" == 200 ]]
       # Plain docker, not compose: CORS_ORIGIN was exported inside the README
       # step only, so compose refuses to interpolate here and would hide the logs.
       - name: Show container logs on failure

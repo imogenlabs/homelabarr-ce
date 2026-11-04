@@ -85,8 +85,10 @@ cd /opt/homelabarr
 # 2. Create the secrets (the initial admin password is printed)
 bash scripts/init-secrets.sh
 
-# 3. Set the dashboard URL
+# 3. Set the dashboard URL. This opens it at plain http://<ip>:8084, so also
+#    allow plain HTTP (skip that line if an HTTPS reverse proxy sits in front)
 export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
+export ALLOW_PLAIN_HTTP=true
 
 # 4. Install the profiles on AppArmor hosts, then start
 sudo bash scripts/install-apparmor.sh
@@ -95,7 +97,9 @@ docker compose -f homelabarr.yml up -d
 
 Open `http://your-server-ip:8084`. Log in as `admin` with the password printed by `scripts/init-secrets.sh` (also saved in `./secrets/default_admin_password`). **Change the password immediately.**
 
-> **For a permanent setup**, move `CORS_ORIGIN` into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
+> **Plain HTTP or HTTPS?** `ALLOW_PLAIN_HTTP=true` turns off the `Secure` flag on login cookies and the HTTPS-only headers, which browsers need for a dashboard at `http://<ip>`. Use it only on a trusted LAN. Behind Traefik, Caddy, or another HTTPS proxy, leave it out and set `CORS_ORIGIN` to your `https://` address.
+
+> **For a permanent setup**, move `CORS_ORIGIN` (and `ALLOW_PLAIN_HTTP`, if you use it) into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
 
 > **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first.
 

@@ -25,16 +25,19 @@ Whether you just bought your first server or you've been running a homelab for y
 git clone https://github.com/imogenlabs/homelabarr-ce.git /opt/homelabarr
 cd /opt/homelabarr
 
-# 2. Set required variables
-export JWT_SECRET=$(openssl rand -hex 32)
-export DOCKER_GID=$(getent group docker | cut -d: -f3)
-export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+# 2. Create the secrets (prints the initial admin password)
+bash scripts/init-secrets.sh
 
-# 3. Start HomelabARR
+# 3. Set the dashboard address (plain http:// needs ALLOW_PLAIN_HTTP=true)
+export CORS_ORIGIN=http://YOUR-SERVER-IP:8084
+export ALLOW_PLAIN_HTTP=true
+
+# 4. Start HomelabARR
+sudo bash scripts/install-apparmor.sh   # AppArmor hosts only
 docker compose -f homelabarr.yml up -d
 ```
 
-Open **http://YOUR-SERVER-IP:8084** and log in with `admin` / `admin` — then **change your password right away**.
+Open **http://YOUR-SERVER-IP:8084** and log in as `admin` with the password `scripts/init-secrets.sh` printed. Then **change your password right away**.
 
 → [Full Quick Start Guide](guides/quick-start.md){ .md-button .md-button--primary }
 
