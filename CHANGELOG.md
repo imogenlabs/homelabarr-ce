@@ -15,6 +15,50 @@
 - The README quick-start CI now checks that the login cookie is usable over plain HTTP and that `/api/auth/me` succeeds with it. It previously checked only for a 200 from login, which is why #622 got through.
 - Fixed a gap in the nginx security-header regression test: it matched the `/` location with `includes('/')`, which hit `/icons/` first, so the SPA `/` block was never checked. Added a regression test that locks the HSTS/CSP defaults behind `ALLOW_PLAIN_HTTP`.
 - The E2E stack now uses `ALLOW_PLAIN_HTTP=true` instead of a `sed` that stripped the CSP directive.
+- **Images are signed even when the signing service hiccups** ([HLCE-361](https://mjashley.atlassian.net/browse/HLCE-361)): a lost reply from the signing log made one build stop before signing, leaving `latest` unsigned. Signing now retries, and a real failure still stops the build.
+
+### 📝 Docs
+- The wiki home page no longer says the default login is `admin`/`admin`; it points to the password `scripts/init-secrets.sh` prints.
+
+### ⬆️ Dependencies
+- Production dependency updates (#619).
+- Cleared every `npm audit` finding in the development tools (zod, minimatch, deepmerge) by removing two unused tools (`shadcn` CLI, `msw`) and requiring patched versions of the rest. Nothing in the published images was affected. `npm audit` now reports 0.
+
+## [v2.5.2] - September 28, 2026
+
+### 🐛 Fixes
+- **The README quick start starts HomelabARR on a clean machine.** The secrets step was missing, the frontend ran as the wrong user, and the health checks asked an address nothing listens on. A CI job now follows the README word for word on a fresh Linux machine and logs in. The first login uses the password printed by `scripts/init-secrets.sh`.
+- **One visitor could lock everyone out of signing in.** Behind the bundled web server, every visitor counted as the same address, so all users shared one login limit. Each visitor now counts separately. Behind your own reverse proxy, set `TRUST_PROXY_HOPS` to the number of proxies.
+
+### 🔒 Security
+- Newer `qs` (two request-slowdown advisories), the password-reset store can no longer be steered by a crafted user id, and the images carry a patched `libexpat`.
+
+## [v2.5.1] - August 29, 2026
+
+### 🔒 Security
+- **Rebuild of v2.5.0 with patched OpenSSL.** v2.5.0's backend image carried ten OpenSSL CVEs (two high) because the build reused a cached package-update layer. Release builds no longer reuse that cache.
+
+## [v2.5.0] - August 29, 2026
+
+### 🐛 Fixes
+- **Container logs work again.** The socket proxy started requiring log reads to be switched on by name. `homelabarr.yml` now sets `ALLOW_LOGS=1`. Upgrading: pull the new `homelabarr.yml` and run `docker compose -f homelabarr.yml up -d --force-recreate socket-proxy`.
+
+### 🐳 Container image
+- The encrypted-database driver ships prebuilt instead of compiling at install time, so a skipped build step can no longer produce an image that only fails at runtime. The backend image grows by about 17 MB.
+- The socket proxy is pinned to a real version plus digest, so updates show up.
+
+## [v2.4.0] - August 13, 2026
+
+### 🐛 Fixes
+- **Login rate limiting could be bypassed from IPv6** by rotating addresses within one allocation. Attempts are now grouped by subnet.
+- **Crash reports named the wrong error** when recording the crash itself failed. The original error is reported first.
+- **Fake containers appeared on real installs** reached at `localhost`. The app now asks the server whether it is a demo.
+
+### ✨ Added
+- **`DEMO_MODE=true`** refuses password, account, API-key and two-factor changes for public instances with shared credentials. Off by default.
+
+### 🐳 Container image
+- `arm64` images build natively instead of under emulation.
 
 ## [v2.3.0] - August 11, 2026
 
