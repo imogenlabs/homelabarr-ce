@@ -273,7 +273,7 @@ export class NetworkManager {
    * @returns {string}
    */
   static getDockerEndpointLabel() {
-    return this.usesRemoteDockerHost() ? process.env.DOCKER_HOST : this.getConfiguration().dockerSocket;
+    return EnvironmentManager.getDockerEndpoint().endpoint;
   }
 
   /**
@@ -500,7 +500,7 @@ export class NetworkManager {
     console.log(`🔗 Server Binding: ${config.bindAddress}:${config.port}`);
     
     // Docker configuration
-    console.log(`🐳 Docker Socket: ${config.dockerSocket}`);
+    console.log(`🐳 Docker: ${EnvironmentManager.getDockerEndpoint(config.platform).endpoint}`);
     console.log(`⏱️  Docker Timeout: ${config.timeouts.connection}ms`);
     
     // Service URLs

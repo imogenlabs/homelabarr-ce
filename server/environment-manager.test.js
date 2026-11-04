@@ -176,3 +176,26 @@ describe('remote DOCKER_HOST validation', () => {
     expect(EM.validateConfiguration().warnings.join('\n')).toMatch(/Docker socket not found/);
   });
 });
+
+// HLCE-364: the startup log named /var/run/docker.sock even when the backend
+// talked to the socket-proxy over TCP, which is what sent #621 looking for a socket.
+describe('getDockerEndpoint', () => {
+  it('names DOCKER_HOST over TCP, and never the socket, with the socket-proxy', async () => {
+    vi.spyOn(process, 'exit').mockImplementation(() => {});
+    const EM = await loadEnvMgr({
+      NODE_ENV: 'development', JWT_SECRET: 'x'.repeat(40), DOCKER_HOST: 'tcp://socket-proxy:2375',
+    });
+    expect(EM.getDockerEndpoint('linux')).toEqual({ endpoint: 'tcp://socket-proxy:2375', type: 'tcp' });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    EM.logEnvironmentInfo();
+    const printed = log.mock.calls.flat().join('\n');
+    expect(printed).toContain('tcp://socket-proxy:2375');
+    expect(printed).not.toMatch(/docker\.sock|unix_socket/);
+  });
+
+  it('names the socket path when no DOCKER_HOST is set', async () => {
+    const EM = await loadEnvMgr({ DOCKER_SOCKET: '/run/custom/docker.sock' });
+    expect(EM.getDockerEndpoint('linux')).toEqual({ endpoint: '/run/custom/docker.sock', type: 'unix_socket' });
+    expect(EM.getDockerEndpoint('windows').type).toBe('named_pipe');
+  });
+});

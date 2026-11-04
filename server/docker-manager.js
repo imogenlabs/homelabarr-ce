@@ -67,6 +67,11 @@ class DockerConnectionManager {
       circuitBreakerTimeout: options.circuitBreakerTimeout || 60000,
       platform: networkConfig.platform
     };
+    // What the backend really talks to: DOCKER_HOST over TCP with the bundled
+    // socket-proxy, otherwise the socket path (#621).
+    this.config.endpoint = EnvironmentManager.usesRemoteDockerHost()
+      ? process.env.DOCKER_HOST
+      : this.config.socketPath;
 
     this.state = {
       isConnected: false,
@@ -93,11 +98,9 @@ class DockerConnectionManager {
     this.connectionTestTimer = null;
 
     // Log initialization with platform-specific context
+    const { socketPath: _socketPath, ...logConfig } = this.config;
     logger.dockerConnection('info', 'Initializing Docker Connection Manager', {
-      config: {
-        ...this.config,
-        socketPath: this.config.socketPath // Show actual socket path being used
-      },
+      config: logConfig,
       platform: this.config.platform,
       platformDetails: this.getPlatformDetails(),
       nodeVersion: process.version,
@@ -164,7 +167,15 @@ class DockerConnectionManager {
       nodeVersion: process.version
     };
 
-    if (this.config.platform === 'windows') {
+    if (EnvironmentManager.usesRemoteDockerHost()) {
+      details.dockerSocketType = 'tcp';
+      details.endpoint = this.config.endpoint;
+      details.commonIssues = [
+        'Socket proxy container not running',
+        'Socket proxy not on the same Docker network',
+        'Socket proxy denies the operation (check its environment flags)'
+      ];
+    } else if (this.config.platform === 'windows') {
       details.dockerSocketType = 'named_pipe';
       details.expectedSocketPath = '\\\\.\\pipe\\docker_engine';
       details.commonIssues = [
@@ -191,6 +202,9 @@ class DockerConnectionManager {
    * @returns {string} Socket type
    */
   getDockerSocketType() {
+    if (EnvironmentManager.usesRemoteDockerHost()) {
+      return 'tcp';
+    }
     if (this.config.platform === 'windows' || this.config.socketPath.includes('pipe')) {
       return 'named_pipe';
     }
@@ -293,7 +307,7 @@ class DockerConnectionManager {
 
     try {
       logger.dockerConnection('debug', 'Initiating Docker connection attempt', {
-        socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         timeout: this.config.timeout,
         retryCount: this.state.retryCount,
         previousConnectionState: previousState,
@@ -357,7 +371,7 @@ class DockerConnectionManager {
           error: dockerError.message,
           code: dockerError.code,
           platform: this.config.platform,
-          socketPath: this.config.socketPath,
+          endpoint: this.config.endpoint,
           isModemError: dockerError.message && dockerError.message.includes('Cannot read properties of undefined')
         });
 
@@ -377,7 +391,7 @@ class DockerConnectionManager {
 
       // Log successful connection with context
       const connectionContext = {
-        socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         testContainers: testResult.length,
         connectionDuration: this.state.lastSuccessfulConnection ?
           Date.now() - this.state.lastSuccessfulConnection.getTime() : 'first_connection',
@@ -408,7 +422,7 @@ class DockerConnectionManager {
       logger.dockerConnection('debug', 'Docker connection attempt failed, handling error', {
         errorCode: error.code,
         errorMessage: error.message,
-        socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         retryCount: this.state.retryCount,
         circuitBreakerState: this.circuitBreaker.state,
         consecutiveFailures: this.circuitBreaker.consecutiveFailures,
@@ -658,7 +672,7 @@ class DockerConnectionManager {
       delay,
       this.state.lastError,
       {
-        socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         errorType: this.state.lastError?.type,
         retryStrategy: 'exponential_backoff_with_jitter',
         circuitBreakerState: this.circuitBreaker.state,
@@ -716,7 +730,7 @@ class DockerConnectionManager {
   startHealthCheck() {
     logger.dockerConnection('info', 'Starting Docker health check monitoring', {
       healthCheckInterval: this.config.healthCheckInterval,
-      socketPath: this.config.socketPath
+      endpoint: this.config.endpoint
     });
 
     this.healthCheckTimer = setInterval(async () => {
@@ -788,6 +802,7 @@ class DockerConnectionManager {
       ...this.state,
       config: {
         socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         timeout: this.config.timeout,
         retryAttempts: this.config.retryAttempts,
         circuitBreakerThreshold: this.config.circuitBreakerThreshold,
@@ -816,6 +831,7 @@ class DockerConnectionManager {
       docker: {
         connected: connectionState.isConnected,
         socketPath: connectionState.config.socketPath,
+        endpoint: connectionState.config.endpoint,
         platform: connectionState.platform
       },
       troubleshooting: {
@@ -1082,6 +1098,7 @@ class DockerConnectionManager {
       },
       config: {
         socketPath: this.config.socketPath,
+        endpoint: this.config.endpoint,
         timeout: this.config.timeout,
         retryAttempts: this.config.retryAttempts,
         healthCheckInterval: this.config.healthCheckInterval,

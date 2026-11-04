@@ -148,8 +148,7 @@ export class DeploymentLogger {
           authEnabled: envConfig.authEnabled
         },
         docker: {
-          socketPath: networkConfig.dockerSocket,
-          socketType: config.platform === 'windows' ? 'named_pipe' : 'unix_socket',
+          ...EnvironmentManager.getDockerEndpoint(config.platform),
           timeout: networkConfig.timeouts.connection
         },
         cors: {
@@ -286,8 +285,8 @@ export class DeploymentLogger {
         configuration: {
           bindAddress: networkConfig.bindAddress,
           port: networkConfig.port,
-          dockerSocket: networkConfig.dockerSocket,
-          socketType: config.platform === 'windows' ? 'named_pipe' : 'unix_socket'
+          dockerEndpoint: EnvironmentManager.getDockerEndpoint(config.platform).endpoint,
+          dockerType: EnvironmentManager.getDockerEndpoint(config.platform).type
         },
         connection: {
           timeout: networkConfig.timeouts.connection,
@@ -349,8 +348,8 @@ export class DeploymentLogger {
         },
         platform: config.platform,
         socketInfo: {
-          path: context.socketPath || NetworkManager.getConfiguration().dockerSocket,
-          type: config.platform === 'windows' ? 'named_pipe' : 'unix_socket',
+          path: context.endpoint || EnvironmentManager.getDockerEndpoint(config.platform).endpoint,
+          type: EnvironmentManager.getDockerEndpoint(config.platform).type,
           accessible: context.socketAccessible || null
         },
         connection: {
@@ -414,7 +413,7 @@ export class DeploymentLogger {
           stack: config.enableDetailedLogging ? error.stack : undefined
         },
         platform: config.platform,
-        socketPath: context.socketPath || NetworkManager.getConfiguration().dockerSocket,
+        endpoint: context.endpoint || EnvironmentManager.getDockerEndpoint(config.platform).endpoint,
         ...context
       }
     };
@@ -451,8 +450,7 @@ export class DeploymentLogger {
           stack: config.enableDetailedLogging ? error.stack : undefined
         },
         configuration: {
-          socketPath: networkConfig.dockerSocket,
-          socketType: config.platform === 'windows' ? 'named_pipe' : 'unix_socket',
+          ...EnvironmentManager.getDockerEndpoint(config.platform),
           timeout: networkConfig.timeouts.connection,
           isContainerized: EnvironmentManager.isContainerized()
         },
@@ -550,8 +548,7 @@ export class DeploymentLogger {
           loggingEnabled: config.environment === 'development'
         },
         docker: {
-          socketPath: networkConfig.dockerSocket,
-          socketType: config.platform === 'windows' ? 'named_pipe' : 'unix_socket',
+          ...EnvironmentManager.getDockerEndpoint(config.platform),
           timeout: networkConfig.timeouts.connection
         },
         features: envConfig.features
