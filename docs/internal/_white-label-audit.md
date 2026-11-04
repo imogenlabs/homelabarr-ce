@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1621
+**Total brand references found:** 1640
 
 ---
 
@@ -404,7 +404,7 @@
 
 ## Wiki content
 
-**360 references**
+**379 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -498,6 +498,10 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- **Workflow permissions**: Added explicit 'permissions: contents: read' to all workflows missing it. Resolves CodeQL al` |
 | `wiki/docs/install/changelog.md` | 1 x | `- **npm vulnerabilities patched**: vite, hono, @hono/node-server bumped to address 9 advisories (3 high, 6 moderate). ([` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Add OWNER-PUNCHLIST for project management by @smashingtags in #203` |
+| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2459: download with curl; not every runner has wget by @smashingtags in #566` |
+| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2619: add Movviz by @smashingtags in #574` |
+| `wiki/docs/install/changelog.md` | 1 x | `- EOS-2718: record each published release in Jira by @smashingtags in #577` |
+| `wiki/docs/install/changelog.md` | 1 x | `- Fix first-install bugs (#620–#624) and clear lint warnings by @smashingtags in #626` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-182: fix cosign verify identity (org migration smashingtags->imogenlabs) by @smashingtags in #229` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-182: revert cosign-installer to v3 (fix red build from #222) by @smashingtags in #228` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-183: fix vitest e2e exclusion + drop deprecated tsconfig baseUrl by @smashingtags in #230` |
@@ -622,6 +626,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-342: measure demo drift against the latest release, not main by @smashingtags in #544` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-343: README and SECURITY say what the code does by @smashingtags in #552` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-344: make the README quick start actually start HomelabARR CE by @smashingtags in #551` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-345: send host alerts through the estate's Resend sender by @smashingtags in #575` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-346: one demo — point every link at demo.homelabarr.com by @smashingtags in #546` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-347: rate-limit each client, not the proxy in front of the backend by @smashingtags in #549` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-348: an unanswered probe is unchecked, not failed by @smashingtags in #548` |
@@ -629,23 +634,37 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-350: hold password-reset tokens in a Map by @smashingtags in #553` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-351: make the white-label audit identical on Mac and Linux by @smashingtags in #554` |
 | `wiki/docs/install/changelog.md` | 1 x | `- HLCE-353: v2.5.2 by @smashingtags in #555` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-354: fix the 22 alerts from the first Python and Actions scans by @smashingtags in #558` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-354: scan Python and the Actions workflows with CodeQL again by @smashingtags in #557` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-356: make the icon smoke check say what it saw, and keep the report by @smashingtags in #576` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-359 drop the stale admin/admin warning from the wiki home page by @smashingtags in #629` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-360 clear the dev-dependency audit findings by @smashingtags in #630` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-361 retry image signing so a lost Rekor reply cannot ship an unsigned image by @smashingtags in #631` |
+| `wiki/docs/install/changelog.md` | 1 x | `- HLCE-362 finish the v2.6.0 changelog and fill in v2.4.0 to v2.5.2 by @smashingtags in #632` |
+| `wiki/docs/install/changelog.md` | 1 x | `- KEEN-62 pin keen 1.9.0 for release sync by @smashingtags in #628` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: /auth/me reload fix, E2E on ce-dev, Dependabot unblock by @smashingtags in #248` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Release dev → main: HLCE-191 E2E + INFRA-64/70 cleanup by @smashingtags in #243` |
 | `wiki/docs/install/changelog.md` | 1 x | `- SITE-239: give wiki.homelabarr.com a robots.txt by @smashingtags in #523` |
 | `wiki/docs/install/changelog.md` | 1 x | `- Sync docs to imogenlabs org + current app count by @smashingtags in #495` |
 | `wiki/docs/install/changelog.md` | 1 x | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
 | `wiki/docs/install/changelog.md` | 1 x | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
+| `wiki/docs/install/changelog.md` | 1 x | `- build keen v1.2.2 for Jira release sync by @smashingtags in #606` |
+| `wiki/docs/install/changelog.md` | 1 x | `- build keen v1.3.0 for Jira release sync by @smashingtags in #607` |
 | `wiki/docs/install/changelog.md` | 1 x | `- bump Playwright workers from 1 to 4 by @smashingtags in #157` |
 | `wiki/docs/install/changelog.md` | 1 x | `- fix broken README mascot image by @smashingtags in #163` |
 | `wiki/docs/install/changelog.md` | 1 x | `- flatten nav + move Discord/Discussions to header icons by @smashingtags in #160` |
 | `wiki/docs/install/changelog.md` | 1 x | `- harden users.json loader + DialogDescription a11y by @smashingtags in #165` |
 | `wiki/docs/install/changelog.md` | 1 x | `- optimize app icons (PNG → WebP, 5.9MB → 1.2MB) by @smashingtags in #154` |
+| `wiki/docs/install/changelog.md` | 1 x | `- pin the current keen release for release sync by @smashingtags in #625` |
+| `wiki/docs/install/changelog.md` | 1 x | `- record releases with keen v1.7.0 by @smashingtags in #609` |
 | `wiki/docs/install/changelog.md` | 1 x | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale tracked files by @smashingtags in #150` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove unused react-query, bump shadcn (kills all npm deprecation warnings) by @smashingtags in #158` |
 | `wiki/docs/install/changelog.md` | 1 x | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
+| `wiki/docs/install/changelog.md` | 1 x | `- v2.6.0 by @smashingtags in #627` |
+| `wiki/docs/install/changelog.md` | 1 x | `- watch every filesystem that holds guests in the host alert by @smashingtags in #608` |
 | `wiki/docs/install/changelog.md` | 1 x | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
 | `wiki/docs/robots.txt` | 1 x | `# wiki.homelabarr.com — documentation for HomelabARR Community Edition.` |
 | `wiki/docs/robots.txt` | 1 x | `Sitemap: https://wiki.homelabarr.com/sitemap.xml` |
