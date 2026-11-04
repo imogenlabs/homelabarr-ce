@@ -56,8 +56,16 @@ if (!raw) {
 // These PRs carry no labels at all, so the config cannot reach them.
 const NOISE = [/regenerate white-label audit/i];
 
+// PR titles carry the tracker key after the type so the tracker can link them
+// ("fix: ABC-12 log the..."); the generator strips the type, the key stays, and
+// public readers have no use for it. Advisory ids (CVE-, GHSA-) are kept.
+const ISSUE_KEY = /^(\s*[-*]\s+)(?:(?!CVE-|GHSA-)[A-Z][A-Z0-9]+-\d+:?\s+)+/;
+
 const body = (() => {
-  const kept = raw.split('\n').filter((l) => !NOISE.some((re) => re.test(l)));
+  const kept = raw
+    .split('\n')
+    .filter((l) => !NOISE.some((re) => re.test(l)))
+    .map((l) => l.replace(ISSUE_KEY, '$1'));
   // Dropping entries can leave a category heading with nothing under it.
   const out = kept.filter((line, i) => {
     if (!/^#{1,6}\s/.test(line)) return true;
