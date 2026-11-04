@@ -2,80 +2,33 @@
 
 <p align="center">
     <a href="https://github.com/imogenlabs/homelabarr-ce">
-      <img src="wiki/docs/img/mascot-600.webp" alt="HomelabARR CE" width="300">
+      <img src="wiki/docs/img/mascot-600.webp" alt="HomelabARR" width="300">
     </a>
 </p>
 
 <p align="center"><strong>Your homelab, one dashboard.</strong></p>
 
 <p align="center">
-    <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest">
-        <img src="https://img.shields.io/github/v/release/imogenlabs/homelabarr-ce?label=Release&logo=github" alt="Release">
-    </a>
-    <a href="https://github.com/imogenlabs/homelabarr-ce/blob/main/LICENSE">
-        <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
-    </a>
-    <a href="https://discord.gg/Pc7mXX786x">
-        <img src="https://img.shields.io/discord/1334411584927301682?label=Discord&logo=discord&color=5865F2" alt="Discord">
-    </a>
-    <a href="https://wiki.homelabarr.com">
-        <img src="https://img.shields.io/badge/Docs-Wiki-blue?logo=readthedocs&logoColor=white" alt="Documentation">
-    </a>
-    <a href="https://www.reddit.com/r/homelabarr/">
-        <img src="https://img.shields.io/badge/Reddit-r/homelabarr-FF4500?logo=reddit&logoColor=white" alt="Reddit">
-    </a>
+    <a href="https://github.com/imogenlabs/homelabarr-ce/releases/latest"><img src="https://img.shields.io/github/v/release/imogenlabs/homelabarr-ce?label=Release&logo=github" alt="Release"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+    <a href="https://demo.homelabarr.com"><img src="https://img.shields.io/badge/Try_the_Demo-Live-brightgreen?logo=docker&logoColor=white" alt="Live demo"></a>
+    <a href="https://wiki.homelabarr.com"><img src="https://img.shields.io/badge/Docs-Wiki-blue?logo=readthedocs&logoColor=white" alt="Documentation"></a>
+    <a href="https://discord.gg/Pc7mXX786x"><img src="https://img.shields.io/discord/1334411584927301682?label=Discord&logo=discord&color=5865F2" alt="Discord"></a>
 </p>
+
+HomelabARR is a dashboard for self-hosted apps. Open it, pick from 118 apps, click **Deploy**, and the app is running. No hunting for Compose files, no editing YAML, no guessing at ports.
+
+Plex, Jellyfin, Sonarr, Radarr, qBittorrent, Ollama, Home Assistant, Immich and more are ready to go. It's free and open source under the MIT license, with no account and no telemetry.
 
 <p align="center">
-    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml">
-        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/docker-build-push.yml/badge.svg" alt="Docker Build">
-    </a>
-    <a href="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml">
-        <img src="https://github.com/imogenlabs/homelabarr-ce/actions/workflows/security-audit.yml/badge.svg" alt="Security Audit">
-    </a>
+    <img src="wiki/docs/img/screenshots/dark-dashboard.png" alt="HomelabARR dashboard" width="700">
 </p>
 
-<p align="center">
-    <a href="https://demo.homelabarr.com">
-        <img src="https://img.shields.io/badge/Try_the_Demo-Live-brightgreen?logo=docker&logoColor=white" alt="CE Demo">
-    </a>
-    <a href="https://homelabarr.com">
-        <img src="https://img.shields.io/badge/Website-homelabarr.com-FF8C1A?logo=firefox&logoColor=white" alt="HomelabARR">
-    </a>
-    <a href="https://imogenlabs.ai">
-        <img src="https://img.shields.io/badge/Imogen_Labs-AI-8B5CF6" alt="Imogen Labs">
-    </a>
-</p>
+**Try it first:** the [live demo](https://demo.homelabarr.com) logs in with `admin` / `admin` and resets every 30 minutes.
 
----
+## Quick start
 
-## What is HomelabARR?
-
-You know how setting up self-hosted apps usually means Googling Docker Compose files, copying YAML, editing ports, and hoping it works? HomelabARR skips all of that.
-
-It's a dashboard. You open it, you see 118 apps, you click **Deploy**, and the app is running. That's it.
-
-Plex, Sonarr, Radarr, Jellyfin, Ollama, Home Assistant, qBittorrent — they're all in there, ready to go.
-
-**Free and open source.** MIT license. No account required. No telemetry.
-
-<p align="center">
-    <img src="wiki/docs/img/screenshots/dark-dashboard.png" alt="HomelabARR Dashboard" width="700">
-</p>
-
----
-
-## Try It Right Now
-
-Don't want to install anything yet? [**Open the live demo →**](https://demo.homelabarr.com)
-
-Log in with `admin` / `admin`. Browse apps, click around. Nothing you do in the demo touches a real server.
-
----
-
-## Install It (5 minutes)
-
-You need a Linux machine with Docker and `setfacl` (the `acl` package) installed.
+You need a Linux machine with Docker and `setfacl` (the `acl` package). No Docker yet? Run `curl -fsSL https://get.docker.com | sh` first.
 
 ```bash
 # 1. Clone
@@ -85,217 +38,84 @@ cd /opt/homelabarr
 # 2. Create the secrets (the initial admin password is printed)
 bash scripts/init-secrets.sh
 
-# 3. Set the dashboard URL. This opens it at plain http://<ip>:8084, so also
+# 3. Set the dashboard address. It opens at plain http://<ip>:8084, so also
 #    allow plain HTTP (skip that line if an HTTPS reverse proxy sits in front)
 export CORS_ORIGIN=http://$(hostname -I | awk '{print $1}'):8084
 export ALLOW_PLAIN_HTTP=true
 
-# 4. Install the profiles on AppArmor hosts, then start
+# 4. Install the AppArmor profiles (AppArmor hosts only), then start
 sudo bash scripts/install-apparmor.sh
 docker compose -f homelabarr.yml up -d
 ```
 
-Open `http://your-server-ip:8084`. Log in as `admin` with the password printed by `scripts/init-secrets.sh` (also saved in `./secrets/default_admin_password`). **Change the password immediately.**
+Open `http://your-server-ip:8084`. Log in as `admin` with the password printed by `scripts/init-secrets.sh` (also saved in `./secrets/default_admin_password`), then change it.
 
-> **Plain HTTP or HTTPS?** `ALLOW_PLAIN_HTTP=true` turns off the `Secure` flag on login cookies and the HTTPS-only headers, which browsers need for a dashboard at `http://<ip>`. Use it only on a trusted LAN. Behind Traefik, Caddy, or another HTTPS proxy, leave it out and set `CORS_ORIGIN` to your `https://` address.
+- **HTTPS:** behind Traefik, Caddy or another HTTPS proxy, leave out `ALLOW_PLAIN_HTTP` and set `CORS_ORIGIN` to your `https://` address. Only use `ALLOW_PLAIN_HTTP=true` on a network you trust.
+- **Keep the settings:** put `CORS_ORIGIN` (and `ALLOW_PLAIN_HTTP`) in a `.env` file next to `homelabarr.yml`.
+- **Update:** `docker compose -f homelabarr.yml pull && docker compose -f homelabarr.yml up -d`
 
-> **For a permanent setup**, move `CORS_ORIGIN` (and `ALLOW_PLAIN_HTTP`, if you use it) into a `.env` file. See the [configuration docs](https://wiki.homelabarr.com/guides/configuration/) for the full list of options.
+More options and building from source: [install guide](https://wiki.homelabarr.com/guides/quick-start/).
 
-> **Don't have Docker?** Run `curl -fsSL https://get.docker.com | sh` first.
+## What you get
 
-Want to build from source? See the [full install guide](https://wiki.homelabarr.com/guides/quick-start/).
+- **118 apps, one click each:** media servers and managers, download clients, AI tools, monitoring, virtual desktops, backup and more.
+- **Your choice of exposure:** plain IP and port, Traefik with SSL, or Traefik with Authelia for two-factor login.
+- **Container management:** start, stop, restart, remove and read logs.
+- **Port Manager:** every port in use across your stack.
+- **Your own apps:** drop a Compose YAML file in `apps/myapps/`.
+- **Mobile app:** manage your homelab from your phone.
 
----
+Every app is a plain Compose file in `apps/<category>/`. Read it, change it, or write your own.
 
-## What You Get
+## How it works
 
-- **118 apps, one click each.** Media servers, download clients, monitoring, AI tools, virtual desktops, backup, and more.
-- **Three deployment modes.** Just IP:port, Traefik for SSL, or Traefik + Authelia for 2FA.
-- **Manage running containers.** Start, stop, restart, remove, view logs.
-- **Port Manager.** See every port in use across your stack.
-- **Add your own apps.** Drop a YAML file in `apps/myapps/`.
-- **Dark mode.** Obviously.
-- **Mobile app.** iOS and Android — manage your homelab from the couch.
+Three containers:
 
----
+| Service | Role |
+|---------|------|
+| **Frontend** | The dashboard, served by nginx on port 8084. |
+| **Backend** | Reads the app catalog, deploys apps and handles sign-in. |
+| **Socket proxy** | The only thing that touches Docker. It allows listing, starting, stopping and log reads, and refuses exec and image builds. |
 
-## App Catalog
-
-| Category | # | Highlights |
-|----------|---|------------|
-| AI & Machine Learning | 14 | Ollama, Open WebUI, ComfyUI, Stable Diffusion, LocalAI |
-| Media Servers | 5 | Plex, Jellyfin, Emby |
-| Media Management | 15 | Sonarr, Radarr, Lidarr, Bazarr, Prowlarr |
-| Downloads | 13 | qBittorrent, SABnzbd, NZBGet, Deluge, Transmission |
-| Monitoring | 6 | Grafana, Netdata, Uptime Kuma, Tautulli |
-| Self-hosted | 35 | Nextcloud, Vaultwarden, Immich, Home Assistant, n8n, IT-Tools |
-| System | 12 | Portainer, Dozzle, Watchtower, Traefik |
-| Virtual Desktops | 10 | Kasm Workspaces, Firefox, Chrome, Tor Browser |
-| Transcoding | 4 | Tdarr, Handbrake, MakeMKV |
-| Backup | 3 | Duplicati, Restic |
-| My Apps | — | Whatever you add |
-
-Every template is a Docker Compose YAML file in `apps/<category>/`. Read them, edit them, or write your own.
-
----
-
-## Architecture
-
-Three containers. That's the whole stack.
-
-| Service | What it does | Port |
-|---------|-------------|------|
-| **Frontend** | React dashboard served by nginx. What you see in your browser. | 8084 |
-| **Backend** | Reads app templates, talks to Docker via socket proxy, handles auth. Node.js + Express. | 8092 |
-| **Socket Proxy** | Mediates Docker API access. `EXEC=0`, `BUILD=0`, `cap_drop: ALL`, read-only. Start/stop/restart and log reads are each an explicit grant. | internal |
-
-<p align="center">
-    <img src="wiki/docs/img/diagrams/system-architecture.png" alt="System Architecture" width="700">
-</p>
-
-Want the deep dive? [Architecture docs →](https://wiki.homelabarr.com/guides/architecture/)
-
----
+Details: [architecture](https://wiki.homelabarr.com/guides/architecture/).
 
 ## Security
 
-22-round security audit. 241+ findings shipped. [Full audit trail →](docs/audit/README.md)
+- Sign-in with two-factor (TOTP), rate limiting and account lockout.
+- An encrypted database, and a tamper-evident audit log.
+- Hardened containers: read-only, no extra privileges, AppArmor profiles.
+- Signed images with an SBOM, scanned for vulnerabilities on every build.
 
-| Layer | What ships |
-|-------|-----------|
-| **Auth** | JWT (HttpOnly cookies, 15-min TTL) + TOTP MFA + bcrypt cost 12 + CSRF double-submit |
-| **API keys** | HMAC-SHA256 hashed, `hlr_` prefix, HKDF-derived subkey isolation |
-| **Rate limiting** | 25 login attempts / 15 min per IP, account lockout at 15 failures, 100 req/min global |
-| **Container hardening** | `cap_drop: ALL`, `read_only: true`, `no-new-privileges`, dumb-init PID 1, AppArmor |
-| **Base images** | All pinned by `@sha256:` digest. cosign keyless signing + SBOM on every push. |
-| **Encryption at rest** | SQLCipher AES-256 on all databases. Key rotation scripts included. |
-| **Audit log** | Hash-chained tamper-evident log with daily rotation |
-| **Headers** | CSP, HSTS (2yr + preload), COOP, CORP, Permissions-Policy, X-Frame-Options DENY |
-| **Scanning** | Trivy on every image push and nightly, Dependabot weekly, secret scanning on every push (TruffleHog) and before every commit (Betterleaks) |
-| **Disclosure** | [SECURITY.md](SECURITY.md) + [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) (RFC 9116) |
+Verify an image before you run it:
 
-For the threat model (STRIDE analysis, trust boundaries, attack trees): [docs/threat-model/](docs/threat-model/README.md)
-For incident response (11 playbooks): [docs/ir/](docs/ir/README.md)
-For compliance posture (CIS Docker, NIST CSF, OWASP ASVS L2): [compliance/](compliance/)
+```bash
+cosign verify \
+  --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/imogenlabs/homelabarr-backend:latest
+```
 
-**A JWT signing key is required** (minimum 32 characters) — `scripts/init-secrets.sh` creates it in `./secrets/jwt_key_current`.
-
-Found a vulnerability? Email **michael@mjashley.com** — see [SECURITY.md](SECURITY.md).
-
----
-
-## Production Deployment Checklist
-
-1. **Bootstrap secrets:** `bash scripts/init-secrets.sh`
-2. **Verify image signatures:** `cosign verify --certificate-identity-regexp '^https://github.com/imogenlabs/homelabarr-ce/' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' ghcr.io/imogenlabs/homelabarr-backend:<tag>`
-3. **AppArmor:** `sudo bash scripts/install-apparmor.sh`
-4. **Start the stack:** `docker compose -f homelabarr.yml up -d`
-5. **Encrypt the database** (first install only): `make encrypt-db`
-6. **Verify health:** `curl -fsS https://<host>/api/health`
-7. **Host firewall:** `sudo bash scripts/host-firewall-setup.sh`
-8. **Backups:** Install `scripts/backup-cron.sh` as a daily cron
-9. **Subscribe** to Dependabot and Security alerts in GitHub repo settings
-
----
+Found a vulnerability? See [SECURITY.md](SECURITY.md). The [threat model](docs/threat-model/README.md) and [audit history](docs/audit/README.md) are in `docs/`.
 
 ## Settings
 
-| Setting | Required | What it does |
-|---------|----------|-------------|
-| `CORS_ORIGIN` | **Yes** | The URL you open the dashboard at. |
-| `TRUST_PROXY_HOPS` | Optional | How many proxies sit in front of the backend; 1 for the bundled setup, raise it only if you add your own reverse proxy in front. |
-| `AUTH_ENABLED` | Optional | Authentication is enabled by default. |
-| `CLI_BRIDGE_HOST_PATH` | Optional | Host path mounted for CLI integration; defaults to `/opt/homelabarr`. |
-| `FRONTEND_PORT` | Optional | Dashboard port; defaults to `8084`. |
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| `CORS_ORIGIN` | required | The address you open the dashboard at. |
+| `ALLOW_PLAIN_HTTP` | `false` | Allow sign-in at a plain `http://` address. LAN only. |
+| `FRONTEND_PORT` | `8084` | Dashboard port. |
+| `TRUST_PROXY_HOPS` | `1` | Proxies in front of the backend. Raise it only if you add your own reverse proxy. |
 
-All options: [wiki.homelabarr.com/guides/configuration](https://wiki.homelabarr.com/guides/configuration/)
+All settings: [configuration](https://wiki.homelabarr.com/guides/configuration/).
 
----
+## Contributing
 
-## Repo Structure
+Bug reports, app requests and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and tests.
 
-```
-homelabarr-ce/
-├── src/              # React frontend (Vite + Tailwind 4 + shadcn/ui)
-├── server/           # Node.js + Express backend (10 route modules)
-│   ├── index.js      # App setup + middleware
-│   ├── routes/       # auth, containers, deploy, health, ports, etc.
-│   ├── auth.js       # JWT dual-key + MFA + API keys
-│   └── audit.js      # Hash-chained tamper-evident log
-├── apps/             # App templates (one YAML per app)
-│   ├── ai/           # AI & machine learning
-│   ├── downloads/    # Download clients
-│   ├── media-servers/
-│   ├── self-hosted/
-│   ├── myapps/       # Your custom templates
-│   └── ...
-├── wiki/             # Source for wiki.homelabarr.com (MkDocs)
-├── docs/             # Audit trail, threat model, IR runbook, governance
-├── compliance/       # CIS Docker, NIST CSF, OWASP ASVS binders
-├── .github/          # CI workflows, security policy
-├── homelabarr.yml    # Production Docker Compose
-└── nginx.conf.template  # nginx config (envsubst-rendered at container start)
-```
+## Community
 
----
-
-## Development
-
-```bash
-npm install
-npm run dev          # Dashboard on :5173 + API on :8092 (set PORT=8092 in .env; without it the API uses 30002)
-npm run build        # Production build
-npm test             # Watch-mode test runner (vitest)
-npm run test:run     # Run the suite once
-npm run test:coverage # Run with a v8 coverage report
-```
-
-### Testing
-
-[Vitest](https://vitest.dev) runs two projects: **`server`** (backend, node environment) and **`web`** (frontend, jsdom + Testing Library). Backend HTTP tests drive the Express app in-process via `supertest` (the app is exported from `server/index.js` and only calls `listen()` outside `NODE_ENV=test`). Backend DB tests run against an in-memory SQLite database (`DB_PATH=:memory:`); set `BCRYPT_COST` low in tests to keep bcrypt fast. Unit/integration tests live next to the code (`server/**.test.js`, `src/**.test.ts(x)`).
-
-#### End-to-end (Playwright)
-
-E2E specs live in `tests/e2e/` (out of scope for vitest) and run in two lanes — full runbook in [`tests/e2e/README.md`](tests/e2e/README.md):
-
-- **`seeded`** — the reliable lane. Brings up a deterministic, self-contained target from [`docker-compose.e2e.yml`](docker-compose.e2e.yml) (namespaced `socket-proxy` + backend/frontend built from the tree, a fresh `admin`/`admin`, and a real allow-listed Docker socket) on port 8099, and drives the critical journeys: login + MFA, deploy-through-the-stream, container lifecycle + logs. Gates CI.
-- **`smoke`** — best-effort cosmetic checks against a live deploy (ce-dev by default, override with `TEST_BASE_URL`); non-deterministic, so it does not gate.
-
-```bash
-docker compose -p hlce-e2e -f docker-compose.e2e.yml up -d --build
-E2E_BASE_URL=http://localhost:8099 npx playwright test --project=seeded --workers=1
-docker compose -p hlce-e2e -f docker-compose.e2e.yml down -v
-```
-
-#### CI gate & coverage ratchet
-
-The `Unit Tests` workflow (`.github/workflows/unit-tests.yml`) runs on every PR and on pushes to `main`/`dev`, on free hosted `ubuntu-latest`: `npm run lint`, `tsc --noEmit`, and `npm run test:coverage`, then uploads the coverage report as a build artifact. Coverage **thresholds live in `vite.config.ts`** (`test.coverage.thresholds`) and act as a floor — vitest fails the run if coverage drops below them.
-
-**Ratchet rule:** the floor only ever moves **up**, and only in the **same PR that adds the tests** backing the increase. Never lower a threshold to make a red build pass. This way coverage is a one-way ratchet as the test suite grows toward the coverage targets (high-risk 80%+, medium 60%, overall 60%).
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to submit changes.
-
----
-
-## Releases in Jira
-
-Whoever cuts a release records it in Jira with `keen release sync --repo-path . --project HLCE --tag <tag> --head origin/main` (EOS-2718).
-
-## Links
-
-| | |
-|---|---|
-| **Website** | [homelabarr.com](https://homelabarr.com) |
-| **Docs** | [wiki.homelabarr.com](https://wiki.homelabarr.com) |
-| **Demo** | [demo.homelabarr.com](https://demo.homelabarr.com) — log in with admin / admin |
-| **Security** | [SECURITY.md](SECURITY.md) · [/.well-known/security.txt](https://demo.homelabarr.com/.well-known/security.txt) |
-| **Discord** | [discord.gg/Pc7mXX786x](https://discord.gg/Pc7mXX786x) |
-| **Reddit** | [r/homelabarr](https://www.reddit.com/r/homelabarr/) |
-| **Company** | [imogenlabs.ai](https://imogenlabs.ai) |
-| **Developer** | [mjashley.com](https://mjashley.com) |
-
----
+[Website](https://homelabarr.com) · [Docs](https://wiki.homelabarr.com) · [Discord](https://discord.gg/Pc7mXX786x) · [r/homelabarr](https://www.reddit.com/r/homelabarr/) · Made by [Imogen Labs](https://imogenlabs.ai)
 
 ## License
 
-[MIT](LICENSE) — do whatever you want with it.
+[MIT](LICENSE)
