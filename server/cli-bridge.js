@@ -952,7 +952,6 @@ export class CLIBridge {
       // Misc defaults
       PLEXVERSION: 'docker',
       PLEXADDON: '',
-      ARIA_RPC_SECRET: 'homelabarr',
     };
 
     return defaultEnv;
