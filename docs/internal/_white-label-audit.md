@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1644
+**Total brand references found:** 1654
 
 ---
 
@@ -392,7 +392,7 @@
 
 ## Wiki content
 
-**395 references**
+**405 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -513,6 +513,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- alert externally when the demo or dev goes down by @smashingtags in #459` |
 | `wiki/docs/install/changelog.md` | 1 x | `- alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
 | `wiki/docs/install/changelog.md` | 1 x | `- an unanswered probe is unchecked, not failed by @smashingtags in #548` |
+| `wiki/docs/install/changelog.md` | 1 x | `- ask for the domain in standard mode when the app uses it by @smashingtags in #675` |
 | `wiki/docs/install/changelog.md` | 1 x | `- audit hash-chain + secure-logging tests (audit/log/alert) by @smashingtags in #302` |
 | `wiki/docs/install/changelog.md` | 1 x | `- audit/log/alert/db hardening (redaction drift, SQLCipher, alert) by @smashingtags in #339` |
 | `wiki/docs/install/changelog.md` | 1 x | `- auto-build :dev on dev pushes (ce-dev auto-deploy) by @smashingtags in #249` |
@@ -571,18 +572,23 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- high-value component tests (RTL) by @smashingtags in #307` |
 | `wiki/docs/install/changelog.md` | 1 x | `- hold password-reset tokens in a Map by @smashingtags in #553` |
 | `wiki/docs/install/changelog.md` | 1 x | `- ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
+| `wiki/docs/install/changelog.md` | 1 x | `- install the E2E browser without Ubuntu's package servers by @smashingtags in #677` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 1 x | `- keep concurrent deploys from sharing each other's settings by @smashingtags in #678` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploy dialog values reach the app by @smashingtags in #667` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploys work on the read-only backend by @smashingtags in #657` |
+| `wiki/docs/install/changelog.md` | 1 x | `- let the deploy dialog redeploy an app on its own port by @smashingtags in #679` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the deploy dialog scroll on small screens by @smashingtags in #659` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
 | `wiki/docs/install/changelog.md` | 1 x | `- list Movviz in the v2.6.0 changelog by @smashingtags in #634` |
 | `wiki/docs/install/changelog.md` | 1 x | `- log the Docker endpoint the backend really uses by @smashingtags in #635` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make GET /containers?stats=true non-blocking (async exec) by @smashingtags in #331` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make app secrets a setting the user fills in by @smashingtags in #674` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make log-injection sanitizer CodeQL-recognized by @smashingtags in #355` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make login limiter's skipSuccessfulRequests effective by @smashingtags in #312` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make the README quick start actually start HomelabARR CE by @smashingtags in #551` |
+| `wiki/docs/install/changelog.md` | 1 x | `- make the app stop, remove and logs API routes find the deployed app by @smashingtags in #673` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make the changelog generator actually categorise this repo's PRs by @smashingtags in #486` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make the icon smoke check say what it saw, and keep the report by @smashingtags in #576` |
 | `wiki/docs/install/changelog.md` | 1 x | `- make the white-label audit identical on Mac and Linux by @smashingtags in #554` |
@@ -608,6 +614,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- pin keen 1.9.0 for release sync by @smashingtags in #628` |
 | `wiki/docs/install/changelog.md` | 1 x | `- pin the current keen release for release sync by @smashingtags in #625` |
 | `wiki/docs/install/changelog.md` | 1 x | `- probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
+| `wiki/docs/install/changelog.md` | 1 x | `- publish apps on the port chosen in the deploy dialog by @smashingtags in #672` |
 | `wiki/docs/install/changelog.md` | 1 x | `- raise the qs override to 6.16.0 by @smashingtags in #545` |
 | `wiki/docs/install/changelog.md` | 1 x | `- ratchet coverage floor + consolidated remediation CHANGELOG by @smashingtags in #344` |
 | `wiki/docs/install/changelog.md` | 1 x | `- rate-limit each client, not the proxy in front of the backend by @smashingtags in #549` |
@@ -620,6 +627,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.2 by @smashingtags in #660` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.3 by @smashingtags in #663` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.4 by @smashingtags in #669` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.5 by @smashingtags in #680` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -648,6 +656,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.1 by @smashingtags in #515` |
 | `wiki/docs/install/changelog.md` | 1 x | `- show why a deploy failed by @smashingtags in #665` |
 | `wiki/docs/install/changelog.md` | 1 x | `- smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
+| `wiki/docs/install/changelog.md` | 1 x | `- space smoke page loads under the server request limit by @smashingtags in #676` |
 | `wiki/docs/install/changelog.md` | 1 x | `- stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
 | `wiki/docs/install/changelog.md` | 1 x | `- start on root-owned appdata by taking ownership and dropping to uid 1001 by @smashingtags in #636` |
 | `wiki/docs/install/changelog.md` | 1 x | `- stop the changelog workflow blanking the published wiki page by @smashingtags in #483` |
@@ -657,6 +666,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
 | `wiki/docs/install/changelog.md` | 1 x | `- take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509` |
 | `wiki/docs/install/changelog.md` | 1 x | `- take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510` |
+| `wiki/docs/install/changelog.md` | 1 x | `- take deploy setting names from the trusted list by @smashingtags in #671` |
 | `wiki/docs/install/changelog.md` | 1 x | `- tell users with an old AppArmor profile how to update it by @smashingtags in #662` |
 | `wiki/docs/install/changelog.md` | 1 x | `- test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
 | `wiki/docs/install/changelog.md` | 1 x | `- tests for rate-limit & account lockout by @smashingtags in #299` |
