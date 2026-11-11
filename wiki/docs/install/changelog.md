@@ -15,6 +15,32 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.5] - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- take deploy setting names from the trusted list by @smashingtags in #671
+- make the app stop, remove and logs API routes find the deployed app by @smashingtags in #673
+- make app secrets a setting the user fills in by @smashingtags in #674
+- publish apps on the port chosen in the deploy dialog by @smashingtags in #672
+- ask for the domain in standard mode when the app uses it by @smashingtags in #675
+- keep concurrent deploys from sharing each other's settings by @smashingtags in #678
+- let the deploy dialog redeploy an app on its own port by @smashingtags in #679
+
+### 📚 Documentation
+
+- changelog for v2.6.3 by @github-actions[bot] in #664
+- changelog for v2.6.4 by @github-actions[bot] in #670
+
+### 🔧 Maintenance
+
+- space smoke page loads under the server request limit by @smashingtags in #676
+- release v2.6.5 by @smashingtags in #680
+
+### 🏗️ Infrastructure
+
+- install the E2E browser without Ubuntu's package servers by @smashingtags in #677
+
 ## [v2.6.4] - 2026-11-11
 
 ### 🚀 Features
