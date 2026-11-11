@@ -240,6 +240,11 @@ export async function restartContainer(containerId: string) {
   return handleResponse(response);
 }
 
+export async function getDeployReadiness(): Promise<{ ok: boolean; message?: string }> {
+  const response = await apiFetch('/health/deploy');
+  return handleResponse(response);
+}
+
 export async function deployApp(
   appId: string,
   config: Record<string, string>,

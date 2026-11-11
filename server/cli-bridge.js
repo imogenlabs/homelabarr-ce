@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'yaml';
 import { DeploymentLogger } from './deployment-logger.js';
+import { APPARMOR_UPDATE_MESSAGE } from './deploy-readiness.js';
 
 export function safeJoin(base, ...parts) {
   for (const p of parts) {
@@ -523,11 +524,7 @@ export class CLIBridge {
         // v2.6.2 added docker-compose to the AppArmor profile. A host still on the
         // older profile refuses to run it, and the raw EACCES says nothing useful.
         if (error.code === 'EACCES') {
-          const explained = new Error(
-            'HomelabARR is not allowed to run docker-compose on this host. If you installed the AppArmor ' +
-            'profiles, update them from your HomelabARR folder with `sudo bash scripts/install-apparmor.sh`, ' +
-            'then deploy again.'
-          );
+          const explained = new Error(APPARMOR_UPDATE_MESSAGE);
           explained.code = 'EACCES';
           explained.cause = error;
           return reject(explained);
