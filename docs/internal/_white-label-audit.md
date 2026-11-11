@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1637
+**Total brand references found:** 1639
 
 ---
 
@@ -392,7 +392,7 @@
 
 ## Wiki content
 
-**388 references**
+**390 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -616,6 +616,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.3.0 by @smashingtags in #456` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.1 by @smashingtags in #637` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.2 by @smashingtags in #660` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.3 by @smashingtags in #663` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -652,6 +653,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- swap octopus for new HomelabARR mascot (placeholder) by @smashingtags in #151` |
 | `wiki/docs/install/changelog.md` | 1 x | `- take Stryker 10, bumping the vitest runner with the core by @smashingtags in #509` |
 | `wiki/docs/install/changelog.md` | 1 x | `- take better-sqlite3-multiple-ciphers 13 by @smashingtags in #510` |
+| `wiki/docs/install/changelog.md` | 1 x | `- tell users with an old AppArmor profile how to update it by @smashingtags in #662` |
 | `wiki/docs/install/changelog.md` | 1 x | `- test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
 | `wiki/docs/install/changelog.md` | 1 x | `- tests for rate-limit & account lockout by @smashingtags in #299` |
 | `wiki/docs/install/changelog.md` | 1 x | `- track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
