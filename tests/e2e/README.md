@@ -61,6 +61,11 @@ the login screen. Expect a run to take a few minutes.
 
 ## Notes
 
+- CI installs the browser with `npx playwright install chromium`, without
+  `--with-deps`. The hosted runner image already has the libraries chromium needs,
+  and `--with-deps` runs apt against Ubuntu's mirrors, which some runners could not
+  reach. On your own machine, run `npx playwright install --with-deps chromium` once.
+
 - All fixed `waitForTimeout` waits were replaced with web-first assertions (HLCE-226 AC5).
 - The seeded target runs the backend in `development` mode so auth cookies aren't
   `Secure` (the target is reached over plain HTTP); the frontend's CSP
