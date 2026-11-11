@@ -280,4 +280,20 @@ describe('DeployModal', () => {
     expect(onDeploy).toHaveBeenCalledTimes(1);
     expect(onDeploy.mock.calls[0][1]).toEqual({ puid: '1001' });
   });
+
+  // HLCE-371 / #643: on a short screen the settings scroll and the buttons stay
+  // reachable. jsdom has no layout, so this pins the structure that does it.
+  it('scrolls the settings inside a height-capped dialog and keeps the buttons outside the scroll area', () => {
+    renderModal();
+    const dialog = screen.getByRole('dialog', { name: /deploy plex/i });
+    expect(dialog).toHaveClass('max-h-[90dvh]', 'flex', 'flex-col');
+    expect(dialog).not.toHaveClass('grid');
+
+    const body = screen.getByTestId('deploy-dialog-body');
+    expect(body).toHaveClass('overflow-y-auto', 'min-h-0', 'flex-1');
+    expect(within(body).getByLabelText(/host port/i)).toBeInTheDocument();
+    expect(within(body).queryByRole('button', { name: /^deploy$/i })).not.toBeInTheDocument();
+    expect(within(body).queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^deploy$/i })).toBeInTheDocument();
+  });
 });
