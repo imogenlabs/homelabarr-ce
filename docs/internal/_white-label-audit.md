@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1664
+**Total brand references found:** 1670
 
 ---
 
@@ -397,7 +397,7 @@
 
 ## Wiki content
 
-**409 references**
+**415 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -577,12 +577,14 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- harden users.json loader + DialogDescription a11y by @smashingtags in #165` |
 | `wiki/docs/install/changelog.md` | 1 x | `- high-value component tests (RTL) by @smashingtags in #307` |
 | `wiki/docs/install/changelog.md` | 1 x | `- hold password-reset tokens in a Map by @smashingtags in #553` |
+| `wiki/docs/install/changelog.md` | 1 x | `- ignore the DAST false positives checked by hand by @smashingtags in #687` |
 | `wiki/docs/install/changelog.md` | 1 x | `- ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
 | `wiki/docs/install/changelog.md` | 1 x | `- install the E2E browser without Ubuntu's package servers by @smashingtags in #677` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
 | `wiki/docs/install/changelog.md` | 1 x | `- keep a signed-in user signed in when the server says slow down by @smashingtags in #682` |
 | `wiki/docs/install/changelog.md` | 1 x | `- keep concurrent deploys from sharing each other's settings by @smashingtags in #678` |
+| `wiki/docs/install/changelog.md` | 1 x | `- keep the frontend's redirects on the address the browser used by @smashingtags in #686` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploy dialog values reach the app by @smashingtags in #667` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploys work on the read-only backend by @smashingtags in #657` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the deploy dialog redeploy an app on its own port by @smashingtags in #679` |
@@ -620,6 +622,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- persistence-integrity tests (db / stars / activity / loggers) by @smashingtags in #301` |
 | `wiki/docs/install/changelog.md` | 1 x | `- pin keen 1.9.0 for release sync by @smashingtags in #628` |
 | `wiki/docs/install/changelog.md` | 1 x | `- pin the current keen release for release sync by @smashingtags in #625` |
+| `wiki/docs/install/changelog.md` | 1 x | `- point every catalog app at an image that exists by @smashingtags in #690` |
 | `wiki/docs/install/changelog.md` | 1 x | `- probe the Docker daemon instead of hardcoding healthy by @smashingtags in #314` |
 | `wiki/docs/install/changelog.md` | 1 x | `- publish apps on the port chosen in the deploy dialog by @smashingtags in #672` |
 | `wiki/docs/install/changelog.md` | 1 x | `- raise the qs override to 6.16.0 by @smashingtags in #545` |
@@ -636,6 +639,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.4 by @smashingtags in #669` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.5 by @smashingtags in #680` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.6 by @smashingtags in #684` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.7 by @smashingtags in #691` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -657,6 +661,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
 | `wiki/docs/install/changelog.md` | 1 x | `- roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
 | `wiki/docs/install/changelog.md` | 1 x | `- run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
+| `wiki/docs/install/changelog.md` | 1 x | `- run stop, remove and logs the way a deploy runs compose by @smashingtags in #689` |
 | `wiki/docs/install/changelog.md` | 1 x | `- scan Python and the Actions workflows with CodeQL again by @smashingtags in #557` |
 | `wiki/docs/install/changelog.md` | 1 x | `- scope docker vuln scan to own images + fix multi-run SARIF by @smashingtags in #241` |
 | `wiki/docs/install/changelog.md` | 1 x | `- send host alerts through the estate's Resend sender by @smashingtags in #575` |
@@ -679,6 +684,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- test harness + Wave 1 unit tests (166 green) by @smashingtags in #294` |
 | `wiki/docs/install/changelog.md` | 1 x | `- tests for rate-limit & account lockout by @smashingtags in #299` |
 | `wiki/docs/install/changelog.md` | 1 x | `- track Docker/SSE timers, fix health lie, lock down SSE CORS + subscribe auth by @smashingtags in #343` |
+| `wiki/docs/install/changelog.md` | 1 x | `- turn usage analytics off unless the install opts in by @smashingtags in #685` |
 | `wiki/docs/install/changelog.md` | 1 x | `- unify password minimum length to 12 by @smashingtags in #320` |
 | `wiki/docs/install/changelog.md` | 1 x | `- v2.5.2 by @smashingtags in #555` |
 | `wiki/docs/install/changelog.md` | 1 x | `- v2.6.0 by @smashingtags in #627` |
