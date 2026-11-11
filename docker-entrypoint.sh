@@ -29,5 +29,45 @@ export BACKEND_URL HSTS_HEADER CSP_UPGRADE_INSECURE
 envsubst '${BACKEND_URL} ${HSTS_HEADER} ${CSP_UPGRADE_INSECURE}' \
   < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
+# Usage analytics are off by default: a self-hosted dashboard sends nothing
+# anywhere (HLCE-389). Setting both values turns on Umami page views, proxied
+# through this server so the browser only talks to its own origin.
+: "${ANALYTICS_URL:=}"
+: "${ANALYTICS_WEBSITE_ID:=}"
+ANALYTICS_CONF=/etc/nginx/conf.d/analytics.inc
+rm -f "$ANALYTICS_CONF"
+if [ -n "${ANALYTICS_URL}${ANALYTICS_WEBSITE_ID}" ]; then
+  printf '%s' "$ANALYTICS_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]+)?$' \
+    || { echo "FATAL: ANALYTICS_URL must look like https://analytics.example.com"; exit 1; }
+  printf '%s' "$ANALYTICS_WEBSITE_ID" | grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' \
+    || { echo "FATAL: ANALYTICS_WEBSITE_ID must be the Umami website id"; exit 1; }
+  ANALYTICS_HOST=${ANALYTICS_URL#https://}
+  ANALYTICS_HOST=${ANALYTICS_HOST%%:*}
+  cat > "$ANALYTICS_CONF" <<EOF
+sub_filter '</head>' '<script defer src="/analytics.js" data-website-id="${ANALYTICS_WEBSITE_ID}"></script></head>';
+sub_filter_once on;
+
+location = /analytics.js {
+    proxy_pass ${ANALYTICS_URL}/script.js;
+    proxy_set_header Host ${ANALYTICS_HOST};
+    proxy_ssl_server_name on;
+    proxy_hide_header Set-Cookie;
+    proxy_ignore_headers Set-Cookie;
+    expires 1h;
+    add_header Strict-Transport-Security \$hsts always;
+    add_header X-Content-Type-Options "nosniff" always;
+}
+
+location = /api/send {
+    proxy_pass ${ANALYTICS_URL}/api/send;
+    proxy_set_header Host ${ANALYTICS_HOST};
+    proxy_ssl_server_name on;
+    proxy_hide_header Set-Cookie;
+    proxy_ignore_headers Set-Cookie;
+}
+EOF
+  echo "Usage analytics on: page views go to ${ANALYTICS_URL}"
+fi
+
 echo "HomelabARR frontend starting (backend: ${BACKEND_URL})"
 exec nginx -g 'daemon off;'
