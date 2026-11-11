@@ -52,7 +52,7 @@ Open `http://your-server-ip:8084`. Log in as `admin` with the password printed b
 
 - **HTTPS:** behind Traefik, Caddy or another HTTPS proxy, leave out `ALLOW_PLAIN_HTTP` and set `CORS_ORIGIN` to your `https://` address. Only use `ALLOW_PLAIN_HTTP=true` on a network you trust.
 - **Keep the settings:** put `CORS_ORIGIN` (and `ALLOW_PLAIN_HTTP`) in a `.env` file next to `homelabarr.yml`.
-- **Update:** `docker compose -f homelabarr.yml pull && docker compose -f homelabarr.yml up -d`
+- **Update:** from the HomelabARR folder, `git pull && sudo bash scripts/install-apparmor.sh`, then `docker compose -f homelabarr.yml pull && docker compose -f homelabarr.yml up -d`. Re-running the AppArmor script picks up profile changes; on hosts without AppArmor it does nothing.
 
 More options and building from source: [install guide](https://wiki.homelabarr.com/guides/quick-start/).
 
