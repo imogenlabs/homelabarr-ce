@@ -485,3 +485,31 @@ describe('HLCE-278 — POST /:id/auth/test', () => {
     expect(res.body.error).toBe('Failed to test connection');
   });
 });
+
+// HLCE-369: every test above passes a hand-made double that has getDocker(),
+// but production passes the manager createDockerManager() returns, which had
+// none, so these routes threw "getDocker is not a function". Use the real one.
+describe('HLCE-369 — the routes work with the production CLI-mode manager', () => {
+  it('GET /:id/status reaches the container through createDockerManager()', async () => {
+    const { createDockerManager } = await import('../docker-manager.js');
+    const dockerManager = createDockerManager();
+    const inspect = vi.fn().mockResolvedValue({
+      NetworkSettings: { Ports: { '8080/tcp': [{ HostPort: '9000' }] } },
+    });
+    dockerManager.docker.getContainer = vi.fn().mockReturnValue({ inspect });
+    vi.stubGlobal('fetch', okFetch({ mounts: 1 }));
+    const { app } = buildApp({ dockerManager });
+
+    try {
+      const res = await request(app)
+        .get('/enhanced-mount/c1/status')
+        .set('Cookie', adminCookie());
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual({ mounts: 1 });
+      expect(dockerManager.docker.getContainer).toHaveBeenCalledWith('c1');
+    } finally {
+      dockerManager.destroy();
+    }
+  });
+});

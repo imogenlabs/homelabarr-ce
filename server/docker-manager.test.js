@@ -170,6 +170,13 @@ describe('createDockerManager — real health probe (AC4)', () => {
     m.destroy();
   });
 
+  it('getDocker returns the same client the manager uses (HLCE-369)', () => {
+    const m = createDockerManager();
+    expect(typeof m.getDocker).toBe('function');
+    expect(m.getDocker()).toBe(m.docker);
+    m.destroy();
+  });
+
   it('executeWithRetry runs the operation and marks the daemon reachable on success', async () => {
     const m = createDockerManager();
     const op = vi.fn().mockResolvedValue('ok');

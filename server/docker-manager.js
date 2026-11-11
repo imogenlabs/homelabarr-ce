@@ -1248,6 +1248,10 @@ function createDockerManager() {
       cliPath: 'docker',
     },
     probe,
+    // The container stats and enhanced-mount routes call getDocker(). Without
+    // it every call threw "getDocker is not a function": the container list
+    // showed zero CPU and memory, and the mount routes failed.
+    getDocker: () => cliDocker,
     getConnectionState: () => ({
       isConnected: state.isConnected === true,
       lastSuccessfulConnection: state.lastSuccessfulConnection,
