@@ -262,6 +262,7 @@ export class CLIBridge {
         image: CLIBridge.resolveTemplateVar(service.image) || 'Unknown',
         ports: this.extractPorts(service),
         environment: this.extractEnvironmentVars(service),
+        variables: [...CLIBridge.settableVariables(config)].map(([name, required]) => ({ name, required })),
         volumes: this.extractVolumes(service),
         networks: this.extractNetworks(service),
         labels: this.extractLabels(service),
@@ -352,6 +353,7 @@ export class CLIBridge {
     // Parse compose so we can inject docker.sock GID for any service that needs it
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
+    const settable = CLIBridge.settableVariables(doc);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-traefik.yml`);
@@ -361,7 +363,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv);
+      }, deployEnv, settable);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -405,30 +407,78 @@ export class CLIBridge {
   }
 
   /**
+   * Every ${NAME} or $NAME a value refers to, and whether that use carries its
+   * own fallback (${NAME:-x}, ${NAME-x}, ${NAME:+x}). $$ is a literal dollar.
+   */
+  static variableRefs(value) {
+    const refs = [];
+    const pattern = /\$\$|\$\{([A-Za-z_][A-Za-z0-9_]*)([^}]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g;
+    const visit = (v) => {
+      if (typeof v === 'string') {
+        for (const m of v.matchAll(pattern)) {
+          const name = m[1] || m[3];
+          if (name) refs.push({ name, fallback: /^:?[-+]/.test(m[2] || '') });
+        }
+      } else if (Array.isArray(v)) {
+        v.forEach(visit);
+      } else if (v && typeof v === 'object') {
+        Object.values(v).forEach(visit);
+      }
+    };
+    visit(value);
+    return refs;
+  }
+
+  /**
    * Names a compose doc uses that the given environment does not set.
    * Compose fills an unset ${NAME} with an empty string, so the app starts
-   * with a blank value and usually crash-loops (#642). ${NAME:-x}, ${NAME-x}
-   * and ${NAME:+x} carry their own fallback, and $$ is a literal dollar.
+   * with a blank value and usually crash-loops (#642).
    */
   static unresolvedVariables(doc, env) {
     const missing = new Set();
-    const pattern = /\$\$|\$\{([A-Za-z_][A-Za-z0-9_]*)([^}]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g;
-    const visit = (value) => {
-      if (typeof value === 'string') {
-        for (const m of value.matchAll(pattern)) {
-          const name = m[1] || m[3];
-          if (!name) continue;
-          if (/^:?[-+]/.test(m[2] || '')) continue;
-          if (env[name] === undefined) missing.add(name);
-        }
-      } else if (Array.isArray(value)) {
-        value.forEach(visit);
-      } else if (value && typeof value === 'object') {
-        Object.values(value).forEach(visit);
-      }
-    };
-    visit(doc);
+    for (const { name, fallback } of CLIBridge.variableRefs(doc)) {
+      if (!fallback && env[name] === undefined) missing.add(name);
+    }
     return [...missing].sort();
+  }
+
+  /**
+   * The variables a user may set for this app from the deploy dialog, mapped to
+   * whether the app needs one (no fallback anywhere). Only names the template
+   * uses inside environment values qualify (HLCE-373). A name it also uses in
+   * image, volumes, ports, security options, labels or anywhere else, any
+   * default HomelabARR supplies, and names the host process depends on stay out
+   * of a user's reach, so a value typed in the dialog can only ever become an
+   * environment value of the app it was typed for.
+   */
+  static settableVariables(doc) {
+    const reserved = new Set([
+      ...Object.keys(CLIBridge.trustedDefaults()),
+      ...Object.keys(CLIBridge.ENV_DEFAULTS),
+      ...Object.keys(CLIBridge.IMAGE_DEFAULTS),
+      'PATH', 'HOME', 'HOSTNAME', 'USER', 'SHELL', 'PWD',
+    ]);
+    const protectedPrefix = /^(DOCKER_|COMPOSE_|LD_|NODE_)/;
+    const { services, ...top } = doc || {};
+    const elsewhere = new Set(CLIBridge.variableRefs(top).map(r => r.name));
+    const inEnvironment = [];
+    for (const svc of Object.values(services || {})) {
+      if (!svc || typeof svc !== 'object') continue;
+      const { environment, ...rest } = svc;
+      CLIBridge.variableRefs(rest).forEach(r => elsewhere.add(r.name));
+      // List form "KEY=value" (only the value counts) or map form { KEY: value }.
+      const values = Array.isArray(environment)
+        ? environment.map(e => (typeof e === 'string' && e.includes('=') ? e.slice(e.indexOf('=') + 1) : ''))
+        : Object.values(environment || {});
+      inEnvironment.push(...CLIBridge.variableRefs(values));
+    }
+    const settable = new Map();
+    for (const { name, fallback } of inEnvironment) {
+      if (elsewhere.has(name) || reserved.has(name) || protectedPrefix.test(name)) continue;
+      if (!/^[A-Z_][A-Z0-9_]*$/.test(name)) continue;
+      settable.set(name, (settable.get(name) ?? true) && !fallback);
+    }
+    return settable;
   }
 
   /**
@@ -436,7 +486,7 @@ export class CLIBridge {
    * deploy builds its compose file and environment. Returns [] when the app
    * cannot be read; the deploy itself reports that.
    */
-  async findUnresolvedVariables(appId, config = {}, deploymentMode = {}) {
+  findUnresolvedVariables(appId, config = {}, deploymentMode = {}) {
     let doc;
     try {
       const { category, appName } = parseAppId(appId);
@@ -447,12 +497,17 @@ export class CLIBridge {
     }
     const type = deploymentMode.type || 'standard';
     const proxied = type === 'traefik' || type === 'authelia';
+    // Same order as the deploy: what a user may set is decided on the app's own
+    // file, before standard mode strips its labels and networks.
+    const settable = CLIBridge.settableVariables(doc);
     if (!proxied) CLIBridge.rewriteForStandard(doc);
 
-    const baseEnv = await this.prepareEnvironmentConfig(config, { ...deploymentMode, type });
+    // trustedDefaults, not prepareEnvironmentConfig: a check must not touch the
+    // deploy state a concurrent deploy reads.
+    const baseEnv = CLIBridge.trustedDefaults(config, { ...deploymentMode, type });
     const userVars = {};
     for (const [k, v] of Object.entries(config)) {
-      if (CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && typeof v === 'string') userVars[k] = v;
+      if ((CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) || settable.has(k)) && typeof v === 'string' && v !== '') userVars[k] = v;
     }
     const env = {
       ...process.env,
@@ -470,6 +525,7 @@ export class CLIBridge {
     // For local/standard mode, rewrite compose to remove Traefik + external networks
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
+    const settable = CLIBridge.settableVariables(doc);
 
     CLIBridge.rewriteForStandard(doc);
     this.injectDockerGid(doc);
@@ -488,7 +544,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      }, deployEnv);
+      }, deployEnv, settable);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -505,6 +561,7 @@ export class CLIBridge {
     // Parse compose so we can inject docker.sock GID for any service that needs it
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
+    const settable = CLIBridge.settableVariables(doc);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-authelia.yml`);
@@ -514,7 +571,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv);
+      }, deployEnv, settable);
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -532,11 +589,13 @@ export class CLIBridge {
    * The host `process.env` is read for inherited basics (PATH, DOCKER_GID, …) but
    * is NEVER mutated — nothing here leaks across deploys.
    */
-  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set()) {
     return new Promise((resolve, reject) => {
       const filtered = {};
       for (const [k, v] of Object.entries(envVars)) {
-        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k)) continue;
+        // The global allowlist, plus the variables this app's own template uses
+        // in environment values (settableVariables, HLCE-373).
+        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && !settable.has(k)) continue;
         if (typeof v !== 'string' || v.length > 256 || /[\r\n\0`$]/.test(v)) {
           throw new Error(`Invalid template variable value for ${k}`);
         }
@@ -810,6 +869,20 @@ export class CLIBridge {
    * the gate and leaked one deploy's values into the next).
    */
   async prepareEnvironmentConfig(config, deploymentMode) {
+    const defaultEnv = CLIBridge.trustedDefaults(config, deploymentMode);
+    // Stash the trusted defaults for this deploy. The user `config` is NOT
+    // merged in here — it travels separately through the validated path in
+    // executeDockerCompose. Returned as well so callers can thread it through
+    // explicitly without reaching into instance state.
+    this._deployEnv = defaultEnv;
+    return defaultEnv;
+  }
+
+  /**
+   * The trusted defaults every deploy starts from. Pure, so the catalog can
+   * see which names are reserved without touching deploy state.
+   */
+  static trustedDefaults(config = {}, deploymentMode = {}) {
     // Set default environment variables based on CLI standards
     const defaultEnv = {
       // Core system defaults
@@ -885,11 +958,6 @@ export class CLIBridge {
       ARIA_RPC_SECRET: 'homelabarr',
     };
 
-    // Stash the trusted defaults for this deploy. The user `config` is NOT
-    // merged in here — it travels separately through the validated path in
-    // executeDockerCompose. Returned as well so callers can thread it through
-    // explicitly without reaching into instance state.
-    this._deployEnv = defaultEnv;
     return defaultEnv;
   }
 }
