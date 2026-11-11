@@ -363,7 +363,7 @@ export class CLIBridge {
   /**
    * Deploy application with Traefik integration
    */
-  async deployWithTraefik(appPath, config, deployEnv = this._deployEnv) {
+  async deployWithTraefik(appPath, config, deployEnv = CLIBridge.trustedDefaults(config, { type: 'traefik' }), { onOutput } = {}) {
     // Ensure Traefik is installed and running
     await this.ensureTraefikRunning();
 
@@ -381,7 +381,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable, { project: appProjectName() });
+      }, deployEnv, settable, { project: appProjectName(), onOutput });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -566,7 +566,7 @@ export class CLIBridge {
   /**
    * Deploy application in standard mode (without Traefik)
    */
-  async deployStandard(appPath, config, deployEnv = this._deployEnv) {
+  async deployStandard(appPath, config, deployEnv = CLIBridge.trustedDefaults(config, { type: 'standard' }), { onOutput } = {}) {
     // For local/standard mode, rewrite compose to remove Traefik + external networks
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
@@ -590,7 +590,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      }, deployEnv, settable, { project: appProjectName() });
+      }, deployEnv, settable, { project: appProjectName(), onOutput });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -599,7 +599,7 @@ export class CLIBridge {
   /**
    * Deploy application with Authelia authentication
    */
-  async deployWithAuthelia(appPath, config, deployEnv = this._deployEnv) {
+  async deployWithAuthelia(appPath, config, deployEnv = CLIBridge.trustedDefaults(config, { type: 'authelia' }), { onOutput } = {}) {
     // Ensure both Traefik and Authelia are running
     await this.ensureTraefikRunning();
     await this.ensureAutheliaRunning();
@@ -618,7 +618,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable, { project: appProjectName() });
+      }, deployEnv, settable, { project: appProjectName(), onOutput });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -637,8 +637,10 @@ export class CLIBridge {
    * is NEVER mutated — nothing here leaks across deploys.
    * `project` names the compose project; app commands pass appProjectName() so
    * stop, remove and logs find what deploy started (HLCE-376).
+   * `onOutput(data, type)` receives this run's output only, so a progress
+   * stream never shows another deploy's lines.
    */
-  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project } = {}) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project, onOutput } = {}) {
     return new Promise((resolve, reject) => {
       const filtered = CLIBridge.pickUserValues(envVars, settable);
       for (const [k, v] of Object.entries(filtered)) {
@@ -671,13 +673,14 @@ export class CLIBridge {
 
       dockerCompose.stdout.on('data', (data) => {
         stdout += data.toString();
-        // Stream real-time output for progress tracking
         this.streamProgress(data.toString());
+        onOutput?.(data.toString(), 'info');
       });
 
       dockerCompose.stderr.on('data', (data) => {
         stderr += data.toString();
         this.streamProgress(data.toString(), 'error');
+        onOutput?.(data.toString(), 'error');
       });
 
       dockerCompose.on('close', (code) => {
@@ -989,21 +992,18 @@ export class CLIBridge {
    * Prepare environment configuration for deployment.
    *
    * Builds the trusted-default env for this deploy (image tags, restart policy,
-   * theme defaults, …) and stashes it on the instance as `_deployEnv` so the
-   * deploy methods can thread it into the compose spawn. It deliberately does
+   * theme defaults, …) and returns it for the caller to pass to the deploy
+   * method. Nothing is kept on the instance, which every deploy shares
+   * (HLCE-380). It deliberately does
    * NOT touch the global `process.env`: the user-supplied `config` must flow
    * only through executeDockerCompose's allowlist + character gate, never get
    * spread wholesale into a shared, persistent environment (which both bypassed
    * the gate and leaked one deploy's values into the next).
    */
   async prepareEnvironmentConfig(config, deploymentMode) {
-    const defaultEnv = CLIBridge.trustedDefaults(config, deploymentMode);
-    // Stash the trusted defaults for this deploy. The user `config` is NOT
-    // merged in here — it travels separately through the validated path in
-    // executeDockerCompose. Returned as well so callers can thread it through
-    // explicitly without reaching into instance state.
-    this._deployEnv = defaultEnv;
-    return defaultEnv;
+    // The user `config` is NOT merged in here: it travels separately through
+    // the validated path in executeDockerCompose.
+    return CLIBridge.trustedDefaults(config, deploymentMode);
   }
 
   /**

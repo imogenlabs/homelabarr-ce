@@ -404,7 +404,7 @@ export class StreamingCLIBridge {
         'Preparing deployment environment...'
       );
 
-      await this.cliBridge.prepareEnvironmentConfig(config, deploymentMode);
+      const deployEnv = await this.cliBridge.prepareEnvironmentConfig(config, deploymentMode);
 
       this.progressStream.streamDeploymentStep(
         deploymentId, 
@@ -444,27 +444,22 @@ export class StreamingCLIBridge {
         `Deploying ${appId} using ${deploymentMode.type} mode...`
       );
 
-      // Use the original CLI bridge method but capture output
-      const originalStreamProgress = this.cliBridge.streamProgress.bind(this.cliBridge);
-      this.cliBridge.streamProgress = (data, type = 'info') => {
-        this.progressStream.streamCommandOutput(deploymentId, 'docker-compose', data, type);
-        originalStreamProgress(data, type);
+      // This deploy's own settings and output only (HLCE-380): the bridge is
+      // shared by every deploy, so nothing per-deploy may live on it.
+      const run = {
+        onOutput: (data, type) => this.progressStream.streamCommandOutput(deploymentId, 'docker-compose', data, type)
       };
 
       let deploymentResult;
       switch (deploymentMode.type) {
         case 'traefik':
-          deploymentResult = await this.cliBridge.deployWithTraefik(appPath, config);
-          break;
-        case 'local':
-        case 'standard':
-          deploymentResult = await this.cliBridge.deployStandard(appPath, config);
+          deploymentResult = await this.cliBridge.deployWithTraefik(appPath, config, deployEnv, run);
           break;
         case 'authelia':
-          deploymentResult = await this.cliBridge.deployWithAuthelia(appPath, config);
+          deploymentResult = await this.cliBridge.deployWithAuthelia(appPath, config, deployEnv, run);
           break;
         default:
-          deploymentResult = await this.cliBridge.deployStandard(appPath, config);
+          deploymentResult = await this.cliBridge.deployStandard(appPath, config, deployEnv, run);
           break;
       }
 
