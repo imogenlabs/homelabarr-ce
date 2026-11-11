@@ -60,8 +60,37 @@ describe('every app command uses the deploy\'s compose project', () => {
   it('stop and remove target the app\'s own services, not a whole project', async () => {
     await bridge.stopApplication('transcoding-tdarr');
     const args = vi.mocked(spawn).mock.calls[0][1];
-    expect(args[3]).toBe(path.join(repoRoot, 'apps', 'transcoding', 'tdarr.yml'));
+    expect(path.basename(args[3])).toBe('tdarr-manage.yml');
     expect(args).not.toContain('--remove-orphans');
+  });
+
+  // HLCE-391: the raw template puts n8n on ${DOCKERNETWORK}, which compose
+  // cannot resolve alone ("refers to undefined network"). Stop, remove and logs
+  // now run the same rewritten file with the same defaults as a deploy.
+  it('stop, remove and logs give compose the deploy\'s rewrite and defaults', async () => {
+    const seen = [];
+    vi.mocked(spawn).mockImplementation((_cmd, args, opts) => {
+      const file = args[args.indexOf('-f') + 1];
+      seen.push({ file, text: fs.readFileSync(file, 'utf8'), network: opts.env.DOCKERNETWORK, appfolder: opts.env.APPFOLDER });
+      return {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn((event, cb) => { if (event === 'close') setTimeout(() => cb(0), 0); }),
+      };
+    });
+
+    await bridge.stopApplication('self-hosted-n8n');
+    await bridge.removeApplication('self-hosted-n8n');
+    await bridge.getApplicationLogs('self-hosted-n8n', 10);
+
+    expect(seen).toHaveLength(3);
+    for (const run of seen) {
+      expect(run.text).not.toContain('${DOCKERNETWORK}');
+      expect(run.text).not.toMatch(/external: true/);
+      expect(run.network).toBe('bridge');
+      expect(run.appfolder).toBe('/opt/appdata');
+      expect(fs.existsSync(run.file)).toBe(false);
+    }
   });
 
   it('leaves Traefik and Authelia in their own projects', async () => {
