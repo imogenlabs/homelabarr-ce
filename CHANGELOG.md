@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### 🐛 Fixes
+- **A failed deploy says why**: the "Deployment Failed" notice always said "Check container logs for details" and dropped the reason the backend sent, so the AppArmor instruction added in v2.6.3 never reached the screen. The notice now shows the reason, and appears once instead of twice.
+
 ## [v2.6.3] - November 11, 2026
 
 ### 🐛 Fixes
