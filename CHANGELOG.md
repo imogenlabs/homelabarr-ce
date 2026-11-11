@@ -5,6 +5,7 @@
 ### 🐛 Fixes
 - **Every app in the catalog can be installed again**: 31 apps pointed at images their publishers had deleted or renamed, so Deploy failed with "not found". Among them were Home Assistant, Dashy, wg-easy, Joplin, aria2 and several LinuxServer apps. They now use versions that exist. A weekly check fails as soon as an image disappears again. Dashy moved to version 4, which keeps its settings in a folder instead of a single file. rsnapshot had an invalid storage line and could never start; it now keeps snapshots in `/mnt/snapshots` and backs up your app data folder.
 - **Six apps left the catalog** because no image exists for them: GPT4All and Jan (desktop apps, no server image), FileRun (now requires a paid license), and Restic, Traktarr and vnStat, whose images were never published.
+- **The stop, remove and logs API routes work for every app**: they ran Compose on the raw template, so apps whose template uses a setting such as the network name (n8n among them) failed with "refers to undefined network". They now run it the way a deploy does. The dashboard's buttons were not affected.
 
 ### 🔒 Privacy
 - **Your dashboard no longer sends page views to the project's analytics**: every install loaded an analytics script and forwarded page views through your server to the project's Umami server, though the privacy notice said only the demo did. Analytics are now off unless you set `ANALYTICS_URL` and `ANALYTICS_WEBSITE_ID` on the frontend, which the public demo does.

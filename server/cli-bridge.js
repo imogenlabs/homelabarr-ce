@@ -796,40 +796,51 @@ export class CLIBridge {
   }
 
   /**
+   * Run a compose command against an app the way deploy runs it: the same
+   * project, the same standard-mode rewrite and the same defaults. The raw
+   * template refers to settings such as ${DOCKERNETWORK}, which compose cannot
+   * resolve on its own ("refers to undefined network"), so stop, remove and
+   * logs failed for apps like n8n (HLCE-391).
+   */
+  async runAppCompose(appId, command) {
+    const { category, appName } = parseAppId(appId);
+    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
+    const doc = yaml.parse(fs.readFileSync(appPath, 'utf8'));
+    CLIBridge.rewriteForStandard(doc);
+
+    const tmpPath = path.join(composeWorkDir(), `${appName}-manage.yml`);
+    fs.writeFileSync(tmpPath, yaml.stringify(doc));
+    try {
+      const defaults = CLIBridge.trustedDefaults({}, { type: 'standard' });
+      return await this.executeDockerCompose(tmpPath, command, {}, defaults, new Set(), { project: appProjectName() });
+    } finally {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    }
+  }
+
+  /**
    * Stop application using CLI
    */
   async stopApplication(appId) {
-    const { category, appName } = parseAppId(appId);
-    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
-    
-    return await this.executeDockerCompose(appPath, 'down', {}, {}, new Set(), { project: appProjectName() });
+    return this.runAppCompose(appId, 'down');
   }
 
   /**
    * Remove application and cleanup
    */
   async removeApplication(appId, removeVolumes = false) {
-    const { category, appName } = parseAppId(appId);
-    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
-    
-    const command = removeVolumes ? 'down -v' : 'down';
-    return await this.executeDockerCompose(appPath, command, {}, {}, new Set(), { project: appProjectName() });
+    return this.runAppCompose(appId, removeVolumes ? 'down -v' : 'down');
   }
 
   /**
    * Get application logs
    */
   async getApplicationLogs(appId, lines = 100) {
-    const { category, appName } = parseAppId(appId);
-    const appPath = safeJoin(this.appsPath, category, appName + '.yml');
-
     // Coerce `lines` to a positive integer; anything non-numeric, zero, or
-    // negative falls back to the 100-line default. (`parseInt` lets a numeric
-    // string like "50" through but a value such as "abc" or "" becomes NaN.)
+    // negative falls back to the 100-line default.
     const parsed = Number.parseInt(lines, 10);
     const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
-
-    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`, {}, {}, new Set(), { project: appProjectName() });
+    return this.runAppCompose(appId, `logs --tail=${tail}`);
   }
 
   // Helper methods for parsing application configurations
