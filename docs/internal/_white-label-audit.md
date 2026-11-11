@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1643
+**Total brand references found:** 1644
 
 ---
 
@@ -291,7 +291,7 @@
 
 ## Root documentation
 
-**93 references**
+**94 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -329,6 +329,7 @@
 | `CHANGELOG.md` | 1 x | `- **Mutation-testing harness (StrykerJS) + scoped baseline** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
 | `CHANGELOG.md` | 1 x | `- **Nightly mutation-testing CI + per-module score ratchet** (Epic [HLCE-261](https://mjashley.atlassian.net/browse/HLCE` |
 | `CHANGELOG.md` | 1 x | `- **No 'users.json is not an array' warning on first boot** ([#623](https://github.com/imogenlabs/homelabarr-ce/issues/6` |
+| `CHANGELOG.md` | 1 x | `- **No app gets a password everyone knows**: aria2 started with the RPC secret 'homelabarr', and n8n and Flowise fell ba` |
 | `CHANGELOG.md` | 1 x | `- **No false "Docker socket not found" warning** ([#621](https://github.com/imogenlabs/homelabarr-ce/issues/621)): with ` |
 | `CHANGELOG.md` | 1 x | `- **No localhost health-check warning in containers** ([#624](https://github.com/imogenlabs/homelabarr-ce/issues/624)): ` |
 | `CHANGELOG.md` | 1 x | `- **Other deps**: 'dockerode' 4 → 5, 'better-sqlite3' 12.11.1, 'nodemailer' 8 → 9, '@types/node' 26, dev-tools group` |
