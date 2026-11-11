@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1661
+**Total brand references found:** 1664
 
 ---
 
@@ -397,7 +397,7 @@
 
 ## Wiki content
 
-**406 references**
+**409 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -581,6 +581,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- install the E2E browser without Ubuntu's package servers by @smashingtags in #677` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 1 x | `- keep a signed-in user signed in when the server says slow down by @smashingtags in #682` |
 | `wiki/docs/install/changelog.md` | 1 x | `- keep concurrent deploys from sharing each other's settings by @smashingtags in #678` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploy dialog values reach the app by @smashingtags in #667` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploys work on the read-only backend by @smashingtags in #657` |
@@ -634,6 +635,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.3 by @smashingtags in #663` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.4 by @smashingtags in #669` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.5 by @smashingtags in #680` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.6 by @smashingtags in #684` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -684,6 +686,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
 | `wiki/docs/install/changelog.md` | 1 x | `- validation path check case-insensitive on field key by @smashingtags in #319` |
 | `wiki/docs/install/changelog.md` | 1 x | `- warn at startup when AppArmor blocks deploys by @smashingtags in #666` |
+| `wiki/docs/install/changelog.md` | 1 x | `- warn when a deployed app still uses a password everyone knows by @smashingtags in #683` |
 | `wiki/docs/install/changelog.md` | 1 x | `- watch every filesystem that holds guests in the host alert by @smashingtags in #608` |
 | `wiki/docs/install/changelog.md` | 1 x | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
 | `wiki/docs/robots.txt` | 1 x | `# wiki.homelabarr.com — documentation for HomelabARR Community Edition.` |
