@@ -2,6 +2,12 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 
+// A host name: dot-separated labels of letters, digits and inner hyphens.
+export function isValidDomain(value) {
+  return typeof value === 'string' && value.length <= 253 &&
+    /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$/.test(value);
+}
+
 export default function deployRoutes({
   dockerManager,
   cliBridge,
@@ -65,6 +71,15 @@ export default function deployRoutes({
             missing
           });
         }
+      }
+
+      // The domain lands in app settings and Traefik rules, so only a plain
+      // host name is accepted: no scheme, path, spaces or backticks (HLCE-378).
+      if (config.domain !== undefined && config.domain !== '' && !isValidDomain(config.domain)) {
+        return res.status(400).json({
+          error: 'Invalid domain',
+          details: 'Domain: use a name like example.com, without https:// or a path.'
+        });
       }
 
       // Check for special Docker CLI deployments first

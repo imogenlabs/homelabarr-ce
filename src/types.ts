@@ -93,6 +93,8 @@ export interface CLIApplication {
   environment: Record<string, string>;
   // The app's own settings a user may fill in at deploy time (HLCE-373).
   variables?: { name: string; required: boolean }[];
+  /** The app uses the domain in its own settings, so the dialog asks for it in every mode. */
+  usesDomain?: boolean;
   volumes: string[];
   networks: string[];
   labels: string[];

@@ -26,6 +26,19 @@ describe('buildConfigFields', () => {
     expect(byName.target_domain).toBeUndefined();
   });
 
+  // HLCE-378: CF Companion needs a domain in standard mode too.
+  it('asks for the domain in every mode when the app uses it in its own settings', () => {
+    const domain = buildConfigFields(appWith({ variables: [], usesDomain: true })).find(f => f.name === 'domain');
+    expect(domain).toMatchObject({ trafikOnly: false, required: false });
+    expect(domain?.helpText).toContain('uses it in its own settings');
+  });
+
+  it('keeps the domain a Traefik-only field for other apps', () => {
+    const domain = buildConfigFields(appWith({ variables: [] })).find(f => f.name === 'domain');
+    expect(domain?.trafikOnly).toBe(true);
+    expect(domain?.helpText).toContain('example.com');
+  });
+
   it('still offers the container name and domain fields', () => {
     const names = buildConfigFields(appWith({ variables: [] })).map(f => f.name);
     expect(names).toEqual(expect.arrayContaining(['containerName', 'domain']));

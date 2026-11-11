@@ -133,3 +133,17 @@ describe('the catalog lists each app\'s variables', () => {
     ]);
   });
 });
+
+describe('the catalog says which apps use the domain themselves (HLCE-378)', () => {
+  it('CF Companion does, FlareSolverr does not', async () => {
+    const cf = await bridge.parseApplicationConfig(path.join(repoRoot, 'apps/system/cf-companion.yml'), 'system');
+    const fs2 = await bridge.parseApplicationConfig(path.join(repoRoot, 'apps/downloads/flaresolverr.yml'), 'downloads');
+    expect(cf.usesDomain).toBe(true);
+    expect(fs2.usesDomain).toBe(false);
+  });
+
+  it('a domain typed in the dialog reaches CF Companion in standard mode', async () => {
+    await bridge.deployApplication('system-cf-companion', { CF_TOKEN: 't', CF_ZONE_ID: 'z', domain: 'example.com' }, { type: 'standard' });
+    expect(spawnEnv().DOMAIN).toBe('example.com');
+  });
+});
