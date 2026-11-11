@@ -231,6 +231,11 @@ Endpoints grouped by function:
 | `GET` | `/applications` | No* | Full app catalog |
 | `POST` | `/deploy` | Yes* | Deploy an app |
 | `GET` | `/stream/progress` | No | Deployment events (SSE) |
+| `POST` | `/applications/:appId/stop` | Yes* | Stop a deployed app and remove its containers (its data stays) |
+| `DELETE` | `/applications/:appId` | Yes* | Remove a deployed app; add `?removeVolumes=true` to delete its volumes too |
+| `GET` | `/applications/:appId/logs` | Yes* | A deployed app's recent logs (`?lines=100`) |
+
+`:appId` is the catalog id, such as `transcoding-tdarr`.
 
 ### Containers
 | Method | Endpoint | Auth required | What it does |
