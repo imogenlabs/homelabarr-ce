@@ -92,3 +92,26 @@ describe('POST /deploy — unfilled settings (HLCE-370)', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('POST /deploy — domain (HLCE-378)', () => {
+  it('refuses a domain that is not a plain host name and never starts it', async () => {
+    for (const domain of ['https://example.com', 'example.com/x', 'a`b.com', 'has space.com', '-bad.com']) {
+      const { app, streamingCLIBridge } = buildApp();
+      const res = await request(app)
+        .post('/deploy')
+        .send({ appId: 'system-cf-companion', config: { CF_TOKEN: 't', CF_ZONE_ID: 'z', domain }, mode: { type: 'standard' } });
+      expect(res.status, domain).toBe(400);
+      expect(res.body.error).toBe('Invalid domain');
+      expect(streamingCLIBridge.deployApplicationWithProgress).not.toHaveBeenCalled();
+    }
+  });
+
+  it('accepts a plain domain', async () => {
+    const { app, streamingCLIBridge } = buildApp();
+    const res = await request(app)
+      .post('/deploy')
+      .send({ appId: 'system-cf-companion', config: { CF_TOKEN: 't', CF_ZONE_ID: 'z', domain: 'home.example.com' }, mode: { type: 'standard' } });
+    expect(res.status).toBe(200);
+    expect(streamingCLIBridge.deployApplicationWithProgress).toHaveBeenCalledTimes(1);
+  });
+});

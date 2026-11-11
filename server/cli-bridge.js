@@ -264,6 +264,8 @@ export class CLIBridge {
         ports: this.extractPorts(service),
         environment: this.extractEnvironmentVars(service),
         variables: [...CLIBridge.settableVariables(config)].map(([name, required]) => ({ name, required })),
+        // The app uses the domain in its own settings, not only for Traefik (HLCE-378).
+        usesDomain: CLIBridge.environmentRefs(config).some(r => r.name === 'DOMAIN'),
         volumes: this.extractVolumes(service),
         networks: this.extractNetworks(service),
         labels: this.extractLabels(service),
@@ -444,6 +446,23 @@ export class CLIBridge {
   }
 
   /**
+   * Every variable the services' environment values refer to: the app's own
+   * settings. List form "KEY=value" (only the value counts) or map form.
+   */
+  static environmentRefs(doc) {
+    const refs = [];
+    for (const svc of Object.values(doc?.services || {})) {
+      if (!svc || typeof svc !== 'object') continue;
+      const { environment } = svc;
+      const values = Array.isArray(environment)
+        ? environment.map(e => (typeof e === 'string' && e.includes('=') ? e.slice(e.indexOf('=') + 1) : ''))
+        : Object.values(environment || {});
+      refs.push(...CLIBridge.variableRefs(values));
+    }
+    return refs;
+  }
+
+  /**
    * The variables a user may set for this app from the deploy dialog, mapped to
    * whether the app needs one (no fallback anywhere). Only names the template
    * uses inside environment values qualify (HLCE-373). A name it also uses in
@@ -462,17 +481,13 @@ export class CLIBridge {
     const protectedPrefix = /^(DOCKER_|COMPOSE_|LD_|NODE_)/;
     const { services, ...top } = doc || {};
     const elsewhere = new Set(CLIBridge.variableRefs(top).map(r => r.name));
-    const inEnvironment = [];
     for (const svc of Object.values(services || {})) {
       if (!svc || typeof svc !== 'object') continue;
-      const { environment, ...rest } = svc;
-      CLIBridge.variableRefs(rest).forEach(r => elsewhere.add(r.name));
-      // List form "KEY=value" (only the value counts) or map form { KEY: value }.
-      const values = Array.isArray(environment)
-        ? environment.map(e => (typeof e === 'string' && e.includes('=') ? e.slice(e.indexOf('=') + 1) : ''))
-        : Object.values(environment || {});
-      inEnvironment.push(...CLIBridge.variableRefs(values));
+      for (const [key, value] of Object.entries(svc)) {
+        if (key !== 'environment') CLIBridge.variableRefs(value).forEach(r => elsewhere.add(r.name));
+      }
     }
+    const inEnvironment = CLIBridge.environmentRefs(doc);
     const settable = new Map();
     for (const { name, fallback } of inEnvironment) {
       if (elsewhere.has(name) || reserved.has(name) || protectedPrefix.test(name)) continue;

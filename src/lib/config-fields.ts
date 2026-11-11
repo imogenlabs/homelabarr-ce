@@ -21,8 +21,12 @@ export function buildConfigFields(app: AppTemplate): ConfigField[] {
       required: false,
       placeholder: 'yourdomain.com — no https:// needed',
       defaultValue: '',
-      trafikOnly: true,
-      helpText: 'Just the domain (e.g. mjashley.com). Apps will be accessible at appname.yourdomain.com',
+      // An app that uses the domain in its own settings needs it in every mode,
+      // not only behind Traefik (HLCE-378).
+      trafikOnly: !cliApp?.usesDomain,
+      helpText: cliApp?.usesDomain
+        ? 'Just the domain (e.g. example.com). This app uses it in its own settings.'
+        : 'Just the domain (e.g. example.com). Apps will be accessible at appname.yourdomain.com',
     },
   ];
 
