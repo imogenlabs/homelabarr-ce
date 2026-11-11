@@ -520,6 +520,18 @@ export class CLIBridge {
       });
 
       dockerCompose.on('error', (error) => {
+        // v2.6.2 added docker-compose to the AppArmor profile. A host still on the
+        // older profile refuses to run it, and the raw EACCES says nothing useful.
+        if (error.code === 'EACCES') {
+          const explained = new Error(
+            'HomelabARR is not allowed to run docker-compose on this host. If you installed the AppArmor ' +
+            'profiles, update them from your HomelabARR folder with `sudo bash scripts/install-apparmor.sh`, ' +
+            'then deploy again.'
+          );
+          explained.code = 'EACCES';
+          explained.cause = error;
+          return reject(explained);
+        }
         reject(error);
       });
     });

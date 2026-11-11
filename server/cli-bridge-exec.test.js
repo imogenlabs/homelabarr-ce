@@ -113,6 +113,17 @@ describe('AC1 — executeDockerCompose builds exact argv and never uses a shell'
     fire('error', new Error('spawn ENOENT'));
     await expect(p).rejects.toThrow(/spawn ENOENT/);
   });
+
+  // A host still on the pre-2.6.2 AppArmor profile refuses to run
+  // docker-compose. The deploy dialog shows this message, so it must say what to do.
+  it('turns EACCES into an instruction to update the AppArmor profiles', async () => {
+    const { child, fire } = makeFakeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const p = bridge.executeDockerCompose(appPath, 'up -d', {});
+    fire('error', Object.assign(new Error('spawn docker-compose EACCES'), { code: 'EACCES' }));
+    await expect(p).rejects.toThrow(/sudo bash scripts\/install-apparmor\.sh/);
+  });
 });
 
 // ---- AC2: deployStandard rewrites the compose file ------------------------
