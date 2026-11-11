@@ -180,6 +180,51 @@ describe('GET /health/deploy (HLCE-372)', () => {
   });
 });
 
+describe('GET /health/known-passwords (HLCE-387)', () => {
+  function dockerWith(containers) {
+    const docker = {
+      listContainers: vi.fn().mockResolvedValue(containers.map((c) => ({ Id: c.id, Names: [`/${c.name}`] }))),
+      getContainer: (id) => ({
+        inspect: async () => {
+          const c = containers.find((x) => x.id === id);
+          if (c.gone) throw new Error('no such container');
+          return { Config: { Env: c.env } };
+        },
+      }),
+    };
+    return {
+      ...disconnectedDockerManager(),
+      executeWithRetry: vi.fn(async (op) => op(docker)),
+    };
+  }
+
+  it('rejects an unauthenticated request with 401', async () => {
+    const { app } = buildApp();
+    const res = await request(app).get('/health/known-passwords');
+    expect(res.status).toBe(401);
+  });
+
+  it('names the apps still using a retired default, never the value', async () => {
+    const { app } = buildApp({ dockerManager: dockerWith([
+      { id: 'a', name: 'n8n', env: ['N8N_BASIC_AUTH_PASSWORD=changeme'] },
+      { id: 'b', name: 'flowise', env: ['FLOWISE_PASSWORD=mine'] },
+      { id: 'c', name: 'gone', gone: true },
+    ]) });
+    const res = await request(app).get('/health/known-passwords').set('Cookie', userCookie());
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ apps: [{ container: 'n8n', app: 'n8n', setting: 'N8N_PASSWORD' }] });
+    expect(res.text).not.toContain('changeme');
+  });
+
+  it('answers an empty list when Docker cannot be reached', async () => {
+    const dockerManager = { ...disconnectedDockerManager(), executeWithRetry: vi.fn().mockRejectedValue(new Error('down')) };
+    const { app } = buildApp({ dockerManager });
+    const res = await request(app).get('/health/known-passwords').set('Cookie', userCookie());
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ apps: [] });
+  });
+});
+
 describe('AC2 — GET /health/detail (admin-only aggregate)', () => {
   it('rejects an unauthenticated request with 401 (real requireAuth)', async () => {
     const { app } = buildApp();

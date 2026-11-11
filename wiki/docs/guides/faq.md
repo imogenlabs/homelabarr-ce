@@ -142,6 +142,10 @@ sudo ufw allow PORT/tcp           # Firewall blocking it?
 
 Some apps protect themselves with a password or secret: n8n, Flowise and aria2 among them. HomelabARR never fills one in for you, because a default would be the same on every install and anyone could look it up. Type one in the dialog; the deploy will not start while it is empty.
 
+### I deployed n8n, Flowise or aria2 before v2.6.5. Is my password safe?
+
+Maybe not. Before v2.6.5, leaving the password empty gave n8n and Flowise the password `changeme` and aria2 the secret `homelabarr`. Updating HomelabARR does not change apps that are already running. After you update, the dashboard shows a red banner naming any app that still uses one. To fix it, deploy the app again from the catalog and type your own password; its data is kept.
+
 ### Can I deploy without the web UI?
 
 Yes. The templates in `apps/` are standard Docker Compose files:
