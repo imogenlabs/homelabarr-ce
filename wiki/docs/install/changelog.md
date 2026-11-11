@@ -15,6 +15,21 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.6] - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- keep a signed-in user signed in when the server says slow down by @smashingtags in #682
+- warn when a deployed app still uses a password everyone knows by @smashingtags in #683
+
+### 📚 Documentation
+
+- changelog for v2.6.5 by @github-actions[bot] in #681
+
+### 🔧 Maintenance
+
+- release v2.6.6 by @smashingtags in #684
+
 ## [v2.6.5] - 2026-11-11
 
 ### 🐛 Bug Fixes
