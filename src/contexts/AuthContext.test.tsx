@@ -112,6 +112,94 @@ describe("AuthContext — initial load (AC1)", () => {
   });
 });
 
+// HLCE-382: a 429 from /auth/me is "slow down", not "signed out". Showing the
+// login screen there signed users out and pushed them into the login limit.
+function tooMany(retryAfter?: string): Response {
+  return {
+    ok: false,
+    status: 429,
+    headers: new Headers(retryAfter ? { "Retry-After": retryAfter } : {}),
+    json: async () => ({ error: "Too many requests" }),
+  } as unknown as Response;
+}
+
+describe("AuthContext — /auth/me answers 429 (HLCE-382)", () => {
+  it("keeps loading instead of showing the login screen, then retries after Retry-After", async () => {
+    mockApiFetchRaw
+      .mockResolvedValueOnce(tooMany("2"))
+      .mockResolvedValueOnce(res(true, { user: sampleUser }));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await flush();
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.user).toBeNull();
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1999);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(2);
+    expect(result.current.user).toEqual(sampleUser);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
+  it("waits 5 seconds when the 429 has no Retry-After, and keeps waiting while it repeats", async () => {
+    mockApiFetchRaw
+      .mockResolvedValueOnce(tooMany())
+      .mockResolvedValueOnce(tooMany("1"))
+      .mockResolvedValueOnce(res(true, { user: sampleUser }));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await flush();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4999);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(2);
+    expect(result.current.loading).toBe(true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(3);
+    expect(result.current.user).toEqual(sampleUser);
+  });
+
+  it("still shows the login screen on a 401", async () => {
+    mockApiFetchRaw.mockResolvedValue(res(false, {}, 401));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await flush();
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("stops retrying once unmounted", async () => {
+    mockApiFetchRaw.mockResolvedValue(tooMany("2"));
+
+    const { unmount } = renderHook(() => useAuth(), { wrapper });
+    await flush();
+    unmount();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(mockApiFetchRaw).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("AuthContext — rate-limit & event contracts (AC2)", () => {
   it("calls apiFetchRaw on mount and never apiFetch (page-load rate-limit bypass)", async () => {
     mockApiFetchRaw.mockResolvedValue(res(false));

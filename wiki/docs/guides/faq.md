@@ -86,6 +86,10 @@ docker compose -f homelabarr.yml up -d
 
 Safari can also show a blank page in this situation, for the same reason.
 
+### The dashboard shows its loading spinner for a few seconds
+
+The backend allows each address about 100 requests a minute. If you refresh a lot, or several tabs and scripts share one address, it asks the dashboard to slow down. The dashboard keeps you signed in, waits the time the server asks for, and carries on. Older versions showed the login screen instead.
+
 ### `docker compose up` says "bind source path does not exist: .../secrets/..."
 
 Run `bash scripts/init-secrets.sh` in `/opt/homelabarr` first. It creates the secret files the stack mounts, and prints the initial admin password.
