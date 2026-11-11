@@ -147,3 +147,18 @@ describe('the catalog says which apps use the domain themselves (HLCE-378)', () 
     expect(spawnEnv().DOMAIN).toBe('example.com');
   });
 });
+
+describe('the catalog lists each app\'s own container names (HLCE-384)', () => {
+  it('uses container_name when the template sets one', async () => {
+    const app = await bridge.parseApplicationConfig(path.join(repoRoot, 'apps/self-hosted/it-tools.yml'), 'self-hosted');
+    expect(app.containerNames).toEqual(['it-tools']);
+  });
+
+  it('falls back to the name compose gives a service in the deploy project', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hlce-384-'));
+    const file = path.join(dir, 'two.yml');
+    fs.writeFileSync(file, 'services:\n  web:\n    image: nginx\n  db:\n    image: postgres\n    container_name: two-db\n');
+    const app = await bridge.parseApplicationConfig(file, 'myapps');
+    expect(app.containerNames).toEqual(['data-web-1', 'two-db']);
+  });
+});

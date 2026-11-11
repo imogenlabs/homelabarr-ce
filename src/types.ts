@@ -9,6 +9,8 @@ export interface AppTemplate {
   deploymentModes: DeploymentModeType[];
   configFields?: ConfigField[];
   defaultPorts?: Record<string, number>;
+  /** Names this app's own containers run under; their ports are not a conflict on a redeploy. */
+  containerNames?: string[];
   requiredPorts?: string[];
   tags?: string[];
   yamlFile?: string;
@@ -95,6 +97,7 @@ export interface CLIApplication {
   variables?: { name: string; required: boolean }[];
   /** The app uses the domain in its own settings, so the dialog asks for it in every mode. */
   usesDomain?: boolean;
+  containerNames?: string[];
   volumes: string[];
   networks: string[];
   labels: string[];

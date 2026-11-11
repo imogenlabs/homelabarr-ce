@@ -64,14 +64,22 @@ export async function validatePortConflicts(
   const errors: string[] = [];
 
   try {
-    const { usedPorts } = await checkUsedPorts();
+    const { usedPorts, owners = {} } = await checkUsedPorts();
+    // A port held only by this app's own containers is not a conflict: deploying
+    // a running app again updates it in place (HLCE-384).
+    const own = new Set(template.containerNames ?? []);
+    const busy = (port: number) => {
+      if (!usedPorts.includes(port)) return false;
+      const holders: string[] = owners[port] ?? [];
+      return !(holders.length > 0 && holders.every(name => own.has(name)));
+    };
 
     // Check configured ports against used ports
     Object.entries(config).forEach(([key, value]) => {
       const field = template.configFields?.find(f => f.name === key);
       if (isPortField(field, key)) {
         const port = parseInt(value, 10);
-        if (!isNaN(port) && usedPorts.includes(port)) {
+        if (!isNaN(port) && busy(port)) {
           errors.push(`Port ${port} is already in use by another container`);
         }
       }
@@ -83,7 +91,7 @@ export async function validatePortConflicts(
       Object.entries(template.defaultPorts).forEach(([portName, port]) => {
         const chosen = config[`port_${portName}`]?.trim();
         if (chosen && Number(chosen) !== port) return;
-        if (usedPorts.includes(port)) {
+        if (busy(port)) {
           errors.push(`Default port ${port} (${portName}) is already in use`);
         }
       });

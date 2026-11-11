@@ -173,6 +173,32 @@ describe('validatePortConflicts', () => {
     expect(await validatePortConflicts(t, {})).toContain('Default port 8080 (80) is already in use');
   });
 
+  // HLCE-384: deploying a running app again updates it in place, so the port
+  // its own container holds is not a conflict. Another app's container still is.
+  it('does not count a port held only by this app\'s own container', async () => {
+    const t = template([field({ name: 'port_80', label: 'Port: 80', type: 'text' })], {
+      defaultPorts: { '80': 8089 },
+      containerNames: ['it-tools'],
+    });
+
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8089], owners: { 8089: ['it-tools'] } });
+    expect(await validatePortConflicts(t, { port_80: '8089' })).toEqual([]);
+    expect(await validatePortConflicts(t, {})).toEqual([]);
+
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8089], owners: { 8089: ['other-app'] } });
+    expect(await validatePortConflicts(t, { port_80: '8089' })).toEqual([
+      'Port 8089 is already in use by another container',
+      'Default port 8089 (80) is already in use',
+    ]);
+
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8089], owners: { 8089: ['it-tools', 'other-app'] } });
+    expect(await validatePortConflicts(t, {})).toContain('Default port 8089 (80) is already in use');
+
+    // An older backend without owners: every used port still counts.
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8089] });
+    expect(await validatePortConflicts(t, {})).toContain('Default port 8089 (80) is already in use');
+  });
+
   it('returns no errors when there are no collisions', async () => {
     checkUsedPortsMock.mockResolvedValue({ usedPorts: [9999] });
     const t = template([field({ name: 'webPort', label: 'Web Port', type: 'number' })], {

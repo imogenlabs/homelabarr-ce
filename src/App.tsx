@@ -69,6 +69,7 @@ function cliAppToTemplate(app: CLIApplication): AppTemplate {
     logo: icon,
     deploymentModes: modes,
     defaultPorts: app.ports,
+    containerNames: app.containerNames,
     requiredPorts: Object.keys(app.ports),
     // Store CLI data for deploy modal enrichment
     _cliApp: app,

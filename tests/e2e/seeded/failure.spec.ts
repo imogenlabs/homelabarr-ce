@@ -12,13 +12,13 @@ import { loginAdmin, openDeployedTab, ensureItToolsDeployed } from './_helpers';
 // fields are text). So neither a duplicate deploy nor the in-modal validator
 // yields a deterministic failure here.
 //
-// Two failure surfaces are checked. First the dialog's own check: it-tools'
-// published port is taken by the running it-tools, so the dialog names it and
-// sends nothing (HLCE-375 made that check read the published port). Then, with
-// the port moved to a free one, the server's port-conflict reply: `deployApp`
-// rejects and `handleDeploy` shows a "Port Conflict" error toast (App.tsx) and
-// never adds the app to Deployed. We force that reply via request interception,
-// so the client failure path runs without touching the live it-tools container.
+// The dialog's own busy-port check must let this deploy through: the only
+// holder of it-tools' port is it-tools itself, and deploying a running app again
+// updates it in place (HLCE-384). The failure surface is then the server's
+// port-conflict reply: `deployApp` rejects and `handleDeploy` shows a "Port
+// Conflict" error toast (App.tsx) and never adds the app to Deployed. We force
+// that reply via request interception, so the client failure path runs without
+// touching the live it-tools container.
 test('a port-conflicting deploy shows a failure state and is not added to Deployed', async ({ page, baseURL }) => {
   test.setTimeout(90_000);
   await ensureItToolsDeployed(baseURL!); // port 80 is occupied by the running it-tools
@@ -59,21 +59,13 @@ test('a port-conflicting deploy shows a failure state and is not added to Deploy
   await expect(modal.getByRole('heading', { name: /deploy it tools/i })).toBeVisible();
   await modal.getByRole('button', { name: /^deploy/i }).last().click();
 
-  // (a) The dialog names the busy port and sends no deploy request.
-  await expect(modal.getByText(/port 8089 .*already in use/i)).toBeVisible({ timeout: 10_000 });
-  expect(deployRequests).toBe(0);
-
-  // Move it to a free port; now the request goes out and the server refuses it.
-  await modal.getByRole('button', { name: /advanced configuration/i }).click();
-  await modal.locator('#port_80').fill('18089');
-  await modal.getByRole('button', { name: /^deploy/i }).last().click();
-
-  // (b) A visible failure state: the "Port Conflict" error toast.
+  // (a) A visible failure state: the "Port Conflict" error toast. The request
+  // went out, so the dialog did not call it-tools' own port busy.
   await expect(page.getByText(/port conflict/i).first()).toBeVisible({ timeout: 15_000 });
-
   expect(deployRequests).toBe(1);
+  await expect(modal.getByText(/port 8089.*already in use/i)).toHaveCount(0);
 
-  // (c) The failed deploy did NOT add another it-tools card under Deployed.
+  // (b) The failed deploy did NOT add another it-tools card under Deployed.
   await openDeployedTab(page);
   await expect(itToolsCards).toHaveCount(before, { timeout: 15_000 });
 });
