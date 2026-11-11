@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1639
+**Total brand references found:** 1644
 
 ---
 
@@ -392,7 +392,7 @@
 
 ## Wiki content
 
-**390 references**
+**395 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -573,6 +573,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 1 x | `- let deploy dialog values reach the app by @smashingtags in #667` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let deploys work on the read-only backend by @smashingtags in #657` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the deploy dialog scroll on small screens by @smashingtags in #659` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
@@ -613,10 +614,12 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- record each published release in Jira by @smashingtags in #577` |
 | `wiki/docs/install/changelog.md` | 1 x | `- record releases with keen v1.7.0 by @smashingtags in #609` |
 | `wiki/docs/install/changelog.md` | 1 x | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
+| `wiki/docs/install/changelog.md` | 1 x | `- refuse a deploy that leaves an app's settings empty by @smashingtags in #668` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.3.0 by @smashingtags in #456` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.1 by @smashingtags in #637` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.2 by @smashingtags in #660` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.3 by @smashingtags in #663` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.4 by @smashingtags in #669` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -643,6 +646,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- send host alerts through the estate's Resend sender by @smashingtags in #575` |
 | `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.0 by @smashingtags in #512` |
 | `wiki/docs/install/changelog.md` | 1 x | `- set the version to 2.5.1 by @smashingtags in #515` |
+| `wiki/docs/install/changelog.md` | 1 x | `- show why a deploy failed by @smashingtags in #665` |
 | `wiki/docs/install/changelog.md` | 1 x | `- smoke E2E reuses one session (fix 15-min rate-limit cascade) by @smashingtags in #369` |
 | `wiki/docs/install/changelog.md` | 1 x | `- stabilize E2E on CI (cold-hydration timeouts + docker-free harness) by @smashingtags in #244` |
 | `wiki/docs/install/changelog.md` | 1 x | `- start on root-owned appdata by taking ownership and dropping to uid 1001 by @smashingtags in #636` |
@@ -663,6 +667,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- validate compose templates as YAML+services (runner-stable) by @smashingtags in #240` |
 | `wiki/docs/install/changelog.md` | 1 x | `- validate container web port in all enhanced-mount handlers by @smashingtags in #321` |
 | `wiki/docs/install/changelog.md` | 1 x | `- validation path check case-insensitive on field key by @smashingtags in #319` |
+| `wiki/docs/install/changelog.md` | 1 x | `- warn at startup when AppArmor blocks deploys by @smashingtags in #666` |
 | `wiki/docs/install/changelog.md` | 1 x | `- watch every filesystem that holds guests in the host alert by @smashingtags in #608` |
 | `wiki/docs/install/changelog.md` | 1 x | `- whitelabel-audit workflow opens PR instead of direct push by @smashingtags in #156` |
 | `wiki/docs/robots.txt` | 1 x | `# wiki.homelabarr.com — documentation for HomelabARR Community Edition.` |
