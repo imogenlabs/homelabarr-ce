@@ -40,6 +40,20 @@ export default function deployRoutes({
         });
       }
 
+      // Refuse a deploy that would leave one of the app's own settings empty.
+      // Compose would start it with a blank value and it usually crash-loops
+      // (#642). Checked here, before any deploy path answers "started".
+      if (cliBridge?.findUnresolvedVariables) {
+        const missing = await cliBridge.findUnresolvedVariables(appId, config, mode || { type: 'standard' });
+        if (missing.length > 0) {
+          return res.status(400).json({
+            error: 'Missing settings',
+            details: `Fill in ${missing.join(', ')} before deploying.`,
+            missing
+          });
+        }
+      }
+
       // Check for special Docker CLI deployments first
       if (appId === 'it-tools') {
         logger.info('🐳 Using direct Docker CLI deployment for it-tools MVP (bypassing streaming)');

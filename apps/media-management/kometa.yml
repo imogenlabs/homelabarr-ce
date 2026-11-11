@@ -9,10 +9,10 @@ services:
       - "PGID=${ID}"
       - "PUID=${ID}"
       - "TZ=${TZ}"
-      - "KOMETA_TIME=${KOMETA_TIME}" # comma-separated list of times to update each day Format: HH:MM
-      - "KOMETA_COLLECTIONS_ONLY=${KOMETA_COLLECTIONS_ONLY}" # Process only collections during the run DEFAULT: false
-      - "KOMETA_LIBRARIES_ONLY=${KOMETA_LIBRARIES_ONLY}" # Process everything but collections during the run DEFAULT: false
-      - "KOMETA_NO_MISSING=${KOMETA_NO_MISSING}" # Run without any of the missing movie/show functions DEFAULT: false
+      - "KOMETA_TIME=${KOMETA_TIME:-05:00}" # comma-separated list of times to update each day Format: HH:MM
+      - "KOMETA_COLLECTIONS_ONLY=${KOMETA_COLLECTIONS_ONLY:-False}" # Process only collections during the run DEFAULT: false
+      - "KOMETA_LIBRARIES_ONLY=${KOMETA_LIBRARIES_ONLY:-False}" # Process everything but collections during the run DEFAULT: false
+      - "KOMETA_NO_MISSING=${KOMETA_NO_MISSING:-False}" # Run without any of the missing movie/show functions DEFAULT: false
     networks:
       - ${DOCKERNETWORK}
     security_opt:

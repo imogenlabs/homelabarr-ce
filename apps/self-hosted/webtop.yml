@@ -11,7 +11,7 @@ services:
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
     restart: "${RESTARTAPP}"
-    shm_size: "${WEBTOP_SHM_SIZE}"
+    shm_size: "${WEBTOP_SHM_SIZE:-1gb}"
     networks:
       - ${DOCKERNETWORK}
     volumes:

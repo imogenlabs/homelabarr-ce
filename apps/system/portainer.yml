@@ -5,11 +5,11 @@ services:
     container_name: portainer
     hostname: portainer
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
+      - PUID=${ID}
+      - PGID=${ID}
       - TZ=${TZ}
     volumes:
-      - ${APPDATA_PATH}/portainer:/data
+      - ${APPFOLDER}/portainer:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - 9000:9000

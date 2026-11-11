@@ -17,16 +17,16 @@ services:
       - ${DOCKERNETWORK}
     dns:
       - ${PORTBLOCK}
-      - ${NS1}
-      - ${NS2}
+      - ${NS1:-1.1.1.1}
+      - ${NS2:-1.0.0.1}
     environment:
       - "PGID=${ID}"
       - "PUID=${ID}"
-      - "PIHOLE_DNS_=${NS1};${NS2}" #Unbound DNS, Set this to Cloudflare or Google etc if not using Unbound.
+      - "PIHOLE_DNS_=${NS1:-1.1.1.1};${NS2:-1.0.0.1}" #Unbound DNS, Set this to Cloudflare or Google etc if not using Unbound.
       - "ServerIP=${PORTBLOCK}"
       - "TZ=${TZ}"
       - "WEBPASSWORD=${PIHOLEWEBPASSWORD}"
-      - "DNSSEC=${PIHOLEDNSSEC}"
+      - "DNSSEC=${PIHOLEDNSSEC:-false}"
     restart: ${RESTARTAPP}
     volumes:
       - /etc/localtime:/etc/localtime:ro
