@@ -5,6 +5,11 @@
 ### 🔒 Privacy
 - **Your dashboard no longer sends page views to the project's analytics**: every install loaded an analytics script and forwarded page views through your server to the project's Umami server, though the privacy notice said only the demo did. Analytics are now off unless you set `ANALYTICS_URL` and `ANALYTICS_WEBSITE_ID` on the frontend, which the public demo does.
 
+## [v2.6.6] - November 11, 2026
+
+### 🐛 Fixes
+- **You stay signed in when the server asks the dashboard to slow down**: each address may make about 100 requests a minute. When a reload went past that, the dashboard took the "too many requests" reply as signed out and showed the login screen, and signing in again counted against the login limit. It now waits the time the server asks for and carries on.
+
 ### 🔒 Security
 - **The dashboard warns about apps that still use a password everyone knows**: v2.6.5 stopped giving new deploys default passwords, but n8n, Flowise and aria2 deployed earlier keep `changeme` or `homelabarr`. A banner now names each one and says to deploy it again with your own password. The values are never sent to the browser.
 
