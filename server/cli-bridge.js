@@ -825,7 +825,7 @@ export class CLIBridge {
     (service?.ports || []).forEach((entry, index) => {
       let host;
       let container;
-      let protocol = 'tcp';
+      let protocol;
       if (typeof entry === 'string') {
         const [spec, proto] = entry.split('/');
         const parts = spec.split(':');
