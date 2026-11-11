@@ -118,6 +118,22 @@ describe('AC3 — GET /ports/check', () => {
     expect(res.body.usedPorts).toContain(3000);
   });
 
+  // HLCE-384: the dialog needs to know whose port it is, so a redeploy of a
+  // running app does not count the app's own port as busy.
+  it('reports which containers hold each port', async () => {
+    vi.mocked(execSync).mockReturnValue(
+      '{"Names":"it-tools","Ports":"0.0.0.0:8089->80/tcp, :::8089->80/tcp"}\n' +
+      '{"Names":"web,web-alias","Ports":"0.0.0.0:3000->3000/tcp"}\n' +
+      '{"Names":"idle","Ports":""}\n'
+    );
+    const { app } = buildApp({ dockerManager: dockerManagerStub() });
+
+    const res = await request(app).get('/ports/check').set('Cookie', adminCookie());
+
+    expect(res.status).toBe(200);
+    expect(res.body.owners).toEqual({ 8089: ['it-tools'], 3000: ['web', 'web-alias'] });
+  });
+
   it('falls back to template mode (not an error) when Docker is unavailable', async () => {
     vi.mocked(execSync).mockImplementation(() => { throw new Error('docker: command not found'); });
     const { app } = buildApp({ dockerManager: dockerManagerStub() });

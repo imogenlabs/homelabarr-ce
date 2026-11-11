@@ -276,6 +276,10 @@ export class CLIBridge {
         variables: [...CLIBridge.settableVariables(config)].map(([name, required]) => ({ name, required })),
         // The app uses the domain in its own settings, not only for Traefik (HLCE-378).
         usesDomain: CLIBridge.environmentRefs(config).some(r => r.name === 'DOMAIN'),
+        // The names this app's containers run under, so the deploy dialog does
+        // not call the app's own port busy on a redeploy (HLCE-384).
+        containerNames: Object.entries(config.services).map(([key, svc]) =>
+          CLIBridge.resolveTemplateVar(svc?.container_name) || `${appProjectName()}-${key}-1`),
         volumes: this.extractVolumes(service),
         networks: this.extractNetworks(service),
         labels: this.extractLabels(service),

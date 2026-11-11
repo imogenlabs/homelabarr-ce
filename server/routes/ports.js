@@ -15,6 +15,9 @@ export default function portRoutes({ sendError, requireAuth, dockerManager, logg
         });
 
         const usedPorts = new Set();
+        // Which containers hold each port, so the deploy dialog can tell an
+        // app's own running copy from another app (HLCE-384).
+        const owners = {};
         const lines = result.split('\n').filter(line => line.trim());
 
         for (const line of lines) {
@@ -25,7 +28,10 @@ export default function portRoutes({ sendError, requireAuth, dockerManager, logg
               if (portMatches) {
                 portMatches.forEach(match => {
                   const port = parseInt(match.replace('->', ''));
-                  if (port) usedPorts.add(port);
+                  if (!port) return;
+                  usedPorts.add(port);
+                  const names = String(container.Names || '').split(',').map(n => n.trim()).filter(Boolean);
+                  owners[port] = [...new Set([...(owners[port] || []), ...names])];
                 });
               }
             }
@@ -35,6 +41,7 @@ export default function portRoutes({ sendError, requireAuth, dockerManager, logg
         return res.json({
           success: true,
           usedPorts: Array.from(usedPorts),
+          owners,
           docker: { status: 'connected', message: 'Docker CLI integration active' },
           source: 'cli'
         });

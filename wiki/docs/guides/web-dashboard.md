@@ -62,7 +62,7 @@ Use the **search bar** at the top to find apps by name across all categories.
     - **Standard** — the simple one. The app gets a port number, you access it at `http://your-server:PORT`. No extra setup needed. **Start here if you're not sure.** Apps that use your domain in their own settings, such as CF Companion, ask for it here too.
     - **Traefik** — gives the app its own URL like `https://plex.yourdomain.com` with free SSL. Requires a domain name and Traefik running on your server. ([Traefik setup guide](traefik-setup.md))
     - **Traefik + Authelia** — same as Traefik but adds a login page in front of the app for extra protection. Good for anything you expose to the internet.
-4. Adjust any settings — timezone, data paths, etc. The defaults usually work fine. If the app's usual port is already taken on your server, open **Advanced Configuration** and change its **Port** field: the app is then reachable on the port you typed
+4. Adjust any settings — timezone, data paths, etc. The defaults usually work fine. If the app's usual port is already taken on your server, open **Advanced Configuration** and change its **Port** field: the app is then reachable on the port you typed. Deploying an app that is already running updates it in place, so its own port does not count as taken.
 5. Click **Deploy** — watch it install in real time
 
 ![Deploy Modal](../img/screenshots/dark-deploy-modal-auth.png)
