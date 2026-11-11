@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1654
+**Total brand references found:** 1660
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**29 references**
+**33 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -64,6 +64,10 @@
 | `server/regression/root-start.regression.test.js` | 1 x | `    const mounted = [...read('homelabarr.yml').matchAll(/^\s+- homelabarr-[a-z]+:(\/app\/[^\s:]+)/gm)]` |
 | `server/regression/root-start.regression.test.js` | 1 x | `  it('fixes ownership of every data volume homelabarr.yml mounts into the backend', () => {` |
 | `server/regression/root-start.regression.test.js` | 1 x | `// else runs, and the folders it fixes are the ones homelabarr.yml mounts.` |
+| `server/retired-defaults.js` | 1 x | `  { app: 'aria2', env: 'RPC_SECRET', value: 'homelabarr', setting: 'ARIA_RPC_SECRET' },` |
+| `server/retired-defaults.test.js` | 1 x | `      { name: 'aria', env: ['RPC_SECRET=homelabarr'] },` |
+| `server/retired-defaults.test.js` | 1 x | `      { name: 'aria', env: ['RPC_SECRET=homelabarr2'] },` |
+| `server/retired-defaults.test.js` | 1 x | `    expect(JSON.stringify(found)).not.toMatch(/changeme\|homelabarr/);` |
 | `server/routes/auth-admin.js` | 1 x | `        from: process.env.SMTP_FROM \|\| 'homelabarr@localhost',` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(nameArg).toMatch(/^homelabarr-it-tools-\d+$/);` |
 | `server/routes/dangerous-ops.routes.test.js` | 1 x | `    expect(res.body.containerName).toMatch(/^homelabarr-it-tools-\d+$/);` |
@@ -291,7 +295,7 @@
 
 ## Root documentation
 
-**94 references**
+**95 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -343,6 +347,7 @@
 | `CHANGELOG.md` | 1 x | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
 | `CHANGELOG.md` | 1 x | `- **Settings typed in the deploy dialog reach the app** ([#642](https://github.com/imogenlabs/homelabarr-ce/issues/642))` |
 | `CHANGELOG.md` | 1 x | `- **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki ins` |
+| `CHANGELOG.md` | 1 x | `- **The dashboard warns about apps that still use a password everyone knows**: v2.6.5 stopped giving new deploys default` |
 | `CHANGELOG.md` | 1 x | `- **The deploy dialog fits small screens** ([#643](https://github.com/imogenlabs/homelabarr-ce/issues/643)): with advanc` |
 | `CHANGELOG.md` | 1 x | `- **The log names the Docker endpoint it really uses** ([HLCE-364](https://mjashley.atlassian.net/browse/HLCE-364)): wit` |
 | `CHANGELOG.md` | 1 x | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
@@ -392,7 +397,7 @@
 
 ## Wiki content
 
-**405 references**
+**406 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -426,6 +431,7 @@
 | `wiki/docs/guides/faq.md` | 1 x | `- **[GitHub Issues](https://github.com/imogenlabs/homelabarr-ce/issues)** — bug reports` |
 | `wiki/docs/guides/faq.md` | 1 x | `- **[homelabarr.com](https://homelabarr.com)** — product page` |
 | `wiki/docs/guides/faq.md` | 1 x | `CE (Community Edition) is 100% free and open source under the MIT license. There's also a paid [HomelabARR Mobile](https` |
+| `wiki/docs/guides/faq.md` | 1 x | `Maybe not. Before v2.6.5, leaving the password empty gave n8n and Flowise the password 'changeme' and aria2 the secret '` |
 | `wiki/docs/guides/faq.md` | 1 x | `Run 'bash scripts/init-secrets.sh' in '/opt/homelabarr' first. It creates the secret files the stack mounts, and prints ` |
 | `wiki/docs/guides/faq.md` | 1 x | `The shipped 'homelabarr.yml' already sets it. This affects you only if you wrote your own compose file or run your own p` |
 | `wiki/docs/guides/faq.md` | 1 x | `The shipped 'homelabarr.yml' reaches Docker through the 'socket-proxy' container at 'tcp://socket-proxy:2375'; the backe` |
