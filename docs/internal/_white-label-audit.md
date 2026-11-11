@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1630
+**Total brand references found:** 1635
 
 ---
 
@@ -390,7 +390,7 @@
 
 ## Wiki content
 
-**383 references**
+**388 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -561,6 +561,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- frame audit row_hash with JSON to close boundary-ambiguous tamper by @smashingtags in #313` |
 | `wiki/docs/install/changelog.md` | 1 x | `- frontend security fixes (rclone XSS, credential log, port validation) by @smashingtags in #338` |
 | `wiki/docs/install/changelog.md` | 1 x | `- frontend security-component tests + lib/api gaps (+ password-min fix) by @smashingtags in #327` |
+| `wiki/docs/install/changelog.md` | 1 x | `- give the CLI-mode Docker manager getDocker by @smashingtags in #658` |
 | `wiki/docs/install/changelog.md` | 1 x | `- give wiki.homelabarr.com a robots.txt by @smashingtags in #523` |
 | `wiki/docs/install/changelog.md` | 1 x | `- guard the native build and give the E2E lane real diagnostics by @smashingtags in #446` |
 | `wiki/docs/install/changelog.md` | 1 x | `- harden auth routes — cli-mint jti-less+ttl, constant-time validatePassword, MFA invariant pins by @smashingtags in #` |
@@ -570,6 +571,8 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- ignore typescript >=6.1.0 in dependabot dev-tools group by @smashingtags in #387` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for dangerous ops (delete, deploy spawn, down -v) by @smashingtags in #310` |
 | `wiki/docs/install/changelog.md` | 1 x | `- integration tests for untested backend routes (+ Router() bug fix) by @smashingtags in #326` |
+| `wiki/docs/install/changelog.md` | 1 x | `- let deploys work on the read-only backend by @smashingtags in #657` |
+| `wiki/docs/install/changelog.md` | 1 x | `- let the deploy dialog scroll on small screens by @smashingtags in #659` |
 | `wiki/docs/install/changelog.md` | 1 x | `- let the server say it is a demo instead of guessing from the URL by @smashingtags in #485` |
 | `wiki/docs/install/changelog.md` | 1 x | `- list Movviz in the v2.6.0 changelog by @smashingtags in #634` |
 | `wiki/docs/install/changelog.md` | 1 x | `- log the Docker endpoint the backend really uses by @smashingtags in #635` |
@@ -610,6 +613,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- refresh CE UI screenshots (dark + light) by @smashingtags in #161` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.3.0 by @smashingtags in #456` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.1 by @smashingtags in #637` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.2 by @smashingtags in #660` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
@@ -627,6 +631,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- revert pages.yml to self-hosted (gitrunners fixed) by @smashingtags in #291` |
 | `wiki/docs/install/changelog.md` | 1 x | `- revert to GitHub-hosted (public repo = free minutes; self-hosted blocked for public) by @smashingtags in #233` |
 | `wiki/docs/install/changelog.md` | 1 x | `- rewrite E2E suite to run the real product locally by @smashingtags in #242` |
+| `wiki/docs/install/changelog.md` | 1 x | `- rewrite the README and CONTRIBUTING for public readers by @smashingtags in #639` |
 | `wiki/docs/install/changelog.md` | 1 x | `- roll up Dependabot deps + fix lucide-react React 19 peer by @smashingtags in #276` |
 | `wiki/docs/install/changelog.md` | 1 x | `- roll up remaining Dependabot PRs (radix transitive, dev-tools, nodemailer) by @smashingtags in #277` |
 | `wiki/docs/install/changelog.md` | 1 x | `- run security/compliance CI suite on self-hosted runners by @smashingtags in #232` |
