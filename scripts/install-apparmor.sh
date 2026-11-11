@@ -20,6 +20,7 @@ profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {
   @{PROC}/@{pid}/cgroup r,
   /proc/version_signature r,
   /usr/bin/docker mrix,
+  /usr/libexec/docker/cli-plugins/docker-compose mrix,
   /sys/fs/cgroup/** r,
   @{PROC}/@{pid}/mountinfo r,
   @{PROC}/@{pid}/stat r,

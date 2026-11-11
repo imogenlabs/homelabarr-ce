@@ -164,6 +164,42 @@ describe('ProgressStreamManager SSE fan-out (AC1)', () => {
     expect(a.end).toHaveBeenCalled();
     expect(mgr.getStatistics()).toMatchObject({ connectedClients: 0, activeDeployments: 0 });
   });
+  // HLCE-368 / #641: a deploy that fails before the browser subscribes must
+  // still reach it, or the dialog sits on "Deploying..." forever.
+  it('replays how a deployment ended to a client that subscribes afterwards', () => {
+    const mgr = new ProgressStreamManager();
+    mgr.streamError('dep-fast', new Error('EROFS: read-only file system'));
+    mgr.streamDeploymentComplete('dep-fast', false, { error: 'EROFS: read-only file system' });
+
+    const late = fakeRes();
+    mgr.addClient('late', late);
+    mgr.subscribeToDeployment('late', 'dep-fast');
+
+    const frames = late.write.mock.calls.map(([f]) => f).join('');
+    expect(frames).toContain('event: error');
+    expect(frames).toContain('EROFS: read-only file system');
+    expect(frames).toContain('event: deployment-complete');
+    expect(frames).toContain('"success":false');
+    mgr.destroy();
+  });
+
+  it('forgets a finished deployment after the 30 second window', () => {
+    vi.useFakeTimers();
+    try {
+      const mgr = new ProgressStreamManager();
+      mgr.streamDeploymentComplete('dep-old', true, {});
+      vi.advanceTimersByTime(30001);
+
+      const late = fakeRes();
+      mgr.addClient('late', late);
+      mgr.subscribeToDeployment('late', 'dep-old');
+
+      const frames = late.write.mock.calls.map(([f]) => f).join('');
+      expect(frames).not.toContain('event: deployment-complete');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('StreamingCLIBridge.deployApplicationWithProgress (AC2)', () => {

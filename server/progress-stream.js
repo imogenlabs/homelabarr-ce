@@ -42,6 +42,7 @@ export class ProgressStreamManager extends EventEmitter {
     this.clientOwners = new Map(); // Map of clientId -> owning session id (HLCE-284)
     this.deploymentStreams = new Map(); // Map of deploymentId -> client list
     this.cleanupTimers = new Map(); // Map of deploymentId -> 30s cleanup timeout (HLCE-284)
+    this.finishedEvents = new Map(); // Map of deploymentId -> terminal events, replayed to late subscribers
     
     DeploymentLogger.logNetworkActivity('Progress Stream Manager initialized', {
       level: 'info',
@@ -164,6 +165,13 @@ export class ProgressStreamManager extends EventEmitter {
       message: `Subscribed to deployment ${deploymentId}`,
       timestamp: new Date().toISOString()
     });
+
+    // A deploy can fail before the browser subscribes (#641 failed in
+    // milliseconds), and a missed ending leaves the UI on "Deploying..."
+    // forever. Replay how it ended.
+    for (const { event, payload } of this.finishedEvents.get(deploymentId) || []) {
+      this.sendToClient(clientId, event, payload);
+    }
   }
 
   /**
@@ -187,14 +195,20 @@ export class ProgressStreamManager extends EventEmitter {
    * Broadcast deployment progress to all subscribed clients
    */
   broadcastDeploymentProgress(deploymentId, event, data) {
-    const clients = this.deploymentStreams.get(deploymentId);
-    if (!clients || clients.length === 0) return;
-
     const payload = {
       deploymentId,
       timestamp: new Date().toISOString(),
       ...data
     };
+
+    if (event === 'error' || event === 'deployment-complete') {
+      const finished = this.finishedEvents.get(deploymentId) || [];
+      finished.push({ event, payload });
+      this.finishedEvents.set(deploymentId, finished);
+    }
+
+    const clients = this.deploymentStreams.get(deploymentId);
+    if (!clients || clients.length === 0) return;
 
     // Iterate a snapshot: a failing sendToClient → removeClient splices the live
     // `clients` array, and splicing mid for-of shifts indices so the next client
@@ -268,6 +282,7 @@ export class ProgressStreamManager extends EventEmitter {
     if (prior) clearTimeout(prior);
     const timer = setTimeout(() => {
       this.deploymentStreams.delete(deploymentId);
+      this.finishedEvents.delete(deploymentId);
       this.cleanupTimers.delete(deploymentId);
     }, 30000); // Keep for 30 seconds for any late clients
     if (typeof timer.unref === 'function') timer.unref();
@@ -282,6 +297,7 @@ export class ProgressStreamManager extends EventEmitter {
       clearTimeout(timer);
     }
     this.cleanupTimers.clear();
+    this.finishedEvents.clear();
   }
 
   /**

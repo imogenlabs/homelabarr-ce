@@ -62,6 +62,19 @@ export function parseAppId(appId) {
 }
 
 /**
+ * Where a deploy writes its rewritten compose file. It lives beside the
+ * database because that folder is writable on every working install, while
+ * homelabarr.yml runs the backend with a read-only root, /app/server/data
+ * included (#641). The folder is still named "data", so compose derives the
+ * same project name deploys have always had.
+ */
+export function composeWorkDir() {
+  const dir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/**
  * CLI Bridge - Connects React frontend to HomelabARR CLI system
  * Provides seamless integration with 100+ proven Docker applications
  */
@@ -341,9 +354,7 @@ export class CLIBridge {
     const doc = yaml.parse(content);
     this.injectDockerGid(doc);
 
-    const tmpDir = path.join(process.cwd(), 'server', 'data');
-    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-traefik.yml`);
+    const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-traefik.yml`);
     fs.writeFileSync(tmpPath, yaml.stringify(doc));
 
     try {
@@ -398,9 +409,7 @@ export class CLIBridge {
 
     this.injectDockerGid(doc);
 
-    const tmpDir = path.join(process.cwd(), 'server', 'data');
-    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-local.yml`);
+    const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-local.yml`);
     fs.writeFileSync(tmpPath, yaml.stringify(doc));
 
     DeploymentLogger.logNetworkActivity('Local mode: rewrote compose file', {
@@ -433,9 +442,7 @@ export class CLIBridge {
     const doc = yaml.parse(content);
     this.injectDockerGid(doc);
 
-    const tmpDir = path.join(process.cwd(), 'server', 'data');
-    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-    const tmpPath = path.join(tmpDir, `${path.basename(appPath, '.yml')}-authelia.yml`);
+    const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-authelia.yml`);
     fs.writeFileSync(tmpPath, yaml.stringify(doc));
 
     try {
