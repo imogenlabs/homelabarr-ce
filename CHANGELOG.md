@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v2.6.3] - November 11, 2026
+
 ### 🐛 Fixes
 - **An out-of-date AppArmor profile explains itself**: v2.6.2 changed the backend's AppArmor profile, and a host that updates the images without re-running the script cannot deploy. Instead of `spawn docker-compose EACCES`, the deploy now says to run `sudo bash scripts/install-apparmor.sh` from the HomelabARR folder.
 
