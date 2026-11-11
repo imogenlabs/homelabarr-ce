@@ -17,7 +17,7 @@ services:
       - "PEERDNS=auto"
       - "INTERNAL_SUBNET=10.13.13.0"
       - "ALLOWEDIPS=0.0.0.0/0"
-    image: "lscr.io/linuxserver/wireguard:version-1.0.20210914"
+    image: "lscr.io/linuxserver/wireguard:v1.0.20210914-ls126"
     restart: "${RESTARTAPP}"
     ports:
       - target: 51820

@@ -3,7 +3,7 @@ services:
   tor:
     container_name: "tor"
     hostname: "tor"
-    image: "kasmweb/tor:1.16.0"
+    image: "kasmweb/tor-browser:1.16.0"
     restart: "${RESTARTAPP}"
     environment:
       - "PGID=${ID}"

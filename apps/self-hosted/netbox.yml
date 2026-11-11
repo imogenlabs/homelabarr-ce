@@ -22,9 +22,8 @@ services:
     environment:
       - "PGID=${ID}"
       - "PUID=${ID}"
-      - "ALLOW_EMPTY_PASSWORD=yes"
       - "TIMEZONE=${TZ}"
-    image: "bitnami/redis:7.4"
+    image: "redis:7.4-alpine"
     networks:
       - default
     restart: "${RESTARTAPP}"

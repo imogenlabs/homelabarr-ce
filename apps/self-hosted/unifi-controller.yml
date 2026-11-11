@@ -8,7 +8,7 @@ services:
       - "PUID=${ID}"
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
-    image: "lscr.io/linuxserver/unifi-controller:version-8.6.9"
+    image: "lscr.io/linuxserver/unifi-controller:version-8.0.24"
     restart: "${RESTARTAPP}"
     ports:
       - "3478:3478/udp"
