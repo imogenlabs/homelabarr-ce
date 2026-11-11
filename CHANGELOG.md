@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v2.6.2] - November 11, 2026
+
 ### 🐛 Fixes
 - **Deploying an app works on a clean install** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): the shipped `homelabarr.yml` runs the backend with a read-only filesystem, but every deploy wrote its prepared compose file to `/app/server/data`, which is not writable. The deploy was accepted, failed in the background, and created nothing. Deploys now write that file to the data folder beside the database, which every working install can write. Behind that, the backend's AppArmor profile did not allow it to run `docker-compose`, so even a writable folder ended in `spawn docker-compose EACCES`; the profile now allows it. **If you installed the AppArmor profiles, re-run `sudo bash scripts/install-apparmor.sh` after updating.** The install check that runs on every change now deploys an app and fails if no container starts.
 - **A failed deploy shows its error** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): a deploy that failed within moments ended before the dashboard was listening, so the dialog stayed on "Deploying..." forever. The dashboard now receives the result even when it subscribes late.
