@@ -76,6 +76,16 @@ export function composeWorkDir() {
 }
 
 /**
+ * The compose project every deployed app belongs to. Compose names a project
+ * after the folder of its file, so deploys (run from composeWorkDir) have always
+ * landed in this one; stop, remove and logs run from the app's template folder
+ * and must name it explicitly (HLCE-376). Normalised the way compose does it.
+ */
+export function appProjectName() {
+  return path.basename(composeWorkDir()).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+}
+
+/**
  * CLI Bridge - Connects React frontend to HomelabARR CLI system
  * Provides seamless integration with 100+ proven Docker applications
  */
@@ -364,7 +374,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -483,6 +493,20 @@ export class CLIBridge {
   }
 
   /**
+   * The user's values for the names they may set: the global allowlist plus the
+   * app's own variables (settableVariables, HLCE-373). The keys come from those
+   * trusted names, never from the request, so a request cannot pick which
+   * property gets written (no __proto__ or constructor).
+   */
+  static pickUserValues(config, settable) {
+    const picked = {};
+    for (const name of [...CLIBridge.ALLOWED_TEMPLATE_VARS, ...settable.keys()]) {
+      if (Object.hasOwn(config, name)) picked[name] = config[name];
+    }
+    return picked;
+  }
+
+  /**
    * The variables this deploy would leave empty, worked out the same way the
    * deploy builds its compose file and environment. Returns [] when the app
    * cannot be read; the deploy itself reports that.
@@ -506,10 +530,10 @@ export class CLIBridge {
     // trustedDefaults, not prepareEnvironmentConfig: a check must not touch the
     // deploy state a concurrent deploy reads.
     const baseEnv = CLIBridge.trustedDefaults(config, { ...deploymentMode, type });
-    const userVars = {};
-    for (const [k, v] of Object.entries(config)) {
-      if ((CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) || settable.has(k)) && typeof v === 'string' && v !== '') userVars[k] = v;
-    }
+    const userVars = Object.fromEntries(
+      Object.entries(CLIBridge.pickUserValues(config, settable))
+        .filter(([, v]) => typeof v === 'string' && v !== ''),
+    );
     const env = {
       ...process.env,
       ...baseEnv,
@@ -545,7 +569,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -572,7 +596,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -589,22 +613,20 @@ export class CLIBridge {
    * user value can override a default but never smuggle an unvalidated value in.
    * The host `process.env` is read for inherited basics (PATH, DOCKER_GID, …) but
    * is NEVER mutated — nothing here leaks across deploys.
+   * `project` names the compose project; app commands pass appProjectName() so
+   * stop, remove and logs find what deploy started (HLCE-376).
    */
-  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set()) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project } = {}) {
     return new Promise((resolve, reject) => {
-      const filtered = {};
-      for (const [k, v] of Object.entries(envVars)) {
-        // The global allowlist, plus the variables this app's own template uses
-        // in environment values (settableVariables, HLCE-373).
-        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && !settable.has(k)) continue;
+      const filtered = CLIBridge.pickUserValues(envVars, settable);
+      for (const [k, v] of Object.entries(filtered)) {
         if (typeof v !== 'string' || v.length > 256 || /[\r\n\0`$]/.test(v)) {
           throw new Error(`Invalid template variable value for ${k}`);
         }
-        filtered[k] = v;
       }
       const env = { ...process.env, ...baseEnv, ...filtered };
 
-      const args = ['-f', appPath];
+      const args = project ? ['-p', project, '-f', appPath] : ['-f', appPath];
       if (command === 'up -d') args.push('up', '-d');
       else if (command === 'down') args.push('down');
       else if (command === 'down -v') args.push('down', '-v');
@@ -755,7 +777,7 @@ export class CLIBridge {
     const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
-    return await this.executeDockerCompose(appPath, 'down');
+    return await this.executeDockerCompose(appPath, 'down', {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -766,7 +788,7 @@ export class CLIBridge {
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     const command = removeVolumes ? 'down -v' : 'down';
-    return await this.executeDockerCompose(appPath, command);
+    return await this.executeDockerCompose(appPath, command, {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -782,7 +804,7 @@ export class CLIBridge {
     const parsed = Number.parseInt(lines, 10);
     const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
 
-    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`);
+    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`, {}, {}, new Set(), { project: appProjectName() });
   }
 
   // Helper methods for parsing application configurations

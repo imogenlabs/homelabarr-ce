@@ -54,7 +54,17 @@ The five cosmetic specs (catalog, dark-mode, footer, icons, modals). These run
 against a shared live deploy and can flake when it's warm/mid-deploy — that's why
 the seeded lane exists. CI runs this lane `continue-on-error`.
 
+The lane signs in once (`smoke.setup.ts`) and spaces dashboard loads 6 seconds
+apart (`login()` in `helpers.ts`). The live server allows 100 requests a minute
+per address and one load makes about 7, so back-to-back tests got 429s and saw
+the login screen. Expect a run to take a few minutes.
+
 ## Notes
+
+- CI installs the browser with `npx playwright install chromium`, without
+  `--with-deps`. The hosted runner image already has the libraries chromium needs,
+  and `--with-deps` runs apt against Ubuntu's mirrors, which some runners could not
+  reach. On your own machine, run `npx playwright install --with-deps chromium` once.
 
 - All fixed `waitForTimeout` waits were replaced with web-first assertions (HLCE-226 AC5).
 - The seeded target runs the backend in `development` mode so auth cookies aren't
