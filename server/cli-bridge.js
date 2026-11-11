@@ -365,6 +365,7 @@ export class CLIBridge {
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
     const settable = CLIBridge.settableVariables(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-traefik.yml`);
@@ -553,6 +554,7 @@ export class CLIBridge {
     const settable = CLIBridge.settableVariables(doc);
 
     CLIBridge.rewriteForStandard(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-local.yml`);
@@ -587,6 +589,7 @@ export class CLIBridge {
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
     const settable = CLIBridge.settableVariables(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-authelia.yml`);
@@ -829,16 +832,103 @@ export class CLIBridge {
   }
 
   extractPorts(service) {
-    if (!service.ports) return {};
-    
-    const ports = {};
-    service.ports.forEach(port => {
-      if (typeof port === 'string' && port.includes(':')) {
-        const [hostPort, containerPort] = port.split(':');
-        ports[containerPort.replace('/tcp', '')] = parseInt(hostPort);
+    return Object.fromEntries(CLIBridge.publishedPorts(service).map(p => [p.key, p.host]));
+  }
+
+  /**
+   * The fixed host ports a service publishes, keyed the way the deploy dialog
+   * names them: the container port, plus "/udp" when it is not TCP. Reads
+   * "8080:80", "${PORTBLOCK}:8080:80/udp" and the long form
+   * {published, target, protocol}. Entries without one fixed host port (ranges,
+   * container-only ports) are left out.
+   */
+  static publishedPorts(service) {
+    const found = [];
+    (service?.ports || []).forEach((entry, index) => {
+      let host;
+      let container;
+      let protocol;
+      if (typeof entry === 'string') {
+        const [spec, proto] = entry.split('/');
+        const parts = spec.split(':');
+        if (parts.length < 2) return;
+        host = parts[parts.length - 2];
+        container = parts[parts.length - 1];
+        protocol = proto || 'tcp';
+      } else if (entry && typeof entry === 'object') {
+        host = entry.published;
+        container = entry.target;
+        protocol = entry.protocol || 'tcp';
+      } else {
+        return;
       }
+      if (!/^\d+$/.test(String(host)) || !/^\d+$/.test(String(container))) return;
+      const key = protocol === 'tcp' ? String(container) : `${container}/${protocol}`;
+      found.push({ key, host: Number(host), index });
     });
-    return ports;
+    return found;
+  }
+
+  /**
+   * The host ports the user chose in the deploy dialog (port_<key>, HLCE-375)
+   * for the app's first service, the one whose ports the dialog offers. Field
+   * names come from the template, never from the request. An empty value keeps
+   * the template's port.
+   */
+  static portChoices(doc, config = {}) {
+    const service = doc?.services ? Object.values(doc.services)[0] : undefined;
+    const invalid = [];
+    const changes = [];
+    for (const port of CLIBridge.publishedPorts(service)) {
+      const field = `port_${port.key}`;
+      if (!Object.hasOwn(config, field)) continue;
+      const value = String(config[field] ?? '').trim();
+      if (value === '') continue;
+      const chosen = Number(value);
+      if (!/^\d+$/.test(value) || chosen < 1 || chosen > 65535) {
+        invalid.push(field);
+      } else {
+        changes.push({ index: port.index, host: chosen });
+      }
+    }
+    return { service, invalid, changes };
+  }
+
+  /**
+   * Publish the app on the host ports chosen in the dialog, in place. Throws
+   * when a chosen port is not a port number; the route refuses those first.
+   */
+  static applyPortChoices(doc, config) {
+    const { service, invalid, changes } = CLIBridge.portChoices(doc, config);
+    if (invalid.length > 0) {
+      throw new Error(`Invalid port for ${invalid.join(', ')}`);
+    }
+    for (const { index, host } of changes) {
+      const entry = service.ports[index];
+      if (typeof entry === 'string') {
+        const [spec, proto] = entry.split('/');
+        const parts = spec.split(':');
+        parts[parts.length - 2] = String(host);
+        service.ports[index] = parts.join(':') + (proto ? `/${proto}` : '');
+      } else {
+        entry.published = host;
+      }
+    }
+    return doc;
+  }
+
+  /**
+   * The dialog port fields of this deploy that are not a port number.
+   * Returns [] when the app cannot be read; the deploy itself reports that.
+   */
+  findInvalidPorts(appId, config = {}) {
+    try {
+      const { category, appName } = parseAppId(appId);
+      const appPath = safeJoin(this.appsPath, category, appName + '.yml');
+      return CLIBridge.portChoices(yaml.parse(fs.readFileSync(appPath, 'utf8')), config).invalid;
+    } catch {
+      return [];
+    }
   }
 
   extractEnvironmentVars(service) {

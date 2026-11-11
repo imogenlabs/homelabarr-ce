@@ -77,9 +77,12 @@ export async function validatePortConflicts(
       }
     });
     
-    // Check template default ports
+    // Check template default ports, except one the user moved to another port
+    // in the dialog (HLCE-375): moving off a busy port is the point of the field.
     if (template.defaultPorts) {
       Object.entries(template.defaultPorts).forEach(([portName, port]) => {
+        const chosen = config[`port_${portName}`]?.trim();
+        if (chosen && Number(chosen) !== port) return;
         if (usedPorts.includes(port)) {
           errors.push(`Default port ${port} (${portName}) is already in use`);
         }
