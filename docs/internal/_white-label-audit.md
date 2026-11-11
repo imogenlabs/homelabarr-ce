@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1636
+**Total brand references found:** 1637
 
 ---
 
@@ -292,10 +292,11 @@
 
 ## Root documentation
 
-**92 references**
+**93 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
+| `CHANGELOG.md` | 1 x | `- **A deploy with an unfilled setting is refused, and names it** ([#642](https://github.com/imogenlabs/homelabarr-ce/iss` |
 | `CHANGELOG.md` | 1 x | `- **A failed deploy shows its error** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): a deploy that fa` |
 | `CHANGELOG.md` | 1 x | `- **Adversarial-review remediation: validation, CORS, auth, and Docker-manager hardening** (Epic [HLCE-279](https://mjas` |
 | `CHANGELOG.md` | 1 x | `- **Audit chain tip gets an out-of-band signed anchor** (Epic [HLCE-286](https://mjashley.atlassian.net/browse/HLCE-286)` |
