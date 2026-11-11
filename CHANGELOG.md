@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### 🐛 Fixes
+- **Container stats and mount controls work again**: the default Docker connection had no `getDocker()`, which the container list and the mount routes call. The list caught the error and showed every container at zero CPU and memory, and the mount routes failed with `getDocker is not a function` (reported in [#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)).
+
 ## [v2.6.1] - November 4, 2026
 
 ### 🐛 Fixes
