@@ -4,6 +4,10 @@ server {
     listen [::]:8080;
     server_name localhost;
     server_tokens off;
+    # Redirects keep the browser's own scheme, host and port. Absolute ones were
+    # built from this container's port, http://<host>:8080/..., which is wrong
+    # behind any proxy or port mapping (HLCE-390).
+    absolute_redirect off;
 
     root /usr/share/nginx/html;
     index index.html;
