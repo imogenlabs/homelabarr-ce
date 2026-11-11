@@ -76,6 +76,16 @@ export function composeWorkDir() {
 }
 
 /**
+ * The compose project every deployed app belongs to. Compose names a project
+ * after the folder of its file, so deploys (run from composeWorkDir) have always
+ * landed in this one; stop, remove and logs run from the app's template folder
+ * and must name it explicitly (HLCE-376). Normalised the way compose does it.
+ */
+export function appProjectName() {
+  return path.basename(composeWorkDir()).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+}
+
+/**
  * CLI Bridge - Connects React frontend to HomelabARR CLI system
  * Provides seamless integration with 100+ proven Docker applications
  */
@@ -364,7 +374,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -545,7 +555,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -572,7 +582,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -589,8 +599,10 @@ export class CLIBridge {
    * user value can override a default but never smuggle an unvalidated value in.
    * The host `process.env` is read for inherited basics (PATH, DOCKER_GID, …) but
    * is NEVER mutated — nothing here leaks across deploys.
+   * `project` names the compose project; app commands pass appProjectName() so
+   * stop, remove and logs find what deploy started (HLCE-376).
    */
-  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set()) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project } = {}) {
     return new Promise((resolve, reject) => {
       const filtered = {};
       for (const [k, v] of Object.entries(envVars)) {
@@ -604,7 +616,7 @@ export class CLIBridge {
       }
       const env = { ...process.env, ...baseEnv, ...filtered };
 
-      const args = ['-f', appPath];
+      const args = project ? ['-p', project, '-f', appPath] : ['-f', appPath];
       if (command === 'up -d') args.push('up', '-d');
       else if (command === 'down') args.push('down');
       else if (command === 'down -v') args.push('down', '-v');
@@ -755,7 +767,7 @@ export class CLIBridge {
     const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
-    return await this.executeDockerCompose(appPath, 'down');
+    return await this.executeDockerCompose(appPath, 'down', {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -766,7 +778,7 @@ export class CLIBridge {
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     const command = removeVolumes ? 'down -v' : 'down';
-    return await this.executeDockerCompose(appPath, command);
+    return await this.executeDockerCompose(appPath, command, {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -782,7 +794,7 @@ export class CLIBridge {
     const parsed = Number.parseInt(lines, 10);
     const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
 
-    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`);
+    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`, {}, {}, new Set(), { project: appProjectName() });
   }
 
   // Helper methods for parsing application configurations
