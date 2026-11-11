@@ -2,27 +2,42 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch, apiFetchRaw } from '../lib/api';
 import { AuthContext, type User } from './AuthContext';
 
+// What /auth/me said: signed in, signed out, or "too many requests, ask again later".
+type AuthCheck = { status: 'in' | 'out' } | { status: 'wait'; retryAfterMs: number };
+
+// Retry-After is seconds (or an HTTP date). Wait at least a second, at most a minute.
+function retryAfterMs(res: Response): number {
+  const header = res.headers?.get?.('Retry-After');
+  const seconds = header ? Number(header) : NaN;
+  const ms = Number.isFinite(seconds)
+    ? seconds * 1000
+    : header ? Date.parse(header) - Date.now() : NaN;
+  return Number.isFinite(ms) ? Math.min(Math.max(ms, 1000), 60_000) : 5000;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAuth = useCallback(async () => {
+  const checkAuth = useCallback(async (): Promise<AuthCheck> => {
     try {
       const res = await apiFetchRaw('/auth/me');
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        return true;
-      } else {
-        setUser(null);
-        return false;
+        setLoading(false);
+        return { status: 'in' };
       }
-    } catch {
-      setUser(null);
-      return false;
-    } finally {
-      setLoading(false);
-    }
+      // A 429 says nothing about the session. Showing the login screen here
+      // would sign the user out and push them into the login limit too, so
+      // keep loading and ask again when the server allows (HLCE-382).
+      if (res.status === 429) {
+        return { status: 'wait', retryAfterMs: retryAfterMs(res) };
+      }
+    } catch { /* network error: treat as signed out, as before */ }
+    setUser(null);
+    setLoading(false);
+    return { status: 'out' };
   }, []);
 
   useEffect(() => {
@@ -31,12 +46,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // unmounted provider (HLCE-280).
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- async session bootstrap: checkAuth sets user/loading on resolve, with a 1500ms cold-load retry. This is the documented "subscribe to an external system" effect shape; no cleaner idiom without a data-fetching library.
-    checkAuth().then(ok => {
-      if (!ok && !cancelled) {
-        retryTimer = setTimeout(() => checkAuth(), 1500);
+    let coldLoadRetried = false;
+    const run = () => checkAuth().then(result => {
+      if (cancelled) return;
+      if (result.status === 'wait') {
+        retryTimer = setTimeout(run, result.retryAfterMs);
+      } else if (result.status === 'out' && !coldLoadRetried) {
+        coldLoadRetried = true;
+        retryTimer = setTimeout(run, 1500);
       }
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async session bootstrap: checkAuth sets user/loading on resolve, with a 1500ms cold-load retry and a Retry-After wait on 429. This is the documented "subscribe to an external system" effect shape; no cleaner idiom without a data-fetching library.
+    run();
     return () => {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
