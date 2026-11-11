@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1623
+**Total brand references found:** 1624
 
 ---
 
@@ -289,7 +289,7 @@
 
 ## Root documentation
 
-**87 references**
+**88 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -303,6 +303,7 @@
 | `CHANGELOG.md` | 1 x | `- **Bug-lock regression suite — 3 latent bugs fixed** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209)` |
 | `CHANGELOG.md` | 1 x | `- **Container delete/stop/restart**: Docker client was never passed to the CLI manager. All container operations now wor` |
 | `CHANGELOG.md` | 1 x | `- **Container logs work again.** The socket proxy started requiring log reads to be switched on by name. 'homelabarr.yml` |
+| `CHANGELOG.md` | 1 x | `- **Container stats and mount controls work again**: the default Docker connection had no 'getDocker()', which the conta` |
 | `CHANGELOG.md` | 1 x | `- **Dangerous-operation integration tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-229, ` |
 | `CHANGELOG.md` | 1 x | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
 | `CHANGELOG.md` | 1 x | `- **Deploy-execution + remaining backend-branch coverage; dead-code removal** (Epic [HLCE-270](https://mjashley.atlassia` |
