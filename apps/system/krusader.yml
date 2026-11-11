@@ -9,7 +9,7 @@ services:
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
       - "VNC_PASSWORD=${KRUSADER_PASSWORD}"
-      - "WEBPAGE_TITLE=${KRUSADER_WEBPAGE_TITLE}"
+      - "WEBPAGE_TITLE=${KRUSADER_WEBPAGE_TITLE:-Krusader}"
       - "TEMP_FOLDER=/config/krusader/tmp"
     image: "binhex/arch-krusader"
     restart: "${RESTARTAPP}"

@@ -110,9 +110,9 @@ services:
       - "GF_SECURITY_DISABLE_GRAVATAR=true"
       - "GF_SNAPSHOTS_EXTERNAL_ENABLED=false"
       - "GF_SMTP_ENABLED=true"
-      - "GF_SMTP_HOST=${SMTP_HOST}:587"
-      - "GF_SMTP_USER=${SMTP_USERNAME}"
-      - "GF_SMTP_PASSWORD=${SMTP_PASSWORD}"
+      - "GF_SMTP_HOST=${SMTP_HOST:-localhost}:587"
+      - "GF_SMTP_USER=${SMTP_USERNAME:-}"
+      - "GF_SMTP_PASSWORD=${SMTP_PASSWORD:-}"
       - "GF_SMTP_FROM_ADDRESS=grafana@${DOMAIN}"
       - "GF_LOG_LEVEL=warn"
     

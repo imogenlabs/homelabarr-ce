@@ -8,9 +8,9 @@ services:
       - "PUID=${ID}"
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
-      - "LOG_LEVEL=${FLARE_LOG_LEVEL}"
-      - "LOG_HTML=${FLARE_LOG_HTML}"
-      - "CAPTCHA_SOLVER=${FLARE_CAPTCHA_SOLVER}"
+      - "LOG_LEVEL=${FLARE_LOG_LEVEL:-info}"
+      - "LOG_HTML=${FLARE_LOG_HTML:-false}"
+      - "CAPTCHA_SOLVER=${FLARE_CAPTCHA_SOLVER:-none}"
     image: "ghcr.io/flaresolverr/flaresolverr:v3.3.21"
     restart: "${RESTARTAPP}"
     ports:
