@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1629
+**Total brand references found:** 1630
 
 ---
 
@@ -292,7 +292,7 @@
 
 ## Root documentation
 
-**90 references**
+**91 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -341,6 +341,7 @@
 | `CHANGELOG.md` | 1 x | `- **SSE broadcast no longer skips a client after a failing one** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/` |
 | `CHANGELOG.md` | 1 x | `- **Security-invariant regression suite — permanent guardrails** (Epic [HLCE-209](https://mjashley.atlassian.net/brows` |
 | `CHANGELOG.md` | 1 x | `- **Setup docs include the secrets step** ([#620](https://github.com/imogenlabs/homelabarr-ce/issues/620)): the wiki ins` |
+| `CHANGELOG.md` | 1 x | `- **The deploy dialog fits small screens** ([#643](https://github.com/imogenlabs/homelabarr-ce/issues/643)): with advanc` |
 | `CHANGELOG.md` | 1 x | `- **The log names the Docker endpoint it really uses** ([HLCE-364](https://mjashley.atlassian.net/browse/HLCE-364)): wit` |
 | `CHANGELOG.md` | 1 x | `- **Untested-route integration tests + a surfaced Router() bug fixed** (Epic [HLCE-270](https://mjashley.atlassian.net/b` |
 | `CHANGELOG.md` | 1 x | `- **Wiki cleanup**: Removed Professional Edition section; replaced placeholder octopus with optimized v3b WebP at proper` |
