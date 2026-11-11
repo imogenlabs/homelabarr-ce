@@ -15,6 +15,22 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.4] - 2026-11-11
+
+### 🚀 Features
+
+- warn at startup when AppArmor blocks deploys by @smashingtags in #666
+
+### 🐛 Bug Fixes
+
+- show why a deploy failed by @smashingtags in #665
+- let deploy dialog values reach the app by @smashingtags in #667
+- refuse a deploy that leaves an app's settings empty by @smashingtags in #668
+
+### 🔧 Maintenance
+
+- release v2.6.4 by @smashingtags in #669
+
 ## [v2.6.2] - 2026-11-11
 
 ### 🐛 Bug Fixes
