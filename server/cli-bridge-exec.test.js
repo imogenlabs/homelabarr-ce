@@ -49,6 +49,8 @@ beforeAll(() => {
   // which hard-exits unless a 32+ char JWT_SECRET is present.
   process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-that-is-definitely-32-plus-chars-long';
   process.env.CLI_BRIDGE_HOST_PATH = repoRoot;
+  // Rewritten compose files go to DATA_DIR; keep them out of the checkout.
+  process.env.DATA_DIR = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'hlce-368-')), 'data');
   bridge = new CLIBridge();
 });
 
@@ -211,6 +213,37 @@ describe('AC2 — deployStandard strips external networks, security_opt, traefik
     expect(doc.networks).toBeUndefined();
 
     execSpy.mockRestore();
+  });
+});
+
+// ---- HLCE-368: the rewritten compose file goes somewhere writable -----------
+// homelabarr.yml runs the backend read-only with only /app/data,
+// /app/server/config and /app/server/activity-data writable. Writing to
+// /app/server/data failed every deploy with EROFS (#641).
+describe('HLCE-368 — deploy writes its compose file into the data folder', () => {
+  it('writes beside the database, keeps the "data" project name, and removes the file after', async () => {
+    const appPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'hlce-368-app-')), 'sampleapp.yml');
+    fs.writeFileSync(appPath, yaml.stringify({ services: { app: { image: 'busybox' } } }));
+
+    let writtenPath;
+    const execSpy = vi
+      .spyOn(bridge, 'executeDockerCompose')
+      .mockImplementation(async (tmpPath) => {
+        writtenPath = tmpPath;
+        expect(fs.existsSync(tmpPath)).toBe(true);
+        return { stdout: '', stderr: '', exitCode: 0 };
+      });
+
+    try {
+      await bridge.deployStandard(appPath, {});
+    } finally {
+      execSpy.mockRestore();
+    }
+
+    expect(path.dirname(writtenPath)).toBe(process.env.DATA_DIR);
+    expect(path.basename(path.dirname(writtenPath))).toBe('data');
+    expect(writtenPath).not.toContain(path.join('server', 'data'));
+    expect(fs.existsSync(writtenPath)).toBe(false);
   });
 });
 

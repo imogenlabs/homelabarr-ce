@@ -90,6 +90,32 @@ jobs:
           me=$(curl -sS -o /dev/null -w '%{http_code}' -b /tmp/readme-cookies http://localhost:8084/api/auth/me)
           echo "/api/auth/me with the login cookie: $me"
           [[ "$me" == 200 ]]
+      # Deploying is the dashboard's main job. A deploy is accepted with 200 and
+      # then runs in the background, so only a running container proves it
+      # worked (#641: every deploy failed on the read-only backend).
+      - name: Deploy an app from the catalog
+        shell: bash
+        run: |
+          csrf=$(awk '$6 == "hl_csrf" {print $7}' /tmp/readme-cookies)
+          status=$(curl -sS -o /tmp/deploy-response -w '%{http_code}' -b /tmp/readme-cookies \
+            -H 'Content-Type: application/json' \
+            -H 'X-Requested-With: XMLHttpRequest' \
+            -H "X-CSRF-Token: $csrf" \
+            --data '{"appId":"self-hosted-it-tools","config":{},"mode":{"type":"standard"}}' \
+            http://localhost:8084/api/deploy)
+          echo "Deploy HTTP status: $status"
+          cat /tmp/deploy-response; echo
+          [[ "$status" == 200 ]]
+          deadline=$((SECONDS + 180))
+          until [[ "$(docker inspect -f '{{.State.Running}}' it-tools 2>/dev/null)" == true ]]; do
+            if (( SECONDS > deadline )); then
+              echo "it-tools never started. Backend log:"
+              docker logs --tail=60 homelabarr-backend 2>&1 | grep -iE 'deploy|erofs|error' || true
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "it-tools is running"
       # Plain docker, not compose: CORS_ORIGIN was exported inside the README
       # step only, so compose refuses to interpolate here and would hide the logs.
       - name: Show container logs on failure

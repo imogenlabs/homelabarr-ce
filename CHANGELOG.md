@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### 🐛 Fixes
+- **Deploying an app works on a clean install** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): the shipped `homelabarr.yml` runs the backend with a read-only filesystem, but every deploy wrote its prepared compose file to `/app/server/data`, which is not writable. The deploy was accepted, failed in the background, and created nothing. Deploys now write that file to the data folder beside the database, which every working install can write. The install check that runs on every change now deploys an app and fails if no container starts.
+- **A failed deploy shows its error** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): a deploy that failed within moments ended before the dashboard was listening, so the dialog stayed on "Deploying..." forever. The dashboard now receives the result even when it subscribes late.
 - **Container stats and mount controls work again**: the default Docker connection had no `getDocker()`, which the container list and the mount routes call. The list caught the error and showed every container at zero CPU and memory, and the mount routes failed with `getDocker is not a function` (reported in [#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)).
 
 ## [v2.6.1] - November 4, 2026
