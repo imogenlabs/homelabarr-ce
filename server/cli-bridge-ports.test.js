@@ -29,7 +29,8 @@ beforeEach(() => {
   composeSeen = undefined;
   vi.mocked(spawn).mockReset();
   vi.mocked(spawn).mockImplementation((...call) => {
-    composeSeen = yaml.parse(fs.readFileSync(call[1][1], 'utf8'));
+    const args = call[1];
+    composeSeen = yaml.parse(fs.readFileSync(args[args.indexOf('-f') + 1], 'utf8'));
     return {
       stdout: { on: vi.fn() },
       stderr: { on: vi.fn() },
