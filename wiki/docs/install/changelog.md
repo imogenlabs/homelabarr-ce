@@ -15,6 +15,20 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.3] - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- tell users with an old AppArmor profile how to update it by @smashingtags in #662
+
+### 📚 Documentation
+
+- changelog for v2.6.2 by @github-actions[bot] in #661
+
+### 🔧 Maintenance
+
+- release v2.6.3 by @smashingtags in #663
+
 ## [v2.6.2] - 2026-11-11
 
 ### 🐛 Bug Fixes
