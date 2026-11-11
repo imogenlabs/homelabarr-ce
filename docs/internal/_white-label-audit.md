@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1624
+**Total brand references found:** 1629
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**28 references**
+**30 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -45,7 +45,9 @@
 | `server/auth.js` | 1 x | `  email: 'admin@homelabarr.local',` |
 | `server/auth.js` | 1 x | `  return Buffer.from(hkdfSync('sha256', current, Buffer.alloc(0), 'homelabarr-api-key-hmac/v1', 32)).toString('hex');` |
 | `server/auth.js` | 1 x | `const DUMMY_PASSWORD_HASH = bcrypt.hashSync('homelabarr-timing-equalizer', BCRYPT_COST);` |
+| `server/cli-bridge-exec.test.js` | 1 x | `// homelabarr.yml runs the backend read-only with only /app/data,` |
 | `server/cli-bridge.js` | 1 x | `      ARIA_RPC_SECRET: 'homelabarr',` |
+| `server/cli-bridge.js` | 1 x | ` * homelabarr.yml runs the backend with a read-only root, /app/server/data` |
 | `server/db.js` | 1 x | `const DB_PATH = process.env.DB_PATH \|\| path.join(process.env.DATA_DIR \|\| path.join(process.cwd(), 'data'), 'homelaba` |
 | `server/email.test.js` | 1 x | `      from: 'noreply@homelabarr.com',` |
 | `server/environment-manager.test.js` | 1 x | `// #621: with DOCKER_HOST=tcp://socket-proxy:2375 (homelabarr.yml) there is no` |
@@ -135,7 +137,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**50 references**
+**51 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -166,6 +168,7 @@
 | `.github/workflows/pages.yml` | 1 x | `    # MUST be hosted: homelabarr-ce is a PUBLIC repo, and GitHub blocks public` |
 | `.github/workflows/pentest.yml` | 1 x | `          ART_TARGET: ${{ github.event.inputs.target \|\| 'https://dev.homelabarr.com' }}` |
 | `.github/workflows/pentest.yml` | 1 x | `        default: 'https://dev.homelabarr.com'` |
+| `.github/workflows/quickstart.yml` | 1 x | `              docker logs --tail=60 homelabarr-backend 2>&1 \| grep -iE 'deploy\|erofs\|error' \|\| true` |
 | `.github/workflows/quickstart.yml` | 1 x | `            backend=$(docker inspect -f '{{.State.Health.Status}}' homelabarr-backend 2>/dev/null \|\| true)` |
 | `.github/workflows/quickstart.yml` | 1 x | `            frontend=$(docker inspect -f '{{.State.Health.Status}}' homelabarr-frontend 2>/dev/null \|\| true)` |
 | `.github/workflows/quickstart.yml` | 1 x | `          commands = re.sub(r'^cd /opt/homelabarr\s*\n', '', commands, flags=re.M)` |
@@ -289,10 +292,11 @@
 
 ## Root documentation
 
-**88 references**
+**90 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
+| `CHANGELOG.md` | 1 x | `- **A failed deploy shows its error** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): a deploy that fa` |
 | `CHANGELOG.md` | 1 x | `- **Adversarial-review remediation: validation, CORS, auth, and Docker-manager hardening** (Epic [HLCE-279](https://mjas` |
 | `CHANGELOG.md` | 1 x | `- **Audit chain tip gets an out-of-band signed anchor** (Epic [HLCE-286](https://mjashley.atlassian.net/browse/HLCE-286)` |
 | `CHANGELOG.md` | 1 x | `- **Audit hash chain now detects boundary-ambiguous tampering** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/H` |
@@ -308,6 +312,7 @@
 | `CHANGELOG.md` | 1 x | `- **Deploy progress stream**: SSE 'connected' event now includes the server-assigned 'clientId', fixing "Client not foun` |
 | `CHANGELOG.md` | 1 x | `- **Deploy-execution + remaining backend-branch coverage; dead-code removal** (Epic [HLCE-270](https://mjashley.atlassia` |
 | `CHANGELOG.md` | 1 x | `- **Deploy/SSE + startup-guard + network tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-` |
+| `CHANGELOG.md` | 1 x | `- **Deploying an app works on a clean install** ([#641](https://github.com/imogenlabs/homelabarr-ce/issues/641)): the sh` |
 | `CHANGELOG.md` | 1 x | `- **Docker connection-manager tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-219, [#304]` |
 | `CHANGELOG.md` | 1 x | `- **Docker health now reflects a real probe instead of always reporting healthy** (Epic [HLCE-209](https://mjashley.atla` |
 | `CHANGELOG.md` | 1 x | `- **Docker socket permissions**: Apps that mount 'docker.sock' (Portainer, etc.) now get 'group_add' injected at deploy ` |
