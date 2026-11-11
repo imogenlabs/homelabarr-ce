@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { isDemoMode } from '../demo-mode.js';
+import { getDeployReadiness } from '../deploy-readiness.js';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -23,6 +24,13 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
         ...counters,
       },
     });
+  });
+
+  // Whether this host lets the backend run docker-compose. Signed-in users see
+  // a banner when it does not, before a deploy fails (HLCE-372).
+  router.get('/health/deploy', requireAuth, async (_req, res) => {
+    const { ok, message } = await getDeployReadiness();
+    res.json(ok ? { ok } : { ok, message });
   });
 
   router.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) => {

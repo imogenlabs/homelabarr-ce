@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### ✨ Improvements
+- **A banner warns when deploys are blocked**: if the host's AppArmor profile is older than v2.6.2, the backend cannot run `docker-compose`, and the fix has to happen on the host. HomelabARR now checks this when it starts, logs the command to run, and shows signed-in users a banner with `sudo bash scripts/install-apparmor.sh` before any deploy fails. The banner goes away once the profile is updated, without a restart.
+
 ### 🐛 Fixes
 - **A failed deploy says why**: the "Deployment Failed" notice always said "Check container logs for details" and dropped the reason the backend sent, so the AppArmor instruction added in v2.6.3 never reached the screen. The notice now shows the reason, and appears once instead of twice.
 

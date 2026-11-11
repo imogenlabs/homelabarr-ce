@@ -165,6 +165,21 @@ describe('GET /health — demo flag (HLCE-315)', () => {
   });
 });
 
+describe('GET /health/deploy (HLCE-372)', () => {
+  it('rejects an unauthenticated request with 401', async () => {
+    const { app } = buildApp();
+    const res = await request(app).get('/health/deploy');
+    expect(res.status).toBe(401);
+  });
+
+  it('answers any signed-in user, not only admins', async () => {
+    const { app } = buildApp();
+    const res = await request(app).get('/health/deploy').set('Cookie', userCookie());
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+  });
+});
+
 describe('AC2 — GET /health/detail (admin-only aggregate)', () => {
   it('rejects an unauthenticated request with 401 (real requireAuth)', async () => {
     const { app } = buildApp();

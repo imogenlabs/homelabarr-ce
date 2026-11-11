@@ -30,6 +30,7 @@ import deploymentRoutes from './routes/deployments.js';
 import portRoutes from './routes/ports.js';
 import containerRoutes from './routes/containers.js';
 import deployRoutes from './routes/deploy.js';
+import { checkDeployReadiness } from './deploy-readiness.js';
 import enhancedMountRoutes from './routes/enhanced-mount.js';
 
 function getRequestMeta(req) {
@@ -325,6 +326,9 @@ try {
       if (allowPlainHttp()) {
         logger.warn('ALLOW_PLAIN_HTTP=true: session cookies are not marked Secure and HSTS is off. Only use this on a trusted LAN.');
       }
+      checkDeployReadiness().then((readiness) => {
+        if (!readiness.ok) logger.warn(`Deploys are blocked. ${readiness.message}`);
+      });
     });
 
     server.on('error', (error) => {
