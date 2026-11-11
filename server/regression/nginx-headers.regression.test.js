@@ -172,3 +172,13 @@ describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () =>
     });
   });
 });
+
+// HLCE-390: nginx built redirects from its own scheme and listen port
+// (http://<host>:8080/settings), which is wrong behind a proxy or port map.
+describe('redirects stay relative (HLCE-390)', () => {
+  it('turns absolute_redirect off at the server level', () => {
+    const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+    expect(template).toMatch(/^\s*absolute_redirect off;/m);
+  });
+});
+
