@@ -188,12 +188,16 @@ sudo tar -czf homelabarr-backup-$(date +%Y%m%d).tar.gz /opt/appdata/
 
 ### How do I update to the latest version?
 
+From the folder you installed HomelabARR in:
+
 ```bash
+git pull
+sudo bash scripts/install-apparmor.sh   # picks up profile changes; does nothing without AppArmor
 docker compose -f homelabarr.yml pull
 docker compose -f homelabarr.yml up -d
 ```
 
-Your data and settings are untouched — only the app itself updates.
+Your data and settings are untouched — only the app itself updates. Skipping the AppArmor step after v2.6.2 leaves deploys failing with a message that tells you to run it.
 
 ---
 
