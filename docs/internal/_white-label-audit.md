@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1660
+**Total brand references found:** 1661
 
 ---
 
@@ -803,7 +803,7 @@
 
 ## Other
 
-**914 references**
+**915 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -844,6 +844,7 @@
 | `.zap/scan-config.yml` | 1 x | `    loginUrl: https://dev.homelabarr.com/api/auth/login` |
 | `.zap/scan-config.yml` | 1 x | `  name: homelabarr-ce` |
 | `Makefile` | 1 x | `encrypt-db:      ; docker compose exec backend bash scripts/encrypt-db.sh /app/data/homelabarr.db /run/secrets/sqlcipher` |
+| `PRIVACY.md` | 1 x | `The public demo at demo.homelabarr.com sets them. It runs first-party [Umami](https://umami.is) analytics at '/analytics` |
 | `apps/.installer/ubuntu.sh` | 1 x | `     buildapp=$(ls -1p /opt/homelabarr/apps/${section}/ \| $(command -v sed) -e 's/.yml//g' \| grep -x $typed)` |
 | `apps/.installer/ubuntu.sh` | 1 x | `     checksection=$(ls -1p /opt/homelabarr/apps/ \| grep '/$' \| $(command -v sed) 's/\/$//' \| grep -x $section)` |
 | `apps/.installer/ubuntu.sh` | 3 x | `   appfolder=/opt/homelabarr/apps/` |
