@@ -368,13 +368,9 @@ export class CLIBridge {
   }
 
   /**
-   * Deploy application in standard mode (without Traefik)
+   * Rewrite a parsed compose doc for standard (no Traefik) mode, in place.
    */
-  async deployStandard(appPath, config, deployEnv = this._deployEnv) {
-    // For local/standard mode, rewrite compose to remove Traefik + external networks
-    const content = fs.readFileSync(appPath, 'utf8');
-    const doc = yaml.parse(content);
-
+  static rewriteForStandard(doc) {
     // Remove top-level external network declarations
     if (doc.networks) {
       for (const netName of Object.keys(doc.networks)) {
@@ -406,7 +402,76 @@ export class CLIBridge {
         }
       }
     }
+  }
 
+  /**
+   * Names a compose doc uses that the given environment does not set.
+   * Compose fills an unset ${NAME} with an empty string, so the app starts
+   * with a blank value and usually crash-loops (#642). ${NAME:-x}, ${NAME-x}
+   * and ${NAME:+x} carry their own fallback, and $$ is a literal dollar.
+   */
+  static unresolvedVariables(doc, env) {
+    const missing = new Set();
+    const pattern = /\$\$|\$\{([A-Za-z_][A-Za-z0-9_]*)([^}]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g;
+    const visit = (value) => {
+      if (typeof value === 'string') {
+        for (const m of value.matchAll(pattern)) {
+          const name = m[1] || m[3];
+          if (!name) continue;
+          if (/^:?[-+]/.test(m[2] || '')) continue;
+          if (env[name] === undefined) missing.add(name);
+        }
+      } else if (Array.isArray(value)) {
+        value.forEach(visit);
+      } else if (value && typeof value === 'object') {
+        Object.values(value).forEach(visit);
+      }
+    };
+    visit(doc);
+    return [...missing].sort();
+  }
+
+  /**
+   * The variables this deploy would leave empty, worked out the same way the
+   * deploy builds its compose file and environment. Returns [] when the app
+   * cannot be read; the deploy itself reports that.
+   */
+  async findUnresolvedVariables(appId, config = {}, deploymentMode = {}) {
+    let doc;
+    try {
+      const { category, appName } = parseAppId(appId);
+      const appPath = safeJoin(this.appsPath, category, appName + '.yml');
+      doc = yaml.parse(fs.readFileSync(appPath, 'utf8'));
+    } catch {
+      return [];
+    }
+    const type = deploymentMode.type || 'standard';
+    const proxied = type === 'traefik' || type === 'authelia';
+    if (!proxied) CLIBridge.rewriteForStandard(doc);
+
+    const baseEnv = await this.prepareEnvironmentConfig(config, { ...deploymentMode, type });
+    const userVars = {};
+    for (const [k, v] of Object.entries(config)) {
+      if (CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && typeof v === 'string') userVars[k] = v;
+    }
+    const env = {
+      ...process.env,
+      ...baseEnv,
+      ...userVars,
+      DOCKERNETWORK: proxied ? 'proxy' : 'bridge',
+    };
+    return CLIBridge.unresolvedVariables(doc, env);
+  }
+
+  /**
+   * Deploy application in standard mode (without Traefik)
+   */
+  async deployStandard(appPath, config, deployEnv = this._deployEnv) {
+    // For local/standard mode, rewrite compose to remove Traefik + external networks
+    const content = fs.readFileSync(appPath, 'utf8');
+    const doc = yaml.parse(content);
+
+    CLIBridge.rewriteForStandard(doc);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-local.yml`);
