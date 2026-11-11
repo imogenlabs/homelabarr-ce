@@ -91,26 +91,10 @@ server {
         add_header X-Frame-Options "DENY" always;
     }
 
-    # Analytics proxy
-    location = /analytics.js {
-        proxy_pass https://analytics.mjashley.com/script.js;
-        proxy_set_header Host analytics.mjashley.com;
-        proxy_ssl_server_name on;
-        proxy_hide_header Set-Cookie;
-        proxy_ignore_headers Set-Cookie;
-        expires 1h;
-        add_header Strict-Transport-Security $hsts always;
-        add_header X-Content-Type-Options "nosniff" always;
-    }
-
-    # Umami analytics event proxy (matches before /api/ catch-all)
-    location = /api/send {
-        proxy_pass https://analytics.mjashley.com/api/send;
-        proxy_set_header Host analytics.mjashley.com;
-        proxy_ssl_server_name on;
-        proxy_hide_header Set-Cookie;
-        proxy_ignore_headers Set-Cookie;
-    }
+    # Usage analytics are off unless ANALYTICS_URL and ANALYTICS_WEBSITE_ID are
+    # set (the public demo sets them). docker-entrypoint.sh then writes this file
+    # with the script tag and the /analytics.js and /api/send proxies (HLCE-389).
+    include /etc/nginx/conf.d/analytics*.inc;
 
     # API proxy to backend
     location /api/ {

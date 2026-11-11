@@ -30,6 +30,7 @@ Optional, but useful:
 | `AUTH_ENABLED` | `true` | Set to `false` to disable the login screen |
 | `AUDIT_ANCHOR_KEY` | falls back to `JWT_SECRET` | Signs the tamper-evident audit log's out-of-band chain-tip anchor. Leave unset to reuse `JWT_SECRET`; set a dedicated random value (`openssl rand -hex 32`) to keep audit integrity independent of JWT key rotation. |
 | `DEMO_MODE` | `false` | Only for a public demo where everyone shares one login. Set to `true` and the server refuses changes to accounts — password changes, creating or deleting users, minting or revoking API keys, and setting up or disabling MFA — so no visitor can lock everyone else out. Everything else, including the app catalog, containers and logs, works normally. Leave it unset on a real install. |
+| `ANALYTICS_URL`, `ANALYTICS_WEBSITE_ID` | unset | Frontend only. Off by default: your dashboard sends usage data nowhere. Set both to send page views to your own [Umami](https://umami.is) server, proxied through the dashboard so browsers only talk to it (for example `https://analytics.example.com` and the site's website id). The frontend refuses to start if either looks wrong. |
 
 !!! danger "Don't disable auth on a networked server"
     Setting `AUTH_ENABLED=false` removes the login screen and exposes all API endpoints — including container management and user administration — to anyone who can reach your server. Only use this in isolated local testing environments.
