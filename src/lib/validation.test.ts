@@ -161,6 +161,18 @@ describe('validatePortConflicts', () => {
     expect(errors).toContain('Default port 32400 (web) is already in use');
   });
 
+  // HLCE-375: moving off a busy default port is what the dialog's port field is for.
+  it('does not block on a busy default port the user moved to a free one', async () => {
+    checkUsedPortsMock.mockResolvedValue({ usedPorts: [8080] });
+    const t = template([field({ name: 'port_80', label: 'Port: 80', type: 'text' })], {
+      defaultPorts: { '80': 8080 },
+    });
+
+    expect(await validatePortConflicts(t, { port_80: '18080' })).toEqual([]);
+    expect(await validatePortConflicts(t, { port_80: '8080' })).toContain('Default port 8080 (80) is already in use');
+    expect(await validatePortConflicts(t, {})).toContain('Default port 8080 (80) is already in use');
+  });
+
   it('returns no errors when there are no collisions', async () => {
     checkUsedPortsMock.mockResolvedValue({ usedPorts: [9999] });
     const t = template([field({ name: 'webPort', label: 'Web Port', type: 'number' })], {

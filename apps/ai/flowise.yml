@@ -9,7 +9,7 @@ services:
       - "TZ=${TZ}"
       - "NVIDIA_VISIBLE_DEVICES=all"
       - "FLOWISE_USERNAME=${FLOWISE_USER:-admin}"
-      - "FLOWISE_PASSWORD=${FLOWISE_PASSWORD:-changeme}"
+      - "FLOWISE_PASSWORD=${FLOWISE_PASSWORD}"
     image: "flowiseai/flowise:latest"
     restart: "${RESTARTAPP}"
     networks:

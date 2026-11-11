@@ -58,14 +58,6 @@ export interface DeploymentMode {
   yamlPath?: string;
 }
 
-export interface DeploymentConfig {
-  mode: DeploymentMode;
-  ports: Record<string, number>;
-  volumes: Record<string, string>;
-  environment: Record<string, string>;
-  networks: string[];
-}
-
 export interface ContainerStats {
   cpu: number;
   memory: {

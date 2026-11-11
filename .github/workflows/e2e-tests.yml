@@ -30,8 +30,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # No --with-deps: that runs apt against Ubuntu's mirrors, which some hosted
+      # runners could not resolve on 11 Nov and every PR went red. The runner
+      # image ships Google Chrome, so the libraries chromium needs are already there.
       - name: Install Playwright (chromium)
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Build + start the seeded target
         run: docker compose -p hlce-e2e -f docker-compose.e2e.yml up -d --build
@@ -101,8 +104,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # No --with-deps: that runs apt against Ubuntu's mirrors, which some hosted
+      # runners could not resolve on 11 Nov and every PR went red. The runner
+      # image ships Google Chrome, so the libraries chromium needs are already there.
       - name: Install Playwright (chromium)
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run smoke E2E
         run: npx playwright test --project=smoke

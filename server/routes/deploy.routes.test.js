@@ -115,3 +115,27 @@ describe('POST /deploy — domain (HLCE-378)', () => {
     expect(streamingCLIBridge.deployApplicationWithProgress).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('POST /deploy — dialog ports (HLCE-375)', () => {
+  it('refuses a port that is not a port number, naming the field, and never starts it', async () => {
+    const { app, streamingCLIBridge } = buildApp();
+    const res = await request(app)
+      .post('/deploy')
+      .send({ appId: 'transcoding-tdarr', config: { port_8265: '70000' }, mode: { type: 'standard' } });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Invalid port');
+    expect(res.body.invalid).toEqual(['port_8265']);
+    expect(res.body.details).toBe('Port 8265: use a whole number from 1 to 65535.');
+    expect(streamingCLIBridge.deployApplicationWithProgress).not.toHaveBeenCalled();
+  });
+
+  it('starts the deploy with a valid port', async () => {
+    const { app, streamingCLIBridge } = buildApp();
+    const res = await request(app)
+      .post('/deploy')
+      .send({ appId: 'transcoding-tdarr', config: { port_8265: '18265' }, mode: { type: 'standard' } });
+    expect(res.status).toBe(200);
+    expect(streamingCLIBridge.deployApplicationWithProgress).toHaveBeenCalledTimes(1);
+  });
+});

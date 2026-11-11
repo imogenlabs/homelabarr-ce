@@ -76,6 +76,16 @@ export function composeWorkDir() {
 }
 
 /**
+ * The compose project every deployed app belongs to. Compose names a project
+ * after the folder of its file, so deploys (run from composeWorkDir) have always
+ * landed in this one; stop, remove and logs run from the app's template folder
+ * and must name it explicitly (HLCE-376). Normalised the way compose does it.
+ */
+export function appProjectName() {
+  return path.basename(composeWorkDir()).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+}
+
+/**
  * CLI Bridge - Connects React frontend to HomelabARR CLI system
  * Provides seamless integration with 100+ proven Docker applications
  */
@@ -357,6 +367,7 @@ export class CLIBridge {
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
     const settable = CLIBridge.settableVariables(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-traefik.yml`);
@@ -366,7 +377,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -498,6 +509,20 @@ export class CLIBridge {
   }
 
   /**
+   * The user's values for the names they may set: the global allowlist plus the
+   * app's own variables (settableVariables, HLCE-373). The keys come from those
+   * trusted names, never from the request, so a request cannot pick which
+   * property gets written (no __proto__ or constructor).
+   */
+  static pickUserValues(config, settable) {
+    const picked = {};
+    for (const name of [...CLIBridge.ALLOWED_TEMPLATE_VARS, ...settable.keys()]) {
+      if (Object.hasOwn(config, name)) picked[name] = config[name];
+    }
+    return picked;
+  }
+
+  /**
    * The variables this deploy would leave empty, worked out the same way the
    * deploy builds its compose file and environment. Returns [] when the app
    * cannot be read; the deploy itself reports that.
@@ -521,10 +546,10 @@ export class CLIBridge {
     // trustedDefaults, not prepareEnvironmentConfig: a check must not touch the
     // deploy state a concurrent deploy reads.
     const baseEnv = CLIBridge.trustedDefaults(config, { ...deploymentMode, type });
-    const userVars = {};
-    for (const [k, v] of Object.entries(config)) {
-      if ((CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) || settable.has(k)) && typeof v === 'string' && v !== '') userVars[k] = v;
-    }
+    const userVars = Object.fromEntries(
+      Object.entries(CLIBridge.pickUserValues(config, settable))
+        .filter(([, v]) => typeof v === 'string' && v !== ''),
+    );
     const env = {
       ...process.env,
       ...baseEnv,
@@ -544,6 +569,7 @@ export class CLIBridge {
     const settable = CLIBridge.settableVariables(doc);
 
     CLIBridge.rewriteForStandard(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-local.yml`);
@@ -560,7 +586,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'bridge'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -578,6 +604,7 @@ export class CLIBridge {
     const content = fs.readFileSync(appPath, 'utf8');
     const doc = yaml.parse(content);
     const settable = CLIBridge.settableVariables(doc);
+    CLIBridge.applyPortChoices(doc, config);
     this.injectDockerGid(doc);
 
     const tmpPath = path.join(composeWorkDir(), `${path.basename(appPath, '.yml')}-authelia.yml`);
@@ -587,7 +614,7 @@ export class CLIBridge {
       return await this.executeDockerCompose(tmpPath, 'up -d', {
         ...config,
         DOCKERNETWORK: 'proxy'
-      }, deployEnv, settable);
+      }, deployEnv, settable, { project: appProjectName() });
     } finally {
       try { fs.unlinkSync(tmpPath); } catch {}
     }
@@ -604,22 +631,20 @@ export class CLIBridge {
    * user value can override a default but never smuggle an unvalidated value in.
    * The host `process.env` is read for inherited basics (PATH, DOCKER_GID, …) but
    * is NEVER mutated — nothing here leaks across deploys.
+   * `project` names the compose project; app commands pass appProjectName() so
+   * stop, remove and logs find what deploy started (HLCE-376).
    */
-  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set()) {
+  async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project } = {}) {
     return new Promise((resolve, reject) => {
-      const filtered = {};
-      for (const [k, v] of Object.entries(envVars)) {
-        // The global allowlist, plus the variables this app's own template uses
-        // in environment values (settableVariables, HLCE-373).
-        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && !settable.has(k)) continue;
+      const filtered = CLIBridge.pickUserValues(envVars, settable);
+      for (const [k, v] of Object.entries(filtered)) {
         if (typeof v !== 'string' || v.length > 256 || /[\r\n\0`$]/.test(v)) {
           throw new Error(`Invalid template variable value for ${k}`);
         }
-        filtered[k] = v;
       }
       const env = { ...process.env, ...baseEnv, ...filtered };
 
-      const args = ['-f', appPath];
+      const args = project ? ['-p', project, '-f', appPath] : ['-f', appPath];
       if (command === 'up -d') args.push('up', '-d');
       else if (command === 'down') args.push('down');
       else if (command === 'down -v') args.push('down', '-v');
@@ -770,7 +795,7 @@ export class CLIBridge {
     const { category, appName } = parseAppId(appId);
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
-    return await this.executeDockerCompose(appPath, 'down');
+    return await this.executeDockerCompose(appPath, 'down', {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -781,7 +806,7 @@ export class CLIBridge {
     const appPath = safeJoin(this.appsPath, category, appName + '.yml');
     
     const command = removeVolumes ? 'down -v' : 'down';
-    return await this.executeDockerCompose(appPath, command);
+    return await this.executeDockerCompose(appPath, command, {}, {}, new Set(), { project: appProjectName() });
   }
 
   /**
@@ -797,7 +822,7 @@ export class CLIBridge {
     const parsed = Number.parseInt(lines, 10);
     const tail = Number.isInteger(parsed) && parsed > 0 ? parsed : 100;
 
-    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`);
+    return await this.executeDockerCompose(appPath, `logs --tail=${tail}`, {}, {}, new Set(), { project: appProjectName() });
   }
 
   // Helper methods for parsing application configurations
@@ -822,16 +847,103 @@ export class CLIBridge {
   }
 
   extractPorts(service) {
-    if (!service.ports) return {};
-    
-    const ports = {};
-    service.ports.forEach(port => {
-      if (typeof port === 'string' && port.includes(':')) {
-        const [hostPort, containerPort] = port.split(':');
-        ports[containerPort.replace('/tcp', '')] = parseInt(hostPort);
+    return Object.fromEntries(CLIBridge.publishedPorts(service).map(p => [p.key, p.host]));
+  }
+
+  /**
+   * The fixed host ports a service publishes, keyed the way the deploy dialog
+   * names them: the container port, plus "/udp" when it is not TCP. Reads
+   * "8080:80", "${PORTBLOCK}:8080:80/udp" and the long form
+   * {published, target, protocol}. Entries without one fixed host port (ranges,
+   * container-only ports) are left out.
+   */
+  static publishedPorts(service) {
+    const found = [];
+    (service?.ports || []).forEach((entry, index) => {
+      let host;
+      let container;
+      let protocol;
+      if (typeof entry === 'string') {
+        const [spec, proto] = entry.split('/');
+        const parts = spec.split(':');
+        if (parts.length < 2) return;
+        host = parts[parts.length - 2];
+        container = parts[parts.length - 1];
+        protocol = proto || 'tcp';
+      } else if (entry && typeof entry === 'object') {
+        host = entry.published;
+        container = entry.target;
+        protocol = entry.protocol || 'tcp';
+      } else {
+        return;
       }
+      if (!/^\d+$/.test(String(host)) || !/^\d+$/.test(String(container))) return;
+      const key = protocol === 'tcp' ? String(container) : `${container}/${protocol}`;
+      found.push({ key, host: Number(host), index });
     });
-    return ports;
+    return found;
+  }
+
+  /**
+   * The host ports the user chose in the deploy dialog (port_<key>, HLCE-375)
+   * for the app's first service, the one whose ports the dialog offers. Field
+   * names come from the template, never from the request. An empty value keeps
+   * the template's port.
+   */
+  static portChoices(doc, config = {}) {
+    const service = doc?.services ? Object.values(doc.services)[0] : undefined;
+    const invalid = [];
+    const changes = [];
+    for (const port of CLIBridge.publishedPorts(service)) {
+      const field = `port_${port.key}`;
+      if (!Object.hasOwn(config, field)) continue;
+      const value = String(config[field] ?? '').trim();
+      if (value === '') continue;
+      const chosen = Number(value);
+      if (!/^\d+$/.test(value) || chosen < 1 || chosen > 65535) {
+        invalid.push(field);
+      } else {
+        changes.push({ index: port.index, host: chosen });
+      }
+    }
+    return { service, invalid, changes };
+  }
+
+  /**
+   * Publish the app on the host ports chosen in the dialog, in place. Throws
+   * when a chosen port is not a port number; the route refuses those first.
+   */
+  static applyPortChoices(doc, config) {
+    const { service, invalid, changes } = CLIBridge.portChoices(doc, config);
+    if (invalid.length > 0) {
+      throw new Error(`Invalid port for ${invalid.join(', ')}`);
+    }
+    for (const { index, host } of changes) {
+      const entry = service.ports[index];
+      if (typeof entry === 'string') {
+        const [spec, proto] = entry.split('/');
+        const parts = spec.split(':');
+        parts[parts.length - 2] = String(host);
+        service.ports[index] = parts.join(':') + (proto ? `/${proto}` : '');
+      } else {
+        entry.published = host;
+      }
+    }
+    return doc;
+  }
+
+  /**
+   * The dialog port fields of this deploy that are not a port number.
+   * Returns [] when the app cannot be read; the deploy itself reports that.
+   */
+  findInvalidPorts(appId, config = {}) {
+    try {
+      const { category, appName } = parseAppId(appId);
+      const appPath = safeJoin(this.appsPath, category, appName + '.yml');
+      return CLIBridge.portChoices(yaml.parse(fs.readFileSync(appPath, 'utf8')), config).invalid;
+    } catch {
+      return [];
+    }
   }
 
   extractEnvironmentVars(service) {
@@ -967,7 +1079,6 @@ export class CLIBridge {
       // Misc defaults
       PLEXVERSION: 'docker',
       PLEXADDON: '',
-      ARIA_RPC_SECRET: 'homelabarr',
     };
 
     return defaultEnv;

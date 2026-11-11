@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1644
+**Total brand references found:** 1643
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Backend & server (`server/`, `docker-entrypoint.sh`)
 
-**30 references**
+**29 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -46,7 +46,6 @@
 | `server/auth.js` | 1 x | `  return Buffer.from(hkdfSync('sha256', current, Buffer.alloc(0), 'homelabarr-api-key-hmac/v1', 32)).toString('hex');` |
 | `server/auth.js` | 1 x | `const DUMMY_PASSWORD_HASH = bcrypt.hashSync('homelabarr-timing-equalizer', BCRYPT_COST);` |
 | `server/cli-bridge-exec.test.js` | 1 x | `// homelabarr.yml runs the backend read-only with only /app/data,` |
-| `server/cli-bridge.js` | 1 x | `      ARIA_RPC_SECRET: 'homelabarr',` |
 | `server/cli-bridge.js` | 1 x | ` * homelabarr.yml runs the backend with a read-only root, /app/server/data` |
 | `server/db.js` | 1 x | `const DB_PATH = process.env.DB_PATH \|\| path.join(process.env.DATA_DIR \|\| path.join(process.cwd(), 'data'), 'homelaba` |
 | `server/email.test.js` | 1 x | `      from: 'noreply@homelabarr.com',` |

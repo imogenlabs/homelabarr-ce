@@ -46,6 +46,19 @@ export default function deployRoutes({
         });
       }
 
+      // Refuse a port from the dialog that is not a port number, naming the field.
+      if (cliBridge?.findInvalidPorts) {
+        const invalid = await cliBridge.findInvalidPorts(appId, config);
+        if (invalid.length > 0) {
+          const names = invalid.map(field => `Port ${field.slice('port_'.length)}`);
+          return res.status(400).json({
+            error: 'Invalid port',
+            details: `${names.join(', ')}: use a whole number from 1 to 65535.`,
+            invalid
+          });
+        }
+      }
+
       // Refuse a deploy that would leave one of the app's own settings empty.
       // Compose would start it with a blank value and it usually crash-loops
       // (#642). Checked here, before any deploy path answers "started".

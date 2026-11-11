@@ -138,6 +138,10 @@ docker port app-name              # What port did it get?
 sudo ufw allow PORT/tcp           # Firewall blocking it?
 ```
 
+### Why does the deploy dialog ask me for a password?
+
+Some apps protect themselves with a password or secret: n8n, Flowise and aria2 among them. HomelabARR never fills one in for you, because a default would be the same on every install and anyone could look it up. Type one in the dialog; the deploy will not start while it is empty.
+
 ### Can I deploy without the web UI?
 
 Yes. The templates in `apps/` are standard Docker Compose files:
