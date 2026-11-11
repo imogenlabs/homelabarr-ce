@@ -106,6 +106,16 @@ describe('deploy dialog values reach compose', () => {
     expect(env.VNC_PW).toBeUndefined();
   });
 
+  it('never writes a property named by the request (__proto__, constructor)', async () => {
+    const config = JSON.parse('{"__proto__":{"polluted":"yes"},"constructor":"x","CF_TOKEN":"tok"}');
+    await bridge.deployApplication('system-cf-companion', config, { type: 'standard' });
+    const env = spawnEnv();
+    expect(env.CF_TOKEN).toBe('tok');
+    expect(Object.hasOwn(env, 'constructor')).toBe(false);
+    expect(env.polluted).toBeUndefined();
+    expect({}.polluted).toBeUndefined();
+  });
+
   it('still rejects a value with a dollar, backtick or newline', async () => {
     await expect(
       bridge.deployApplication('system-cf-companion', { CF_TOKEN: 'a$b' }, { type: 'standard' }),

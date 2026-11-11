@@ -493,6 +493,20 @@ export class CLIBridge {
   }
 
   /**
+   * The user's values for the names they may set: the global allowlist plus the
+   * app's own variables (settableVariables, HLCE-373). The keys come from those
+   * trusted names, never from the request, so a request cannot pick which
+   * property gets written (no __proto__ or constructor).
+   */
+  static pickUserValues(config, settable) {
+    const picked = {};
+    for (const name of [...CLIBridge.ALLOWED_TEMPLATE_VARS, ...settable.keys()]) {
+      if (Object.hasOwn(config, name)) picked[name] = config[name];
+    }
+    return picked;
+  }
+
+  /**
    * The variables this deploy would leave empty, worked out the same way the
    * deploy builds its compose file and environment. Returns [] when the app
    * cannot be read; the deploy itself reports that.
@@ -516,10 +530,10 @@ export class CLIBridge {
     // trustedDefaults, not prepareEnvironmentConfig: a check must not touch the
     // deploy state a concurrent deploy reads.
     const baseEnv = CLIBridge.trustedDefaults(config, { ...deploymentMode, type });
-    const userVars = {};
-    for (const [k, v] of Object.entries(config)) {
-      if ((CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) || settable.has(k)) && typeof v === 'string' && v !== '') userVars[k] = v;
-    }
+    const userVars = Object.fromEntries(
+      Object.entries(CLIBridge.pickUserValues(config, settable))
+        .filter(([, v]) => typeof v === 'string' && v !== ''),
+    );
     const env = {
       ...process.env,
       ...baseEnv,
@@ -604,15 +618,11 @@ export class CLIBridge {
    */
   async executeDockerCompose(appPath, command, envVars = {}, baseEnv = {}, settable = new Set(), { project } = {}) {
     return new Promise((resolve, reject) => {
-      const filtered = {};
-      for (const [k, v] of Object.entries(envVars)) {
-        // The global allowlist, plus the variables this app's own template uses
-        // in environment values (settableVariables, HLCE-373).
-        if (!CLIBridge.ALLOWED_TEMPLATE_VARS.has(k) && !settable.has(k)) continue;
+      const filtered = CLIBridge.pickUserValues(envVars, settable);
+      for (const [k, v] of Object.entries(filtered)) {
         if (typeof v !== 'string' || v.length > 256 || /[\r\n\0`$]/.test(v)) {
           throw new Error(`Invalid template variable value for ${k}`);
         }
-        filtered[k] = v;
       }
       const env = { ...process.env, ...baseEnv, ...filtered };
 
