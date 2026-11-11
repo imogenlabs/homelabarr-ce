@@ -15,6 +15,39 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.2] - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- give the CLI-mode Docker manager getDocker by @smashingtags in #658
+- let deploys work on the read-only backend by @smashingtags in #657
+- let the deploy dialog scroll on small screens by @smashingtags in #659
+
+### 📚 Documentation
+
+- rewrite the README and CONTRIBUTING for public readers by @smashingtags in #639
+- changelog for v2.6.1 by @github-actions[bot] in #640
+
+### ⬆️ Dependencies
+
+- bump nginx from `785835e` to `713fc2e` by @dependabot[bot] in #644
+- bump node from `8a32c8c` to `a34ab6d` by @dependabot[bot] in #645
+- bump the actions group with 5 updates by @dependabot[bot] in #646
+- bump the production group with 7 updates by @dependabot[bot] in #647
+- bump the development group with 20 updates by @dependabot[bot] in #648
+- bump @babel/helper-module-transforms from 7.29.7 to 7.29.13 by @dependabot[bot] in #649
+- bump @babel/generator from 7.29.12 to 7.29.13 by @dependabot[bot] in #650
+- bump @babel/helpers from 7.29.10 to 7.29.13 by @dependabot[bot] in #652
+- bump @babel/helper-string-parser from 7.29.11 to 7.29.13 by @dependabot[bot] in #651
+- bump @babel/parser from 7.29.12 to 7.29.13 by @dependabot[bot] in #653
+- bump @babel/traverse from 7.29.12 to 7.29.13 by @dependabot[bot] in #654
+- bump @babel/core from 7.29.7 to 7.29.13 by @dependabot[bot] in #655
+- bump @babel/helper-compilation-targets from 7.29.7 to 7.29.13 by @dependabot[bot] in #656
+
+### 🔧 Maintenance
+
+- release v2.6.2 by @smashingtags in #660
+
 ## [v2.6.1] - 2026-11-04
 
 ### 🐛 Bug Fixes
