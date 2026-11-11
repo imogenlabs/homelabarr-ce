@@ -245,6 +245,18 @@ export async function getDeployReadiness(): Promise<{ ok: boolean; message?: str
   return handleResponse(response);
 }
 
+export interface KnownPasswordApp {
+  container: string;
+  app: string;
+  setting: string;
+}
+
+// Deployed apps still using a password earlier releases set by default (HLCE-387).
+export async function getKnownPasswordApps(): Promise<{ apps: KnownPasswordApp[] }> {
+  const response = await apiFetch('/health/known-passwords');
+  return handleResponse(response);
+}
+
 export async function deployApp(
   appId: string,
   config: Record<string, string>,

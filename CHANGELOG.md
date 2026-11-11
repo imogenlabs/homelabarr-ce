@@ -2,11 +2,14 @@
 
 ## [Unreleased]
 
+### 🔒 Security
+- **The dashboard warns about apps that still use a password everyone knows**: v2.6.5 stopped giving new deploys default passwords, but n8n, Flowise and aria2 deployed earlier keep `changeme` or `homelabarr`. A banner now names each one and says to deploy it again with your own password. The values are never sent to the browser.
+
 ## [v2.6.5] - November 11, 2026
 
 ### 🐛 Fixes
 - **Apps start on the port you chose**: the deploy dialog's port fields were shown but never used, so an app always took its template's port and failed when another app already had it. The ports you pick are now the ones the app is published on, and a port that is not a number from 1 to 65535 is refused before the deploy starts, naming the field.
-- **No app gets a password everyone knows**: aria2 started with the RPC secret `homelabarr`, and n8n and Flowise fell back to `changeme` when no password was given. Those defaults are gone. The deploy dialog asks for the password, and the deploy does not start while it is empty.
+- **No app gets a password everyone knows**: aria2 started with the RPC secret `homelabarr`, and n8n and Flowise fell back to `changeme` when no password was given. Those defaults are gone. The deploy dialog asks for the password, and the deploy does not start while it is empty. **Apps deployed before this release keep the old password:** deploy them again from the catalog with your own.
 - **CF Companion's domain can be set without Traefik**: the dialog showed the Domain field only in Traefik mode, though CF Companion needs it in every mode. Apps that use the domain in their own settings now show the field in every mode, and a domain that is not a valid hostname is refused.
 - **Two deploys at once keep their own settings**: deploys started together could run with each other's values, such as the domain, and each deploy's progress window could show the other's output. Each deploy now carries its own settings and output.
 - **The stop, remove and logs API routes find the deployed app**: they looked under a different Compose project name than the deploy used, so through the API they reported nothing to stop. The dashboard's buttons were not affected.

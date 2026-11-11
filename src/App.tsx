@@ -20,6 +20,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { ApiKeysModal } from './components/ApiKeysModal';
 import { UserMenu } from './components/UserMenu';
 import { DeployBlockedBanner } from './components/DeployBlockedBanner';
+import { KnownPasswordBanner } from './components/KnownPasswordBanner';
 import { UserSettings } from './components/UserSettings';
 import {
   Network,
@@ -706,6 +707,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[calc(100vh-80px)]">
 
         <DeployBlockedBanner />
+        <KnownPasswordBanner />
 
         {/* Search Bar */}
         <div className="relative mb-8">

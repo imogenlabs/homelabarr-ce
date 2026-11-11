@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { isDemoMode } from '../demo-mode.js';
 import { getDeployReadiness } from '../deploy-readiness.js';
+import { findRetiredDefaults } from '../retired-defaults.js';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -31,6 +32,27 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
   router.get('/health/deploy', requireAuth, async (_req, res) => {
     const { ok, message } = await getDeployReadiness();
     res.json(ok ? { ok } : { ok, message });
+  });
+
+  // Deployed apps still running with a password earlier releases set by
+  // default (HLCE-387). Names only: the values never leave the server.
+  router.get('/health/known-passwords', requireAuth, async (_req, res) => {
+    const containers = await dockerManager.executeWithRetry(
+      async (docker) => {
+        const list = await docker.listContainers({ all: true });
+        return Promise.all(list.map(async (c) => {
+          // A container removed since the list just has nothing to report.
+          const info = await docker.getContainer(c.Id).inspect().catch(() => null);
+          return { name: (c.Names?.[0] || c.Id).replace(/^\//, ''), env: info?.Config?.Env || [] };
+        }));
+      },
+      'Check for retired default passwords',
+      { allowDegraded: true, fallbackValue: [] }
+    ).catch((error) => {
+      logger.warn('Could not check for retired default passwords:', error.message);
+      return [];
+    });
+    res.json({ apps: findRetiredDefaults(containers) });
   });
 
   router.get('/health/detail', requireAuth, requireRole('admin'), async (req, res) => {
