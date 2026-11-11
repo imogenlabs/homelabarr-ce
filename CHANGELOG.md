@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### 🔒 Privacy
+- **Your dashboard no longer sends page views to the project's analytics**: every install loaded an analytics script and forwarded page views through your server to the project's Umami server, though the privacy notice said only the demo did. Analytics are now off unless you set `ANALYTICS_URL` and `ANALYTICS_WEBSITE_ID` on the frontend, which the public demo does.
+
 ## [v2.6.6] - November 11, 2026
 
 ### 🐛 Fixes
