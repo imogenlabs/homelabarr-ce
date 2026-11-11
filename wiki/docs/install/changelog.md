@@ -15,6 +15,24 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.7] - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- turn usage analytics off unless the install opts in by @smashingtags in #685
+- keep the frontend's redirects on the address the browser used by @smashingtags in #686
+- run stop, remove and logs the way a deploy runs compose by @smashingtags in #689
+- point every catalog app at an image that exists by @smashingtags in #690
+
+### 📚 Documentation
+
+- changelog for v2.6.6 by @github-actions[bot] in #688
+
+### 🔧 Maintenance
+
+- ignore the DAST false positives checked by hand by @smashingtags in #687
+- release v2.6.7 by @smashingtags in #691
+
 ## [v2.6.6] - 2026-11-11
 
 ### 🐛 Bug Fixes
