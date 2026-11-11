@@ -365,7 +365,7 @@
 | `README.md` | 1 x | `  ghcr.io/imogenlabs/homelabarr-backend:latest` |
 | `README.md` | 1 x | `**Try it first:** the [live demo](https://demo.homelabarr.com) logs in with 'admin' / 'admin' and resets every 30 minute` |
 | `README.md` | 1 x | `- **Keep the settings:** put 'CORS_ORIGIN' (and 'ALLOW_PLAIN_HTTP') in a '.env' file next to 'homelabarr.yml'.` |
-| `README.md` | 1 x | `- **Update:** 'docker compose -f homelabarr.yml pull && docker compose -f homelabarr.yml up -d'` |
+| `README.md` | 1 x | `- **Update:** from the HomelabARR folder, 'git pull && sudo bash scripts/install-apparmor.sh', then 'docker compose -f h` |
 | `README.md` | 1 x | `All settings: [configuration](https://wiki.homelabarr.com/guides/configuration/).` |
 | `README.md` | 1 x | `Details: [architecture](https://wiki.homelabarr.com/guides/architecture/).` |
 | `README.md` | 1 x | `More options and building from source: [install guide](https://wiki.homelabarr.com/guides/quick-start/).` |
