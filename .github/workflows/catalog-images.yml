@@ -1,0 +1,29 @@
+name: Catalog images
+
+# Every catalog app's image must exist, or Deploy fails with "not found".
+# Upstream projects delete and rename tags, so this runs weekly as well as on
+# changes to the catalog (HLCE-392).
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'scripts/check-catalog-images.py'
+      - '.github/workflows/catalog-images.yml'
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Catalog images resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check every catalog image exists
+        run: python3 scripts/check-catalog-images.py

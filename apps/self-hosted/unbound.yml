@@ -1,7 +1,7 @@
 ---
 services:
   unbound:
-    image: ghcr.io/crazy-max/unbound:1.21.1
+    image: ghcr.io/crazy-max/unbound:1.26.1
     hostname: unbound
     container_name: unbound
     #TIP: Just replace ${PORTBLOCK} with your servers VPN IP to set this up.

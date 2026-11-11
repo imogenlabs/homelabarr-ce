@@ -9,14 +9,14 @@ services:
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
       - "NODE_ENV=production"
-    image: "ghcr.io/lissy93/dashy:3.1.1"
+    image: "ghcr.io/lissy93/dashy:4.9.17"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}
     security_opt:
       - "${SECURITYOPS}:${SECURITYOPSSET}"
     volumes:
-      - "${APPFOLDER}/dashy/conf.yml:/app/public/conf.yml:rw"
+      - "${APPFOLDER}/dashy:/app/user-data:rw"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
@@ -27,7 +27,7 @@ services:
       - "traefik.http.routers.dashy-rtr.tls.certresolver=dns-cloudflare"
       - "traefik.http.routers.dashy-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.dashy-rtr.service=dashy-svc"
-      - "traefik.http.services.dashy-svc.loadbalancer.server.port=80"
+      - "traefik.http.services.dashy-svc.loadbalancer.server.port=8080"
     healthcheck:
       test: ["CMD", "node", "/app/services/healthcheck"]
       interval: 1m30s

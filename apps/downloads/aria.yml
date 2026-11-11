@@ -1,7 +1,7 @@
 ---
 services:
   aria:
-    image: "p3terx/aria2-pro:202312040917"
+    image: "p3terx/aria2-pro:202209060423"
     hostname: "aria"
     container_name: "aria"
     restart: "${RESTARTAPP}"
@@ -40,7 +40,7 @@ services:
       - "dockupdater.enable=true"
 
   ariang:
-    image: "p3terx/ariang:1.3.7-202301081738"
+    image: "p3terx/ariang:latest"
     hostname: "ariang"
     container_name: "ariang"
     restart: "${RESTARTAPP}"

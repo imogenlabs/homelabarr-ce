@@ -54,13 +54,13 @@ describe('HLCE-380: concurrent deploys keep their own settings', () => {
 
     await Promise.all([
       bridge.deployApplicationWithProgress('ai-comfyui', { domain: 'a.example.com' }, { type: 'standard' }, 'dep-a'),
-      bridge.deployApplicationWithProgress('ai-jan', { domain: 'b.example.com' }, { type: 'standard' }, 'dep-b'),
+      bridge.deployApplicationWithProgress('ai-ollama', { domain: 'b.example.com' }, { type: 'standard' }, 'dep-b'),
     ]);
 
     const domainByFile = Object.fromEntries(
       vi.mocked(spawn).mock.calls.map(([, args, opts]) => [path.basename(args[args.indexOf('-f') + 1]), opts.env.DOMAIN])
     );
-    expect(domainByFile).toEqual({ 'comfyui-local.yml': 'a.example.com', 'jan-local.yml': 'b.example.com' });
+    expect(domainByFile).toEqual({ 'comfyui-local.yml': 'a.example.com', 'ollama-local.yml': 'b.example.com' });
 
     expect(stream.output['dep-a']).toEqual(['domain=a.example.com']);
     expect(stream.output['dep-b']).toEqual(['domain=b.example.com']);

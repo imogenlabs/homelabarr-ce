@@ -62,7 +62,7 @@ Open **http://YOUR-SERVER-IP:8084** and log in as `admin` with the password `scr
 | **Media Management** | Radarr, Sonarr, Lidarr, Bazarr, Readarr, Tautulli |
 | **Monitoring & Analytics** | Netdata, Grafana/Prometheus, Speedtest, Notifiarr |
 | **Virtual Desktops** | Chrome, Firefox, Discord, Steam, Signal (via Kasm) |
-| **Backup & Storage** | Duplicati, Restic, Rsnapshot |
+| **Backup & Storage** | Duplicati, Rsnapshot |
 | **System & Utilities** | Portainer, Dozzle, Uptime Kuma, Watchtower, Gluetun |
 | **Self-hosted** | Nextcloud, Bitwarden, Pi-hole, Home Assistant, n8n |
 | **AI & Machine Learning** | Ollama, Open WebUI, ComfyUI, Stable Diffusion, LocalAI |

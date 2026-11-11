@@ -10,7 +10,7 @@ services:
       - "UMASK=${UMASK}"
       - "branch=v2-master"
       - "fpm=false"
-    image: "organizr/organizr:2.1.2670"
+    image: "organizr/organizr:latest"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

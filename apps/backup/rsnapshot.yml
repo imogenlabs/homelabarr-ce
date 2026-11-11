@@ -7,20 +7,14 @@ services:
       - "PGID=${ID}"
       - "PUID=${ID}"
       - "TZ=${TZ}"
-    image: "lscr.io/linuxserver/rsnapshot:version-3.1.1"
+    image: "lscr.io/linuxserver/rsnapshot:version-1.4.5-r0"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}
     volumes:
       - "${APPFOLDER}/rsnapshot:/config:rw"
-      - "unionfs/snapshots:/data"
-      - "/etc/locatime:/etc/localtime:ro"
+      - "/mnt/snapshots:/.snapshots"
+      - "${APPFOLDER}:/data:ro"
+      - "/etc/localtime:/etc/localtime:ro"
     labels:
       - "dockupdater.enable=true"
-volumes:
-  unionfs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt

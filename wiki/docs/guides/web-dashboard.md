@@ -38,7 +38,7 @@ Apps are sorted into 10 categories. Click any tab to filter:
 | **Downloads & Automation** | qBittorrent, SABnzbd, NZBGet, Prowlarr, Jackett |
 | **Monitoring & Analytics** | Netdata, Grafana, Speedtest, Uptime Kuma |
 | **Virtual Desktops** | Chrome, Firefox, Discord, Steam — full desktops in your browser via Kasm |
-| **Backup & Storage** | Duplicati, Restic, Rsnapshot |
+| **Backup & Storage** | Duplicati, Rsnapshot |
 | **System & Utilities** | Portainer, Dozzle, Watchtower, Gluetun (VPN) |
 | **Self-hosted** | Nextcloud, Bitwarden, Pi-hole, Home Assistant, n8n |
 | **AI & Machine Learning** | Ollama, Open WebUI, ComfyUI, Stable Diffusion, LocalAI |

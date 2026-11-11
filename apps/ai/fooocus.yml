@@ -8,7 +8,7 @@ services:
     environment:
       - "TZ=${TZ}"
       - "NVIDIA_VISIBLE_DEVICES=all"
-    image: "ghcr.io/lllyasviel/fooocus:main"
+    image: "ghcr.io/lllyasviel/fooocus:2.5.5"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

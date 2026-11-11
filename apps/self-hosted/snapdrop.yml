@@ -8,7 +8,7 @@ services:
       - "PUID=${ID}"
       - "TZ=${TZ}"
       - "UMASK=${UMASK}"
-    image: "lscr.io/linuxserver/snapdrop:version-1.5.4"
+    image: "lscr.io/linuxserver/snapdrop:version-b8b78cc2"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

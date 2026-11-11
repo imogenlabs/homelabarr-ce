@@ -9,7 +9,7 @@ services:
       - "YTDL_UMASK=${UMASK}"
       - "UID=${ID}"
       - "GID=${ID}"
-    image: "tzahi12345/youtubedl-material:4.3.3"
+    image: "tzahi12345/youtubedl-material:4.3.2"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

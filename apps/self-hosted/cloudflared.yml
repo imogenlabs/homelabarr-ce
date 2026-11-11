@@ -1,7 +1,7 @@
 ---
 services:
   cloudflared:
-    image: "ghcr.io/crazy-max/cloudflared:2025.5.0"
+    image: "ghcr.io/crazy-max/cloudflared:2025.9.1"
     hostname: "cloudflared"
     container_name: "cloudflared"
     ports:

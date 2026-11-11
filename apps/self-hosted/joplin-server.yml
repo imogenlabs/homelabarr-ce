@@ -33,7 +33,7 @@ services:
       - "POSTGRES_DATABASE=${POSTGRES_DB:-joplin}"
       - "POSTGRES_PORT=5432"
       - "POSTGRES_HOST=db_joplin"
-    image: "joplin/server:3.1.1"
+    image: "joplin/server:3.7.5"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}

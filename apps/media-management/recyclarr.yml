@@ -10,7 +10,7 @@ services:
       - "PGID=${ID}"
       - "PUID=${ID}"
       - "TZ=${TZ}"
-    image: "ghcr.io/recyclarr/recyclarr:latest"
+    image: "ghcr.io/recyclarr/recyclarr:8.8.1"
     restart: "${RESTARTAPP}"
     networks:
       - ${DOCKERNETWORK}
