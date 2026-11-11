@@ -54,6 +54,11 @@ The five cosmetic specs (catalog, dark-mode, footer, icons, modals). These run
 against a shared live deploy and can flake when it's warm/mid-deploy — that's why
 the seeded lane exists. CI runs this lane `continue-on-error`.
 
+The lane signs in once (`smoke.setup.ts`) and spaces dashboard loads 6 seconds
+apart (`login()` in `helpers.ts`). The live server allows 100 requests a minute
+per address and one load makes about 7, so back-to-back tests got 429s and saw
+the login screen. Expect a run to take a few minutes.
+
 ## Notes
 
 - CI installs the browser with `npx playwright install chromium`, without
