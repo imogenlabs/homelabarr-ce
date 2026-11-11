@@ -99,6 +99,8 @@ export interface CLIApplication {
   image: string;
   ports: Record<string, number>;
   environment: Record<string, string>;
+  // The app's own settings a user may fill in at deploy time (HLCE-373).
+  variables?: { name: string; required: boolean }[];
   volumes: string[];
   networks: string[];
   labels: string[];

@@ -6,6 +6,9 @@
 - **A banner warns when deploys are blocked**: if the host's AppArmor profile is older than v2.6.2, the backend cannot run `docker-compose`, and the fix has to happen on the host. HomelabARR now checks this when it starts, logs the command to run, and shows signed-in users a banner with `sudo bash scripts/install-apparmor.sh` before any deploy fails. The banner goes away once the profile is updated, without a restart.
 
 ### 🐛 Fixes
+- **Settings typed in the deploy dialog reach the app** ([#642](https://github.com/imogenlabs/homelabarr-ce/issues/642)): the dialog's Advanced Configuration listed the container's environment lines and sent them in lowercase, and the backend accepted only a short fixed list of names, so everything typed there was discarded without an error. Apps such as CF Companion, the VPN and database apps, and the virtual desktops started with blank values. The dialog now lists each app's own settings under their real names, required ones up front, and those values reach the app. Only settings an app uses in its environment can be set this way; paths, images, ports and HomelabARR's own defaults stay protected.
+
+### 🐛 Fixes
 - **A failed deploy says why**: the "Deployment Failed" notice always said "Check container logs for details" and dropped the reason the backend sent, so the AppArmor instruction added in v2.6.3 never reached the screen. The notice now shows the reason, and appears once instead of twice.
 
 ## [v2.6.3] - November 11, 2026

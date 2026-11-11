@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppTemplate, AppCategory, CLIApplication, ConfigField, ContainerStats, DeployedApp, DeploymentMode } from './types';
+import { AppTemplate, AppCategory, CLIApplication, ContainerStats, DeployedApp, DeploymentMode } from './types';
 import { DISPLAY_CATEGORIES, getDisplayCategoryId, getAppIcon, getDisplayCategory } from './data/app-metadata';
 import { AppCard } from './components/AppCard';
 import { Search, ArrowUpDown } from 'lucide-react';
@@ -31,6 +31,7 @@ import {
   Star,
 } from 'lucide-react';
 import { deployApp, getContainers, getApplicationCatalog, getDeploymentModes, getStars, starApp, unstarApp } from './lib/api';
+import { buildConfigFields } from './lib/config-fields';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -407,59 +408,6 @@ export default function App() {
         return 0;
     }
   });
-
-  // Build config fields for the deploy modal from CLI app data
-  const buildConfigFields = (app: AppTemplate) => {
-    const cliApp = (app as AppTemplate & { _cliApp?: CLIApplication })._cliApp;
-    const fields: ConfigField[] = [
-      {
-        name: 'containerName',
-        label: 'Container Name',
-        type: 'text' as const,
-        required: false,
-        placeholder: cliApp?.name || 'auto',
-        defaultValue: '',
-      },
-      {
-        name: 'domain',
-        label: 'Domain',
-        type: 'text' as const,
-        required: false,
-        placeholder: 'yourdomain.com — no https:// needed',
-        defaultValue: '',
-        trafikOnly: true,
-        helpText: 'Just the domain (e.g. mjashley.com). Apps will be accessible at appname.yourdomain.com',
-      },
-    ];
-
-    if (cliApp?.environment) {
-      Object.entries(cliApp.environment).forEach(([key, value]) => {
-        fields.push({
-          name: key.toLowerCase(),
-          label: key.replace(/_/g, ' '),
-          type: 'text' as const,
-          required: false,
-          defaultValue: String(value),
-          advanced: true,
-        });
-      });
-    }
-
-    if (cliApp?.ports) {
-      Object.entries(cliApp.ports).forEach(([key, value]) => {
-        fields.push({
-          name: `port_${key}`,
-          label: `Port: ${key}`,
-          type: 'text' as const,
-          required: false,
-          defaultValue: String(value),
-          advanced: true,
-        });
-      });
-    }
-
-    return fields;
-  };
 
   const renderContent = () => {
 
