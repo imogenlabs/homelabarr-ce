@@ -73,6 +73,15 @@ export function DeploymentProgressModal({
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
+  // A failed deploy sends both an error and a completion event. Report the
+  // ending once, or the user gets two identical notices.
+  const reportedRef = useRef(false);
+  const reportOnce = (success: boolean, summary?: unknown) => {
+    if (reportedRef.current) return;
+    reportedRef.current = true;
+    onCompleteRef.current?.(success, summary);
+  };
+
   useEffect(() => {
     if (!deploymentId) return;
 
@@ -145,7 +154,7 @@ export function DeploymentProgressModal({
       setIsSuccess(data.success);
       setCurrentStep('');
 
-      onCompleteRef.current?.(data.success, data.summary);
+      reportOnce(data.success, data.summary);
     };
 
     const handleError = (data: DeploymentErrorEvent) => {
@@ -154,7 +163,7 @@ export function DeploymentProgressModal({
       setIsSuccess(false);
       setCurrentStep('');
 
-      onCompleteRef.current?.(false, { error: data.error });
+      reportOnce(false, { error: data.error });
     };
 
     // Set up Server-Sent Events connection

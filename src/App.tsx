@@ -370,14 +370,17 @@ export default function App() {
     setPendingDeployment(null);
   };
 
-  const handleDeploymentComplete = async (completionSuccess: boolean) => {
+  const handleDeploymentComplete = async (completionSuccess: boolean, summary?: unknown) => {
     setDeploymentProgress(null);
     if (completionSuccess) {
       await fetchContainers();
       success('Deployment Successful', 'Container is running. Check the Deployed Apps tab.');
       setActiveCategory('deployed');
     } else {
-      showError('Deployment Failed', 'Check container logs for details.');
+      // The backend's reason can tell the user what to do (for example, update
+      // the AppArmor profile), so show it rather than a generic hint.
+      const reason = (summary as { error?: unknown } | undefined)?.error;
+      showError('Deployment Failed', typeof reason === 'string' && reason ? reason : 'Check container logs for details.');
     }
   };
 
