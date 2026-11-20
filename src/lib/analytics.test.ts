@@ -37,6 +37,21 @@ describe('usage analytics', () => {
     expect(posthog.capture).not.toHaveBeenCalled();
   });
 
+  it('does nothing inside the mobile app, whose store page says no data is collected', async () => {
+    addTag();
+    (window as unknown as Record<string, unknown>).ReactNativeWebView = { postMessage: () => {} };
+    try {
+      const instance = vi.fn();
+      startAnalytics(instance);
+      track('signed_in');
+      await flush();
+      expect(instance).not.toHaveBeenCalled();
+      expect(posthog.init).not.toHaveBeenCalled();
+    } finally {
+      delete (window as unknown as Record<string, unknown>).ReactNativeWebView;
+    }
+  });
+
   it('does nothing when the backend gives no install id', async () => {
     addTag();
     startAnalytics(async () => ({ install: null, demo: false }));

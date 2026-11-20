@@ -20,6 +20,8 @@ Because the data goes out from your server, PostHog sees the public IP address y
 
 Your browser only ever talks to your own dashboard. If your server has no internet access, or blocks PostHog, the dashboard works as normal and nothing is sent.
 
+Nothing is sent when you open the dashboard in the HomelabARR mobile app.
+
 The public demo at demo.homelabarr.com reports the same things, except that each visitor's browser keeps its own random id (in local storage) so we can count visitors.
 
 **This changes what we said in v2.6.7.** That release turned analytics off by default and this page said a self-hosted install sends no usage data. v2.6.8 turns anonymous analytics on by default, because without it we cannot tell whether anyone uses the project. Before v2.6.7, installs sent page views to a Umami server run by the maintainer; that is gone, and the `ANALYTICS_URL` and `ANALYTICS_WEBSITE_ID` settings no longer do anything.

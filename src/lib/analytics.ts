@@ -48,6 +48,9 @@ function showNoticeOnce() {
 export function startAnalytics(instance: () => Promise<Instance>) {
   const token = document.querySelector('meta[name="hl-analytics"]')?.getAttribute('content');
   if (!token || client) return;
+  // The mobile app shows this dashboard in a web view and its App Store page
+  // says the app collects no data. Keep that true: nothing is sent from it.
+  if ('ReactNativeWebView' in window) return;
   client = (async () => {
     const [{ default: posthog }, { install, demo }] = await Promise.all([import('posthog-js'), instance()]);
     // No id means the backend could not be reached or predates this feature.
