@@ -16,9 +16,11 @@ What is sent, to [PostHog](https://posthog.com) (US cloud), through your dashboa
 
 What is never sent: your dashboard's address or hostname, referrers, usernames, passwords, container names, environment values, logs, or anything you type. No cookies are set and nothing is stored in your browser for analytics, apart from one flag that remembers you have seen the notice. Session recording is off.
 
-Because the data goes out from your server, PostHog sees the public IP address your server connects from, as any web service does. The project is set to discard it.
+Because the data goes out from your server, PostHog sees the public IP address your server connects from, as any web service does. The project is set to discard it, and looking up a location from it is switched off.
 
 Your browser only ever talks to your own dashboard. If your server has no internet access, or blocks PostHog, the dashboard works as normal and nothing is sent.
+
+Nothing is sent when you open the dashboard in the HomelabARR mobile app.
 
 The public demo at demo.homelabarr.com reports the same things, except that each visitor's browser keeps its own random id (in local storage) so we can count visitors.
 

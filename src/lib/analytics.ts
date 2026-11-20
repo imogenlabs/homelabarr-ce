@@ -48,6 +48,9 @@ function showNoticeOnce() {
 export function startAnalytics(instance: () => Promise<Instance>) {
   const token = document.querySelector('meta[name="hl-analytics"]')?.getAttribute('content');
   if (!token || client) return;
+  // The mobile app shows this dashboard in a web view and its App Store page
+  // says the app collects no data. Keep that true: nothing is sent from it.
+  if ('ReactNativeWebView' in window) return;
   client = (async () => {
     const [{ default: posthog }, { install, demo }] = await Promise.all([import('posthog-js'), instance()]);
     // No id means the backend could not be reached or predates this feature.
@@ -78,7 +81,8 @@ export function startAnalytics(instance: () => Promise<Instance>) {
       disable_external_dependency_loading: true,
       before_send: scrub,
     });
-    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo });
+    // $geoip_disable: PostHog would otherwise place the server's address on a map.
+    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo, $geoip_disable: true });
     if (!demo) showNoticeOnce();
     return posthog;
   })().catch(() => null);
