@@ -1,0 +1,53 @@
+name: Docker Hub pull counts
+
+# Docker Hub shows one all-time pull total per image and keeps no history, so
+# this writes the totals down once a day. The usage analytics count is a floor
+# (blocked servers and untouched installs never report); the daily change in
+# pulls is the second number to read beside it.
+#
+# The rows live on the `chore/metrics` branch, not main: every commit on main
+# publishes new images, and a daily data commit must not do that.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docker-hub-pulls
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record pull counts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          path: code
+          sparse-checkout: scripts/record-docker-hub-pulls.py
+          sparse-checkout-cone-mode: false
+      - name: Check out the metrics branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: chore/metrics
+          path: metrics
+      - name: Record today's totals
+        run: python3 code/scripts/record-docker-hub-pulls.py metrics/docker-hub-pulls.csv
+      - name: Commit the row
+        working-directory: metrics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docker-hub-pulls.csv
+          if git diff --cached --quiet; then
+            echo "No change since the last run today"
+            exit 0
+          fi
+          git commit -m "data: Docker Hub pull counts for $(date -u +%F)"
+          git push origin HEAD:chore/metrics
