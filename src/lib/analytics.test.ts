@@ -78,7 +78,7 @@ describe('usage analytics', () => {
       disable_external_dependency_loading: true,
     });
     expect(posthog.register).toHaveBeenCalledWith(
-      expect.objectContaining({ product: 'homelabarr', install_id: 'install-1', demo: false }),
+      expect.objectContaining({ product: 'homelabarr', install_id: 'install-1', demo: false, $geoip_disable: true }),
     );
   });
 

@@ -81,7 +81,8 @@ export function startAnalytics(instance: () => Promise<Instance>) {
       disable_external_dependency_loading: true,
       before_send: scrub,
     });
-    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo });
+    // $geoip_disable: PostHog would otherwise place the server's address on a map.
+    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo, $geoip_disable: true });
     if (!demo) showNoticeOnce();
     return posthog;
   })().catch(() => null);
