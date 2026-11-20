@@ -103,3 +103,7 @@ tests/e2e/.smoke-auth.json
 
 # Playwright MCP screenshot artifacts (transient)
 .playwright-mcp/
+
+# Python bytecode
+__pycache__/
+*.pyc
