@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1677
+**Total brand references found:** 1679
 
 ---
 
@@ -402,7 +402,7 @@
 
 ## Wiki content
 
-**416 references**
+**418 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -522,6 +522,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- add Movviz by @smashingtags in #574` |
 | `wiki/docs/install/changelog.md` | 1 x | `- add White-Label & Forking guide (self-maintaining) by @smashingtags in #152` |
 | `wiki/docs/install/changelog.md` | 1 x | `- add a demo mode that refuses account changes by @smashingtags in #472` |
+| `wiki/docs/install/changelog.md` | 1 x | `- add anonymous usage analytics, on by default by @smashingtags in #704` |
 | `wiki/docs/install/changelog.md` | 1 x | `- alert externally when the demo or dev goes down by @smashingtags in #459` |
 | `wiki/docs/install/changelog.md` | 1 x | `- alert when the hypervisor disk fills or a domain pauses by @smashingtags in #466` |
 | `wiki/docs/install/changelog.md` | 1 x | `- an unanswered probe is unchecked, not failed by @smashingtags in #548` |
@@ -646,6 +647,7 @@
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.5 by @smashingtags in #680` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.6 by @smashingtags in #684` |
 | `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.7 by @smashingtags in #691` |
+| `wiki/docs/install/changelog.md` | 1 x | `- release v2.6.8 by @smashingtags in #705` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove Pro Edition section + Author → Developer by @smashingtags in #155` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove npm from the backend image instead of patching its deps by @smashingtags in #438` |
 | `wiki/docs/install/changelog.md` | 1 x | `- remove stale octopus favicons by @smashingtags in #153` |
