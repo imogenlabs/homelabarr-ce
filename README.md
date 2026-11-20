@@ -104,6 +104,7 @@ Found a vulnerability? See [SECURITY.md](SECURITY.md). The [threat model](docs/t
 | `CORS_ORIGIN` | required | The address you open the dashboard at. |
 | `ALLOW_PLAIN_HTTP` | `false` | Allow sign-in at a plain `http://` address. LAN only. |
 | `FRONTEND_PORT` | `8084` | Dashboard port. |
+| `ANALYTICS` | `on` | Anonymous usage data, sent to the project. Set to `off` to send nothing. See [PRIVACY.md](PRIVACY.md). |
 | `TRUST_PROXY_HOPS` | `1` | Proxies in front of the backend. Raise it only if you add your own reverse proxy. |
 
 All settings: [configuration](https://wiki.homelabarr.com/guides/configuration/).

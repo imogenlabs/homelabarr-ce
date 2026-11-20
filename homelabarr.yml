@@ -10,6 +10,8 @@
 #   ALLOW_PLAIN_HTTP      — set to true ONLY if you open the dashboard at plain
 #                           http://<ip>:<port> with no HTTPS proxy in front.
 #                           Turns off Secure cookies and HSTS (default: false)
+#   ANALYTICS             — anonymous usage data sent to the project; set to off
+#                           to send nothing. See PRIVACY.md (default: on)
 #
 # Usage:
 #   docker compose -f homelabarr.yml up -d
@@ -105,6 +107,7 @@ services:
       - BACKEND_URL=http://backend:8092
       - LOG_LEVEL=${LOG_LEVEL:-warn}
       - ALLOW_PLAIN_HTTP=${ALLOW_PLAIN_HTTP:-false}
+      - ANALYTICS=${ANALYTICS:-on}
     ports:
       - "${FRONTEND_PORT:-8084}:8080"
     networks:

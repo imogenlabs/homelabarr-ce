@@ -8,6 +8,8 @@ import App from "./App.tsx";
 import "./index.css";
 import { getTheme, setTheme } from "./lib/theme";
 import { Toaster } from "@/components/ui/sonner";
+import { startAnalytics } from "./lib/analytics";
+import { getInstance } from "./lib/api";
 
 try {
   ['homelabarr_token', 'homelabarr_user', 'homelabarr_jwt'].forEach(k => localStorage.removeItem(k));
@@ -16,6 +18,7 @@ try {
 }
 
 setTheme(getTheme());
+startAnalytics(getInstance);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

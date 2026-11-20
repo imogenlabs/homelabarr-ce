@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { isDemoMode } from '../demo-mode.js';
+import { getInstallId } from '../install-id.js';
 import { getDeployReadiness } from '../deploy-readiness.js';
 import { findRetiredDefaults } from '../retired-defaults.js';
 import fs from 'fs';
@@ -20,6 +21,8 @@ export default function healthRoutes({ requireAuth, requireRole, sendError, dock
       // when the demo moved hosts (HLCE-315). The server is the only thing that
       // actually knows, so it says so, on the one endpoint that needs no auth.
       demo: isDemoMode(),
+      // Random per-install id for usage analytics (see install-id.js).
+      install: getInstallId(),
       process: {
         uptime_seconds: Math.floor(process.uptime()),
         ...counters,

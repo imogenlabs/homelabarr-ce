@@ -90,6 +90,44 @@ jobs:
           me=$(curl -sS -o /dev/null -w '%{http_code}' -b /tmp/readme-cookies http://localhost:8084/api/auth/me)
           echo "/api/auth/me with the login cookie: $me"
           [[ "$me" == 200 ]]
+      # Usage analytics are on by default and reach PostHog through the
+      # dashboard's own nginx. A wrong Host, SNI or path fails silently in a
+      # browser, so ask through the proxy here. Neither call records an event.
+      - name: Analytics proxy reaches PostHog
+        shell: bash
+        run: |
+          key=$(curl -sS http://localhost:8084/ | grep -o 'name="hl-analytics" content="[^"]*"' | cut -d'"' -f4)
+          [[ "$key" == phc_* ]] || { echo "no analytics tag in the served page"; exit 1; }
+          settings=$(curl -sS -o /dev/null -w '%{http_code}' "http://localhost:8084/ingest/array/$key/config")
+          echo "settings through /ingest: $settings"
+          [[ "$settings" == 200 ]]
+          flags=$(curl -sS -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' \
+            --data "{\"token\":\"$key\",\"distinct_id\":\"ci\"}" 'http://localhost:8084/ingest/flags/?v=2')
+          echo "ingest host through /ingest: $flags"
+          [[ "$flags" == 200 ]]
+      # The proxy must never decide whether the dashboard starts: a host with
+      # no working DNS, and one with analytics switched off, both serve it.
+      - name: Dashboard starts with no DNS, and with analytics off
+        shell: bash
+        run: |
+          image=ghcr.io/imogenlabs/homelabarr-frontend:latest
+          docker run -d --name fe-nodns --dns 192.0.2.1 -p 18081:8080 "$image"
+          docker run -d --name fe-off -e ANALYTICS=off -p 18082:8080 "$image"
+          for port in 18081 18082; do
+            for _ in $(seq 1 30); do
+              curl -fsS -o /dev/null "http://localhost:$port/" && break
+              sleep 1
+            done
+          done
+          curl -fsS http://localhost:18081/ | grep -q 'name="hl-analytics"' \
+            || { echo "no-DNS frontend did not serve the page with its tag"; docker logs fe-nodns; exit 1; }
+          if curl -fsS http://localhost:18082/ | grep -q 'hl-analytics'; then
+            echo "ANALYTICS=off still serves the analytics tag"; exit 1
+          fi
+          off=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:18082/ingest/flags/)
+          echo "/ingest with analytics off: $off"
+          [[ "$off" == 404 ]]
+          docker rm -f fe-nodns fe-off
       # Deploying is the dashboard's main job. A deploy is accepted with 200 and
       # then runs in the background, so only a running container proves it
       # worked (#641: every deploy failed on the read-only backend).

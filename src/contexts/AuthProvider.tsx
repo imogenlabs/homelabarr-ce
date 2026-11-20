@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch, apiFetchRaw } from '../lib/api';
+import { track } from '../lib/analytics';
 import { AuthContext, type User } from './AuthContext';
 
 // What /auth/me said: signed in, signed out, or "too many requests, ask again later".
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { mfa_required: true, ticket: data.ticket as string };
     }
     setUser(data.user);
+    track('signed_in');
     return {};
   };
 

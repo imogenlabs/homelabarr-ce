@@ -5,6 +5,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 // endpoint read as healthy to monitoring. We mount the route factory directly
 // with collaborators that force the in-`try` path to throw and assert 500.
 process.env.NODE_ENV = 'test';
+// health.js reads the install id, so it opens the database on import.
+process.env.DB_PATH = ':memory:';
 
 let request, express, healthRoutes;
 
