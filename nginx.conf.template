@@ -91,9 +91,8 @@ server {
         add_header X-Frame-Options "DENY" always;
     }
 
-    # Usage analytics are off unless ANALYTICS_URL and ANALYTICS_WEBSITE_ID are
-    # set (the public demo sets them). docker-entrypoint.sh then writes this file
-    # with the script tag and the /analytics.js and /api/send proxies (HLCE-389).
+    # Usage analytics: docker-entrypoint.sh writes this file with the page tag
+    # and the /ingest/ proxy to PostHog, unless ANALYTICS=off.
     include /etc/nginx/conf.d/analytics*.inc;
 
     # API proxy to backend

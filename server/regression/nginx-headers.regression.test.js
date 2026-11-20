@@ -146,18 +146,18 @@ describe('nginx security-header non-inheritance invariant (HLCE-227 AC5)', () =>
   });
 
   // POTENTIAL GAP (reported, NOT fixed here per HLCE-227 scope — assert-only):
-  // The text-resource blocks `= /robots.txt`, `= /humans.txt`, `^~ /.well-known/`
-  // and the proxy block `= /analytics.js` add ONLY a minimal subset
+  // The text-resource blocks `= /robots.txt`, `= /humans.txt` and `^~ /.well-known/`
+  // add ONLY a minimal subset
   // (Strict-Transport-Security + X-Content-Type-Options [+ X-Frame-Options]) and do
   // NOT re-emit Content-Security-Policy / Referrer-Policy / Permissions-Policy /
-  // Cross-Origin-* / X-XSS-Protection. For plain-text / redirect / proxied responses
+  // Cross-Origin-* / X-XSS-Protection. For plain-text / redirect responses
   // this is arguably fine (no HTML to frame or script), but it IS a divergence from
   // the full set and would be a real gap if any of these ever served HTML. We lock
   // the CURRENT minimal state so a future change to these blocks is visible in diff,
   // without asserting the full set on them.
   describe('POTENTIAL GAP: text/redirect/proxy blocks carry only the minimal subset (current state locked)', () => {
     const MINIMAL_SUBSET = ['Strict-Transport-Security', 'X-Content-Type-Options'];
-    const PARTIAL_BLOCKS = ['/robots.txt', '/humans.txt', '^~ /.well-known/', '/analytics.js'];
+    const PARTIAL_BLOCKS = ['/robots.txt', '/humans.txt', '^~ /.well-known/'];
 
     it.each(PARTIAL_BLOCKS)('block %s carries at least the minimal hardening subset', (matcher) => {
       const block = findBlock(blocks, matcher);

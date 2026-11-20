@@ -1,4 +1,5 @@
 import { DeploymentMode } from '../types';
+import { track, type Instance } from './analytics';
 
 // In production, use relative URL so requests go through nginx proxy (/api/ → backend)
 // In development (npm run dev), Vite proxy handles the forwarding
@@ -175,21 +176,28 @@ export async function getContainers(includeStats = false) {
 //
 // Cached as a promise: one answer per page load, and concurrent callers share
 // the same in-flight request rather than each firing their own.
-let demoInstance: Promise<boolean> | null = null;
+let instance: Promise<Instance> | null = null;
 
-async function isDemoInstance(): Promise<boolean> {
-  demoInstance ??= (async () => {
+// What the server says about itself on /health: whether it is the demo, and the
+// random install id usage analytics count installs by.
+export function getInstance(): Promise<Instance> {
+  instance ??= (async () => {
     try {
       const response = await apiFetchRaw('/health');
-      if (!response.ok) return false;
-      return (await response.json())?.demo === true;
+      if (!response.ok) return { demo: false, install: null };
+      const body = await response.json();
+      return { demo: body?.demo === true, install: typeof body?.install === 'string' ? body.install : null };
     } catch {
       // Unreachable or unparseable: assume a real install. Showing a real
       // deployment fabricated containers is worse than showing the demo none.
-      return false;
+      return { demo: false, install: null };
     }
   })();
-  return demoInstance;
+  return instance;
+}
+
+async function isDemoInstance(): Promise<boolean> {
+  return (await getInstance()).demo;
 }
 
 export async function getContainerStats(containerId: string) {
@@ -267,6 +275,9 @@ export async function deployApp(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ appId, config, mode }),
   });
+  // appId is a catalog template id, the same for every install.
+  if (response.ok) track('deploy_started', { template: appId, mode: mode.type });
+  else track('deploy_failed', { template: appId, status: response.status });
   return handleResponse(response);
 }
 
@@ -289,6 +300,7 @@ export async function stopApplication(appId: string) {
 
 export async function removeApplication(appId: string, removeVolumes: boolean = false) {
   const response = await apiFetch(`/applications/${appId}?removeVolumes=${removeVolumes}`, { method: 'DELETE' });
+  if (response.ok) track('app_removed');
   return handleResponse(response);
 }
 
@@ -299,6 +311,7 @@ export async function getApplicationLogs(appId: string, lines: number = 100) {
 
 export async function removeContainer(containerId: string) {
   const response = await apiFetch(`/containers/${containerId}`, { method: 'DELETE' });
+  if (response.ok) track('app_removed');
   return handleResponse(response);
 }
 

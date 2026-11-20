@@ -123,6 +123,18 @@ describe('AC2 — GET /health (liveness, no auth)', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ ok: true, state: 'ready' });
   });
+
+  it('carries the install id, and the fixed word "demo" on the demo', async () => {
+    const { app } = buildApp();
+    const res = await request(app).get('/health');
+    expect(res.body.install).toMatch(/^[0-9a-f-]{36}$/);
+    process.env.DEMO_MODE = 'true';
+    try {
+      expect((await request(app).get('/health')).body.install).toBe('demo');
+    } finally {
+      delete process.env.DEMO_MODE;
+    }
+  });
 });
 
 // HLCE-315: the frontend decides whether it may show seeded demo containers

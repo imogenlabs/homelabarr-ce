@@ -53,6 +53,7 @@
     "nodemailer": "^10.5.0",
     "otpauth": "^9.6.0",
     "playwright": "^1.65.0",
+    "posthog-js": "^1.453.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-chartjs-2": "^5.2.0",
