@@ -15,6 +15,33 @@ Latest releases and what changed in each.
 
 ---
 
+## [v2.6.8] - 2026-11-20
+
+### 🚀 Features
+
+- add anonymous usage analytics, on by default by @smashingtags in #704
+
+### 📚 Documentation
+
+- changelog for v2.6.7 by @github-actions[bot] in #692
+
+### ⬆️ Dependencies
+
+- bump node from `a34ab6d` to `116b800` by @dependabot[bot] in #693
+- bump google/osv-scanner-action/osv-scanner-action from 2.7.0 to 2.7.1 in the actions group by @dependabot[bot] in #694
+- bump the production group with 4 updates by @dependabot[bot] in #695
+- bump the development group with 34 updates by @dependabot[bot] in #696
+- bump @babel/generator from 7.29.13 to 7.29.14 by @dependabot[bot] in #697
+- bump @babel/helper-module-transforms from 7.29.13 to 7.29.14 by @dependabot[bot] in #698
+- bump @babel/types from 7.29.11 to 7.29.14 by @dependabot[bot] in #699
+- bump @babel/parser from 7.29.13 to 7.29.14 by @dependabot[bot] in #700
+- bump @babel/runtime from 7.29.10 to 7.29.14 by @dependabot[bot] in #701
+- bump @babel/helper-string-parser from 7.29.13 to 7.29.14 by @dependabot[bot] in #703
+
+### 🔧 Maintenance
+
+- release v2.6.8 by @smashingtags in #705
+
 ## [v2.6.7] - 2026-11-11
 
 ### 🐛 Bug Fixes
