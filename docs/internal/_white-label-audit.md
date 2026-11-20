@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1676
+**Total brand references found:** 1677
 
 ---
 
@@ -31,8 +31,8 @@
 | `src/components/HelpModal.tsx` | 1 x | `                  { label: "Wiki & Docs", href: "https://wiki.homelabarr.com", desc: "Full documentation" },` |
 | `src/data/app-metadata.ts` | 1 x | `  'homelabarr-uploader': Zap,` |
 | `src/data/app-metadata.ts` | 1 x | `  'homelabarr-web-interface': LayoutDashboard,` |
-| `src/lib/analytics.test.ts` | 1 x | `      expect.objectContaining({ product: 'homelabarr', install_id: 'install-1', demo: false }),` |
-| `src/lib/analytics.ts` | 1 x | `    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo });` |
+| `src/lib/analytics.test.ts` | 1 x | `      expect.objectContaining({ product: 'homelabarr', install_id: 'install-1', demo: false, $geoip_disable: true }),` |
+| `src/lib/analytics.ts` | 1 x | `    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo, $geoip_disable: t` |
 | `src/lib/analytics.ts` | 1 x | `const PRIVACY_URL = 'https://github.com/imogenlabs/homelabarr-ce/blob/main/PRIVACY.md';` |
 | `src/main.tsx` | 1 x | `  ['homelabarr_token', 'homelabarr_user', 'homelabarr_jwt'].forEach(k => localStorage.removeItem(k));` |
 | `src/utils/iconMap.ts` | 1 x | `const availableIcons = new Set(["alltube", "amd", "aria", "autoscan", "backup", "bazarr", "bazarr4k", "bitwarden", "cali` |
@@ -299,7 +299,7 @@
 
 ## Root documentation
 
-**95 references**
+**96 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -329,6 +329,7 @@
 | `CHANGELOG.md` | 1 x | `- **Fix: 'GET /containers?stats=true' no longer blocks the event loop** (HLCE-275, [#331](https://github.com/imogenlabs/` |
 | `CHANGELOG.md` | 1 x | `- **Frontend security-component tests + lib/api gap-fills + a password-policy fix** (Epic [HLCE-270](https://mjashley.at` |
 | `CHANGELOG.md` | 1 x | `- **High-value component tests (RTL)** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-225, [#307` |
+| `CHANGELOG.md` | 1 x | `- **HomelabARR now sends anonymous usage data, and you can turn it off**: v2.6.7 turned analytics off for everyone, whic` |
 | `CHANGELOG.md` | 1 x | `- **Login limiter no longer counts successful logins** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209),` |
 | `CHANGELOG.md` | 1 x | `- **Login works over plain HTTP** ([#622](https://github.com/imogenlabs/homelabarr-ce/issues/622)): the README install o` |
 | `CHANGELOG.md` | 1 x | `- **MFA tests** (Epic [HLCE-209](https://mjashley.atlassian.net/browse/HLCE-209), HLCE-214, [#297](https://github.com/im` |
