@@ -6,7 +6,7 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1679
+**Total brand references found:** 1681
 
 ---
 
@@ -212,7 +212,7 @@
 
 ## Install & utility scripts
 
-**80 references**
+**82 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -283,6 +283,8 @@
 | `scripts/install-apparmor.sh` | 1 x | `profile homelabarr-backend flags=(attach_disconnected,mediate_deleted) {` |
 | `scripts/install-apparmor.sh` | 1 x | `profile homelabarr-frontend flags=(attach_disconnected,mediate_deleted) {` |
 | `scripts/intelligent-storage-detection.sh` | 1 x | `    local CONFIG_DIR="/opt/homelabarr/config"` |
+| `scripts/record-docker-hub-pulls.py` | 1 x | `HEADER = ["date"] + [image.split("/")[1].removeprefix("homelabarr-") + "_pulls" for image in IMAGES]` |
+| `scripts/record-docker-hub-pulls.py` | 1 x | `IMAGES = ["smashingtags/homelabarr-frontend", "smashingtags/homelabarr-backend"]` |
 | `scripts/restore-drill.sh` | 1 x | `LATEST_DB="$(ls -1t "$BACKUP_DIR"/homelabarr.*.db 2>/dev/null \| head -1)"` |
 | `scripts/test/test-ecosystem.sh` | 1 x | `            echo "  • Web Interface: https://homelabarr.$domain"` |
 | `scripts/test/test-ecosystem.sh` | 1 x | `        "/opt/appdata/homelabarr"` |
