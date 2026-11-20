@@ -6,13 +6,13 @@
 > Do not edit by hand — your changes will be overwritten. See the companion
 > [White-Label & Forking guide](white-label.md) for the narrative walkthrough.
 
-**Total brand references found:** 1670
+**Total brand references found:** 1676
 
 ---
 
 ## User-facing UI (`src/`, `index.html`)
 
-**17 references**
+**20 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -31,6 +31,9 @@
 | `src/components/HelpModal.tsx` | 1 x | `                  { label: "Wiki & Docs", href: "https://wiki.homelabarr.com", desc: "Full documentation" },` |
 | `src/data/app-metadata.ts` | 1 x | `  'homelabarr-uploader': Zap,` |
 | `src/data/app-metadata.ts` | 1 x | `  'homelabarr-web-interface': LayoutDashboard,` |
+| `src/lib/analytics.test.ts` | 1 x | `      expect.objectContaining({ product: 'homelabarr', install_id: 'install-1', demo: false }),` |
+| `src/lib/analytics.ts` | 1 x | `    posthog.register({ product: 'homelabarr', app_version: __APP_VERSION__, install_id: install, demo });` |
+| `src/lib/analytics.ts` | 1 x | `const PRIVACY_URL = 'https://github.com/imogenlabs/homelabarr-ce/blob/main/PRIVACY.md';` |
 | `src/main.tsx` | 1 x | `  ['homelabarr_token', 'homelabarr_user', 'homelabarr_jwt'].forEach(k => localStorage.removeItem(k));` |
 | `src/utils/iconMap.ts` | 1 x | `const availableIcons = new Set(["alltube", "amd", "aria", "autoscan", "backup", "bazarr", "bazarr4k", "bitwarden", "cali` |
 
@@ -140,7 +143,7 @@
 
 ## CI/CD workflows (`.github/workflows/`)
 
-**51 references**
+**52 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -179,6 +182,7 @@
 | `.github/workflows/quickstart.yml` | 1 x | `          docker build -f Dockerfile -t ghcr.io/imogenlabs/homelabarr-frontend:latest .` |
 | `.github/workflows/quickstart.yml` | 1 x | `          docker build -f Dockerfile.backend -t ghcr.io/imogenlabs/homelabarr-backend:latest .` |
 | `.github/workflows/quickstart.yml` | 1 x | `          for c in homelabarr-backend homelabarr-frontend homelabarr-socket-proxy; do` |
+| `.github/workflows/quickstart.yml` | 1 x | `          image=ghcr.io/imogenlabs/homelabarr-frontend:latest` |
 | `.github/workflows/quickstart.yml` | 1 x | `          sudo dmesg \| grep -E 'apparmor="DENIED"' \| grep -E 'profile="homelabarr-' \| sed -E 's/.*(operation="[^"]*")` |
 | `.github/workflows/security-audit.yml` | 1 x | `          category: 'trivy-homelabarr-backend'` |
 | `.github/workflows/security-audit.yml` | 1 x | `          category: 'trivy-homelabarr-frontend'` |
@@ -397,7 +401,7 @@
 
 ## Wiki content
 
-**415 references**
+**416 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -416,6 +420,7 @@
 | `wiki/docs/guides/configuration.md` | 1 x | `You don't need 'JWT_SECRET' or 'DOCKER_GID' with the shipped 'homelabarr.yml'. The JWT key comes from './secrets/jwt_key` |
 | `wiki/docs/guides/configuration.md` | 1 x | `docker compose -f homelabarr.yml --env-file .env up -d` |
 | `wiki/docs/guides/configuration.md` | 1 x | `\| './secrets/' files \| The JWT signing keys, the initial admin password, and the database key are read from files, not` |
+| `wiki/docs/guides/configuration.md` | 1 x | `\| 'ANALYTICS' \| 'on' \| Frontend only. Anonymous usage data (install count, version, page views, masked clicks, deploy` |
 | `wiki/docs/guides/configuration.md` | 1 x | `\| 'CLI_BRIDGE_HOST_PATH' \| '/opt/homelabarr' \| Path to the repo with app templates (must contain 'apps/') \|` |
 | `wiki/docs/guides/configuration.md` | 1 x | `\| 'CORS_ORIGIN' \| The exact address you open the dashboard at, e.g. 'http://192.0.2.100:8084' or 'https://homelabarr.e` |
 | `wiki/docs/guides/contributing.md` | 1 x | `**☕ [Support on Ko-fi](https://ko-fi.com/homelabarr)** - Help fund development time, infrastructure costs, and project` |
@@ -812,7 +817,7 @@
 
 ## Other
 
-**915 references**
+**916 references**
 
 | File | Count | Match |
 | ---- | ----- | ----- |
@@ -853,7 +858,8 @@
 | `.zap/scan-config.yml` | 1 x | `    loginUrl: https://dev.homelabarr.com/api/auth/login` |
 | `.zap/scan-config.yml` | 1 x | `  name: homelabarr-ce` |
 | `Makefile` | 1 x | `encrypt-db:      ; docker compose exec backend bash scripts/encrypt-db.sh /app/data/homelabarr.db /run/secrets/sqlcipher` |
-| `PRIVACY.md` | 1 x | `The public demo at demo.homelabarr.com sets them. It runs first-party [Umami](https://umami.is) analytics at '/analytics` |
+| `PRIVACY.md` | 1 x | `**To turn it off**, set 'ANALYTICS=off' on the frontend container (in '.env' next to 'homelabarr.yml', or as a container` |
+| `PRIVACY.md` | 1 x | `The public demo at demo.homelabarr.com reports the same things, except that each visitor's browser keeps its own random ` |
 | `apps/.installer/ubuntu.sh` | 1 x | `     buildapp=$(ls -1p /opt/homelabarr/apps/${section}/ \| $(command -v sed) -e 's/.yml//g' \| grep -x $typed)` |
 | `apps/.installer/ubuntu.sh` | 1 x | `     checksection=$(ls -1p /opt/homelabarr/apps/ \| grep '/$' \| $(command -v sed) 's/\/$//' \| grep -x $section)` |
 | `apps/.installer/ubuntu.sh` | 3 x | `   appfolder=/opt/homelabarr/apps/` |
