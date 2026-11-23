@@ -9,7 +9,7 @@ RUN npm ci --no-audit --loglevel=error --no-fund
 COPY . .
 RUN npm run build
 
-FROM nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+FROM nginx:1.31.9-alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7
 RUN apk add --no-cache gettext dumb-init
 RUN apk upgrade --no-cache && \
     addgroup -g 1001 homelabarr && \
